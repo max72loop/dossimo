@@ -1,0 +1,65 @@
+@import "tailwindcss";
+
+/* ------------------------------------------------------------------ Theme
+   « Atelier Conforme » — l'atelier numérique de la conformité.
+   Encre, bleu tampon, terre cuite, papier. Source Serif 4 aux titres, Inter
+   à l'interface, Geist Mono aux données techniques. Sobre, précis, tangible. */
+@theme {
+  /* Couleurs de marque */
+  --color-encre: #1a1f2c;
+  --color-tampon: #2e5c8a;
+  --color-terre-cuite: #c45d3c;
+  --color-terre-cuite-hover: #a84d32;
+  --color-papier: #f7f5f0;
+  --color-blanc-casse: #fdfcfa;
+  --color-ardoise: #5a6573;
+  --color-filigrane: #dcd8d0;
+  --color-encre-claire: #8a94a6;
+
+  /* Fonds neutres utilitaires */
+  --color-papier-fonce: #f0eee9;
+
+  /* Couleurs sémantiques */
+  --color-succes: #2d6a4f;
+  --color-succes-bg: #e8f4ef;
+  --color-erreur: #9b2c2c;
+  --color-erreur-bg: #f9ebeb;
+  --color-avertissement: #b38600;
+  --color-avertissement-bg: #fdf3d7;
+  --color-info: #2e5c8a;
+  --color-info-bg: #e8f0f7;
+
+  /* Typographie */
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+  --font-serif: var(--font-source-serif), Georgia, serif;
+  --font-mono: var(--font-geist-mono), "SFMono-Regular", monospace;
+
+  /* Rayons — comme un papier découpé */
+  --radius-sm: 4px;
+  --radius: 4px;
+  --radius-md: 8px;
+
+  /* Ombres très discrètes */
+  --shadow-sm: 0 1px 2px rgba(26, 31, 44, 0.04);
+  --shadow-md: 0 4px 6px rgba(26, 31, 44, 0.06);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-papier);
+  color: var(--color-encre);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Libellé de section — Inter 500, sobre, sans capitales intégrales. */
+.label {
+  font-family: var(--font-sans);
+  font-size: 0.813rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}

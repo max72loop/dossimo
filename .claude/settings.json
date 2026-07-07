@@ -1,0 +1,47 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm -v)",
+      "Bash(git init *)",
+      "Bash(npx --yes create-next-app@latest . --ts --tailwind --eslint --app --src-dir --import-alias \"@/*\" --use-npm --no-turbopack --disable-git)",
+      "Bash(npx --yes create-next-app@latest dossimo --ts --tailwind --eslint --app --src-dir --import-alias \"@/*\" --use-npm --no-turbopack --disable-git)",
+      "Bash(node -e \"const p=require\\('./package.json'\\);console.log\\('next',p.dependencies.next,'| react',p.dependencies.react,'| tailwind',\\(p.devDependencies.tailwindcss||p.dependencies.tailwindcss\\)\\)\")",
+      "PowerShell(Get-NetTCPConnection -LocalPort 3000 -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique | ForEach-Object { try { Stop-Process -Id $_ -Force -ErrorAction Stop; \"killed $_\" } catch {} })",
+      "PowerShell(Get-NetTCPConnection -LocalPort 3000 -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique | ForEach-Object { try { Stop-Process -Id $_ -Force -ErrorAction Stop } catch {} }; if \\(Test-Path .next\\) { Remove-Item -Recurse -Force .next }; \"cleared\")",
+      "PowerShell(Get-NetTCPConnection -LocalPort 3000 -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique | ForEach-Object { try { Stop-Process -Id $_ -Force -ErrorAction Stop } catch {} }; \"dev server stopped\")",
+      "Bash(command -v supabase)",
+      "Bash(supabase --version)",
+      "Bash(echo \"exit=$?\")",
+      "Bash(node -e \"console.log\\('zod', require\\('./node_modules/zod/package.json'\\).version\\); console.log\\('rhf', require\\('./node_modules/react-hook-form/package.json'\\).version\\); console.log\\('resolvers', require\\('./node_modules/@hookform/resolvers/package.json'\\).version\\)\")",
+      "PowerShell(Get-NetTCPConnection -LocalPort 3000 -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique | ForEach-Object { try { Stop-Process -Id $_ -Force -ErrorAction Stop } catch {} }; \"stopped\")",
+      "Bash(node -e \"console.log\\('react-pdf', require\\('./node_modules/@react-pdf/renderer/package.json'\\).version\\)\")",
+      "Bash(perl -i -pe 's/\\\\.replace\\\\\\(\\\\/\\\\[\\\\x{0300}-\\\\x{036f}\\\\]\\\\/g, \"\"\\\\\\)/.replace\\(\\\\/[\\\\\\\\u0300-\\\\\\\\u036f]\\\\/gu, \"\"\\)/' src/lib/pack/render.ts)",
+      "Bash(cp /tmp/test-recap.pdf \"C:/Users/Max/AppData/Local/Temp/claude/c--Users-Max-DOSSIMO/adf73ce2-f57c-4aaa-a964-17e6616fd4e0/scratchpad/recap.pdf\")",
+      "Bash(cp /tmp/test-checklist.pdf \"C:/Users/Max/AppData/Local/Temp/claude/c--Users-Max-DOSSIMO/adf73ce2-f57c-4aaa-a964-17e6616fd4e0/scratchpad/checklist.pdf\")",
+      "Read(//tmp/**)",
+      "Bash(xxd)",
+      "Bash(cp /tmp/r2.pdf __TRACKED_VAR__/recap.pdf)",
+      "Bash(cp /tmp/c2.pdf __TRACKED_VAR__/checklist.pdf)",
+      "Bash(npx eslint *)",
+      "Bash(cp /tmp/ctrl.pdf \"C:/Users/Max/AppData/Local/Temp/claude/c--Users-Max-DOSSIMO/adf73ce2-f57c-4aaa-a964-17e6616fd4e0/scratchpad/rapport.pdf\" && echo ok)",
+      "Bash(node -e \"console.log\\('lucide', require\\('./node_modules/lucide-react/package.json'\\).version\\)\")",
+      "WebFetch(domain:land-book.com)",
+      "WebFetch(domain:www.storeyarchitecture.co.uk)",
+      "Bash(node -e \"try{require.resolve\\('puppeteer'\\);console.log\\('puppeteer-ok'\\)}catch{console.log\\('no-puppeteer'\\)}\")",
+      "Bash(node -e \"try{require.resolve\\('playwright'\\);console.log\\('playwright-ok'\\)}catch{console.log\\('no-playwright'\\)}\")",
+      "Bash(node -e ' *)",
+      "Bash(taskkill //F //IM msedge.exe)",
+      "Bash(pkill -f \"next-server\")",
+      "Bash(pkill -f \"next start\")",
+      "Bash(rm -rf .next)",
+      "Bash(cd \"c:/Users/Max/DOSSIMO\"; npx tsc --noEmit 2>&1 | head -10; npx next build >/tmp/build.log 2>&1 && echo \"build ok\" || tail -20 /tmp/build.log; git status --short)",
+      "Bash(cd \"c:/Users/Max/DOSSIMO\"; grep -iE \"\\\\[auth\\\\]|signup\" /tmp/dossimo-server.log | tail -3)",
+      "Bash(node -e \"console.log\\('pdf-lib', require\\('pdf-lib/package.json'\\).version\\)\")",
+      "Bash(cd \"c:/Users/Max/DOSSIMO\"; grep -iE \"winansi|encode|cannot|error|cerfa|0x|U\\\\+\" /tmp/dossimo-server.log | tail -8)",
+      "Bash(node _text.mjs 0)"
+    ],
+    "additionalDirectories": [
+      "\\tmp"
+    ]
+  }
+}
