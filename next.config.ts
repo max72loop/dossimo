@@ -10,6 +10,11 @@ const nextConfig: NextConfig = {
   // @react-pdf/renderer s'appuie sur des modules Node : le garder hors du bundle
   // serveur évite les erreurs de packaging.
   serverExternalPackages: ["@react-pdf/renderer"],
+  // La route Cerfa lit le PDF officiel dans public/cerfa via fs (chemin calculé,
+  // non tracé automatiquement) : on l'inclut explicitement pour le serverless.
+  outputFileTracingIncludes: {
+    "/dossiers/[id]/cerfa.pdf": ["./public/cerfa/**"],
+  },
 };
 
 export default nextConfig;
