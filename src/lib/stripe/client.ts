@@ -22,16 +22,5 @@ export function getStripe(): Stripe {
   return cached;
 }
 
-/**
- * Prix d'un dossier (produit ponctuel). Configurable par env — le pricing n'est
- * pas figé (CLAUDE.md §10). Défaut : 149 €.
- */
-export const PRIX_DOSSIER_CENTS: number = (() => {
-  const n = Number(process.env.STRIPE_PRICE_CENTS);
-  return Number.isFinite(n) && n > 0 ? Math.round(n) : 14900;
-})();
-
-export const PRIX_DOSSIER_LABEL: string = (PRIX_DOSSIER_CENTS / 100).toLocaleString(
-  "fr-FR",
-  { minimumFractionDigits: PRIX_DOSSIER_CENTS % 100 === 0 ? 0 : 2 },
-) + " €";
+// La tarification (par palier selon la taille du dossier) vit dans
+// src/lib/stripe/pricing.ts.

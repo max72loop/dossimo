@@ -11,7 +11,7 @@ import { AhObligeFill } from "@/components/dossier/ah-oblige-fill";
 import { PaywallCta } from "@/components/dossier/paywall-cta";
 import { ParcoursSelector } from "@/components/dossier/parcours-selector";
 import { accesDossier } from "@/lib/dossier/acces";
-import { PRIX_DOSSIER_LABEL } from "@/lib/stripe/client";
+import { prixDossier } from "@/lib/stripe/pricing";
 import { estimerPrime } from "@/lib/dossier/prime";
 import {
   LOGEMENT_TYPES,
@@ -143,6 +143,8 @@ export default async function DossierPage({
 
   // Estimation indicative de prime (barème piloté par la règle métier).
   const prime = estimerPrime(data);
+  // Prix du dossier par palier (selon la prime estimée).
+  const prix = prixDossier(data);
 
   return (
     <main className="mx-auto max-w-4xl px-8 py-10">
@@ -215,7 +217,7 @@ export default async function DossierPage({
             <p className="mt-2 text-xs text-ardoise">Paiement annulé · vous pouvez réessayer.</p>
           )}
           <div className="mt-4">
-            <PaywallCta dossierId={id} prix={PRIX_DOSSIER_LABEL} />
+            <PaywallCta dossierId={id} prix={prix.label} />
           </div>
           <p className="mt-3 text-xs text-encre-claire">
             Paiement unique par Stripe. Le premier dossier de votre compte est offert.

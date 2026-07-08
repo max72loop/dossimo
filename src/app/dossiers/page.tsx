@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentArtisan } from "@/lib/auth/get-artisan";
 import { TYPES_ISOLATION, type TypeIsolation } from "@/lib/dossier/cee-isolation";
 import { PaywallCta } from "@/components/dossier/paywall-cta";
-import { PRIX_DOSSIER_LABEL } from "@/lib/stripe/client";
+import { prixDossier } from "@/lib/stripe/pricing";
 import { getAdminEmail } from "@/lib/auth/is-admin";
 import { ETAPE_PAR_STATUT, PARCOURS } from "@/lib/dossier/parcours";
 import { controlerDossierCeeIsolation } from "@/lib/rules/cee-isolation";
@@ -70,6 +70,7 @@ export default async function DossiersPage() {
   ) as StatsTableau["parEtat"];
   let conformes = 0;
   let baseConformite = 0;
+  const prixParDossier = new Map<string, string>();
   for (const d of rows) {
     parEtat[d.statut] = (parEtat[d.statut] ?? 0) + 1;
     try {
@@ -82,6 +83,7 @@ export default async function DossiersPage() {
       } as unknown as Parameters<typeof controlerDossierCeeIsolation>[0];
       baseConformite += 1;
       if (controlerDossierCeeIsolation(data).conforme) conformes += 1;
+      prixParDossier.set(d.id, prixDossier(data).label);
     } catch {
       // dossier incomplet : exclu du calcul de conformité.
     }
@@ -210,7 +212,7 @@ export default async function DossiersPage() {
                             Débloqué
                           </span>
                         ) : (
-                          <PaywallCta dossierId={d.id} prix={PRIX_DOSSIER_LABEL} compact />
+                          <PaywallCta dossierId={d.id} prix={prixParDossier.get(d.id) ?? "149 €"} compact />
                         )}
                       </td>
                     </tr>

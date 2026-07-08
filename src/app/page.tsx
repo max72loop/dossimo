@@ -17,6 +17,7 @@ import {
 import { SiteHeader } from "@/components/landing/site-header";
 import { SiteFooter } from "@/components/landing/site-footer";
 import { LeadForm } from "@/components/landing/lead-form";
+import { fourchettePrix } from "@/lib/stripe/pricing";
 
 export default function Home() {
   return (
@@ -204,7 +205,7 @@ function StatusBadge({
 function TrustStrip() {
   const items = [
     "Premier dossier offert",
-    "149 € par dossier ensuite",
+    "À partir de 49 € par dossier",
     "MaPrimeRénov' + CEE",
     "Vous gardez votre prime",
   ];
@@ -503,6 +504,7 @@ function Features() {
 
 /* --------------------------------------------------------------- Pricing */
 function Pricing() {
+  const { minLabel: minPrix, maxLabel: maxPrix } = fourchettePrix();
   return (
     <section className="py-20 sm:py-24">
       <Shell>
@@ -511,12 +513,15 @@ function Pricing() {
             <p className="label text-papier/70">Tarification</p>
             <h2 className="mt-5 font-serif text-3xl font-semibold tracking-tight text-papier sm:text-[2.25rem] sm:leading-tight">
               Le premier dossier est offert. Ensuite,{" "}
-              <span className="font-mono text-blanc-casse">~149 €</span> par
-              dossier.
+              <span className="font-mono text-blanc-casse">
+                de {minPrix} à {maxPrix}
+              </span>{" "}
+              selon la taille du dossier.
             </h2>
             <p className="mt-4 max-w-xl text-lg leading-relaxed text-papier/75">
-              Un tarif simple, sans abonnement imposé. Vous ne payez que la
-              sécurité que vous utilisez, et votre prime reste entièrement à vous.
+              Un forfait fixe, adapté à la taille du dossier : un petit chantier
+              paie moins. Jamais un pourcentage de votre prime, qui reste
+              entièrement à vous. Sans abonnement imposé.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <Link

@@ -2,11 +2,8 @@
 
 import { getDossier } from "@/lib/dossier/get-dossier";
 import { accesDossier } from "@/lib/dossier/acces";
-import {
-  getStripe,
-  isStripeConfigured,
-  PRIX_DOSSIER_CENTS,
-} from "@/lib/stripe/client";
+import { getStripe, isStripeConfigured } from "@/lib/stripe/client";
+import { prixDossier } from "@/lib/stripe/pricing";
 
 export type PaiementResult =
   | { ok: true; url: string }
@@ -41,6 +38,7 @@ export async function creerSessionPaiementDossier(
   }
 
   const { prenom, nom } = data.caracteristiques.beneficiaire;
+  const prix = prixDossier(data);
 
   try {
     const stripe = getStripe();
@@ -51,9 +49,9 @@ export async function creerSessionPaiementDossier(
           quantity: 1,
           price_data: {
             currency: "eur",
-            unit_amount: PRIX_DOSSIER_CENTS,
+            unit_amount: prix.cents,
             product_data: {
-              name: `Pack Dossimo — dossier ${prenom} ${nom}`,
+              name: `Pack Dossimo, dossier ${prenom} ${nom}`,
               description: `Contrôle anti-refus + pack documentaire (${data.caracteristiques.fiche}).`,
             },
           },
