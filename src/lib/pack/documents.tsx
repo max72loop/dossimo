@@ -142,6 +142,9 @@ export function RecapDocument({ data }: { data: DossierComplet }) {
               <Row label="Montant HT" value={euro(c.montants.ht)} />
               <Row label="Montant TTC" value={euro(c.montants.ttc)} />
               <Row label="Prime CEE estimée" value={euro(c.montants.prime_estime)} />
+              {c.montants.aides_publiques_hors_cee != null ? (
+                <Row label="Aides publiques (hors CEE)" value={euro(c.montants.aides_publiques_hors_cee)} />
+              ) : null}
             </Section>
           </View>
         </View>

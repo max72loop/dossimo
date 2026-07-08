@@ -145,6 +145,7 @@ export function DossierCeeIsolationForm({
         <TextField label="Montant HT (€)" required type="number" step="0.01" inputMode="decimal" error={errors.montant_ht} register={register("montant_ht")} />
         <TextField label="Montant TTC (€)" required type="number" step="0.01" inputMode="decimal" error={errors.montant_ttc} register={register("montant_ttc")} />
         <TextField label="Prime CEE estimée (€)" type="number" step="0.01" inputMode="decimal" error={errors.montant_prime_estime} register={register("montant_prime_estime")} />
+        <TextField label="Aides publiques hors CEE (€) — ex. MaPrimeRénov'" type="number" step="0.01" inputMode="decimal" error={errors.montant_aides_publiques} register={register("montant_aides_publiques")} />
       </Section>
 
       {serverError && (

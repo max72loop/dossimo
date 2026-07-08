@@ -121,6 +121,7 @@ export async function createDossierCeeIsolation(
           ht: d.montant_ht,
           ttc: d.montant_ttc,
           prime_estime: d.montant_prime_estime ?? null,
+          aides_publiques_hors_cee: d.montant_aides_publiques ?? null,
         },
         rge: {
           numero: d.rge_numero,

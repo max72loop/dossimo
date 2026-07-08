@@ -197,12 +197,23 @@ export function AttestationHonneurDocument({
         {ref.variant === "p6" && (
           <Cadre title="Cadre — Coût de l'opération et aides (6e période)">
             <Field label="Coût de l'opération (TTC, pose incluse)" value={euro(c.montants.ttc)} />
-            <View style={s.field}>
-              <Text style={s.fieldLabel}>Autres aides publiques perçues (hors CEE)</Text>
-              <Text style={[s.fieldValue, { color: COLORS.muted }]}>
-                à compléter : ____________
-              </Text>
-            </View>
+            {c.montants.aides_publiques_hors_cee == null ? (
+              <View style={s.field}>
+                <Text style={s.fieldLabel}>Autres aides publiques perçues (hors CEE)</Text>
+                <Text style={[s.fieldValue, { color: COLORS.muted }]}>
+                  à compléter : ____________
+                </Text>
+              </View>
+            ) : (
+              <Field
+                label="Autres aides publiques perçues (hors CEE)"
+                value={
+                  c.montants.aides_publiques_hors_cee > 0
+                    ? euro(c.montants.aides_publiques_hors_cee)
+                    : "Aucune"
+                }
+              />
+            )}
             <Text style={{ fontSize: 8, color: COLORS.muted, marginTop: 4 }}>
               Depuis le 01/04/2026, l&apos;attestation doit préciser le coût de
               l&apos;opération et l&apos;ensemble des aides publiques perçues (hors

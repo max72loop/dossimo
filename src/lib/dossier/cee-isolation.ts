@@ -162,6 +162,9 @@ export const ceeIsolationSchema = z.object({
   montant_ht: nombrePositif("Montant HT invalide"),
   montant_ttc: nombrePositif("Montant TTC invalide"),
   montant_prime_estime: nombreOptionnel,
+  // Aides publiques perçues hors CEE (ex. MaPrimeRénov') — obligatoire sur l'AH
+  // depuis la 6e période (01/04/2026). Laisser vide = aucune aide.
+  montant_aides_publiques: nombreOptionnel,
 });
 
 export type CeeIsolationInput = z.input<typeof ceeIsolationSchema>;
@@ -207,4 +210,5 @@ export const ceeIsolationDefaults: CeeIsolationInput = {
   montant_ht: "" as unknown as number,
   montant_ttc: "" as unknown as number,
   montant_prime_estime: "",
+  montant_aides_publiques: "",
 };

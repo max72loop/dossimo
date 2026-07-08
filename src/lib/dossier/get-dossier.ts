@@ -42,6 +42,7 @@ export interface CeeIsolationCaracteristiques {
     ht: number;
     ttc: number;
     prime_estime: number | null;
+    aides_publiques_hors_cee?: number | null;
   };
   rge: {
     numero: string;
