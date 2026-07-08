@@ -93,6 +93,9 @@ export async function generateCerfa(data: DossierComplet): Promise<GenerateResul
       arrete: t.arrete,
       version: t.version,
       variant: t.ahVariant ?? "p5",
+      // Référence de fiche pilotée par la règle métier (§7/§8) : correcte pour
+      // chaque fiche (BAR-EN-101/102/103), au lieu d'une valeur codée en dur.
+      ficheRef: data.regle?.versionFormulaire ?? data.caracteristiques.fiche,
     });
     return { ok: true, bytes: new Uint8Array(buf), meta: toMeta(t) };
   }

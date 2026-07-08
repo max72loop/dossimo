@@ -126,7 +126,7 @@ const TEMPLATES: CerfaTemplate[] = [
     fiches: ["BAR-EN-101", "BAR-EN-102", "BAR-EN-103"],
     titre: "Attestation sur l'honneur — CEE Isolation (fiches BAR-EN)",
     arrete:
-      "Modèle d'attestation sur l'honneur — arrêté du 4 septembre 2014 modifié (annexe 7-1) ; fiche BAR-EN-101 v. A64.6 (à compter du 01/01/2025)",
+      "Modèle d'attestation sur l'honneur — arrêté du 4 septembre 2014 modifié (annexe 7-1)",
     version: "2025-01",
     effectiveFrom: "2024-01-01",
     effectiveTo: "2026-03-31",
@@ -145,7 +145,7 @@ const TEMPLATES: CerfaTemplate[] = [
     fiches: ["BAR-EN-101", "BAR-EN-102", "BAR-EN-103"],
     titre: "Attestation sur l'honneur — CEE Isolation (fiches BAR-EN)",
     arrete:
-      "Modèle d'attestation sur l'honneur 6e période — arrêté du 4 septembre 2014 modifié (annexe 7-1) et arrêté du 21 décembre 2025 ; fiche BAR-EN-101 v. A64.6",
+      "Modèle d'attestation sur l'honneur 6e période — arrêté du 4 septembre 2014 modifié (annexe 7-1) et arrêté du 21 décembre 2025",
     version: "2026-04 (P6)",
     effectiveFrom: "2026-04-01",
     effectiveTo: null,

@@ -31,9 +31,9 @@ select
   1,
   true
 from pieces, (values
-  ('combles_perdus',  '{"r_min":7,"tva_taux":0.055,"anciennete_min_ans":2}', 'BAR-EN-101 vA64.6'),
-  ('rampants_toiture','{"r_min":6,"tva_taux":0.055,"anciennete_min_ans":2}', 'BAR-EN-101 vA64.6'),
+  ('combles_perdus',  '{"r_min":7,"tva_taux":0.055,"anciennete_min_ans":2}', 'BAR-EN-101 vA64.6 (à compter du 01/01/2025)'),
+  ('rampants_toiture','{"r_min":6,"tva_taux":0.055,"anciennete_min_ans":2}', 'BAR-EN-101 vA64.6 (à compter du 01/01/2025)'),
   ('murs',            '{"r_min":3.7,"tva_taux":0.055,"anciennete_min_ans":2}', 'BAR-EN-102'),
-  ('plancher_bas',    '{"r_min":3,"tva_taux":0.055,"anciennete_min_ans":2}', 'BAR-EN-103')
+  ('plancher_bas',    '{"r_min":3,"tva_taux":0.055,"anciennete_min_ans":2}', 'BAR-EN-103 vA29.2 (à compter du 01/01/2025)')
 ) as t(type, cond, vf)
 on conflict (dispositif, type_travaux, version) do nothing;

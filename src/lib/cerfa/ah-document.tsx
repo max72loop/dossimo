@@ -114,6 +114,8 @@ export interface AhRef {
   version: string;
   /** Modèle d'AH : 5e période, ou 6e période (annexe 7-1 modifiée au 01/04/2026). */
   variant: "p5" | "p6";
+  /** Référence de la fiche en vigueur (ex. « BAR-EN-103 vA29.2 »), issue de la règle. */
+  ficheRef?: string;
 }
 
 export function AttestationHonneurDocument({
@@ -144,9 +146,9 @@ export function AttestationHonneurDocument({
           <View style={styles.headerRight}>
             <Text style={styles.title}>Attestation sur l&apos;honneur</Text>
             <Text style={styles.subtitle}>
-              CEE · {c.fiche}
+              CEE · {ref.ficheRef ?? c.fiche}
             </Text>
-            <Text style={s.refLine}>version {ref.version}</Text>
+            <Text style={s.refLine}>modèle {ref.version}</Text>
           </View>
         </View>
 
