@@ -5,6 +5,8 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentArtisan } from "@/lib/auth/get-artisan";
 import { TYPES_ISOLATION, type TypeIsolation } from "@/lib/dossier/cee-isolation";
 import type { StatutDossier } from "@/lib/database.types";
+import { PaywallCta } from "@/components/dossier/paywall-cta";
+import { PRIX_DOSSIER_LABEL } from "@/lib/stripe/client";
 
 export const metadata = { title: "Mes dossiers — Dossimo" };
 
@@ -34,6 +36,19 @@ export default async function DossiersPage() {
     .order("created_at", { ascending: false });
 
   const rows = dossiers ?? [];
+
+  // Accès (paiement) calculé pour toute la liste en 1 requête supplémentaire :
+  // le dossier le plus ancien est offert (§10) ; les autres nécessitent un
+  // paiement encaissé. Voir src/lib/dossier/acces.ts pour la logique côté PDF.
+  const { data: paiements } = await supabase
+    .from("paiements")
+    .select("dossier_id")
+    .eq("statut", "paye");
+  const paidSet = new Set((paiements ?? []).map((p) => p.dossier_id));
+  // rows est trié du plus récent au plus ancien → le dernier est le plus ancien.
+  const gratuitId = rows.length ? rows[rows.length - 1].id : null;
+  const acces = (id: string): "gratuit" | "paye" | "verrouille" =>
+    id === gratuitId ? "gratuit" : paidSet.has(id) ? "paye" : "verrouille";
 
   return (
     <div className="mx-auto max-w-[1280px] px-8 py-12">
@@ -78,6 +93,7 @@ export default async function DossiersPage() {
                   <th className="px-5 py-3 font-medium">Prime estimée</th>
                   <th className="px-5 py-3 font-medium">Créé le</th>
                   <th className="px-5 py-3 font-medium">Statut</th>
+                  <th className="px-5 py-3 font-medium">Accès / paiement</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-filigrane">
@@ -122,6 +138,21 @@ export default async function DossiersPage() {
                           <span className={`h-1.5 w-1.5 rounded-full ${st.dot}`} />
                           {st.label}
                         </span>
+                      </td>
+                      <td className="px-5 py-3">
+                        {acces(d.id) === "gratuit" ? (
+                          <span className="inline-flex items-center gap-1.5 rounded-full bg-tampon/10 px-2.5 py-1 text-xs font-medium text-tampon">
+                            <span className="h-1.5 w-1.5 rounded-full bg-tampon" />
+                            Offert
+                          </span>
+                        ) : acces(d.id) === "paye" ? (
+                          <span className="inline-flex items-center gap-1.5 rounded-full bg-succes-bg px-2.5 py-1 text-xs font-medium text-succes">
+                            <span className="h-1.5 w-1.5 rounded-full bg-succes" />
+                            Débloqué
+                          </span>
+                        ) : (
+                          <PaywallCta dossierId={d.id} prix={PRIX_DOSSIER_LABEL} compact />
+                        )}
                       </td>
                     </tr>
                   );
