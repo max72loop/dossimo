@@ -28,6 +28,7 @@ export default function Home() {
         <TrustStrip />
         <Probleme />
         <Difference />
+        <PourQui />
         <Etapes />
         <Features />
         <Pricing />
@@ -57,19 +58,21 @@ function Shell({ children }: { children: React.ReactNode }) {
 /* ------------------------------------------------------------------ Hero */
 function Hero() {
   return (
-    <section className="border-b border-filigrane">
+    <section className="relative overflow-hidden border-b border-filigrane">
+      {/* Halo bleu doux, signature de marque */}
+      <div className="pointer-events-none absolute -right-32 -top-32 -z-10 h-96 w-96 rounded-full bg-tampon/10 blur-3xl" />
       <div className="mx-auto grid max-w-[1280px] items-center gap-16 px-8 py-20 lg:grid-cols-[1.05fr_0.95fr] lg:py-24">
         <div>
-          <SectionLabel>MaPrimeRénov&rsquo; &amp; CEE · Île-de-France</SectionLabel>
+          <SectionLabel>Pour les artisans RGE indépendants d&rsquo;Île-de-France</SectionLabel>
 
           <h1 className="mt-6 font-serif text-[2.75rem] font-semibold leading-[1.08] tracking-tight text-encre sm:text-[3.25rem]">
             Des dossiers de prime qui passent.{" "}
-            <span className="text-terre-cuite">Du premier coup.</span>
+            <span className="text-tampon">Du premier coup.</span>
           </h1>
 
           <p className="mt-6 max-w-xl text-lg leading-relaxed text-ardoise">
-            Dossimo prépare et vérifie vos dossiers MaPrimeRénov&rsquo; et CEE —
-            conformes, anti-refus. Sans passer par un mandataire :{" "}
+            Dossimo prépare et vérifie vos dossiers MaPrimeRénov&rsquo; et CEE,
+            conformes et anti-refus. Sans mandataire :{" "}
             <span className="text-encre">
               vous gardez votre client et l&rsquo;intégralité de votre prime.
             </span>
@@ -78,31 +81,27 @@ function Hero() {
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <Link
               href="/dossiers/nouveau"
-              className="group inline-flex h-11 items-center gap-2 rounded bg-terre-cuite px-5 text-sm font-medium text-blanc-casse transition-colors hover:bg-terre-cuite-hover"
+              className="group inline-flex h-12 items-center gap-2 rounded-lg bg-terre-cuite px-6 text-sm font-semibold text-blanc-casse transition-colors hover:bg-terre-cuite-hover"
             >
-              Créer un dossier
+              Créer mon dossier gratuit
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </Link>
             <a
               href="#etapes"
-              className="inline-flex h-11 items-center gap-2 rounded border border-encre px-5 text-sm font-medium text-encre transition-colors hover:bg-papier-fonce"
+              className="inline-flex h-12 items-center gap-2 rounded-lg border border-encre px-6 text-sm font-medium text-encre transition-colors hover:bg-papier-fonce"
             >
               Comment ça marche
             </a>
           </div>
 
-          <ul className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm text-ardoise">
-            {[
-              "Premier dossier offert",
-              "Vous ne déléguez jamais votre prime",
-              "MaPrimeRénov' + CEE",
-            ].map((t) => (
-              <li key={t} className="flex items-center gap-1.5">
-                <CheckCircle2 className="h-4 w-4 text-succes" strokeWidth={1.5} />
-                {t}
-              </li>
-            ))}
-          </ul>
+          <p className="mt-5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-ardoise">
+            <CheckCircle2 className="h-4 w-4 text-succes" strokeWidth={1.5} />
+            Premier dossier offert
+            <span className="text-filigrane">·</span>
+            sans carte bancaire
+            <span className="text-filigrane">·</span>
+            prêt en quelques minutes
+          </p>
         </div>
 
         <HeroVisual />
@@ -113,18 +112,25 @@ function Hero() {
 
 function HeroVisual() {
   return (
-    <div className="relative">
-      <div className="overflow-hidden rounded border border-filigrane bg-blanc-casse p-1.5 shadow-sm">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/atelier.jpg"
-          alt="Mains d'artisan au travail parmi des plans techniques et des outils"
-          className="h-[22rem] w-full rounded-sm object-cover [filter:saturate(0.92)] sm:h-[27rem]"
-        />
+    <div className="relative lg:pr-8">
+      <div className="pointer-events-none absolute -inset-6 -z-10 rounded-[2.5rem] bg-tampon/5 blur-2xl" />
+      <ReportCard />
+      <div className="mt-4 lg:absolute lg:-bottom-8 lg:-right-2 lg:mt-0 lg:w-56">
+        <PrimeCard />
       </div>
-      <div className="mt-4 lg:absolute lg:-bottom-8 lg:-left-8 lg:mt-0 lg:w-[20rem]">
-        <ReportCard />
-      </div>
+    </div>
+  );
+}
+
+/* Petite carte « prime estimée », encre, en signature du produit. */
+function PrimeCard() {
+  return (
+    <div className="rounded-xl border border-encre bg-encre p-4 text-papier shadow-md">
+      <p className="text-xs text-papier/70">Prime estimée</p>
+      <p className="mt-1 font-serif text-2xl font-semibold">≈ 1 900 €</p>
+      <p className="mt-0.5 text-[11px] text-papier/60">
+        MaPrimeRénov&rsquo; · ménage modeste
+      </p>
     </div>
   );
 }
@@ -197,20 +203,19 @@ function StatusBadge({
 /* ------------------------------------------------------------ TrustStrip */
 function TrustStrip() {
   const items = [
-    { label: "Fiches", code: "BAR-EN 101 · 102 · 103" },
-    { label: "Cerfa", code: "à jour" },
-    { label: "Qualification", code: "RGE" },
-    { label: "Contrôle", code: "anti-refus" },
-    { label: "Cohérence", code: "garantie" },
+    "Premier dossier offert",
+    "149 € par dossier ensuite",
+    "MaPrimeRénov' + CEE",
+    "Vous gardez votre prime",
   ];
   return (
     <div className="border-b border-filigrane bg-papier-fonce">
       <Shell>
-        <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-3 py-5 text-sm text-ardoise">
+        <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 py-5 text-sm font-medium text-encre">
           {items.map((i) => (
-            <span key={i.label} className="flex items-center gap-2">
-              {i.label}
-              <span className="font-mono text-xs text-encre">{i.code}</span>
+            <span key={i} className="flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4 text-succes" strokeWidth={1.5} />
+              {i}
             </span>
           ))}
         </div>
@@ -345,6 +350,62 @@ function Difference() {
   );
 }
 
+/* --------------------------------------------------------------- Pour qui */
+function PourQui() {
+  const points = [
+    "Vous restez maître de votre client et de votre prime, toujours.",
+    "Pas de jargon : une saisie, un pack prêt à déposer.",
+    "Vous voyez le contrôle anti-refus avant même de payer.",
+    "Le premier dossier est offert, sans engagement ni carte bancaire.",
+  ];
+  return (
+    <section className="py-20 sm:py-24">
+      <Shell>
+        <div className="grid items-center gap-12 lg:grid-cols-[0.9fr_1.1fr]">
+          <div>
+            <SectionLabel>Pensé pour vous</SectionLabel>
+            <h2 className="mt-5 font-serif text-3xl font-semibold tracking-tight text-encre sm:text-[2.25rem] sm:leading-tight">
+              Fait pour l&rsquo;artisan indépendant, pas pour les intermédiaires
+            </h2>
+            <p className="mt-4 text-lg leading-relaxed text-ardoise">
+              Vous connaissez votre métier. Dossimo s&rsquo;occupe de la paperasse
+              et de la conformité, sans jamais s&rsquo;intercaler entre vous et
+              votre client.
+            </p>
+            <div className="mt-8">
+              <Link
+                href="/dossiers/nouveau"
+                className="group inline-flex h-12 items-center gap-2 rounded-lg bg-terre-cuite px-6 text-sm font-semibold text-blanc-casse transition-colors hover:bg-terre-cuite-hover"
+              >
+                Essayer, c&rsquo;est gratuit
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+              </Link>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-filigrane bg-blanc-casse p-8 shadow-sm">
+            <div className="flex items-center gap-3">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/dossimo-icon.png" alt="Dossimo" className="h-10 w-10 rounded-lg" />
+              <p className="font-serif text-lg font-semibold text-encre">
+                Ce que ça change pour vous
+              </p>
+            </div>
+            <ul className="mt-6 space-y-4">
+              {points.map((p) => (
+                <li key={p} className="flex items-start gap-3 text-[0.95rem] text-encre">
+                  <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-succes" strokeWidth={1.5} />
+                  {p}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </Shell>
+    </section>
+  );
+}
+
 /* ---------------------------------------------------------------- Etapes */
 function Etapes() {
   const steps = [
@@ -449,30 +510,35 @@ function Pricing() {
           <div className="max-w-2xl">
             <p className="label text-papier/70">Tarification</p>
             <h2 className="mt-5 font-serif text-3xl font-semibold tracking-tight text-papier sm:text-[2.25rem] sm:leading-tight">
-              Premier dossier offert, puis{" "}
-              <span className="font-mono text-terre-cuite">~149 €</span> par
-              dossier
+              Le premier dossier est offert. Ensuite,{" "}
+              <span className="font-mono text-blanc-casse">~149 €</span> par
+              dossier.
             </h2>
             <p className="mt-4 max-w-xl text-lg leading-relaxed text-papier/75">
-              Un tarif simple par dossier, sans abonnement imposé. Vous ne payez
-              que la sécurité que vous utilisez, et votre prime reste
-              entièrement à vous.
+              Un tarif simple, sans abonnement imposé. Vous ne payez que la
+              sécurité que vous utilisez, et votre prime reste entièrement à vous.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <Link
                 href="/dossiers/nouveau"
-                className="group inline-flex h-11 items-center gap-2 rounded bg-terre-cuite px-5 text-sm font-medium text-blanc-casse transition-colors hover:bg-terre-cuite-hover"
+                className="group inline-flex h-12 items-center gap-2 rounded-lg bg-papier px-6 text-sm font-semibold text-encre transition-colors hover:bg-blanc-casse"
               >
                 Créer mon premier dossier
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </Link>
               <a
                 href="#contact"
-                className="inline-flex h-11 items-center gap-2 rounded border border-papier/30 px-5 text-sm font-medium text-papier transition-colors hover:bg-papier/10"
+                className="inline-flex h-12 items-center gap-2 rounded-lg border border-papier/30 px-6 text-sm font-medium text-papier transition-colors hover:bg-papier/10"
               >
                 Être recontacté
               </a>
             </div>
+            <p className="mt-5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-papier/70">
+              <CheckCircle2 className="h-4 w-4 text-succes" strokeWidth={1.5} />
+              Aucune carte requise pour commencer
+              <span className="text-papier/30">·</span>
+              vous voyez le contrôle avant de payer
+            </p>
           </div>
         </div>
       </Shell>
