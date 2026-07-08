@@ -203,7 +203,48 @@ export function controlerDossierCeeIsolation(
   // ---------------------------------------------------------------------
   // Performance technique (seuil piloté par la règle métier, selon le geste)
   // ---------------------------------------------------------------------
-  if ((c.geste ?? "isolation") === "pac_air_eau") {
+  const geste = c.geste ?? "isolation";
+  if (geste === "cet") {
+    // Chauffe-eau thermodynamique : coefficient de performance (COP) selon le
+    // profil de soutirage (EN 16147). Seuil par défaut 2,5, surchargeable par
+    // la règle métier (cop_min).
+    const copMin = cond?.cop_min ?? 2.5;
+    const cop = c.cet?.cop;
+    if (cop == null) {
+      add({
+        code: "technique_cop",
+        categorie: "technique",
+        severite: "avertissement",
+        titre: "COP non renseigné",
+        detail: "Le coefficient de performance (COP) est nécessaire pour vérifier l'éligibilité du chauffe-eau thermodynamique.",
+      });
+    } else if (cop < copMin) {
+      add({
+        code: "technique_cop",
+        categorie: "technique",
+        severite: "bloquant",
+        titre: "COP insuffisant",
+        detail: `COP = ${cop}, en dessous du minimum de ${copMin} attendu (profil de soutirage ${c.cet?.profil_soutirage ?? "?"}).`,
+      });
+    } else {
+      add({
+        code: "technique_cop",
+        categorie: "technique",
+        severite: "ok",
+        titre: "COP conforme",
+        detail: `COP = ${cop} >= ${copMin} (profil ${c.cet?.profil_soutirage ?? "?"}).`,
+      });
+    }
+    if (!c.cet?.marque || !c.cet?.reference) {
+      add({
+        code: "technique_produit",
+        categorie: "pieces",
+        severite: "avertissement",
+        titre: "Marque ou référence de l'appareil manquante",
+        detail: "La marque et la référence du chauffe-eau thermodynamique sont obligatoires sur le devis et la facture.",
+      });
+    }
+  } else if (geste === "pac_air_eau") {
     // Pompe à chaleur air/eau : efficacité énergétique saisonnière (ETAS).
     // Seuil selon le régime de température (basse ~126 %, moyenne/haute ~111 %),
     // surchargeable par la règle métier.

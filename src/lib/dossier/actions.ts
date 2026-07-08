@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { TYPES_ISOLATION, TYPES_PAC, ceeIsolationSchema } from "@/lib/dossier/cee-isolation";
+import { TYPES_CET, TYPES_ISOLATION, TYPES_PAC, ceeIsolationSchema } from "@/lib/dossier/cee-isolation";
 
 export type CreateDossierResult =
   | { ok: true; dossierId: string }
@@ -66,36 +66,55 @@ export async function createDossierCeeIsolation(
     })
     .eq("id", artisanId);
 
-  // --- 2. Dossier : mapping de la saisie unique ---
-  const isPac = d.geste === "pac_air_eau";
-  const fiche = isPac ? TYPES_PAC.air_eau.fiche : TYPES_ISOLATION[d.type_isolation!].fiche;
-  const typeTravaux = isPac ? "pac_air_eau" : (d.type_isolation as string);
-
-  const blocTechnique = isPac
-    ? {
-        pac: {
-          type_pac: "air_eau",
-          fiche,
-          etas: d.pac_etas,
-          puissance_kw: d.pac_puissance_kw,
-          temperature: d.pac_temperature,
-          marque: d.pac_marque || null,
-          reference: d.pac_reference || null,
-          regulateur_classe: d.pac_regulateur_classe || null,
-        },
-      }
-    : {
-        travaux: {
-          type_isolation: d.type_isolation,
-          fiche,
-          surface_isolee_m2: d.surface_isolee_m2,
-          isolant_type: d.isolant_type,
-          isolant_marque: d.isolant_marque || null,
-          isolant_reference: d.isolant_reference || null,
-          resistance_thermique_r: d.resistance_thermique_r,
-          epaisseur_mm: d.epaisseur_mm ?? null,
-        },
-      };
+  // --- 2. Dossier : mapping de la saisie unique (par famille de geste) ---
+  let fiche: string;
+  let typeTravaux: string;
+  let blocTechnique: Record<string, unknown>;
+  if (d.geste === "pac_air_eau") {
+    fiche = TYPES_PAC.air_eau.fiche;
+    typeTravaux = "pac_air_eau";
+    blocTechnique = {
+      pac: {
+        type_pac: "air_eau",
+        fiche,
+        etas: d.pac_etas,
+        puissance_kw: d.pac_puissance_kw,
+        temperature: d.pac_temperature,
+        marque: d.pac_marque || null,
+        reference: d.pac_reference || null,
+        regulateur_classe: d.pac_regulateur_classe || null,
+      },
+    };
+  } else if (d.geste === "cet") {
+    fiche = TYPES_CET.accumulation.fiche;
+    typeTravaux = "cet";
+    blocTechnique = {
+      cet: {
+        type_cet: "accumulation",
+        fiche,
+        cop: d.cet_cop,
+        profil_soutirage: d.cet_profil_soutirage,
+        volume_l: d.cet_volume_l,
+        marque: d.cet_marque || null,
+        reference: d.cet_reference || null,
+      },
+    };
+  } else {
+    fiche = TYPES_ISOLATION[d.type_isolation!].fiche;
+    typeTravaux = d.type_isolation as string;
+    blocTechnique = {
+      travaux: {
+        type_isolation: d.type_isolation,
+        fiche,
+        surface_isolee_m2: d.surface_isolee_m2,
+        isolant_type: d.isolant_type,
+        isolant_marque: d.isolant_marque || null,
+        isolant_reference: d.isolant_reference || null,
+        resistance_thermique_r: d.resistance_thermique_r,
+        epaisseur_mm: d.epaisseur_mm ?? null,
+      },
+    };
+  }
 
   const { data: dossier, error: dossierErr } = await supabase
     .from("dossiers")

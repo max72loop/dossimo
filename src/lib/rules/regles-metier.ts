@@ -35,6 +35,7 @@ const conditionSchema = z
   .object({
     r_min: z.number().optional(),
     etas_min: z.number().optional(),
+    cop_min: z.number().optional(),
     tva_taux: z.number().optional(),
     anciennete_min_ans: z.number().optional(),
     prime: primeSchema,

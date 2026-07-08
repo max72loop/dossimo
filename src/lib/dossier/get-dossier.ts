@@ -15,7 +15,7 @@ import type {
 /** Forme typée de `caracteristiques_techniques_json` d'un dossier. */
 export interface CeeIsolationCaracteristiques {
   /** Famille de geste ; absent = isolation (dossiers créés avant le multi-geste). */
-  geste?: "isolation" | "pac_air_eau";
+  geste?: "isolation" | "pac_air_eau" | "cet";
   fiche: string;
   beneficiaire: {
     nom: string;
@@ -55,6 +55,16 @@ export interface CeeIsolationCaracteristiques {
     marque: string | null;
     reference: string | null;
     regulateur_classe: string | null;
+  };
+  /** Bloc technique du chauffe-eau thermodynamique (présent pour la famille cet). */
+  cet?: {
+    type_cet: "accumulation";
+    fiche: string;
+    cop: number;
+    profil_soutirage: "M" | "L" | "XL";
+    volume_l: number;
+    marque: string | null;
+    reference: string | null;
   };
   montants: {
     ht: number;

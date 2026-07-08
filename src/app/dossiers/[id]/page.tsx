@@ -18,8 +18,12 @@ import {
   OCCUPATIONS,
   PRECARITES,
   RESIDENCES,
-  TYPES_ISOLATION,
+  posteLabel,
 } from "@/lib/dossier/cee-isolation";
+import {
+  lignesTechniques,
+  titreSectionTechnique,
+} from "@/lib/dossier/geste-technique";
 import {
   mentionsObligatoires,
   piecesCeeIsolation,
@@ -114,10 +118,7 @@ export default async function DossierPage({
   if (!data) notFound();
 
   const { dossier, artisan, caracteristiques: c, dates } = data;
-  const estIsolation = (c.geste ?? "isolation") === "isolation";
-  const posteLabel = estIsolation
-    ? TYPES_ISOLATION[c.travaux.type_isolation].label
-    : "Pompe à chaleur air/eau";
+  const poste = posteLabel(c);
   const pieces = piecesCeeIsolation(data);
   const mentionsDevis = mentionsObligatoires(data).filter(
     (m) => m.document === "Devis",
@@ -164,7 +165,7 @@ export default async function DossierPage({
             {c.beneficiaire.prenom} {c.beneficiaire.nom}
           </h1>
           <p className="mt-1 text-sm text-ardoise">
-            {posteLabel} · <span className="font-mono text-xs">{c.fiche}</span>{" "}
+            {poste} · <span className="font-mono text-xs">{c.fiche}</span>{" "}
             · {c.beneficiaire.commune}{" "}
             <span className="font-mono text-xs">({c.beneficiaire.code_postal})</span>
           </p>
@@ -457,24 +458,11 @@ export default async function DossierPage({
           <Row label="Surface habitable" value={c.logement.surface_habitable ? `${c.logement.surface_habitable} m²` : "—"} mono />
         </Card>
 
-        <Card title="Travaux">
-          <Row label="Poste" value={`${posteLabel} (${c.fiche})`} />
-          {estIsolation ? (
-            <>
-              <Row label="Surface isolée" value={`${c.travaux.surface_isolee_m2} m²`} mono />
-              <Row label="Isolant" value={c.travaux.isolant_type} />
-              <Row label="Résistance R" value={`${c.travaux.resistance_thermique_r} m²·K/W`} mono />
-              <Row label="Marque / réf." value={[c.travaux.isolant_marque, c.travaux.isolant_reference].filter(Boolean).join(" ") || "—"} />
-            </>
-          ) : (
-            <>
-              <Row label="ETAS" value={c.pac?.etas != null ? `${c.pac.etas} %` : "—"} mono />
-              <Row label="Puissance" value={c.pac?.puissance_kw != null ? `${c.pac.puissance_kw} kW` : "—"} mono />
-              <Row label="Régime" value={c.pac?.temperature === "basse" ? "Basse température" : c.pac?.temperature === "moyenne_haute" ? "Moyenne / haute" : "—"} />
-              <Row label="Marque / réf." value={[c.pac?.marque, c.pac?.reference].filter(Boolean).join(" ") || "—"} />
-              <Row label="Régulateur" value={c.pac?.regulateur_classe || "—"} />
-            </>
-          )}
+        <Card title={titreSectionTechnique(c)}>
+          <Row label="Poste" value={`${poste} (${c.fiche})`} />
+          {lignesTechniques(c).map((l) => (
+            <Row key={l.label} label={l.label} value={l.value} mono={l.mono} />
+          ))}
         </Card>
 
         <Card title="Chronologie">

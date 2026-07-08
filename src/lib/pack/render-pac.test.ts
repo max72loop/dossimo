@@ -87,3 +87,42 @@ describe("rendu du pack — geste PAC air/eau (Phase 1b)", () => {
     expect(buf.length).toBeGreaterThan(1000);
   });
 });
+
+function dossierCet(): DossierComplet {
+  const base = dossierPac();
+  return {
+    ...base,
+    caracteristiques: {
+      ...base.caracteristiques,
+      geste: "cet",
+      fiche: "BAR-TH-148",
+      pac: undefined,
+      cet: {
+        type_cet: "accumulation", fiche: "BAR-TH-148", cop: 3.1,
+        profil_soutirage: "L", volume_l: 200, marque: "Atlantic", reference: "Calypso",
+      },
+    },
+  } as unknown as DossierComplet;
+}
+
+describe("rendu du pack — geste chauffe-eau thermodynamique (BAR-TH-148)", () => {
+  it("récapitulatif : PDF non vide", async () => {
+    expect((await renderRecapPdf(dossierCet())).length).toBeGreaterThan(1000);
+  });
+  it("checklist : PDF non vide", async () => {
+    expect((await renderChecklistPdf(dossierCet())).length).toBeGreaterThan(1000);
+  });
+  it("rapport de contrôle : PDF non vide", async () => {
+    expect((await renderControlePdf(dossierCet())).length).toBeGreaterThan(1000);
+  });
+  it("attestation sur l'honneur CEE : PDF non vide", async () => {
+    const buf = await renderAhCeePdf(dossierCet(), {
+      titre: "Attestation sur l'honneur — CEE CET",
+      arrete: "annexe 7-1",
+      version: "2026-04 (P6)",
+      variant: "p6",
+      ficheRef: "BAR-TH-148",
+    });
+    expect(buf.length).toBeGreaterThan(1000);
+  });
+});

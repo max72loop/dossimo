@@ -204,3 +204,68 @@ describe("controlerDossierCeeIsolation — PAC air/eau (BAR-TH-171)", () => {
     expect(cs.some((c) => c.startsWith("technique_resistance"))).toBe(false);
   });
 });
+
+/** Règle CEE chauffe-eau thermodynamique (forfait, sans cop_min figé). */
+function regleCet(over: Partial<RegleMetierResolue["condition"]> = {}): RegleMetierResolue {
+  return {
+    version: 1,
+    versionFormulaire: "BAR-TH-148",
+    pieces: [],
+    mentions: [],
+    condition: {
+      tva_taux: 0.055,
+      anciennete_min_ans: 2,
+      prime: { forfait: { grande_precarite: 1200, precaire: 900, classique: 600 } },
+      ...over,
+    },
+  };
+}
+
+function dossierCet(over: { cet?: Record<string, unknown>; regle?: RegleMetierResolue | null } = {}): DossierComplet {
+  const base = dossier();
+  return {
+    ...base,
+    caracteristiques: {
+      ...base.caracteristiques,
+      geste: "cet",
+      fiche: "BAR-TH-148",
+      cet: {
+        type_cet: "accumulation", fiche: "BAR-TH-148", cop: 3.0,
+        profil_soutirage: "L", volume_l: 200, marque: "Atlantic", reference: "Calypso",
+        ...over.cet,
+      },
+    },
+    regle: over.regle === undefined ? regleCet() : over.regle,
+  } as unknown as DossierComplet;
+}
+
+const codesCet = (d: DossierComplet) =>
+  controlerDossierCeeIsolation(d, AUJ).findings.map((f) => `${f.code}:${f.severite}`);
+
+describe("controlerDossierCeeIsolation — chauffe-eau thermodynamique (BAR-TH-148)", () => {
+  it("CET de référence : conforme, COP ok", () => {
+    const r = controlerDossierCeeIsolation(dossierCet(), AUJ);
+    expect(r.conforme).toBe(true);
+    expect(codesCet(dossierCet())).toContain("technique_cop:ok");
+  });
+
+  it("COP insuffisant (< 2,5) : bloquant", () => {
+    const r = controlerDossierCeeIsolation(dossierCet({ cet: { cop: 2.2 } }), AUJ);
+    expect(r.conforme).toBe(false);
+    expect(codesCet(dossierCet({ cet: { cop: 2.2 } }))).toContain("technique_cop:bloquant");
+  });
+
+  it("cop_min de la règle surcharge le défaut : 3,2 requis => 3,0 bloqué", () => {
+    const r = controlerDossierCeeIsolation(
+      dossierCet({ cet: { cop: 3.0 }, regle: regleCet({ cop_min: 3.2 }) }),
+      AUJ,
+    );
+    expect(r.conforme).toBe(false);
+  });
+
+  it("ne déclenche aucun contrôle d'isolation (R) ni ETAS sur un CET", () => {
+    const cs = codesCet(dossierCet());
+    expect(cs.some((c) => c.startsWith("technique_resistance"))).toBe(false);
+    expect(cs.some((c) => c.startsWith("technique_etas"))).toBe(false);
+  });
+});

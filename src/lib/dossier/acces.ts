@@ -69,7 +69,7 @@ export async function verrouLivrable(
  * Un geste hors de cette liste reste contrôlé et estimé, mais ne produit pas
  * encore de PDF : la route renvoie 422 plutôt qu'un document incohérent.
  */
-const GESTES_DOCUMENTES = new Set(["isolation", "pac_air_eau"]);
+const GESTES_DOCUMENTES = new Set(["isolation", "pac_air_eau", "cet"]);
 
 /**
  * Garde de génération documentaire par geste. Renvoie une réponse 422 pour un

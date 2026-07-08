@@ -45,16 +45,35 @@ export const TYPES_PAC = {
 } as const;
 export type TypePac = keyof typeof TYPES_PAC;
 
+export const TYPES_CET = {
+  accumulation: {
+    label: "Chauffe-eau thermodynamique",
+    fiche: "BAR-TH-148",
+  },
+} as const;
+export type TypeCet = keyof typeof TYPES_CET;
+
+/** Profils de soutirage (norme EN 16147) — conditionnent le COP minimal. */
+export const SOUTIRAGE_PROFILS = {
+  M: "Profil M",
+  L: "Profil L",
+  XL: "Profil XL",
+} as const;
+export type SoutirageProfil = keyof typeof SOUTIRAGE_PROFILS;
+
 /** Familles de gestes couvertes. Chaque dossier appartient à une famille. */
 export const FAMILLES = {
   isolation: "Isolation",
   pac_air_eau: "Pompe à chaleur air/eau",
+  cet: "Chauffe-eau thermodynamique",
 } as const;
 export type Famille = keyof typeof FAMILLES;
 
-/** type_travaux -> famille de geste (isolation ou chauffage). */
+/** type_travaux -> famille de geste. */
 export function familleDeGeste(typeTravaux: string): Famille {
-  return typeTravaux === "pac_air_eau" ? "pac_air_eau" : "isolation";
+  if (typeTravaux === "pac_air_eau") return "pac_air_eau";
+  if (typeTravaux === "cet") return "cet";
+  return "isolation";
 }
 
 /**
@@ -66,10 +85,11 @@ export function posteLabel(c: {
   geste?: string;
   travaux?: { type_isolation?: TypeIsolation };
   pac?: { type_pac?: TypePac };
+  cet?: { type_cet?: TypeCet };
 }): string {
-  if ((c.geste ?? "isolation") === "pac_air_eau") {
-    return TYPES_PAC[c.pac?.type_pac ?? "air_eau"].label;
-  }
+  const geste = c.geste ?? "isolation";
+  if (geste === "pac_air_eau") return TYPES_PAC[c.pac?.type_pac ?? "air_eau"].label;
+  if (geste === "cet") return TYPES_CET[c.cet?.type_cet ?? "accumulation"].label;
   const ti = c.travaux?.type_isolation;
   return ti ? TYPES_ISOLATION[ti].label : "Travaux";
 }
@@ -134,7 +154,7 @@ export const ceeIsolationSchema = z.object({
   dispositif: z.enum(["cee", "maprimerenov"]).default("cee"),
 
   // --- Famille de geste (isolation ou chauffage) ---
-  geste: z.enum(["isolation", "pac_air_eau"]).default("isolation"),
+  geste: z.enum(["isolation", "pac_air_eau", "cet"]).default("isolation"),
 
   // --- Entreprise (artisan RGE) ---
   entreprise: z.string().min(1, requis),
@@ -207,6 +227,13 @@ export const ceeIsolationSchema = z.object({
   pac_reference: z.string().optional().default(""),
   pac_regulateur_classe: z.string().optional().default(""),
 
+  // --- Travaux : chauffe-eau thermodynamique (requis si geste = cet) ---
+  cet_cop: nombreOptionnel,
+  cet_profil_soutirage: z.enum(["M", "L", "XL"]).optional(),
+  cet_volume_l: nombreOptionnel,
+  cet_marque: z.string().optional().default(""),
+  cet_reference: z.string().optional().default(""),
+
   // --- Chronologie (dates_json) — clé du contrôle anti-refus ---
   date_visite_technique: dateISOOptionnelle,
   date_devis: dateISO,
@@ -232,6 +259,11 @@ export const ceeIsolationSchema = z.object({
     requisSi("pac_puissance_kw", v.pac_puissance_kw, "Puissance requise (kW)");
     requisSi("pac_temperature", v.pac_temperature);
     requisSi("pac_marque", v.pac_marque);
+  } else if (v.geste === "cet") {
+    requisSi("cet_cop", v.cet_cop, "COP requis");
+    requisSi("cet_profil_soutirage", v.cet_profil_soutirage);
+    requisSi("cet_volume_l", v.cet_volume_l, "Volume requis (L)");
+    requisSi("cet_marque", v.cet_marque);
   } else {
     requisSi("type_isolation", v.type_isolation);
     requisSi("surface_isolee_m2", v.surface_isolee_m2, "Surface requise");
@@ -283,6 +315,11 @@ export const ceeIsolationDefaults: CeeIsolationInput = {
   pac_marque: "",
   pac_reference: "",
   pac_regulateur_classe: "",
+  cet_cop: "",
+  cet_profil_soutirage: undefined as unknown as "M" | "L" | "XL",
+  cet_volume_l: "",
+  cet_marque: "",
+  cet_reference: "",
   date_visite_technique: "",
   date_devis: "",
   date_debut_travaux: "",

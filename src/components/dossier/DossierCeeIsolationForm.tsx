@@ -51,6 +51,7 @@ const ETAPES: { titre: string; champs: Champ[] }[] = [
       "isolant_marque", "isolant_reference", "epaisseur_mm",
       "pac_etas", "pac_puissance_kw", "pac_temperature", "pac_marque",
       "pac_reference", "pac_regulateur_classe",
+      "cet_cop", "cet_profil_soutirage", "cet_volume_l", "cet_marque", "cet_reference",
     ],
   },
   {
@@ -91,6 +92,7 @@ export function DossierCeeIsolationForm({
   const dispositif = watch("dispositif");
   const geste = watch("geste");
   const estPac = geste === "pac_air_eau";
+  const estCet = geste === "cet";
 
   async function suivant() {
     const ok = await trigger(ETAPES[etape].champs);
@@ -199,7 +201,7 @@ export function DossierCeeIsolationForm({
             <SelectField
               label="Type de geste"
               required
-              options={{ isolation: "Isolation", pac_air_eau: "Pompe à chaleur air/eau" }}
+              options={{ isolation: "Isolation", pac_air_eau: "Pompe à chaleur air/eau", cet: "Chauffe-eau thermodynamique" }}
               hint="Détermine les caractéristiques techniques demandées."
               error={errors.geste}
               register={register("geste")}
@@ -272,7 +274,27 @@ export function DossierCeeIsolationForm({
           </Section>
         )}
 
-        {etape === 4 && !estPac && (
+        {etape === 4 && estCet && (
+          <Section
+            title="Chauffe-eau thermodynamique"
+            description="Caractéristiques techniques du CET (fiche BAR-TH-148)."
+          >
+            <SelectField
+              label="Profil de soutirage"
+              required
+              options={{ M: "Profil M", L: "Profil L", XL: "Profil XL" }}
+              hint="Profil de puisage normalisé (EN 16147)."
+              error={errors.cet_profil_soutirage}
+              register={register("cet_profil_soutirage")}
+            />
+            <TextField label="COP" required type="number" step="0.01" inputMode="decimal" hint="Coefficient de performance (EN 16147). Minimum indicatif : ≥ 2,5." error={errors.cet_cop} register={register("cet_cop")} />
+            <TextField label="Volume du ballon (L)" required type="number" step="1" inputMode="numeric" error={errors.cet_volume_l} register={register("cet_volume_l")} />
+            <TextField label="Marque" required error={errors.cet_marque} register={register("cet_marque")} />
+            <TextField label="Référence / modèle" error={errors.cet_reference} register={register("cet_reference")} />
+          </Section>
+        )}
+
+        {etape === 4 && !estPac && !estCet && (
           <Section
             title="Travaux d'isolation"
             description="Caractéristiques techniques du poste isolé."

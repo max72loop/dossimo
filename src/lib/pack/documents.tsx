@@ -4,11 +4,14 @@ import type { DossierComplet } from "@/lib/dossier/get-dossier";
 import {
   LOGEMENT_TYPES,
   OCCUPATIONS,
-  PAC_TEMPERATURES,
   PRECARITES,
   RESIDENCES,
   posteLabel,
 } from "@/lib/dossier/cee-isolation";
+import {
+  lignesTechniques,
+  titreSectionTechnique,
+} from "@/lib/dossier/geste-technique";
 import { dateFr, euro } from "@/lib/pack/format";
 import {
   mentionsObligatoires,
@@ -76,7 +79,6 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 export function RecapDocument({ data }: { data: DossierComplet }) {
   const { caracteristiques: c, dates, artisan } = data;
   const poste = posteLabel(c);
-  const estPac = (c.geste ?? "isolation") === "pac_air_eau";
 
   return (
     <Document
@@ -120,25 +122,12 @@ export function RecapDocument({ data }: { data: DossierComplet }) {
           </View>
         </View>
 
-        {estPac && c.pac ? (
-          <Section title="Pompe à chaleur air/eau">
-            <Row label="Poste" value={`${poste} (${c.fiche})`} />
-            <Row label="Efficacité énergétique saisonnière (ETAS)" value={`${c.pac.etas} %`} />
-            <Row label="Régime de température" value={PAC_TEMPERATURES[c.pac.temperature]} />
-            <Row label="Puissance thermique" value={`${c.pac.puissance_kw} kW`} />
-            <Row label="Marque / référence" value={[c.pac.marque, c.pac.reference].filter(Boolean).join(" ") || "—"} />
-            <Row label="Classe du régulateur" value={c.pac.regulateur_classe || "—"} />
-          </Section>
-        ) : (
-          <Section title="Travaux d'isolation">
-            <Row label="Poste" value={`${poste} (${c.fiche})`} />
-            <Row label="Surface isolée" value={`${c.travaux.surface_isolee_m2} m²`} />
-            <Row label="Isolant" value={c.travaux.isolant_type} />
-            <Row label="Résistance thermique R" value={`${c.travaux.resistance_thermique_r} m²·K/W`} />
-            <Row label="Marque / référence" value={[c.travaux.isolant_marque, c.travaux.isolant_reference].filter(Boolean).join(" ") || "—"} />
-            <Row label="Épaisseur" value={c.travaux.epaisseur_mm ? `${c.travaux.epaisseur_mm} mm` : "—"} />
-          </Section>
-        )}
+        <Section title={titreSectionTechnique(c)}>
+          <Row label="Poste" value={`${poste} (${c.fiche})`} />
+          {lignesTechniques(c).map((l) => (
+            <Row key={l.label} label={l.label} value={l.value} />
+          ))}
+        </Section>
 
         <View style={styles.twoCol}>
           <View style={styles.col}>
