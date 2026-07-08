@@ -1,21 +1,21 @@
-feat(llm): vigilance IA enrichie (ecarts pieces reelles + motifs de refus + pieces requises)
+feat(llm): persistance des points de vigilance + modele rapide (latence)
 
-La brique de points de vigilance ne voyait ni les pieces reelles ni les pieces
-requises, et son prompt manquait d'ancrage metier. On l'enrichit :
+Deux ameliorations complementaires de l'analyse assistee :
 
-- Contexte : ajout des ecarts piece<->saisie (Chantier 1) comme signal anti-refus
-  prioritaire, de la liste des pieces requises et des mentions obligatoires
-  devis/facture. buildContext devient async (getDossierPieces auth-scope).
-- Prompt : ancrage sur les 10 principaux motifs de refus CEE isolation (coherence
-  inter-pieces, role actif et incitatif, RGE, mentions obligatoires, ACERMI,
-  anciennete, chronologie, AH signee, double valorisation, pieces manquantes) ;
-  consigne de citer les valeurs en ecart ; 3 a 7 points tries par criticite.
+1) Persistance. Les points generes sont stockes sur le dossier (colonnes
+   vigilance_json / vigilance_at, migration 0003) : affichage instantane a chaque
+   visite, inclusion dans le rapport PDF, sans re-payer l'appel LLM. Bouton
+   "Regenerer" pour rafraichir a la demande ; horodatage affiche.
+   - actions.genererPointsVigilance persiste apres generation (best-effort : ne
+     casse pas si la migration n'est pas encore appliquee).
+   - storedVigilance() relit et valide les points persistes (zod).
+   - la page passe les points persistes au composant (initial + initialAt).
+   - la route rapport.pdf lit les points persistes au lieu de re-generer (evitait
+     d'ajouter ~un appel LLM lent au telechargement du rapport).
 
-Valide en reel : sur un dossier avec devis divergent (surface 80!=95, TTC
-4431!=4620), le LLM remonte les 2 ecarts en "important" avec les valeurs exactes,
-plus le role actif/incitatif manquant et les pieces non televersees.
-
-- maxDuration=60 sur la page dossier : le contexte enrichi + LLM depasse le
-  timeout de fonction par defaut de Vercel.
+2) Modele rapide. La vigilance utilise google/gemini-2.5-flash par defaut
+   (surchargeable via OPENROUTER_VIGILANCE_MODEL) : ~0,5 s de latence reseau
+   contre le throughput lent du gros modele texte sur un contexte enrichi.
+   openRouterChat accepte desormais un parametre `model` ponctuel.
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>

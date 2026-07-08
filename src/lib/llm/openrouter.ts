@@ -55,11 +55,13 @@ export async function openRouterChat(params: {
   jsonMode?: boolean;
   temperature?: number;
   maxTokens?: number;
+  /** Surcharge ponctuelle du modèle (ex. modèle rapide pour la vigilance). */
+  model?: string;
   signal?: AbortSignal;
 }): Promise<string> {
   return postChat(
     {
-      model: process.env.OPENROUTER_MODEL || DEFAULT_MODEL,
+      model: params.model || process.env.OPENROUTER_MODEL || DEFAULT_MODEL,
       messages: params.messages,
       temperature: params.temperature ?? 0.3,
       max_tokens: params.maxTokens ?? 1200,

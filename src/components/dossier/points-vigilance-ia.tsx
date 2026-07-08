@@ -8,9 +8,22 @@ import type { PointVigilance, VigilanceResult } from "@/lib/llm/vigilance";
 type Etat =
   | { statut: "idle" }
   | { statut: "loading" }
-  | { statut: "done"; points: PointVigilance[] }
+  | { statut: "done"; points: PointVigilance[]; genereLe: string | null }
   | { statut: "non-configure" }
   | { statut: "erreur"; message: string };
+
+function formatHorodatage(iso: string | null): string | null {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toLocaleDateString("fr-FR", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
 
 const SEVERITE_STYLE: Record<PointVigilance["severite"], string> = {
   important: "border-erreur/30 bg-erreur-bg text-erreur",
@@ -24,8 +37,20 @@ const SEVERITE_LABEL: Record<PointVigilance["severite"], string> = {
   info: "Info",
 };
 
-export function PointsVigilanceIA({ dossierId }: { dossierId: string }) {
-  const [etat, setEtat] = useState<Etat>({ statut: "idle" });
+export function PointsVigilanceIA({
+  dossierId,
+  initial,
+  initialAt,
+}: {
+  dossierId: string;
+  initial?: PointVigilance[];
+  initialAt?: string | null;
+}) {
+  const [etat, setEtat] = useState<Etat>(
+    initial && initial.length > 0
+      ? { statut: "done", points: initial, genereLe: initialAt ?? null }
+      : { statut: "idle" },
+  );
 
   async function lancer() {
     setEtat({ statut: "loading" });
@@ -36,7 +61,12 @@ export function PointsVigilanceIA({ dossierId }: { dossierId: string }) {
       setEtat({ statut: "erreur", message: "Une erreur est survenue. Réessayez." });
       return;
     }
-    if (res.ok) setEtat({ statut: "done", points: res.points });
+    if (res.ok)
+      setEtat({
+        statut: "done",
+        points: res.points,
+        genereLe: res.generatedAt ?? new Date().toISOString(),
+      });
     else if (res.reason === "non-configure") setEtat({ statut: "non-configure" });
     else setEtat({ statut: "erreur", message: res.message ?? "Analyse indisponible." });
   }
@@ -61,7 +91,7 @@ export function PointsVigilanceIA({ dossierId }: { dossierId: string }) {
           {etat.statut === "loading"
             ? "Analyse…"
             : etat.statut === "done"
-              ? "Relancer l'analyse"
+              ? "Régénérer l'analyse"
               : "Générer les points"}
         </button>
       </div>
@@ -116,8 +146,11 @@ export function PointsVigilanceIA({ dossierId }: { dossierId: string }) {
             </ul>
           )}
           <p className="mt-4 text-[11px] text-encre-claire">
-            Généré automatiquement — à relire. Ne remplace pas le contrôle de
-            conformité ni la décision de l&apos;instructeur.
+            {formatHorodatage(etat.genereLe)
+              ? `Généré le ${formatHorodatage(etat.genereLe)} — `
+              : "Généré automatiquement — "}
+            à relire. Inclus dans le rapport de contrôle. Ne remplace pas le
+            contrôle de conformité ni la décision de l&apos;instructeur.
           </p>
         </>
       )}

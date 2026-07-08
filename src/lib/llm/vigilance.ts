@@ -36,8 +36,26 @@ const outputSchema = z.object({ points: z.array(pointSchema) });
 export type PointVigilance = z.infer<typeof pointSchema>;
 
 export type VigilanceResult =
-  | { ok: true; points: PointVigilance[] }
+  | { ok: true; points: PointVigilance[]; generatedAt?: string }
   | { ok: false; reason: "non-configure" | "erreur"; message?: string };
+
+/**
+ * Modèle dédié à la vigilance : rapide et peu coûteux (le contexte enrichi rend
+ * le gros modèle texte trop lent pour une action synchrone). Surchargeable.
+ */
+const VIGILANCE_MODEL =
+  process.env.OPENROUTER_VIGILANCE_MODEL || "google/gemini-2.5-flash";
+
+/** Relit les points de vigilance persistés sur le dossier (jsonb), validés. */
+export function storedVigilance(
+  data: DossierComplet,
+): { points: PointVigilance[]; at: string | null } | null {
+  const raw = data.dossier.vigilance_json;
+  if (raw == null) return null;
+  const parsed = z.array(pointSchema).safeParse(raw);
+  if (!parsed.success) return null;
+  return { points: parsed.data, at: data.dossier.vigilance_at ?? null };
+}
 
 const SYSTEM_PROMPT = `Tu es un conseiller technique spécialisé dans la conformité des dossiers CEE (fiches BAR-EN, isolation) et MaPrimeRénov' pour des artisans RGE indépendants en France.
 
@@ -166,6 +184,7 @@ export async function generateVigilancePoints(
       jsonMode: true,
       temperature: 0.3,
       maxTokens: 1800,
+      model: VIGILANCE_MODEL,
     });
 
     const parsed = outputSchema.safeParse(extractJson(raw));

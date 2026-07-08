@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { getDossier } from "@/lib/dossier/get-dossier";
 import { getDossierPieces } from "@/lib/piece/get";
 import { resolveCerfaTemplate } from "@/lib/cerfa/registry";
+import { storedVigilance } from "@/lib/llm/vigilance";
 import { PointsVigilanceIA } from "@/components/dossier/points-vigilance-ia";
 import { PiecesJustificatives } from "@/components/dossier/pieces-justificatives";
 import { AhObligeFill } from "@/components/dossier/ah-oblige-fill";
@@ -125,6 +126,9 @@ export default async function DossierPage({
   // Pièces réelles uploadées + écarts avec la saisie.
   const piecesReelles = await getDossierPieces(data);
 
+  // Points de vigilance déjà générés (persistés) : affichage instantané.
+  const vigilance = storedVigilance(data);
+
   return (
     <main className="mx-auto max-w-4xl px-8 py-10">
       <Link
@@ -191,8 +195,12 @@ export default async function DossierPage({
       {/* Pièces réelles (devis/facture) : cohérence avec la saisie */}
       <PiecesJustificatives dossierId={id} initial={piecesReelles} />
 
-      {/* Points de vigilance rédigés (LLM, à la demande) */}
-      <PointsVigilanceIA dossierId={id} />
+      {/* Points de vigilance rédigés (LLM, à la demande, persistés) */}
+      <PointsVigilanceIA
+        dossierId={id}
+        initial={vigilance?.points}
+        initialAt={vigilance?.at}
+      />
 
       {/* Pack documentaire */}
       <div className="mt-6 mb-6 rounded border border-filigrane bg-papier-fonce p-5">

@@ -74,6 +74,8 @@ export interface Database {
           formule: string | null;
           created_at: string;
           delivered_at: string | null;
+          vigilance_json: Json | null;
+          vigilance_at: string | null;
         };
         Insert: {
           id?: string;
@@ -91,6 +93,8 @@ export interface Database {
           formule?: string | null;
           created_at?: string;
           delivered_at?: string | null;
+          vigilance_json?: Json | null;
+          vigilance_at?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["dossiers"]["Insert"]>;
         Relationships: [
