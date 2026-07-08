@@ -61,6 +61,7 @@ export const styles = StyleSheet.create({
     backgroundColor: COLORS.accent,
     marginBottom: 20,
   },
+  logo: { width: 82, height: 27, objectFit: "contain", alignSelf: "flex-start", marginBottom: 12 },
   eyebrow: {
     fontSize: 8,
     fontFamily: "Helvetica-Bold",

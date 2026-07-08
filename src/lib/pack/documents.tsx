@@ -1,6 +1,7 @@
-import { Document, Page, Text, View } from "@react-pdf/renderer";
+import { Document, Image, Page, Text, View } from "@react-pdf/renderer";
 
 import type { DossierComplet } from "@/lib/dossier/get-dossier";
+import { logoNuit } from "@/lib/pack/logo";
 import {
   LOGEMENT_TYPES,
   OCCUPATIONS,
@@ -65,6 +66,7 @@ function Header({
     <>
       <View style={styles.headerBand}>
         <View style={{ flex: 1, paddingRight: 12 }}>
+          <Image src={logoNuit()} style={styles.logo} />
           <Text style={styles.eyebrow}>{eyebrow}</Text>
           <Text style={styles.bandTitle}>{title}</Text>
           {subtitle ? <Text style={styles.bandSubtitle}>{subtitle}</Text> : null}
