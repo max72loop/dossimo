@@ -36,6 +36,7 @@ const conditionSchema = z
     r_min: z.number().optional(),
     etas_min: z.number().optional(),
     cop_min: z.number().optional(),
+    rendement_min: z.number().optional(),
     tva_taux: z.number().optional(),
     anciennete_min_ans: z.number().optional(),
     prime: primeSchema,

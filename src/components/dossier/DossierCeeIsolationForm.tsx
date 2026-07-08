@@ -52,6 +52,7 @@ const ETAPES: { titre: string; champs: Champ[] }[] = [
       "pac_etas", "pac_puissance_kw", "pac_temperature", "pac_marque",
       "pac_reference", "pac_regulateur_classe",
       "cet_cop", "cet_profil_soutirage", "cet_volume_l", "cet_marque", "cet_reference",
+      "bois_combustible", "bois_rendement", "bois_emissions_co", "bois_marque", "bois_reference",
     ],
   },
   {
@@ -93,6 +94,7 @@ export function DossierCeeIsolationForm({
   const geste = watch("geste");
   const estPac = geste === "pac_air_eau";
   const estCet = geste === "cet";
+  const estBois = geste === "bois";
 
   async function suivant() {
     const ok = await trigger(ETAPES[etape].champs);
@@ -201,7 +203,7 @@ export function DossierCeeIsolationForm({
             <SelectField
               label="Type de geste"
               required
-              options={{ isolation: "Isolation", pac_air_eau: "Pompe à chaleur air/eau", cet: "Chauffe-eau thermodynamique" }}
+              options={{ isolation: "Isolation", pac_air_eau: "Pompe à chaleur air/eau", cet: "Chauffe-eau thermodynamique", bois: "Appareil de chauffage au bois" }}
               hint="Détermine les caractéristiques techniques demandées."
               error={errors.geste}
               register={register("geste")}
@@ -294,7 +296,27 @@ export function DossierCeeIsolationForm({
           </Section>
         )}
 
-        {etape === 4 && !estPac && !estCet && (
+        {etape === 4 && estBois && (
+          <Section
+            title="Appareil de chauffage au bois"
+            description="Caractéristiques techniques de l'appareil (fiche BAR-TH-112)."
+          >
+            <SelectField
+              label="Combustible"
+              required
+              options={{ granules: "Granulés (pellets)", buches: "Bûches" }}
+              hint="Conditionne le rendement minimal (granulés ≈ 80 %, bûches ≈ 75 %)."
+              error={errors.bois_combustible}
+              register={register("bois_combustible")}
+            />
+            <TextField label="Rendement énergétique (%)" required type="number" step="0.1" inputMode="decimal" hint="Rendement de l'appareil (label Flamme Verte)." error={errors.bois_rendement} register={register("bois_rendement")} />
+            <TextField label="Émissions de CO (mg/Nm³)" type="number" step="1" inputMode="numeric" hint="À 13 % d'O₂. Facultatif mais recommandé sur le devis." error={errors.bois_emissions_co} register={register("bois_emissions_co")} />
+            <TextField label="Marque" required error={errors.bois_marque} register={register("bois_marque")} />
+            <TextField label="Référence / modèle" error={errors.bois_reference} register={register("bois_reference")} />
+          </Section>
+        )}
+
+        {etape === 4 && !estPac && !estCet && !estBois && (
           <Section
             title="Travaux d'isolation"
             description="Caractéristiques techniques du poste isolé."

@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { TYPES_CET, TYPES_ISOLATION, TYPES_PAC, ceeIsolationSchema } from "@/lib/dossier/cee-isolation";
+import { TYPES_BOIS, TYPES_CET, TYPES_ISOLATION, TYPES_PAC, ceeIsolationSchema } from "@/lib/dossier/cee-isolation";
 
 export type CreateDossierResult =
   | { ok: true; dossierId: string }
@@ -97,6 +97,20 @@ export async function createDossierCeeIsolation(
         volume_l: d.cet_volume_l,
         marque: d.cet_marque || null,
         reference: d.cet_reference || null,
+      },
+    };
+  } else if (d.geste === "bois") {
+    fiche = TYPES_BOIS.appareil.fiche;
+    typeTravaux = "bois";
+    blocTechnique = {
+      bois: {
+        type_bois: "appareil",
+        fiche,
+        combustible: d.bois_combustible,
+        rendement: d.bois_rendement,
+        emissions_co: d.bois_emissions_co ?? null,
+        marque: d.bois_marque || null,
+        reference: d.bois_reference || null,
       },
     };
   } else {

@@ -139,7 +139,9 @@ export function AttestationHonneurDocument({
       ? "ETAS, puissance, régime de température, marque et référence de l'appareil, classe du régulateur"
       : geste === "cet"
         ? "COP, profil de soutirage, volume, marque et référence de l'appareil"
-        : "surface, résistance thermique, marque et référence de l'isolant";
+        : geste === "bois"
+          ? "combustible, rendement énergétique, marque et référence de l'appareil"
+          : "surface, résistance thermique, marque et référence de l'isolant";
 
   return (
     <Document>

@@ -1,4 +1,5 @@
 import {
+  BOIS_COMBUSTIBLES,
   PAC_TEMPERATURES,
   SOUTIRAGE_PROFILS,
   posteLabel,
@@ -48,6 +49,15 @@ export function lignesTechniques(
     ];
   }
 
+  if (geste === "bois" && c.bois) {
+    return [
+      { label: "Combustible", value: BOIS_COMBUSTIBLES[c.bois.combustible] },
+      { label: "Rendement énergétique", value: `${c.bois.rendement} %`, mono: true },
+      { label: "Émissions CO", value: c.bois.emissions_co != null ? `${c.bois.emissions_co} mg/Nm³` : "—", mono: true },
+      { label: "Marque / référence", value: ou(c.bois.marque, c.bois.reference) },
+    ];
+  }
+
   // Isolation (défaut, y compris dossiers antérieurs au multi-geste).
   const t = c.travaux;
   return [
@@ -64,6 +74,7 @@ export function titreSectionTechnique(c: CeeIsolationCaracteristiques): string {
   const geste = c.geste ?? "isolation";
   if (geste === "pac_air_eau") return "Pompe à chaleur air/eau";
   if (geste === "cet") return "Chauffe-eau thermodynamique";
+  if (geste === "bois") return "Appareil de chauffage au bois";
   return "Travaux d'isolation";
 }
 

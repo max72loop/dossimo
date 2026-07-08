@@ -53,6 +53,21 @@ export const TYPES_CET = {
 } as const;
 export type TypeCet = keyof typeof TYPES_CET;
 
+export const TYPES_BOIS = {
+  appareil: {
+    label: "Appareil de chauffage au bois",
+    fiche: "BAR-TH-112",
+  },
+} as const;
+export type TypeBois = keyof typeof TYPES_BOIS;
+
+/** Combustible bois — conditionne le rendement minimal (granulés vs bûches). */
+export const BOIS_COMBUSTIBLES = {
+  granules: "Granulés (pellets)",
+  buches: "Bûches",
+} as const;
+export type BoisCombustible = keyof typeof BOIS_COMBUSTIBLES;
+
 /** Profils de soutirage (norme EN 16147) — conditionnent le COP minimal. */
 export const SOUTIRAGE_PROFILS = {
   M: "Profil M",
@@ -66,6 +81,7 @@ export const FAMILLES = {
   isolation: "Isolation",
   pac_air_eau: "Pompe à chaleur air/eau",
   cet: "Chauffe-eau thermodynamique",
+  bois: "Appareil de chauffage au bois",
 } as const;
 export type Famille = keyof typeof FAMILLES;
 
@@ -73,6 +89,7 @@ export type Famille = keyof typeof FAMILLES;
 export function familleDeGeste(typeTravaux: string): Famille {
   if (typeTravaux === "pac_air_eau") return "pac_air_eau";
   if (typeTravaux === "cet") return "cet";
+  if (typeTravaux === "bois") return "bois";
   return "isolation";
 }
 
@@ -86,10 +103,12 @@ export function posteLabel(c: {
   travaux?: { type_isolation?: TypeIsolation };
   pac?: { type_pac?: TypePac };
   cet?: { type_cet?: TypeCet };
+  bois?: { type_bois?: TypeBois };
 }): string {
   const geste = c.geste ?? "isolation";
   if (geste === "pac_air_eau") return TYPES_PAC[c.pac?.type_pac ?? "air_eau"].label;
   if (geste === "cet") return TYPES_CET[c.cet?.type_cet ?? "accumulation"].label;
+  if (geste === "bois") return TYPES_BOIS[c.bois?.type_bois ?? "appareil"].label;
   const ti = c.travaux?.type_isolation;
   return ti ? TYPES_ISOLATION[ti].label : "Travaux";
 }
@@ -154,7 +173,7 @@ export const ceeIsolationSchema = z.object({
   dispositif: z.enum(["cee", "maprimerenov"]).default("cee"),
 
   // --- Famille de geste (isolation ou chauffage) ---
-  geste: z.enum(["isolation", "pac_air_eau", "cet"]).default("isolation"),
+  geste: z.enum(["isolation", "pac_air_eau", "cet", "bois"]).default("isolation"),
 
   // --- Entreprise (artisan RGE) ---
   entreprise: z.string().min(1, requis),
@@ -234,6 +253,13 @@ export const ceeIsolationSchema = z.object({
   cet_marque: z.string().optional().default(""),
   cet_reference: z.string().optional().default(""),
 
+  // --- Travaux : appareil de chauffage au bois (requis si geste = bois) ---
+  bois_combustible: z.enum(["granules", "buches"]).optional(),
+  bois_rendement: nombreOptionnel,
+  bois_emissions_co: nombreOptionnel,
+  bois_marque: z.string().optional().default(""),
+  bois_reference: z.string().optional().default(""),
+
   // --- Chronologie (dates_json) — clé du contrôle anti-refus ---
   date_visite_technique: dateISOOptionnelle,
   date_devis: dateISO,
@@ -264,6 +290,10 @@ export const ceeIsolationSchema = z.object({
     requisSi("cet_profil_soutirage", v.cet_profil_soutirage);
     requisSi("cet_volume_l", v.cet_volume_l, "Volume requis (L)");
     requisSi("cet_marque", v.cet_marque);
+  } else if (v.geste === "bois") {
+    requisSi("bois_combustible", v.bois_combustible);
+    requisSi("bois_rendement", v.bois_rendement, "Rendement requis (%)");
+    requisSi("bois_marque", v.bois_marque);
   } else {
     requisSi("type_isolation", v.type_isolation);
     requisSi("surface_isolee_m2", v.surface_isolee_m2, "Surface requise");
@@ -320,6 +350,11 @@ export const ceeIsolationDefaults: CeeIsolationInput = {
   cet_volume_l: "",
   cet_marque: "",
   cet_reference: "",
+  bois_combustible: undefined as unknown as "granules" | "buches",
+  bois_rendement: "",
+  bois_emissions_co: "",
+  bois_marque: "",
+  bois_reference: "",
   date_visite_technique: "",
   date_devis: "",
   date_debut_travaux: "",

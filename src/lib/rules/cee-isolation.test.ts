@@ -269,3 +269,79 @@ describe("controlerDossierCeeIsolation — chauffe-eau thermodynamique (BAR-TH-1
     expect(cs.some((c) => c.startsWith("technique_etas"))).toBe(false);
   });
 });
+
+/** Règle CEE appareil de chauffage au bois (forfait, sans rendement_min figé). */
+function regleBois(over: Partial<RegleMetierResolue["condition"]> = {}): RegleMetierResolue {
+  return {
+    version: 1,
+    versionFormulaire: "BAR-TH-112",
+    pieces: [],
+    mentions: [],
+    condition: {
+      tva_taux: 0.055,
+      anciennete_min_ans: 2,
+      prime: { forfait: { grande_precarite: 900, precaire: 700, classique: 500 } },
+      ...over,
+    },
+  };
+}
+
+function dossierBois(over: { bois?: Record<string, unknown>; regle?: RegleMetierResolue | null } = {}): DossierComplet {
+  const base = dossier();
+  return {
+    ...base,
+    caracteristiques: {
+      ...base.caracteristiques,
+      geste: "bois",
+      fiche: "BAR-TH-112",
+      bois: {
+        type_bois: "appareil", fiche: "BAR-TH-112", combustible: "granules",
+        rendement: 90, emissions_co: 200, marque: "MCZ", reference: "Suite",
+        ...over.bois,
+      },
+    },
+    regle: over.regle === undefined ? regleBois() : over.regle,
+  } as unknown as DossierComplet;
+}
+
+const codesBois = (d: DossierComplet) =>
+  controlerDossierCeeIsolation(d, AUJ).findings.map((f) => `${f.code}:${f.severite}`);
+
+describe("controlerDossierCeeIsolation — appareil de chauffage au bois (BAR-TH-112)", () => {
+  it("appareil de référence : conforme, rendement ok", () => {
+    const r = controlerDossierCeeIsolation(dossierBois(), AUJ);
+    expect(r.conforme).toBe(true);
+    expect(codesBois(dossierBois())).toContain("technique_rendement:ok");
+  });
+
+  it("rendement insuffisant en granulés (< 80 %) : bloquant", () => {
+    const r = controlerDossierCeeIsolation(dossierBois({ bois: { rendement: 78 } }), AUJ);
+    expect(r.conforme).toBe(false);
+    expect(codesBois(dossierBois({ bois: { rendement: 78 } }))).toContain("technique_rendement:bloquant");
+  });
+
+  it("seuil selon combustible : 76 % conforme en bûches (>= 75 %)", () => {
+    const r = controlerDossierCeeIsolation(
+      dossierBois({ bois: { rendement: 76, combustible: "buches" } }),
+      AUJ,
+    );
+    expect(codesBois(dossierBois({ bois: { rendement: 76, combustible: "buches" } })))
+      .toContain("technique_rendement:ok");
+    expect(r.conforme).toBe(true);
+  });
+
+  it("rendement_min de la règle surcharge le défaut : 92 requis => 90 bloqué", () => {
+    const r = controlerDossierCeeIsolation(
+      dossierBois({ bois: { rendement: 90 }, regle: regleBois({ rendement_min: 92 }) }),
+      AUJ,
+    );
+    expect(r.conforme).toBe(false);
+  });
+
+  it("ne déclenche aucun contrôle d'isolation, ETAS ni COP sur un appareil bois", () => {
+    const cs = codesBois(dossierBois());
+    expect(cs.some((c) => c.startsWith("technique_resistance"))).toBe(false);
+    expect(cs.some((c) => c.startsWith("technique_etas"))).toBe(false);
+    expect(cs.some((c) => c.startsWith("technique_cop"))).toBe(false);
+  });
+});

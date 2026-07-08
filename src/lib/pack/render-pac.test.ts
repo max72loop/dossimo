@@ -126,3 +126,42 @@ describe("rendu du pack — geste chauffe-eau thermodynamique (BAR-TH-148)", () 
     expect(buf.length).toBeGreaterThan(1000);
   });
 });
+
+function dossierBois(): DossierComplet {
+  const base = dossierPac();
+  return {
+    ...base,
+    caracteristiques: {
+      ...base.caracteristiques,
+      geste: "bois",
+      fiche: "BAR-TH-112",
+      pac: undefined,
+      bois: {
+        type_bois: "appareil", fiche: "BAR-TH-112", combustible: "granules",
+        rendement: 91, emissions_co: 180, marque: "MCZ", reference: "Suite",
+      },
+    },
+  } as unknown as DossierComplet;
+}
+
+describe("rendu du pack — geste appareil de chauffage au bois (BAR-TH-112)", () => {
+  it("récapitulatif : PDF non vide", async () => {
+    expect((await renderRecapPdf(dossierBois())).length).toBeGreaterThan(1000);
+  });
+  it("checklist : PDF non vide", async () => {
+    expect((await renderChecklistPdf(dossierBois())).length).toBeGreaterThan(1000);
+  });
+  it("rapport de contrôle : PDF non vide", async () => {
+    expect((await renderControlePdf(dossierBois())).length).toBeGreaterThan(1000);
+  });
+  it("attestation sur l'honneur CEE : PDF non vide", async () => {
+    const buf = await renderAhCeePdf(dossierBois(), {
+      titre: "Attestation sur l'honneur — CEE bois",
+      arrete: "annexe 7-1",
+      version: "2026-04 (P6)",
+      variant: "p6",
+      ficheRef: "BAR-TH-112",
+    });
+    expect(buf.length).toBeGreaterThan(1000);
+  });
+});

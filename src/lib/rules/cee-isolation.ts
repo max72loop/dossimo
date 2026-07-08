@@ -204,7 +204,48 @@ export function controlerDossierCeeIsolation(
   // Performance technique (seuil piloté par la règle métier, selon le geste)
   // ---------------------------------------------------------------------
   const geste = c.geste ?? "isolation";
-  if (geste === "cet") {
+  if (geste === "bois") {
+    // Appareil de chauffage au bois : rendement énergétique. Seuil selon le
+    // combustible (granulés ~80 %, bûches ~75 %), surchargeable par la règle
+    // métier (rendement_min).
+    const rendementMin =
+      cond?.rendement_min ?? (c.bois?.combustible === "buches" ? 75 : 80);
+    const rendement = c.bois?.rendement;
+    if (rendement == null) {
+      add({
+        code: "technique_rendement",
+        categorie: "technique",
+        severite: "avertissement",
+        titre: "Rendement non renseigné",
+        detail: "Le rendement énergétique de l'appareil est nécessaire pour vérifier son éligibilité.",
+      });
+    } else if (rendement < rendementMin) {
+      add({
+        code: "technique_rendement",
+        categorie: "technique",
+        severite: "bloquant",
+        titre: "Rendement insuffisant",
+        detail: `Rendement = ${rendement} %, en dessous du minimum de ${rendementMin} % attendu (combustible ${c.bois?.combustible ?? "?"}).`,
+      });
+    } else {
+      add({
+        code: "technique_rendement",
+        categorie: "technique",
+        severite: "ok",
+        titre: "Rendement conforme",
+        detail: `Rendement = ${rendement} % >= ${rendementMin} % (combustible ${c.bois?.combustible ?? "?"}).`,
+      });
+    }
+    if (!c.bois?.marque || !c.bois?.reference) {
+      add({
+        code: "technique_produit",
+        categorie: "pieces",
+        severite: "avertissement",
+        titre: "Marque ou référence de l'appareil manquante",
+        detail: "La marque et la référence de l'appareil (label Flamme Verte) sont obligatoires sur le devis et la facture.",
+      });
+    }
+  } else if (geste === "cet") {
     // Chauffe-eau thermodynamique : coefficient de performance (COP) selon le
     // profil de soutirage (EN 16147). Seuil par défaut 2,5, surchargeable par
     // la règle métier (cop_min).

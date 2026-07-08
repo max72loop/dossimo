@@ -15,7 +15,7 @@ import type {
 /** Forme typée de `caracteristiques_techniques_json` d'un dossier. */
 export interface CeeIsolationCaracteristiques {
   /** Famille de geste ; absent = isolation (dossiers créés avant le multi-geste). */
-  geste?: "isolation" | "pac_air_eau" | "cet";
+  geste?: "isolation" | "pac_air_eau" | "cet" | "bois";
   fiche: string;
   beneficiaire: {
     nom: string;
@@ -63,6 +63,16 @@ export interface CeeIsolationCaracteristiques {
     cop: number;
     profil_soutirage: "M" | "L" | "XL";
     volume_l: number;
+    marque: string | null;
+    reference: string | null;
+  };
+  /** Bloc technique de l'appareil de chauffage au bois (présent pour la famille bois). */
+  bois?: {
+    type_bois: "appareil";
+    fiche: string;
+    combustible: "granules" | "buches";
+    rendement: number;
+    emissions_co: number | null;
     marque: string | null;
     reference: string | null;
   };
