@@ -39,6 +39,21 @@ function parsePieces(raw: string): { ok: true; value: unknown[] } | { ok: false;
   return { ok: true, value: parsed.data };
 }
 
+/** Valide et parse un JSON de mentions (tableau de chaînes). */
+function parseMentions(raw: string): { ok: true; value: string[] } | { ok: false; error: string } {
+  let json: unknown;
+  try {
+    json = JSON.parse(raw || "[]");
+  } catch {
+    return { ok: false, error: "Mentions : JSON invalide." };
+  }
+  const parsed = z.array(z.string()).safeParse(json);
+  if (!parsed.success) {
+    return { ok: false, error: "Mentions : tableau de textes attendu (ex. [\"Fiche CEE : {fiche}\"])." };
+  }
+  return { ok: true, value: parsed.data };
+}
+
 export interface RegleUpdateInput {
   id: string;
   r_min?: number | null;
@@ -47,6 +62,7 @@ export interface RegleUpdateInput {
   version_formulaire: string;
   actif: boolean;
   pieces_json: string;
+  mentions_json: string;
 }
 
 /** Met à jour une règle métier (admin uniquement). */
@@ -55,6 +71,8 @@ export async function updateRegle(input: RegleUpdateInput): Promise<RegleActionR
 
   const pieces = parsePieces(input.pieces_json);
   if (!pieces.ok) return pieces;
+  const mentions = parseMentions(input.mentions_json);
+  if (!mentions.ok) return mentions;
 
   const condition = conditionSchema.parse({
     ...(input.r_min != null ? { r_min: input.r_min } : {}),
@@ -68,6 +86,7 @@ export async function updateRegle(input: RegleUpdateInput): Promise<RegleActionR
     .update({
       condition_json: condition as never,
       pieces_requises_json: pieces.value as never,
+      points_vigilance_json: mentions.value as never,
       version_formulaire: input.version_formulaire || null,
       actif: input.actif,
     })
@@ -90,6 +109,7 @@ export interface RegleCreateInput {
   anciennete_min_ans?: number | null;
   version_formulaire: string;
   pieces_json: string;
+  mentions_json: string;
 }
 
 /** Crée une nouvelle règle (nouveau couple ou nouvelle version). Admin uniquement. */
@@ -99,6 +119,8 @@ export async function createRegle(input: RegleCreateInput): Promise<RegleActionR
 
   const pieces = parsePieces(input.pieces_json);
   if (!pieces.ok) return pieces;
+  const mentions = parseMentions(input.mentions_json);
+  if (!mentions.ok) return mentions;
 
   const condition = conditionSchema.parse({
     ...(input.r_min != null ? { r_min: input.r_min } : {}),
@@ -113,6 +135,7 @@ export async function createRegle(input: RegleCreateInput): Promise<RegleActionR
     version: input.version,
     condition_json: condition as never,
     pieces_requises_json: pieces.value as never,
+    points_vigilance_json: mentions.value as never,
     version_formulaire: input.version_formulaire || null,
     actif: true,
   });

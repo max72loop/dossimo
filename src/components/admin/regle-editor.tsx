@@ -35,6 +35,7 @@ export interface RegleRow {
   version_formulaire: string | null;
   condition: { r_min?: number; tva_taux?: number; anciennete_min_ans?: number };
   pieces: unknown[];
+  mentions: string[];
 }
 
 export function RegleEditor({ row }: { row: RegleRow }) {
@@ -53,6 +54,7 @@ export function RegleEditor({ row }: { row: RegleRow }) {
       version_formulaire: String(fd.get("version_formulaire") ?? ""),
       actif: fd.get("actif") === "on",
       pieces_json: String(fd.get("pieces_json") ?? "[]"),
+      mentions_json: String(fd.get("mentions_json") ?? "[]"),
     });
     setRes(r);
     if (r.ok) router.refresh();
@@ -103,6 +105,18 @@ export function RegleEditor({ row }: { row: RegleRow }) {
         />
       </div>
 
+      <div className="mt-3">
+        <label className={label}>
+          Mentions obligatoires devis + facture (JSON) — variables {"{fiche}"} {"{surface}"} {"{r}"}
+        </label>
+        <textarea
+          name="mentions_json"
+          rows={4}
+          defaultValue={JSON.stringify(row.mentions, null, 2)}
+          className="mt-1 w-full rounded border border-filigrane bg-blanc-casse p-2.5 font-mono text-xs text-encre outline-none focus:border-tampon focus:ring-2 focus:ring-tampon/15"
+        />
+      </div>
+
       <div className="mt-3 flex items-center gap-3">
         <button
           type="submit"
@@ -133,6 +147,7 @@ export function RegleCreator() {
       anciennete_min_ans: num(fd.get("anciennete_min_ans")),
       version_formulaire: String(fd.get("version_formulaire") ?? ""),
       pieces_json: String(fd.get("pieces_json") ?? "[]"),
+      mentions_json: String(fd.get("mentions_json") ?? "[]"),
     });
     setRes(r);
     if (r.ok) {
@@ -182,6 +197,15 @@ export function RegleCreator() {
         <textarea
           name="pieces_json"
           rows={4}
+          defaultValue="[]"
+          className="mt-1 w-full rounded border border-filigrane bg-blanc-casse p-2.5 font-mono text-xs text-encre outline-none focus:border-tampon focus:ring-2 focus:ring-tampon/15"
+        />
+      </div>
+      <div className="mt-3">
+        <label className={label}>Mentions obligatoires (JSON)</label>
+        <textarea
+          name="mentions_json"
+          rows={3}
           defaultValue="[]"
           className="mt-1 w-full rounded border border-filigrane bg-blanc-casse p-2.5 font-mono text-xs text-encre outline-none focus:border-tampon focus:ring-2 focus:ring-tampon/15"
         />

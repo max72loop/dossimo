@@ -21,7 +21,7 @@ export default async function AdminReglesPage() {
   const supabase = createAdminClient();
   const { data } = await supabase
     .from("regles_metier")
-    .select("id, dispositif, type_travaux, version, actif, version_formulaire, condition_json, pieces_requises_json")
+    .select("id, dispositif, type_travaux, version, actif, version_formulaire, condition_json, pieces_requises_json, points_vigilance_json")
     .order("dispositif")
     .order("type_travaux")
     .order("version", { ascending: false });
@@ -36,6 +36,9 @@ export default async function AdminReglesPage() {
     condition: (r.condition_json ?? {}) as RegleRow["condition"],
     pieces: Array.isArray(r.pieces_requises_json)
       ? (r.pieces_requises_json as unknown[])
+      : [],
+    mentions: Array.isArray(r.points_vigilance_json)
+      ? (r.points_vigilance_json as string[])
       : [],
   }));
 

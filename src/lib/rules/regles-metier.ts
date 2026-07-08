@@ -29,6 +29,8 @@ const pieceSchema = z.object({
   obligatoire: z.boolean(),
 });
 
+const mentionsSchema = z.array(z.string());
+
 export type RegleCondition = z.infer<typeof conditionSchema>;
 export type ReglePiece = z.infer<typeof pieceSchema>;
 
@@ -37,6 +39,8 @@ export interface RegleMetierResolue {
   versionFormulaire: string | null;
   condition: RegleCondition;
   pieces: ReglePiece[];
+  /** Mentions obligatoires (templates) à porter sur devis + facture. */
+  mentions: string[];
 }
 
 type DbClient = SupabaseClient<Database>;
@@ -53,7 +57,9 @@ export async function fetchRegleActive(
 ): Promise<RegleMetierResolue | null> {
   const { data, error } = await supabase
     .from("regles_metier")
-    .select("condition_json, pieces_requises_json, version_formulaire, version")
+    .select(
+      "condition_json, pieces_requises_json, points_vigilance_json, version_formulaire, version",
+    )
     .eq("dispositif", dispositif)
     .eq("type_travaux", typeTravaux)
     .eq("actif", true)
@@ -65,11 +71,13 @@ export async function fetchRegleActive(
 
   const condition = conditionSchema.safeParse(data.condition_json);
   const pieces = z.array(pieceSchema).safeParse(data.pieces_requises_json);
+  const mentions = mentionsSchema.safeParse(data.points_vigilance_json);
 
   return {
     version: data.version,
     versionFormulaire: data.version_formulaire,
     condition: condition.success ? condition.data : {},
     pieces: pieces.success ? pieces.data : [],
+    mentions: mentions.success ? mentions.data : [],
   };
 }

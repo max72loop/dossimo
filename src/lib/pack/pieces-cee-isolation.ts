@@ -19,28 +19,48 @@ export interface MentionObligatoire {
   mention: string;
 }
 
-/** Mentions qui DOIVENT figurer sur le devis et la facture (fiches BAR-EN). */
+/** Templates de mentions par défaut — repli si aucune règle métier active. */
+const MENTIONS_DEFAUT: string[] = [
+  "Fiche CEE : {fiche}",
+  "Marque et référence de l'isolant posé",
+  "Surface isolée : {surface} m²",
+  "Résistance thermique R = {r} m²·K/W",
+  "Certification de l'isolant (ACERMI ou équivalent)",
+  "Mention de la qualification RGE (n° et domaine)",
+];
+
+/** Interpole {fiche} / {surface} / {r} dans un template de mention. */
+function interpolerMention(
+  tpl: string,
+  v: { fiche: string; surface: string; r: string },
+): string {
+  return tpl
+    .replace(/\{fiche\}/g, v.fiche)
+    .replace(/\{surface\}/g, v.surface)
+    .replace(/\{r\}/g, v.r);
+}
+
+/**
+ * Mentions qui DOIVENT figurer sur le devis ET la facture (fiches BAR-EN).
+ * Templates pilotés par la règle métier éditable (§7/§9.4), avec repli codé.
+ */
 export function mentionsObligatoires(
   data: DossierComplet,
 ): MentionObligatoire[] {
   const { travaux } = data.caracteristiques;
-  const communes: MentionObligatoire[] = [
-    { document: "Devis", mention: `Fiche CEE : ${travaux.fiche}` },
-    { document: "Devis", mention: "Marque et référence de l'isolant posé" },
-    {
-      document: "Devis",
-      mention: `Surface isolée : ${travaux.surface_isolee_m2} m²`,
-    },
-    {
-      document: "Devis",
-      mention: `Résistance thermique R = ${travaux.resistance_thermique_r} m²·K/W`,
-    },
-    {
-      document: "Devis",
-      mention: "Certification de l'isolant (ACERMI ou équivalent)",
-    },
-    { document: "Devis", mention: "Mention de la qualification RGE (n° et domaine)" },
-  ];
+  const vals = {
+    fiche: travaux.fiche,
+    surface: String(travaux.surface_isolee_m2),
+    r: String(travaux.resistance_thermique_r),
+  };
+  const templates = data.regle?.mentions?.length
+    ? data.regle.mentions
+    : MENTIONS_DEFAUT;
+
+  const communes: MentionObligatoire[] = templates.map((tpl) => ({
+    document: "Devis" as const,
+    mention: interpolerMention(tpl, vals),
+  }));
   // Les mêmes mentions sont exigées à l'identique sur la facture.
   const surFacture = communes.map((m) => ({ ...m, document: "Facture" as const }));
   return [...communes, ...surFacture];

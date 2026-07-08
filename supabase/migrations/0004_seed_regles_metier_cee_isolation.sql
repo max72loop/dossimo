@@ -19,21 +19,34 @@ with pieces as (
     {"id":"fiche_technique","label":"Fiche technique de l'isolant","description":"Fiche produit mentionnant la marque, la référence, la résistance thermique et la certification ACERMI.","obligatoire":true},
     {"id":"photos","label":"Photographies avant / après travaux","description":"Preuves visuelles de l'état initial et des travaux réalisés (souvent exigées au contrôle).","obligatoire":true}
   ]$json$::jsonb as liste
+),
+mentions as (
+  -- Mentions obligatoires à porter à l'identique sur devis ET facture. Templates
+  -- avec variables {fiche} / {surface} / {r} interpolées par le code.
+  select $json$[
+    "Fiche CEE : {fiche}",
+    "Marque et référence de l'isolant posé",
+    "Surface isolée : {surface} m²",
+    "Résistance thermique R = {r} m²·K/W",
+    "Certification de l'isolant (ACERMI ou équivalent)",
+    "Mention de la qualification RGE (n° et domaine)"
+  ]$json$::jsonb as liste
 )
 insert into public.regles_metier
-  (dispositif, type_travaux, condition_json, pieces_requises_json, version_formulaire, version, actif)
+  (dispositif, type_travaux, condition_json, pieces_requises_json, points_vigilance_json, version_formulaire, version, actif)
 select
   'cee'::dispositif,
   t.type,
   t.cond::jsonb,
   pieces.liste,
+  mentions.liste,
   t.vf,
   1,
   true
-from pieces, (values
+from pieces, mentions, (values
   ('combles_perdus',  '{"r_min":7,"tva_taux":0.055,"anciennete_min_ans":2}', 'BAR-EN-101 vA64.6 (à compter du 01/01/2025)'),
   ('rampants_toiture','{"r_min":6,"tva_taux":0.055,"anciennete_min_ans":2}', 'BAR-EN-101 vA64.6 (à compter du 01/01/2025)'),
-  ('murs',            '{"r_min":3.7,"tva_taux":0.055,"anciennete_min_ans":2}', 'BAR-EN-102'),
+  ('murs',            '{"r_min":3.7,"tva_taux":0.055,"anciennete_min_ans":2}', 'BAR-EN-102 vA65.4 (à compter du 01/01/2025)'),
   ('plancher_bas',    '{"r_min":3,"tva_taux":0.055,"anciennete_min_ans":2}', 'BAR-EN-103 vA29.2 (à compter du 01/01/2025)')
 ) as t(type, cond, vf)
 on conflict (dispositif, type_travaux, version) do nothing;
