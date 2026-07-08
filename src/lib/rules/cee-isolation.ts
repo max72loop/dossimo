@@ -3,7 +3,8 @@ import { TYPES_ISOLATION } from "@/lib/dossier/cee-isolation";
 import { dateFr } from "@/lib/pack/format";
 import type { Finding, RapportControle } from "@/lib/rules/types";
 
-const TVA_ISOLATION = 0.055; // taux réduit rénovation énergétique
+const TVA_ISOLATION_DEFAUT = 0.055; // taux réduit rénovation énergétique (repli)
+const ANCIENNETE_MIN_DEFAUT = 2; // années (repli)
 
 function parseDate(s: string | null | undefined): Date | null {
   if (!s) return null;
@@ -24,6 +25,13 @@ export function controlerDossierCeeIsolation(
   const { caracteristiques: c, dates } = data;
   const findings: Finding[] = [];
   const add = (f: Finding) => findings.push(f);
+
+  // Paramètres pilotés par la règle métier éditable (§7/§9.4), avec repli codé.
+  const cond = data.regle?.condition;
+  const tvaAttendue = cond?.tva_taux ?? TVA_ISOLATION_DEFAUT;
+  const ancienneteMin = cond?.anciennete_min_ans ?? ANCIENNETE_MIN_DEFAUT;
+  const rMin =
+    cond?.r_min ?? TYPES_ISOLATION[c.travaux.type_isolation].r_min;
 
   const dDevis = parseDate(dates.devis);
   const dVisite = parseDate(dates.visite_technique);
@@ -155,13 +163,13 @@ export function controlerDossierCeeIsolation(
   // ---------------------------------------------------------------------
   const anneeRef = (dDevis ?? today).getFullYear();
   const age = anneeRef - c.logement.annee_construction;
-  if (age < 2) {
+  if (age < ancienneteMin) {
     add({
       code: "eligibilite_anciennete",
       categorie: "eligibilite",
       severite: "bloquant",
-      titre: "Logement de moins de 2 ans",
-      detail: `Le logement (construit en ${c.logement.annee_construction}) doit être achevé depuis plus de 2 ans à la date d'engagement pour être éligible aux CEE.`,
+      titre: `Logement de moins de ${ancienneteMin} ans`,
+      detail: `Le logement (construit en ${c.logement.annee_construction}) doit être achevé depuis plus de ${ancienneteMin} ans à la date d'engagement pour être éligible aux CEE.`,
     });
   } else {
     add({
@@ -169,14 +177,13 @@ export function controlerDossierCeeIsolation(
       categorie: "eligibilite",
       severite: "ok",
       titre: "Ancienneté du logement conforme",
-      detail: `Logement construit en ${c.logement.annee_construction} (> 2 ans).`,
+      detail: `Logement construit en ${c.logement.annee_construction} (> ${ancienneteMin} ans).`,
     });
   }
 
   // ---------------------------------------------------------------------
-  // Performance technique (R minimal)
+  // Performance technique (R minimal — piloté par la règle métier)
   // ---------------------------------------------------------------------
-  const rMin = TYPES_ISOLATION[c.travaux.type_isolation].r_min;
   if (c.travaux.resistance_thermique_r < rMin) {
     add({
       code: "technique_resistance",
@@ -220,13 +227,13 @@ export function controlerDossierCeeIsolation(
     });
   } else if (ht > 0) {
     const taux = ttc / ht - 1;
-    if (Math.abs(taux - TVA_ISOLATION) > 0.005) {
+    if (Math.abs(taux - tvaAttendue) > 0.005) {
       add({
         code: "montants_tva",
         categorie: "montants",
         severite: "avertissement",
         titre: "Taux de TVA inhabituel",
-        detail: `Le taux de TVA implicite est de ${(taux * 100).toFixed(1)} %. Les travaux d'isolation relèvent en principe du taux réduit de 5,5 %.`,
+        detail: `Le taux de TVA implicite est de ${(taux * 100).toFixed(1)} %. Les travaux d'isolation relèvent en principe du taux réduit de ${(tvaAttendue * 100).toFixed(1).replace(".", ",")} %.`,
       });
     }
   }

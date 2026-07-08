@@ -46,62 +46,75 @@ export function mentionsObligatoires(
   return [...communes, ...surFacture];
 }
 
+/** Liste de base codée — repli si aucune règle métier active (§7/§9.4). */
+const PIECES_BASE_DEFAUT: PieceRequise[] = [
+  {
+    id: "cadre_contribution",
+    label: "Cadre contribution / preuve du rôle actif et incitatif",
+    description:
+      "Document prouvant que l'offre CEE (le « coup de pouce ») a été proposée AVANT la signature du devis. Sans antériorité, le dossier est refusé.",
+    obligatoire: true,
+  },
+  {
+    id: "devis_signe",
+    label: "Devis signé et daté",
+    description:
+      "Signé par le bénéficiaire, portant toutes les mentions obligatoires CEE et daté avant le début des travaux.",
+    obligatoire: true,
+  },
+  {
+    id: "facture",
+    label: "Facture",
+    description:
+      "Reprenant à l'identique les mentions techniques (marque, référence, surface, R) et cohérente avec le devis.",
+    obligatoire: true,
+  },
+  {
+    id: "attestation_honneur",
+    label: "Attestation sur l'honneur (AH)",
+    description:
+      "Signée par le bénéficiaire ET le professionnel, datée après la fin des travaux.",
+    obligatoire: true,
+  },
+  {
+    id: "qualification_rge",
+    label: "Justificatif de qualification RGE",
+    description:
+      "Certificat RGE valide à la date de signature du devis, couvrant le domaine des travaux réalisés.",
+    obligatoire: true,
+  },
+  {
+    id: "fiche_technique",
+    label: "Fiche technique de l'isolant",
+    description:
+      "Fiche produit mentionnant la marque, la référence, la résistance thermique et la certification ACERMI.",
+    obligatoire: true,
+  },
+  {
+    id: "photos",
+    label: "Photographies avant / après travaux",
+    description:
+      "Preuves visuelles de l'état initial et des travaux réalisés (souvent exigées au contrôle).",
+    obligatoire: true,
+  },
+];
+
 /** Liste des pièces à réunir, adaptée au dossier (dispositif, occupation, revenus). */
 export function piecesCeeIsolation(data: DossierComplet): PieceRequise[] {
   const { beneficiaire } = data.caracteristiques;
   const isMpr = data.dossier.dispositif === "maprimerenov";
 
-  const pieces: PieceRequise[] = [
-    {
-      id: "cadre_contribution",
-      label: "Cadre contribution / preuve du rôle actif et incitatif",
-      description:
-        "Document prouvant que l'offre CEE (le « coup de pouce ») a été proposée AVANT la signature du devis. Sans antériorité, le dossier est refusé.",
-      obligatoire: true,
-    },
-    {
-      id: "devis_signe",
-      label: "Devis signé et daté",
-      description:
-        "Signé par le bénéficiaire, portant toutes les mentions obligatoires CEE et daté avant le début des travaux.",
-      obligatoire: true,
-    },
-    {
-      id: "facture",
-      label: "Facture",
-      description:
-        "Reprenant à l'identique les mentions techniques (marque, référence, surface, R) et cohérente avec le devis.",
-      obligatoire: true,
-    },
-    {
-      id: "attestation_honneur",
-      label: "Attestation sur l'honneur (AH)",
-      description:
-        "Signée par le bénéficiaire ET le professionnel, datée après la fin des travaux.",
-      obligatoire: true,
-    },
-    {
-      id: "qualification_rge",
-      label: "Justificatif de qualification RGE",
-      description:
-        "Certificat RGE valide à la date de signature du devis, couvrant le domaine des travaux réalisés.",
-      obligatoire: true,
-    },
-    {
-      id: "fiche_technique",
-      label: "Fiche technique de l'isolant",
-      description:
-        "Fiche produit mentionnant la marque, la référence, la résistance thermique et la certification ACERMI.",
-      obligatoire: true,
-    },
-    {
-      id: "photos",
-      label: "Photographies avant / après travaux",
-      description:
-        "Preuves visuelles de l'état initial et des travaux réalisés (souvent exigées au contrôle).",
-      obligatoire: true,
-    },
-  ];
+  // Base pilotée par la règle métier éditable (§7/§9.4), avec repli codé. Les
+  // ajustements conditionnels ci-dessous restent du ressort du code (ils
+  // dépendent des données du dossier).
+  const pieces: PieceRequise[] = data.regle?.pieces?.length
+    ? data.regle.pieces.map((p) => ({
+        id: p.id,
+        label: p.label,
+        description: p.description,
+        obligatoire: p.obligatoire,
+      }))
+    : [...PIECES_BASE_DEFAUT];
 
   // Pièces du bénéficiaire (particulier). Requises pour MaPrimeRénov' (dépôt en
   // ligne par le particulier) ; côté CEE, l'obligé exige surtout l'AH et le

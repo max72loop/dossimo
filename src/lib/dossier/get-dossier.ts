@@ -1,5 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import type { Artisan, Dossier } from "@/lib/database.types";
+import {
+  fetchRegleActive,
+  type RegleMetierResolue,
+} from "@/lib/rules/regles-metier";
 import type {
   OCCUPATIONS,
   PRECARITES,
@@ -65,6 +69,12 @@ export interface DossierComplet {
   artisan: Artisan | null;
   caracteristiques: CeeIsolationCaracteristiques;
   dates: DossierDates;
+  /**
+   * Règle métier active pour ce couple (dispositif, type_travaux), résolue une
+   * fois ici. Les moteurs (contrôle, pièces) la lisent en synchrone, avec repli
+   * sur leurs valeurs codées si null. Voir `regles_metier` (§7/§9.4).
+   */
+  regle: RegleMetierResolue | null;
 }
 
 /**
@@ -94,11 +104,18 @@ export async function getDossier(id: string): Promise<DossierComplet | null> {
     artisan = data ?? null;
   }
 
+  const regle = await fetchRegleActive(
+    supabase,
+    dossier.dispositif,
+    dossier.type_travaux,
+  );
+
   return {
     dossier,
     artisan,
     caracteristiques:
       dossier.caracteristiques_techniques_json as unknown as CeeIsolationCaracteristiques,
     dates: dossier.dates_json as unknown as DossierDates,
+    regle,
   };
 }

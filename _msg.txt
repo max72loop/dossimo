@@ -1,0 +1,23 @@
+feat(regles): moteur de regles editable regles_metier (parametres pilotes par la table, repli code)
+
+Socle du sec.9.4 : sortir du code les PARAMETRES par couple (dispositif,
+type_travaux) vers la table regles_metier (deja prevue sec.7), editable et
+versionnee. Le code garde le MOTEUR deterministe ; il lit les parametres et
+retombe sur ses valeurs en dur si aucune regle active (aucune regression).
+
+- migration 0004 : seed des 4 couples CEE isolation (combles/rampants/murs/
+  planchers) avec seuils (r_min, tva_taux, anciennete_min_ans), pieces requises
+  et version de fiche. A RUN.
+- lib/rules/regles-metier : fetchRegleActive + types (parsing zod, best-effort).
+- get-dossier : resout la regle active UNE fois et l'attache a data.regle
+  (les moteurs la lisent en synchrone).
+- rules/cee-isolation : R min, taux de TVA et anciennete min lus depuis la regle
+  (repli code).
+- pack/pieces-cee-isolation : liste de base lue depuis la regle (repli code) ;
+  les ajustements conditionnels (identite/avis/bailleur MPR) restent au code.
+
+Verifie en reel : parametres et pieces proviennent de la table ; editer r_min
+7->8 fait basculer un dossier R=7.5 de Conforme a Insuffisant SANS toucher au
+code ni redeployer.
+
+Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
