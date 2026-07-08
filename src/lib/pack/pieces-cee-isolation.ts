@@ -46,9 +46,10 @@ export function mentionsObligatoires(
   return [...communes, ...surFacture];
 }
 
-/** Liste des pièces à réunir, adaptée au dossier (occupation, revenus). */
+/** Liste des pièces à réunir, adaptée au dossier (dispositif, occupation, revenus). */
 export function piecesCeeIsolation(data: DossierComplet): PieceRequise[] {
   const { beneficiaire } = data.caracteristiques;
+  const isMpr = data.dossier.dispositif === "maprimerenov";
 
   const pieces: PieceRequise[] = [
     {
@@ -102,13 +103,44 @@ export function piecesCeeIsolation(data: DossierComplet): PieceRequise[] {
     },
   ];
 
-  // Justificatif de revenus si bonification précarité.
-  if (beneficiaire.precarite !== "classique") {
+  // Pièces du bénéficiaire (particulier). Requises pour MaPrimeRénov' (dépôt en
+  // ligne par le particulier) ; côté CEE, l'obligé exige surtout l'AH et le
+  // technique, donc on ne les ajoute pas systématiquement.
+  if (isMpr) {
+    pieces.push(
+      {
+        id: "piece_identite",
+        label: "Pièce d'identité du bénéficiaire",
+        description:
+          "CNI ou passeport en cours de validité du demandeur (et de chaque membre du foyer fiscal).",
+        obligatoire: true,
+      },
+      {
+        id: "titre_propriete",
+        label: "Titre de propriété ou justificatif d'occupation",
+        description:
+          "Prouve la propriété et l'occupation en résidence principale (acte notarié, avis de taxe foncière).",
+        obligatoire: true,
+      },
+      {
+        id: "rib",
+        label: "RIB du bénéficiaire",
+        description:
+          "Compte, au nom du bénéficiaire, sur lequel MaPrimeRénov' sera versée.",
+        obligatoire: true,
+      },
+    );
+  }
+
+  // Avis d'imposition : toujours pour MaPrimeRénov' (détermine le profil de
+  // revenus et le montant), sinon côté CEE seulement en cas de bonification.
+  if (isMpr || beneficiaire.precarite !== "classique") {
     pieces.push({
       id: "avis_imposition",
       label: "Avis d'imposition du ménage",
-      description:
-        "Justifie la catégorie de revenus (précaire / grande précarité) ouvrant droit à la bonification.",
+      description: isMpr
+        ? "Détermine le profil de revenus MaPrimeRénov' (couleur) et le montant de l'aide."
+        : "Justifie la catégorie de revenus (précaire / grande précarité) ouvrant droit à la bonification.",
       obligatoire: true,
     });
   }
