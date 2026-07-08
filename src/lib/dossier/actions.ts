@@ -74,7 +74,7 @@ export async function createDossierCeeIsolation(
     .insert({
       artisan_id: artisanId,
       statut: "nouveau",
-      dispositif: "cee",
+      dispositif: d.dispositif,
       type_travaux: d.type_isolation,
       commune: d.client_commune,
       code_postal: d.client_code_postal,

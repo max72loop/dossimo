@@ -68,8 +68,27 @@ export function DossierCeeIsolationForm({
     }
   }
 
+  const dispositif = watch("dispositif");
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" noValidate>
+      <Section
+        title="Dispositif visé"
+        description={
+          dispositif === "maprimerenov"
+            ? "MaPrimeRénov' — dépôt en ligne par le client sur maprimerenov.gouv.fr. Logement achevé depuis plus de 15 ans. En 2026, l'isolation des murs n'est plus éligible au parcours par geste."
+            : "CEE — dossier remis à un obligé. Logement achevé depuis plus de 2 ans."
+        }
+      >
+        <SelectField
+          label="Dispositif"
+          required
+          options={{ cee: "CEE (Certificats d'économies d'énergie)", maprimerenov: "MaPrimeRénov'" }}
+          error={errors.dispositif}
+          register={register("dispositif")}
+        />
+      </Section>
+
       <Section
         title="Entreprise (artisan RGE)"
         description="Ces informations alimentent le pack et le contrôle de qualification RGE."

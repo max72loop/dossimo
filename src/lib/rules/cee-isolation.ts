@@ -33,6 +33,24 @@ export function controlerDossierCeeIsolation(
   const rMin =
     cond?.r_min ?? TYPES_ISOLATION[c.travaux.type_isolation].r_min;
 
+  const dispositif = data.dossier.dispositif;
+  const dispositifLabel =
+    dispositif === "maprimerenov" ? "MaPrimeRénov'" : "CEE";
+
+  // Éligibilité du geste au dispositif : côté MaPrimeRénov', l'absence de règle
+  // active pour ce type de travaux = geste non couvert (ex. isolation des murs,
+  // sortie du parcours par geste en 2026).
+  if (dispositif === "maprimerenov" && !data.regle) {
+    add({
+      code: "eligibilite_dispositif",
+      categorie: "eligibilite",
+      severite: "bloquant",
+      titre: "Geste non éligible à MaPrimeRénov'",
+      detail:
+        "Aucune règle MaPrimeRénov' active pour ce type de travaux. En 2026, certains gestes (isolation des murs par ex.) ne sont plus éligibles au parcours par geste.",
+    });
+  }
+
   const dDevis = parseDate(dates.devis);
   const dVisite = parseDate(dates.visite_technique);
   const dDebut = parseDate(dates.debut_travaux);
@@ -169,7 +187,7 @@ export function controlerDossierCeeIsolation(
       categorie: "eligibilite",
       severite: "bloquant",
       titre: `Logement de moins de ${ancienneteMin} ans`,
-      detail: `Le logement (construit en ${c.logement.annee_construction}) doit être achevé depuis plus de ${ancienneteMin} ans à la date d'engagement pour être éligible aux CEE.`,
+      detail: `Le logement (construit en ${c.logement.annee_construction}) doit être achevé depuis plus de ${ancienneteMin} ans à la date d'engagement pour être éligible à ${dispositifLabel}.`,
     });
   } else {
     add({

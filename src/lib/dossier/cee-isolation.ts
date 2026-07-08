@@ -87,6 +87,9 @@ const dateISOOptionnelle = z.preprocess(
 // Schéma
 // ---------------------------------------------------------------------------
 export const ceeIsolationSchema = z.object({
+  // --- Dispositif visé ---
+  dispositif: z.enum(["cee", "maprimerenov"]).default("cee"),
+
   // --- Entreprise (artisan RGE) ---
   entreprise: z.string().min(1, requis),
   siret: z
@@ -172,6 +175,7 @@ export type CeeIsolationData = z.output<typeof ceeIsolationSchema>;
 
 /** Valeurs par défaut du formulaire (tous les champs contrôlés). */
 export const ceeIsolationDefaults: CeeIsolationInput = {
+  dispositif: "cee",
   entreprise: "",
   siret: "",
   rge_numero: "",
