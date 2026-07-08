@@ -6,7 +6,12 @@
  *   npx supabase gen types typescript --project-id <id> > src/lib/database.types.ts
  */
 
-export type StatutDossier = "nouveau" | "en_traitement" | "livre";
+export type StatutDossier =
+  | "nouveau"
+  | "en_traitement"
+  | "pret_depot"
+  | "depose"
+  | "livre";
 export type Dispositif = "maprimerenov" | "cee";
 export type StatutAbonnement = "aucun" | "actif" | "expire";
 export type TypePaiement = "abonnement" | "ponctuel";

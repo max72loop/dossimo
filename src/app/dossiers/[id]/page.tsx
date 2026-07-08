@@ -9,6 +9,7 @@ import { PointsVigilanceIA } from "@/components/dossier/points-vigilance-ia";
 import { PiecesJustificatives } from "@/components/dossier/pieces-justificatives";
 import { AhObligeFill } from "@/components/dossier/ah-oblige-fill";
 import { PaywallCta } from "@/components/dossier/paywall-cta";
+import { ParcoursSelector } from "@/components/dossier/parcours-selector";
 import { accesDossier } from "@/lib/dossier/acces";
 import { PRIX_DOSSIER_LABEL } from "@/lib/stripe/client";
 import { estimerPrime } from "@/lib/dossier/prime";
@@ -179,6 +180,8 @@ export default async function DossierPage({
           </span>
         )}
       </div>
+
+      <ParcoursSelector dossierId={id} statut={dossier.statut} />
 
       {sp.paye && acces.debloque && (
         <div className="mb-6 rounded border-l-4 border-succes bg-succes-bg px-4 py-3 text-sm text-succes">

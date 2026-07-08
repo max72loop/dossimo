@@ -4,18 +4,16 @@ import { FolderOpen } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentArtisan } from "@/lib/auth/get-artisan";
 import { TYPES_ISOLATION, type TypeIsolation } from "@/lib/dossier/cee-isolation";
-import type { StatutDossier } from "@/lib/database.types";
 import { PaywallCta } from "@/components/dossier/paywall-cta";
 import { PRIX_DOSSIER_LABEL } from "@/lib/stripe/client";
 import { getAdminEmail } from "@/lib/auth/is-admin";
+import { ETAPE_PAR_STATUT, PARCOURS } from "@/lib/dossier/parcours";
 
 export const metadata = { title: "Mes dossiers · Dossimo" };
 
-const STATUT: Record<StatutDossier, { label: string; cls: string; dot: string }> = {
-  nouveau: { label: "Nouveau", cls: "bg-papier-fonce text-ardoise", dot: "bg-encre-claire" },
-  en_traitement: { label: "En traitement", cls: "bg-avertissement-bg text-avertissement", dot: "bg-avertissement" },
-  livre: { label: "Livré", cls: "bg-succes-bg text-succes", dot: "bg-succes" },
-};
+// Parcours partagé (liste + page dossier). Repli sur « Nouveau » si l'état n'est
+// pas encore reconnu (migration 0007 du parcours pas encore appliquée).
+const STATUT = ETAPE_PAR_STATUT;
 
 const euro = (n: number | null) =>
   n == null ? "—" : n.toLocaleString("fr-FR", { style: "currency", currency: "EUR" });
@@ -113,7 +111,7 @@ export default async function DossiersPage() {
                   } | null;
                   const b = carac?.beneficiaire;
                   const poste = TYPES_ISOLATION[d.type_travaux as TypeIsolation];
-                  const st = STATUT[d.statut];
+                  const st = STATUT[d.statut] ?? PARCOURS[0];
                   return (
                     <tr key={d.id} className="transition-colors hover:bg-papier">
                       <td className="px-5 py-3">
