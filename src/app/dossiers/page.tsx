@@ -7,6 +7,7 @@ import { TYPES_ISOLATION, type TypeIsolation } from "@/lib/dossier/cee-isolation
 import type { StatutDossier } from "@/lib/database.types";
 import { PaywallCta } from "@/components/dossier/paywall-cta";
 import { PRIX_DOSSIER_LABEL } from "@/lib/stripe/client";
+import { getAdminEmail } from "@/lib/auth/is-admin";
 
 export const metadata = { title: "Mes dossiers — Dossimo" };
 
@@ -36,6 +37,7 @@ export default async function DossiersPage() {
     .order("created_at", { ascending: false });
 
   const rows = dossiers ?? [];
+  const adminEmail = await getAdminEmail();
 
   // Accès (paiement) calculé pour toute la liste en 1 requête supplémentaire :
   // le dossier le plus ancien est offert (§10) ; les autres nécessitent un
@@ -62,6 +64,14 @@ export default async function DossiersPage() {
             au même endroit.
           </p>
         </div>
+        {adminEmail && (
+          <Link
+            href="/admin/regles"
+            className="shrink-0 rounded border border-filigrane bg-blanc-casse px-3 py-1.5 text-xs font-medium text-ardoise transition hover:bg-papier"
+          >
+            ⚙ Règles métier
+          </Link>
+        )}
       </div>
 
       {rows.length === 0 ? (
