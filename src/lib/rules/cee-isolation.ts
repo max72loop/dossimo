@@ -191,7 +191,7 @@ export function controlerDossierCeeIsolation(
       categorie: "technique",
       severite: "ok",
       titre: "Résistance thermique R conforme",
-      detail: `R = ${c.travaux.resistance_thermique_r} ≥ ${rMin} m²·K/W.`,
+      detail: `R = ${c.travaux.resistance_thermique_r} >= ${rMin} m²·K/W.`,
     });
   }
 
