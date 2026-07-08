@@ -92,6 +92,7 @@ export async function generateCerfa(data: DossierComplet): Promise<GenerateResul
       titre: t.titre,
       arrete: t.arrete,
       version: t.version,
+      variant: t.ahVariant ?? "p5",
     });
     return { ok: true, bytes: new Uint8Array(buf), meta: toMeta(t) };
   }

@@ -59,6 +59,8 @@ export interface CerfaTemplate {
   official: boolean;
   kind: CerfaKind;
   strategy: CerfaStrategy;
+  /** Variante du modèle d'AH à rendre (5e période vs 6e période). */
+  ahVariant?: "p5" | "p6";
   /** Champs canoniques (stratégie acroform). */
   fields?: readonly CerfaField[];
   /** Fichier officiel dans public/cerfa/ (stratégie overlay, ou acroform officiel). */
@@ -116,19 +118,41 @@ const MANDAT_MPR_OVERLAY: readonly OverlaySpec[] = [
 
 /* -------------------------------------------------------------- Modèles */
 const TEMPLATES: CerfaTemplate[] = [
+  // Modèle d'AH en vigueur AVANT la 6e période (opérations engagées jusqu'au
+  // 31/03/2026). Le résolveur le choisit sur la date de devis (§8).
   {
-    id: "ah-cee-bar-en",
+    id: "ah-cee-bar-en-p5",
     dispositif: "cee",
     fiches: ["BAR-EN-101", "BAR-EN-102", "BAR-EN-103"],
     titre: "Attestation sur l'honneur — CEE Isolation (fiches BAR-EN)",
     arrete:
-      "Modèle réglementaire CEE — arrêtés des 4 et 22 décembre 2014 modifiés ; fiche BAR-EN v. A54.5 applicable au 01/01/2024",
-    version: "2024-01",
+      "Modèle d'attestation sur l'honneur — arrêté du 4 septembre 2014 modifié (annexe 7-1) ; fiche BAR-EN-101 v. A64.6 (à compter du 01/01/2025)",
+    version: "2025-01",
     effectiveFrom: "2024-01-01",
+    effectiveTo: "2026-03-31",
+    official: false,
+    kind: "reproduction",
+    strategy: "reproduction",
+    ahVariant: "p5",
+    fields: AH_CEE_FIELDS,
+  },
+  // Modèle d'AH 6e période — annexe 7-1 modifiée, en vigueur pour les opérations
+  // engagées à compter du 01/04/2026 : coût de l'opération, aides publiques
+  // perçues (hors CEE), engagement de mise en service.
+  {
+    id: "ah-cee-bar-en-p6",
+    dispositif: "cee",
+    fiches: ["BAR-EN-101", "BAR-EN-102", "BAR-EN-103"],
+    titre: "Attestation sur l'honneur — CEE Isolation (fiches BAR-EN)",
+    arrete:
+      "Modèle d'attestation sur l'honneur 6e période — arrêté du 4 septembre 2014 modifié (annexe 7-1) et arrêté du 21 décembre 2025 ; fiche BAR-EN-101 v. A64.6",
+    version: "2026-04 (P6)",
+    effectiveFrom: "2026-04-01",
     effectiveTo: null,
     official: false,
     kind: "reproduction",
     strategy: "reproduction",
+    ahVariant: "p6",
     fields: AH_CEE_FIELDS,
   },
   {

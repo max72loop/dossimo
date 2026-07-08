@@ -2,7 +2,7 @@ import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
 
 import type { DossierComplet } from "@/lib/dossier/get-dossier";
 import { LOGEMENT_TYPES, TYPES_ISOLATION } from "@/lib/dossier/cee-isolation";
-import { dateFr } from "@/lib/pack/format";
+import { dateFr, euro } from "@/lib/pack/format";
 import { COLORS, styles } from "@/lib/pack/pdf-theme";
 
 const DISCLAIMER =
@@ -112,6 +112,8 @@ export interface AhRef {
   titre: string;
   arrete: string;
   version: string;
+  /** Modèle d'AH : 5e période, ou 6e période (annexe 7-1 modifiée au 01/04/2026). */
+  variant: "p5" | "p6";
 }
 
 export function AttestationHonneurDocument({
@@ -192,6 +194,24 @@ export function AttestationHonneurDocument({
           <Field label="RGE valable jusqu'au" value={dateFr(c.rge.date_fin)} />
         </Cadre>
 
+        {ref.variant === "p6" && (
+          <Cadre title="Cadre — Coût de l'opération et aides (6e période)">
+            <Field label="Coût de l'opération (TTC, pose incluse)" value={euro(c.montants.ttc)} />
+            <View style={s.field}>
+              <Text style={s.fieldLabel}>Autres aides publiques perçues (hors CEE)</Text>
+              <Text style={[s.fieldValue, { color: COLORS.muted }]}>
+                à compléter : ____________
+              </Text>
+            </View>
+            <Text style={{ fontSize: 8, color: COLORS.muted, marginTop: 4 }}>
+              Depuis le 01/04/2026, l&apos;attestation doit préciser le coût de
+              l&apos;opération et l&apos;ensemble des aides publiques perçues (hors
+              incitation CEE). Renseignez les aides éventuelles (ex. MaPrimeRénov&apos;)
+              avant signature.
+            </Text>
+          </Cadre>
+        )}
+
         <Cadre title="Engagement sur l'honneur">
           <Text style={{ fontSize: 9, marginBottom: 6 }}>
             Le bénéficiaire et le professionnel soussignés attestent sur l&apos;honneur que :
@@ -202,6 +222,11 @@ export function AttestationHonneurDocument({
             "Le professionnel disposait, à la date d'engagement de l'opération (acceptation du devis), d'une qualification RGE en cours de validité couvrant le domaine des travaux réalisés.",
             "Les matériaux éligibles ont été fournis, installés et facturés par l'entreprise mentionnée au cadre C, ou par son sous-traitant déclaré.",
             "Aucune autre demande de certificats d'économies d'énergie n'a été sollicitée pour cette même opération.",
+            ...(ref.variant === "p6"
+              ? [
+                  "Les travaux ont été effectivement réalisés et l'installation mise en service ; le bénéficiaire et le professionnel attestent de cette mise en service.",
+                ]
+              : []),
             "Les informations portées sur la présente attestation sont exactes ; toute fausse déclaration expose son auteur aux sanctions prévues par la loi.",
           ].map((txt, i) => (
             <View style={s.engage} key={i}>
