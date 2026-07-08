@@ -1,7 +1,11 @@
 import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
 
 import type { DossierComplet } from "@/lib/dossier/get-dossier";
-import { LOGEMENT_TYPES, TYPES_ISOLATION } from "@/lib/dossier/cee-isolation";
+import {
+  LOGEMENT_TYPES,
+  PAC_TEMPERATURES,
+  posteLabel,
+} from "@/lib/dossier/cee-isolation";
 import { dateFr, euro } from "@/lib/pack/format";
 import { COLORS, styles } from "@/lib/pack/pdf-theme";
 
@@ -128,9 +132,14 @@ export function AttestationHonneurDocument({
   const c = data.caracteristiques;
   const b = c.beneficiaire;
   const t = c.travaux;
-  const travaux = TYPES_ISOLATION[t.type_isolation];
-  const isolant =
-    [t.isolant_marque, t.isolant_reference].filter(Boolean).join(" ") || t.isolant_type;
+  const poste = posteLabel(c);
+  const estPac = (c.geste ?? "isolation") === "pac_air_eau";
+  const isolant = t
+    ? [t.isolant_marque, t.isolant_reference].filter(Boolean).join(" ") || t.isolant_type
+    : "—";
+  const pacMateriel = c.pac
+    ? [c.pac.marque, c.pac.reference].filter(Boolean).join(" ") || "—"
+    : "—";
   const plus2ans = new Date().getFullYear() - c.logement.annee_construction > 2;
 
   return (
@@ -160,7 +169,7 @@ export function AttestationHonneurDocument({
         </Text>
 
         <Cadre title="Cadre A — Nature et caractéristiques de l'opération">
-          <Field label="Opération standardisée" value={`${c.fiche} — ${travaux.label}`} />
+          <Field label="Opération standardisée" value={`${c.fiche} — ${poste}`} />
           <Field label="Adresse des travaux" value={b.adresse} />
           <Field label="Code postal / commune" value={`${b.code_postal} ${b.commune}`} />
           <Field label="Type de logement" value={LOGEMENT_TYPES[c.logement.type]} />
@@ -170,16 +179,31 @@ export function AttestationHonneurDocument({
             label="Logement achevé depuis plus de 2 ans à la date d'engagement de l'opération"
           />
           <Field label="Date de visite préalable" value={dateFr(data.dates.visite_technique)} />
-          <Field label="Surface d'isolant posée" value={`${t.surface_isolee_m2} m²`} />
-          <Field
-            label="Résistance thermique R"
-            value={`${t.resistance_thermique_r} m²·K/W`}
-          />
-          <Field label="Marque et gamme de l'isolant" value={isolant} />
-          <Field
-            label="Épaisseur de l'isolant"
-            value={t.epaisseur_mm ? `${t.epaisseur_mm} mm` : "—"}
-          />
+          {estPac && c.pac ? (
+            <>
+              <Field label="Efficacité énergétique saisonnière (ETAS)" value={`${c.pac.etas} %`} />
+              <Field label="Régime de température" value={PAC_TEMPERATURES[c.pac.temperature]} />
+              <Field label="Puissance thermique" value={`${c.pac.puissance_kw} kW`} />
+              <Field label="Marque et référence de l'appareil" value={pacMateriel} />
+              <Field
+                label="Classe du régulateur"
+                value={c.pac.regulateur_classe ? `Classe ${c.pac.regulateur_classe}` : "—"}
+              />
+            </>
+          ) : (
+            <>
+              <Field label="Surface d'isolant posée" value={`${t.surface_isolee_m2} m²`} />
+              <Field
+                label="Résistance thermique R"
+                value={`${t.resistance_thermique_r} m²·K/W`}
+              />
+              <Field label="Marque et gamme de l'isolant" value={isolant} />
+              <Field
+                label="Épaisseur de l'isolant"
+                value={t.epaisseur_mm ? `${t.epaisseur_mm} mm` : "—"}
+              />
+            </>
+          )}
         </Cadre>
 
         <Cadre title="Cadre B — Bénéficiaire">
@@ -231,7 +255,9 @@ export function AttestationHonneurDocument({
           </Text>
           {[
             `Les travaux décrits ci-dessus ont été réalisés à l'adresse indiquée et correspondent à l'opération standardisée ${c.fiche}.`,
-            "Les caractéristiques techniques mentionnées (surface, résistance thermique, marque et référence de l'isolant) sont exactes et identiques à celles portées sur le devis et sur la facture.",
+            estPac
+              ? "Les caractéristiques techniques mentionnées (ETAS, puissance, régime de température, marque et référence de l'appareil, classe du régulateur) sont exactes et identiques à celles portées sur le devis et sur la facture."
+              : "Les caractéristiques techniques mentionnées (surface, résistance thermique, marque et référence de l'isolant) sont exactes et identiques à celles portées sur le devis et sur la facture.",
             "Le professionnel disposait, à la date d'engagement de l'opération (acceptation du devis), d'une qualification RGE en cours de validité couvrant le domaine des travaux réalisés.",
             "Les matériaux éligibles ont été fournis, installés et facturés par l'entreprise mentionnée au cadre C, ou par son sous-traitant déclaré.",
             "Aucune autre demande de certificats d'économies d'énergie n'a été sollicitée pour cette même opération.",

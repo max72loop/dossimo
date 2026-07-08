@@ -57,6 +57,29 @@ export function familleDeGeste(typeTravaux: string): Famille {
   return typeTravaux === "pac_air_eau" ? "pac_air_eau" : "isolation";
 }
 
+/**
+ * Libellé du poste de travaux, quel que soit le geste. Point unique de lecture
+ * du référentiel (isolation vs PAC) pour les documents et l'UI : un dossier PAC
+ * n'a pas de bloc `travaux`, un accès direct à `TYPES_ISOLATION[...]` planterait.
+ */
+export function posteLabel(c: {
+  geste?: string;
+  travaux?: { type_isolation?: TypeIsolation };
+  pac?: { type_pac?: TypePac };
+}): string {
+  if ((c.geste ?? "isolation") === "pac_air_eau") {
+    return TYPES_PAC[c.pac?.type_pac ?? "air_eau"].label;
+  }
+  const ti = c.travaux?.type_isolation;
+  return ti ? TYPES_ISOLATION[ti].label : "Travaux";
+}
+
+/** Régime de température PAC en clair. */
+export const PAC_TEMPERATURES = {
+  basse: "Basse température",
+  moyenne_haute: "Moyenne / haute température",
+} as const;
+
 export const OCCUPATIONS = {
   proprietaire_occupant: "Propriétaire occupant",
   proprietaire_bailleur: "Propriétaire bailleur",

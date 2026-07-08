@@ -47,11 +47,13 @@ function interpolerMention(
 export function mentionsObligatoires(
   data: DossierComplet,
 ): MentionObligatoire[] {
-  const { travaux } = data.caracteristiques;
+  const { travaux, fiche } = data.caracteristiques;
+  // La PAC n'a pas de bloc `travaux` : on retombe sur la fiche du dossier et on
+  // laisse les placeholders {surface}/{r} vides (les mentions PAC n'en ont pas).
   const vals = {
-    fiche: travaux.fiche,
-    surface: String(travaux.surface_isolee_m2),
-    r: String(travaux.resistance_thermique_r),
+    fiche: travaux?.fiche ?? fiche,
+    surface: travaux ? String(travaux.surface_isolee_m2) : "",
+    r: travaux ? String(travaux.resistance_thermique_r) : "",
   };
   const templates = data.regle?.mentions?.length
     ? data.regle.mentions

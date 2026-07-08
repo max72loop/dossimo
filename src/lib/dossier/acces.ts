@@ -65,15 +65,20 @@ export async function verrouLivrable(
 }
 
 /**
- * Garde de génération documentaire par geste. Les documents du pack (récap,
- * checklist, Cerfa, AH) ne sont pour l'instant modélisés que pour l'isolation.
- * Le contrôle anti-refus et l'estimation de prime, eux, couvrent déjà tous les
- * gestes ; seule la fabrication des PDF est en attente (Phase 1b). Renvoie une
- * réponse 422 pour un geste non encore documenté, sinon `null`.
+ * Gestes dont le pack documentaire (récap, checklist, AH/Cerfa) est modélisé.
+ * Un geste hors de cette liste reste contrôlé et estimé, mais ne produit pas
+ * encore de PDF : la route renvoie 422 plutôt qu'un document incohérent.
+ */
+const GESTES_DOCUMENTES = new Set(["isolation", "pac_air_eau"]);
+
+/**
+ * Garde de génération documentaire par geste. Renvoie une réponse 422 pour un
+ * geste non encore documenté, sinon `null`. Le contrôle anti-refus et
+ * l'estimation de prime couvrent déjà tous les gestes.
  */
 export function verrouGesteDocumente(data: DossierComplet): Response | null {
   const geste = data.caracteristiques.geste ?? "isolation";
-  if (geste === "isolation") return null;
+  if (GESTES_DOCUMENTES.has(geste)) return null;
   return new Response(
     "Documents du pack indisponibles pour ce geste : le rapport de contrôle et l'estimation restent accessibles.",
     { status: 422 },

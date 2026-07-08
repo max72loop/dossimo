@@ -4,9 +4,10 @@ import type { DossierComplet } from "@/lib/dossier/get-dossier";
 import {
   LOGEMENT_TYPES,
   OCCUPATIONS,
+  PAC_TEMPERATURES,
   PRECARITES,
   RESIDENCES,
-  TYPES_ISOLATION,
+  posteLabel,
 } from "@/lib/dossier/cee-isolation";
 import { dateFr, euro } from "@/lib/pack/format";
 import {
@@ -74,7 +75,8 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 // ---------------------------------------------------------------------------
 export function RecapDocument({ data }: { data: DossierComplet }) {
   const { caracteristiques: c, dates, artisan } = data;
-  const travaux = TYPES_ISOLATION[c.travaux.type_isolation];
+  const poste = posteLabel(c);
+  const estPac = (c.geste ?? "isolation") === "pac_air_eau";
 
   return (
     <Document
@@ -85,14 +87,14 @@ export function RecapDocument({ data }: { data: DossierComplet }) {
         <Header
           docType="Récapitulatif client"
           title={`${c.beneficiaire.prenom} ${c.beneficiaire.nom}`}
-          subtitle={`${travaux.label} · ${c.fiche}`}
+          subtitle={`${poste} · ${c.fiche}`}
         />
 
         <View style={styles.brandCard}>
           <Text>
-            Récapitulatif des informations du chantier d'isolation. Ce document
-            reprend la saisie unique : toutes les pièces du dossier en découlent.
-            Vérifiez chaque donnée avant génération des documents officiels.
+            Récapitulatif des informations du chantier. Ce document reprend la
+            saisie unique : toutes les pièces du dossier en découlent. Vérifiez
+            chaque donnée avant génération des documents officiels.
           </Text>
         </View>
 
@@ -118,14 +120,25 @@ export function RecapDocument({ data }: { data: DossierComplet }) {
           </View>
         </View>
 
-        <Section title="Travaux d'isolation">
-          <Row label="Poste" value={`${travaux.label} (${c.fiche})`} />
-          <Row label="Surface isolée" value={`${c.travaux.surface_isolee_m2} m²`} />
-          <Row label="Isolant" value={c.travaux.isolant_type} />
-          <Row label="Résistance thermique R" value={`${c.travaux.resistance_thermique_r} m²·K/W`} />
-          <Row label="Marque / référence" value={[c.travaux.isolant_marque, c.travaux.isolant_reference].filter(Boolean).join(" ") || "—"} />
-          <Row label="Épaisseur" value={c.travaux.epaisseur_mm ? `${c.travaux.epaisseur_mm} mm` : "—"} />
-        </Section>
+        {estPac && c.pac ? (
+          <Section title="Pompe à chaleur air/eau">
+            <Row label="Poste" value={`${poste} (${c.fiche})`} />
+            <Row label="Efficacité énergétique saisonnière (ETAS)" value={`${c.pac.etas} %`} />
+            <Row label="Régime de température" value={PAC_TEMPERATURES[c.pac.temperature]} />
+            <Row label="Puissance thermique" value={`${c.pac.puissance_kw} kW`} />
+            <Row label="Marque / référence" value={[c.pac.marque, c.pac.reference].filter(Boolean).join(" ") || "—"} />
+            <Row label="Classe du régulateur" value={c.pac.regulateur_classe || "—"} />
+          </Section>
+        ) : (
+          <Section title="Travaux d'isolation">
+            <Row label="Poste" value={`${poste} (${c.fiche})`} />
+            <Row label="Surface isolée" value={`${c.travaux.surface_isolee_m2} m²`} />
+            <Row label="Isolant" value={c.travaux.isolant_type} />
+            <Row label="Résistance thermique R" value={`${c.travaux.resistance_thermique_r} m²·K/W`} />
+            <Row label="Marque / référence" value={[c.travaux.isolant_marque, c.travaux.isolant_reference].filter(Boolean).join(" ") || "—"} />
+            <Row label="Épaisseur" value={c.travaux.epaisseur_mm ? `${c.travaux.epaisseur_mm} mm` : "—"} />
+          </Section>
+        )}
 
         <View style={styles.twoCol}>
           <View style={styles.col}>
@@ -196,7 +209,7 @@ export function ControleDocument({
   vigilance?: PointVigilance[];
 }) {
   const { caracteristiques: c } = data;
-  const travaux = TYPES_ISOLATION[c.travaux.type_isolation];
+  const poste = posteLabel(c);
   const findings = [...rapport.findings].sort(
     (a, b) => SEV_ORDER[a.severite] - SEV_ORDER[b.severite],
   );
@@ -210,7 +223,7 @@ export function ControleDocument({
         <Header
           docType="Rapport de contrôle anti-refus"
           title={rapport.conforme ? "Aucun point bloquant" : `${rapport.nbBloquants} point(s) bloquant(s)`}
-          subtitle={`${travaux.label} · ${c.fiche} · ${c.beneficiaire.prenom} ${c.beneficiaire.nom}`}
+          subtitle={`${poste} · ${c.fiche} · ${c.beneficiaire.prenom} ${c.beneficiaire.nom}`}
         />
 
         <View style={[styles.banner, { backgroundColor: banner.bg }]}>
@@ -282,7 +295,7 @@ export function ControleDocument({
 // ---------------------------------------------------------------------------
 export function ChecklistDocument({ data }: { data: DossierComplet }) {
   const { caracteristiques: c } = data;
-  const travaux = TYPES_ISOLATION[c.travaux.type_isolation];
+  const poste = posteLabel(c);
   const pieces = piecesCeeIsolation(data);
   const mentions = mentionsObligatoires(data);
   const mentionsDevis = mentions.filter((m) => m.document === "Devis");
@@ -293,7 +306,7 @@ export function ChecklistDocument({ data }: { data: DossierComplet }) {
         <Header
           docType="Checklist de conformité"
           title="Pièces à réunir"
-          subtitle={`${travaux.label} · ${c.fiche} · ${c.beneficiaire.prenom} ${c.beneficiaire.nom}`}
+          subtitle={`${poste} · ${c.fiche} · ${c.beneficiaire.prenom} ${c.beneficiaire.nom}`}
         />
 
         <View style={styles.brandCard}>
@@ -349,7 +362,7 @@ export function PackCoverDocument({
   hasVigilance: boolean;
 }) {
   const { caracteristiques: c } = data;
-  const travaux = TYPES_ISOLATION[c.travaux.type_isolation];
+  const poste = posteLabel(c);
   const conforme = rapport.conforme;
 
   const sommaire = [
@@ -365,7 +378,7 @@ export function PackCoverDocument({
         <Header
           docType="Pack documentaire"
           title={`${c.beneficiaire.prenom} ${c.beneficiaire.nom}`}
-          subtitle={`${travaux.label} · ${c.fiche}`}
+          subtitle={`${poste} · ${c.fiche}`}
         />
 
         <View

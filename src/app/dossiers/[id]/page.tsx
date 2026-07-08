@@ -320,19 +320,6 @@ export default async function DossierPage({
         </>
       )}
 
-      {!estIsolation && (
-        <section className="mb-6 rounded border border-filigrane bg-blanc-casse p-5 shadow-sm">
-          <h2 className="font-serif text-base font-semibold text-encre">Documents du pack</h2>
-          <p className="mt-1 text-sm text-ardoise">
-            Le contrôle anti-refus et l&apos;estimation de prime sont déjà actifs pour
-            ce geste. Les documents du pack (récapitulatif, checklist, attestation)
-            arrivent bientôt pour la pompe à chaleur.
-          </p>
-        </section>
-      )}
-
-      {estIsolation && (
-        <>
       {/* Pack documentaire */}
       <div className="mt-6 mb-6 rounded border border-filigrane bg-papier-fonce p-5">
         <p className="text-sm text-encre">
@@ -444,9 +431,6 @@ export default async function DossierPage({
           <AhObligeFill dossierId={id} />
         )}
       </section>
-
-        </>
-      )}
 
       {/* Données du dossier */}
       <div className="grid gap-4 sm:grid-cols-2">
