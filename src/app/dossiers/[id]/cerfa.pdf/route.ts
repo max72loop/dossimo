@@ -1,4 +1,5 @@
 import { getDossier } from "@/lib/dossier/get-dossier";
+import { verrouLivrable } from "@/lib/dossier/acces";
 import { generateCerfa } from "@/lib/cerfa/generate";
 import { packSlug } from "@/lib/pack/render";
 
@@ -13,6 +14,9 @@ export async function GET(
   // l'artisan connecté (RLS).
   const data = await getDossier(id);
   if (!data) return new Response("Dossier introuvable", { status: 404 });
+
+  const verrou = await verrouLivrable(data);
+  if (verrou) return verrou;
 
   let res;
   try {

@@ -8,6 +8,9 @@ import { storedVigilance } from "@/lib/llm/vigilance";
 import { PointsVigilanceIA } from "@/components/dossier/points-vigilance-ia";
 import { PiecesJustificatives } from "@/components/dossier/pieces-justificatives";
 import { AhObligeFill } from "@/components/dossier/ah-oblige-fill";
+import { PaywallCta } from "@/components/dossier/paywall-cta";
+import { accesDossier } from "@/lib/dossier/acces";
+import { PRIX_DOSSIER_LABEL } from "@/lib/stripe/client";
 import {
   LOGEMENT_TYPES,
   OCCUPATIONS,
@@ -96,10 +99,13 @@ function Card({ title, children }: { title: string; children: React.ReactNode })
 
 export default async function DossierPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ paye?: string; annule?: string }>;
 }) {
   const { id } = await params;
+  const sp = await searchParams;
   // getDossier lit en auth-scopé : null si le dossier n'appartient pas à
   // l'artisan connecté (RLS). Le layout /dossiers garantit déjà l'auth.
   const data = await getDossier(id);
@@ -129,6 +135,10 @@ export default async function DossierPage({
   // Points de vigilance déjà générés (persistés) : affichage instantané.
   const vigilance = storedVigilance(data);
 
+  // Droit d'accès au livrable (1er dossier gratuit, sinon paiement). Verrouille
+  // à la fois les téléchargements (routes PDF) et le détail affiché ici.
+  const acces = await accesDossier(data);
+
   return (
     <main className="mx-auto max-w-4xl px-8 py-10">
       <Link
@@ -149,11 +159,62 @@ export default async function DossierPage({
             <span className="font-mono text-xs">({c.beneficiaire.code_postal})</span>
           </p>
         </div>
-        <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-succes-bg px-3 py-1 text-xs font-medium text-succes">
-          <span className="h-1.5 w-1.5 rounded-full bg-succes" />
-          Dossier créé
-        </span>
+        {acces.gratuit ? (
+          <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-tampon/10 px-3 py-1 text-xs font-medium text-tampon">
+            <span className="h-1.5 w-1.5 rounded-full bg-tampon" />
+            Premier dossier — offert
+          </span>
+        ) : acces.paye ? (
+          <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-succes-bg px-3 py-1 text-xs font-medium text-succes">
+            <span className="h-1.5 w-1.5 rounded-full bg-succes" />
+            Pack débloqué
+          </span>
+        ) : (
+          <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-avertissement-bg px-3 py-1 text-xs font-medium text-avertissement">
+            🔒 Verrouillé
+          </span>
+        )}
       </div>
+
+      {sp.paye && acces.debloque && (
+        <div className="mb-6 rounded border-l-4 border-succes bg-succes-bg px-4 py-3 text-sm text-succes">
+          Paiement confirmé — le pack est débloqué. Vous pouvez télécharger tous les
+          documents ci-dessous.
+        </div>
+      )}
+
+      {!acces.debloque && (
+        <section className="mb-6 rounded border border-terre-cuite/30 bg-terre-cuite/5 p-5 shadow-sm">
+          <h2 className="font-serif text-base font-semibold text-encre">
+            Débloquez ce dossier pour accéder au pack
+          </h2>
+          <p className="mt-1 text-sm text-ardoise">
+            Le contrôle anti-refus a analysé ce dossier :{" "}
+            {rapport.nbBloquants > 0 ? (
+              <span className="font-semibold text-erreur">
+                {rapport.nbBloquants} point{rapport.nbBloquants > 1 ? "s" : ""} bloquant
+                {rapport.nbBloquants > 1 ? "s" : ""}
+              </span>
+            ) : (
+              <span className="font-semibold text-succes">aucun point bloquant</span>
+            )}
+            {rapport.nbAvertissements > 0 && (
+              <> · {rapport.nbAvertissements} à vérifier</>
+            )}
+            . Débloquez pour voir le détail, les points de vigilance, générer le pack
+            complet et télécharger les documents (attestation, checklist, rapport…).
+          </p>
+          {sp.annule && (
+            <p className="mt-2 text-xs text-ardoise">Paiement annulé — vous pouvez réessayer.</p>
+          )}
+          <div className="mt-4">
+            <PaywallCta dossierId={id} prix={PRIX_DOSSIER_LABEL} />
+          </div>
+          <p className="mt-3 text-xs text-encre-claire">
+            Paiement unique par Stripe. Le premier dossier de votre compte est offert.
+          </p>
+        </section>
+      )}
 
       {/* Rapport de contrôle déterministe */}
       <section className="mb-6 overflow-hidden rounded border border-filigrane bg-blanc-casse shadow-sm">
@@ -176,31 +237,45 @@ export default async function DossierPage({
                 ` · ${rapport.nbAvertissements} à vérifier.`}
             </p>
           </div>
-          <a
-            href={`/dossiers/${id}/rapport.pdf`}
-            target="_blank"
-            rel="noopener"
-            className="shrink-0 rounded border border-encre bg-blanc-casse px-3 py-1.5 text-xs font-medium text-encre transition hover:bg-papier-fonce"
-          >
-            ↓ Rapport PDF
-          </a>
+          {acces.debloque && (
+            <a
+              href={`/dossiers/${id}/rapport.pdf`}
+              target="_blank"
+              rel="noopener"
+              className="shrink-0 rounded border border-encre bg-blanc-casse px-3 py-1.5 text-xs font-medium text-encre transition hover:bg-papier-fonce"
+            >
+              ↓ Rapport PDF
+            </a>
+          )}
         </div>
-        <ul className="divide-y divide-filigrane px-5 py-2">
-          {findingsTries.map((f) => (
-            <FindingRow key={f.code} f={f} />
-          ))}
-        </ul>
+        {acces.debloque ? (
+          <ul className="divide-y divide-filigrane px-5 py-2">
+            {findingsTries.map((f) => (
+              <FindingRow key={f.code} f={f} />
+            ))}
+          </ul>
+        ) : (
+          <p className="px-5 py-4 text-sm text-ardoise">
+            🔒 Le détail des points de contrôle est verrouillé. Débloquez le dossier
+            ci-dessus pour voir chaque point et sa correction.
+          </p>
+        )}
       </section>
 
-      {/* Pièces réelles (devis/facture) : cohérence avec la saisie */}
-      <PiecesJustificatives dossierId={id} initial={piecesReelles} />
+      {/* Sections de valeur : verrouillées tant que le dossier n'est pas débloqué */}
+      {acces.debloque && (
+        <>
+          {/* Pièces réelles (devis/facture) : cohérence avec la saisie */}
+          <PiecesJustificatives dossierId={id} initial={piecesReelles} />
 
-      {/* Points de vigilance rédigés (LLM, à la demande, persistés) */}
-      <PointsVigilanceIA
-        dossierId={id}
-        initial={vigilance?.points}
-        initialAt={vigilance?.at}
-      />
+          {/* Points de vigilance rédigés (LLM, à la demande, persistés) */}
+          <PointsVigilanceIA
+            dossierId={id}
+            initial={vigilance?.points}
+            initialAt={vigilance?.at}
+          />
+        </>
+      )}
 
       {/* Pack documentaire */}
       <div className="mt-6 mb-6 rounded border border-filigrane bg-papier-fonce p-5">
@@ -208,37 +283,46 @@ export default async function DossierPage({
           Pack documentaire généré depuis la saisie unique. Toutes les pièces
           dérivent des mêmes données.
         </p>
-        <div className="mt-3 flex flex-wrap items-center gap-2">
-          <a
-            href={`/dossiers/${id}/pack.pdf`}
-            target="_blank"
-            rel="noopener"
-            className="inline-flex h-10 items-center rounded bg-terre-cuite px-4 text-sm font-medium text-blanc-casse transition-colors hover:bg-terre-cuite-hover"
-          >
-            ↓ Pack complet (PDF unique)
-          </a>
-          <span className="text-xs text-encre-claire">
-            page de garde · récap · rapport · checklist · attestation
-          </span>
-        </div>
-        <div className="mt-2 flex flex-wrap gap-2">
-          <a
-            href={`/dossiers/${id}/recap.pdf`}
-            target="_blank"
-            rel="noopener"
-            className="inline-flex h-8 items-center rounded border border-filigrane bg-blanc-casse px-3 text-xs font-medium text-ardoise transition-colors hover:bg-papier"
-          >
-            Récapitulatif seul
-          </a>
-          <a
-            href={`/dossiers/${id}/checklist.pdf`}
-            target="_blank"
-            rel="noopener"
-            className="inline-flex h-8 items-center rounded border border-filigrane bg-blanc-casse px-3 text-xs font-medium text-ardoise transition-colors hover:bg-papier"
-          >
-            Checklist seule
-          </a>
-        </div>
+        {acces.debloque ? (
+          <>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <a
+                href={`/dossiers/${id}/pack.pdf`}
+                target="_blank"
+                rel="noopener"
+                className="inline-flex h-10 items-center rounded bg-terre-cuite px-4 text-sm font-medium text-blanc-casse transition-colors hover:bg-terre-cuite-hover"
+              >
+                ↓ Pack complet (PDF unique)
+              </a>
+              <span className="text-xs text-encre-claire">
+                page de garde · récap · rapport · checklist · attestation
+              </span>
+            </div>
+            <div className="mt-2 flex flex-wrap gap-2">
+              <a
+                href={`/dossiers/${id}/recap.pdf`}
+                target="_blank"
+                rel="noopener"
+                className="inline-flex h-8 items-center rounded border border-filigrane bg-blanc-casse px-3 text-xs font-medium text-ardoise transition-colors hover:bg-papier"
+              >
+                Récapitulatif seul
+              </a>
+              <a
+                href={`/dossiers/${id}/checklist.pdf`}
+                target="_blank"
+                rel="noopener"
+                className="inline-flex h-8 items-center rounded border border-filigrane bg-blanc-casse px-3 text-xs font-medium text-ardoise transition-colors hover:bg-papier"
+              >
+                Checklist seule
+              </a>
+            </div>
+          </>
+        ) : (
+          <p className="mt-3 text-sm text-ardoise">
+            🔒 Téléchargements verrouillés. Débloquez le dossier pour obtenir le pack
+            complet et chaque document.
+          </p>
+        )}
       </div>
 
       {/* Formulaire officiel (Cerfa) */}
@@ -283,7 +367,7 @@ export default async function DossierPage({
           </p>
         )}
 
-        {cerfa.ok && (
+        {cerfa.ok && acces.debloque && (
           <a
             href={`/dossiers/${id}/cerfa.pdf`}
             target="_blank"
@@ -294,7 +378,13 @@ export default async function DossierPage({
           </a>
         )}
 
-        {cerfa.ok && cerfa.template.kind === "reproduction" && (
+        {cerfa.ok && !acces.debloque && (
+          <p className="mt-4 text-sm text-ardoise">
+            🔒 Débloquez le dossier pour télécharger l&apos;attestation pré-remplie.
+          </p>
+        )}
+
+        {cerfa.ok && cerfa.template.kind === "reproduction" && acces.debloque && (
           <AhObligeFill dossierId={id} />
         )}
       </section>

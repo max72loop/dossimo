@@ -1,4 +1,5 @@
 import { getDossier } from "@/lib/dossier/get-dossier";
+import { verrouLivrable } from "@/lib/dossier/acces";
 import { packSlug, renderControlePdf } from "@/lib/pack/render";
 import { storedVigilance } from "@/lib/llm/vigilance";
 
@@ -11,6 +12,9 @@ export async function GET(
   const { id } = await params;
   const data = await getDossier(id);
   if (!data) return new Response("Dossier introuvable", { status: 404 });
+
+  const verrou = await verrouLivrable(data);
+  if (verrou) return verrou;
 
   // On inclut les points de vigilance DÉJÀ générés (persistés). On ne les
   // (re)génère pas ici : ça ajouterait un appel LLM lent au téléchargement du
