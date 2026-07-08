@@ -146,21 +146,18 @@ export function AttestationHonneurDocument({
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.brand}>Dossimo</Text>
-            <Text style={styles.docType}>
-              Reproduction du modèle réglementaire — à imprimer et signer
-            </Text>
+        <View style={styles.headerBand}>
+          <View style={{ flex: 1, paddingRight: 12 }}>
+            <Text style={styles.eyebrow}>Reproduction du modèle réglementaire</Text>
+            <Text style={styles.bandTitle}>Attestation sur l&apos;honneur</Text>
+            <Text style={styles.bandSubtitle}>CEE · {ref.ficheRef ?? c.fiche}</Text>
           </View>
-          <View style={styles.headerRight}>
-            <Text style={styles.title}>Attestation sur l&apos;honneur</Text>
-            <Text style={styles.subtitle}>
-              CEE · {ref.ficheRef ?? c.fiche}
-            </Text>
-            <Text style={s.refLine}>modèle {ref.version}</Text>
+          <View style={styles.bandRight}>
+            <Text style={styles.bandRef}>À imprimer et signer</Text>
+            <Text style={styles.bandRefSub}>modèle {ref.version}</Text>
           </View>
         </View>
+        <View style={styles.accentLine} />
 
         <Text style={s.intro}>
           Reproduction fidèle du modèle réglementaire en vigueur ({ref.arrete}). Les

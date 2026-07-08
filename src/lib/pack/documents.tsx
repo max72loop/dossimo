@@ -28,18 +28,56 @@ import type { PointVigilance } from "@/lib/llm/vigilance";
 const DISCLAIMER =
   "Dossimo — service indépendant d'aide à la préparation de dossier, non affilié à l'Anah ni à France Rénov'. Dossimo ne dépose pas le dossier et ne perçoit pas la prime.";
 
-function Header({ docType, title, subtitle }: { docType: string; title: string; subtitle: string }) {
+/** Libellé court du dispositif pour les sur-titres. */
+function dispoLabel(data: DossierComplet): string {
+  return data.dossier.dispositif === "maprimerenov" ? "MaPrimeRénov'" : "CEE";
+}
+
+/**
+ * Référence de pack lisible et déterministe (identifiant partagé entre toutes
+ * les pièces). Format : DS-AAAA-MMJJ-XXXX (date de création + fragment d'id).
+ */
+export function packRef(data: DossierComplet): string {
+  const iso = (data.dossier.created_at ?? "").slice(0, 10);
+  const compact = iso.replace(/-/g, "");
+  const d = compact.length === 8 ? `${compact.slice(0, 4)}-${compact.slice(4)}` : "0000-0000";
+  const frag = String(data.dossier.id ?? "").replace(/[^a-zA-Z0-9]/g, "").slice(0, 4).toUpperCase() || "0000";
+  return `DS-${d}-${frag}`;
+}
+
+// ---------------------------------------------------------------------------
+// Blocs partagés
+// ---------------------------------------------------------------------------
+function Header({
+  eyebrow,
+  title,
+  subtitle,
+  refTop,
+  refSub,
+}: {
+  eyebrow: string;
+  title: string;
+  subtitle?: string;
+  refTop?: string;
+  refSub?: string;
+}) {
   return (
-    <View style={styles.header}>
-      <View>
-        <Text style={styles.brand}>Dossimo</Text>
-        <Text style={styles.docType}>{docType}</Text>
+    <>
+      <View style={styles.headerBand}>
+        <View style={{ flex: 1, paddingRight: 12 }}>
+          <Text style={styles.eyebrow}>{eyebrow}</Text>
+          <Text style={styles.bandTitle}>{title}</Text>
+          {subtitle ? <Text style={styles.bandSubtitle}>{subtitle}</Text> : null}
+        </View>
+        {refTop || refSub ? (
+          <View style={styles.bandRight}>
+            {refTop ? <Text style={styles.bandRef}>{refTop}</Text> : null}
+            {refSub ? <Text style={styles.bandRefSub}>{refSub}</Text> : null}
+          </View>
+        ) : null}
       </View>
-      <View style={styles.headerRight}>
-        <Text style={styles.title}>{title}</Text>
-        <Text style={styles.subtitle}>{subtitle}</Text>
-      </View>
-    </View>
+      <View style={styles.accentLine} />
+    </>
   );
 }
 
@@ -73,6 +111,15 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
+/** Carte d'information encadrée (fond clair, filet gauche d'accent). */
+function NoteCard({ children }: { children: React.ReactNode }) {
+  return (
+    <View style={styles.noteCard}>
+      <Text>{children}</Text>
+    </View>
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Récap client
 // ---------------------------------------------------------------------------
@@ -87,18 +134,18 @@ export function RecapDocument({ data }: { data: DossierComplet }) {
     >
       <Page size="A4" style={styles.page}>
         <Header
-          docType="Récapitulatif client"
-          title={`${c.beneficiaire.prenom} ${c.beneficiaire.nom}`}
+          eyebrow={`Pack ${dispoLabel(data)}`}
+          title="Récapitulatif client"
           subtitle={`${poste} · ${c.fiche}`}
+          refTop={packRef(data)}
+          refSub={`${c.beneficiaire.prenom} ${c.beneficiaire.nom}`}
         />
 
-        <View style={styles.brandCard}>
-          <Text>
-            Récapitulatif des informations du chantier. Ce document reprend la
-            saisie unique : toutes les pièces du dossier en découlent. Vérifiez
-            chaque donnée avant génération des documents officiels.
-          </Text>
-        </View>
+        <NoteCard>
+          Récapitulatif des informations du chantier. Ce document reprend la
+          saisie unique : toutes les pièces du dossier en découlent. Vérifiez
+          chaque donnée avant génération des documents officiels.
+        </NoteCard>
 
         <View style={styles.twoCol}>
           <View style={styles.col}>
@@ -143,7 +190,7 @@ export function RecapDocument({ data }: { data: DossierComplet }) {
             <Section title="Montants">
               <Row label="Montant HT" value={euro(c.montants.ht)} />
               <Row label="Montant TTC" value={euro(c.montants.ttc)} />
-              <Row label="Prime CEE estimée" value={euro(c.montants.prime_estime)} />
+              <Row label="Prime estimée" value={euro(c.montants.prime_estime)} />
               {c.montants.aides_publiques_hors_cee != null ? (
                 <Row label="Aides publiques (hors CEE)" value={euro(c.montants.aides_publiques_hors_cee)} />
               ) : null}
@@ -167,26 +214,47 @@ export function RecapDocument({ data }: { data: DossierComplet }) {
 // ---------------------------------------------------------------------------
 // Rapport de contrôle anti-refus
 // ---------------------------------------------------------------------------
-const SEV_COLORS: Record<Severite, { fg: string; bg: string }> = {
-  bloquant: { fg: COLORS.danger, bg: COLORS.dangerSoft },
-  avertissement: { fg: COLORS.warn, bg: COLORS.warnSoft },
-  ok: { fg: COLORS.ok, bg: COLORS.okSoft },
+const SEV_COLORS: Record<Severite, string> = {
+  bloquant: COLORS.danger,
+  avertissement: COLORS.warn,
+  ok: COLORS.ok,
 };
 
-const SEV_ORDER: Record<Severite, number> = {
-  bloquant: 0,
-  avertissement: 1,
-  ok: 2,
+const SEV_ORDER: Record<Severite, number> = { bloquant: 0, avertissement: 1, ok: 2 };
+
+/** Libellés lisibles des catégories de contrôle (sinon le slug brut). */
+const CATEGORIE_LABEL: Record<string, string> = {
+  chronologie: "Chronologie",
+  rge: "Qualification RGE",
+  eligibilite: "Éligibilité",
+  technique: "Performance technique",
+  montants: "Cohérence des montants",
+  pieces: "Pièces",
+};
+const catLabel = (c: string) => CATEGORIE_LABEL[c] ?? c;
+
+const AI_SEV: Record<PointVigilance["severite"], { color: string; label: string }> = {
+  important: { color: COLORS.danger, label: "IMPORTANT" },
+  vigilance: { color: COLORS.warn, label: "VIGILANCE" },
+  info: { color: COLORS.tampon, label: "INFO" },
 };
 
-const AI_SEV: Record<
-  PointVigilance["severite"],
-  { fg: string; bg: string; label: string }
-> = {
-  important: { fg: COLORS.danger, bg: COLORS.dangerSoft, label: "IMPORTANT" },
-  vigilance: { fg: COLORS.warn, bg: COLORS.warnSoft, label: "VIGILANCE" },
-  info: { fg: COLORS.tampon, bg: COLORS.tamponSoft, label: "INFO" },
-};
+/** Badge de sévérité contourné (bordure + texte colorés, sans fond plein). */
+function SevBadge({ color, children }: { color: string; children: string }) {
+  return (
+    <Text style={[styles.sevBadge, { color, borderColor: color }]}>{children}</Text>
+  );
+}
+
+/** Cartouche de synthèse (filet gauche coloré). */
+function StatCard({ n, label, color }: { n: number; label: string; color: string }) {
+  return (
+    <View style={[styles.statCard, { borderLeftColor: color }]}>
+      <Text style={[styles.statNum, { color }]}>{n}</Text>
+      <Text style={styles.statLabel}>{label}</Text>
+    </View>
+  );
+}
 
 export function ControleDocument({
   data,
@@ -202,71 +270,71 @@ export function ControleDocument({
   const findings = [...rapport.findings].sort(
     (a, b) => SEV_ORDER[a.severite] - SEV_ORDER[b.severite],
   );
-  const banner = rapport.conforme
-    ? { fg: COLORS.ok, bg: COLORS.okSoft }
-    : { fg: COLORS.danger, bg: COLORS.dangerSoft };
+  const nbConformes = findings.filter((f) => f.severite === "ok").length;
+  const bannerColor = rapport.conforme ? COLORS.ok : COLORS.danger;
 
   return (
     <Document title={`Rapport de contrôle — ${c.beneficiaire.prenom} ${c.beneficiaire.nom}`} author="Dossimo">
       <Page size="A4" style={styles.page}>
         <Header
-          docType="Rapport de contrôle anti-refus"
-          title={rapport.conforme ? "Aucun point bloquant" : `${rapport.nbBloquants} point(s) bloquant(s)`}
-          subtitle={`${poste} · ${c.fiche} · ${c.beneficiaire.prenom} ${c.beneficiaire.nom}`}
+          eyebrow={`Pack ${dispoLabel(data)}`}
+          title="Rapport de contrôle anti-refus"
+          subtitle={`${poste} · ${c.fiche}`}
+          refTop={packRef(data)}
+          refSub={`${c.beneficiaire.prenom} ${c.beneficiaire.nom}`}
         />
 
-        <View style={[styles.banner, { backgroundColor: banner.bg }]}>
-          <Text style={[styles.bannerTitle, { color: banner.fg }]}>
+        <View style={[styles.banner, { borderColor: bannerColor, borderLeftColor: bannerColor }]}>
+          <Text style={[styles.bannerTitle, { color: bannerColor }]}>
             {rapport.conforme
-              ? "Le dossier ne présente aucun point bloquant."
-              : "Des points bloquants doivent être corrigés avant dépôt."}
+              ? "Aucun point bloquant — dossier prêt à vérifier avant dépôt."
+              : "Dossier non déposable en l'état."}
           </Text>
-          <Text style={{ marginTop: 3 }}>
-            {rapport.nbBloquants} bloquant(s) · {rapport.nbAvertissements} à
-            vérifier. Contrôle automatisé des règles dures (chronologie, RGE,
-            éligibilité, performance, montants).
+          <Text style={{ marginTop: 3, color: COLORS.muted }}>
+            {rapport.conforme
+              ? "Contrôle automatisé des règles dures (chronologie, RGE, éligibilité, performance, montants)."
+              : `${rapport.nbBloquants} anomalie(s) bloquante(s) à corriger avant tout dépôt auprès de l'obligé.`}
           </Text>
         </View>
 
+        <View style={styles.statRow}>
+          <StatCard n={rapport.nbBloquants} label="Bloquants" color={COLORS.danger} />
+          <StatCard n={rapport.nbAvertissements} label="À vérifier" color={COLORS.warn} />
+          <StatCard n={nbConformes} label="Conforme" color={COLORS.ok} />
+        </View>
+
+        <Text style={styles.sectionTitle}>Points à traiter</Text>
         {findings.map((f) => {
-          const sc = SEV_COLORS[f.severite];
+          const color = SEV_COLORS[f.severite];
           return (
-            <View key={f.code} style={styles.finding} wrap={false}>
-              <Text style={[styles.sevBadge, { color: sc.fg, backgroundColor: sc.bg }]}>
-                {SEVERITE_LABEL[f.severite].toUpperCase()}
-              </Text>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.findingTitle}>{f.titre}</Text>
-                <Text style={styles.findingDetail}>{f.detail}</Text>
+            <View key={f.code} style={[styles.finding, { borderLeftColor: color }]} wrap={false}>
+              <View style={styles.findingHead}>
+                <SevBadge color={color}>{SEVERITE_LABEL[f.severite].toUpperCase()}</SevBadge>
+                <Text style={styles.findingCat}>{catLabel(f.categorie)}</Text>
               </View>
+              <Text style={styles.findingTitle}>{f.titre}</Text>
+              <Text style={styles.findingDetail}>{f.detail}</Text>
             </View>
           );
         })}
 
         {vigilance && vigilance.length > 0 ? (
           <View style={{ marginTop: 12 }}>
-            <Text style={styles.sectionTitle}>
-              Points de vigilance — analyse assistée
-            </Text>
+            <Text style={styles.sectionTitle}>Points de vigilance — analyse assistée</Text>
             <Text style={styles.aiNote}>
-              Complément contextuel généré automatiquement, à relire. Ne
-              remplace pas le contrôle de conformité ni la décision de
-              l&apos;instructeur.
+              Complément contextuel généré automatiquement, à relire. Ne remplace
+              pas le contrôle de conformité ni la décision de l&apos;instructeur.
             </Text>
             {vigilance.map((p, i) => {
               const sc = AI_SEV[p.severite];
               return (
-                <View key={i} style={styles.finding} wrap={false}>
-                  <Text style={[styles.sevBadge, { color: sc.fg, backgroundColor: sc.bg }]}>
-                    {sc.label}
-                  </Text>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.findingTitle}>
-                      {p.titre}
-                      {p.poste ? <Text style={styles.aiPoste}>  · {p.poste}</Text> : null}
-                    </Text>
-                    <Text style={styles.findingDetail}>{p.detail}</Text>
+                <View key={i} style={[styles.finding, { borderLeftColor: sc.color }]} wrap={false}>
+                  <View style={styles.findingHead}>
+                    <SevBadge color={sc.color}>{sc.label}</SevBadge>
+                    {p.poste ? <Text style={styles.findingCat}>{p.poste}</Text> : null}
                   </View>
+                  <Text style={styles.findingTitle}>{p.titre}</Text>
+                  <Text style={styles.findingDetail}>{p.detail}</Text>
                 </View>
               );
             })}
@@ -293,18 +361,18 @@ export function ChecklistDocument({ data }: { data: DossierComplet }) {
     <Document title={`Checklist — ${c.beneficiaire.prenom} ${c.beneficiaire.nom}`} author="Dossimo">
       <Page size="A4" style={styles.page}>
         <Header
-          docType="Checklist de conformité"
-          title="Pièces à réunir"
-          subtitle={`${poste} · ${c.fiche} · ${c.beneficiaire.prenom} ${c.beneficiaire.nom}`}
+          eyebrow={`Pack ${dispoLabel(data)}`}
+          title="Checklist de conformité"
+          subtitle={`${poste} · ${c.fiche}`}
+          refTop={packRef(data)}
+          refSub={`${c.beneficiaire.prenom} ${c.beneficiaire.nom}`}
         />
 
-        <View style={styles.brandCard}>
-          <Text>
-            Bordereau des pièces à joindre au dossier {c.fiche}. Cochez chaque
-            élément avant dépôt. Le contrôle automatisé anti-refus (chronologie,
-            RGE, cohérence des montants) s'ajoutera au rapport de contrôle.
-          </Text>
-        </View>
+        <NoteCard>
+          Bordereau des pièces à joindre au dossier {c.fiche}. Cochez chaque
+          élément avant dépôt. Le contrôle automatisé anti-refus (chronologie,
+          RGE, cohérence des montants) s&apos;ajoute au rapport de contrôle.
+        </NoteCard>
 
         <Section title="Pièces du dossier">
           {pieces.map((p) => (
@@ -339,6 +407,15 @@ export function ChecklistDocument({ data }: { data: DossierComplet }) {
 // ---------------------------------------------------------------------------
 // Page de garde du pack complet (PDF fusionné)
 // ---------------------------------------------------------------------------
+function HealthRow({ n, label, color }: { n: number; label: string; color: string }) {
+  return (
+    <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 8 }}>
+      <Text style={{ fontFamily: "Helvetica-Bold", fontSize: 13, color, width: 16 }}>{n}</Text>
+      <Text style={{ color: COLORS.muted }}>{label}</Text>
+    </View>
+  );
+}
+
 export function PackCoverDocument({
   data,
   rapport,
@@ -353,74 +430,93 @@ export function PackCoverDocument({
   const { caracteristiques: c } = data;
   const poste = posteLabel(c);
   const conforme = rapport.conforme;
+  const nbConformes = rapport.findings.filter((f) => f.severite === "ok").length;
+  const statutColor = conforme ? COLORS.ok : COLORS.danger;
 
   const sommaire = [
-    "Récapitulatif client — la saisie unique dont tout le pack découle",
-    `Rapport de contrôle anti-refus${hasVigilance ? " (dont points de vigilance rédigés)" : ""}`,
-    "Checklist de conformité — pièces à réunir et mentions obligatoires",
-    cerfaTitre ?? null,
-  ].filter(Boolean) as string[];
+    { t: "Récapitulatif client", d: "La saisie unique dont tout le pack découle" },
+    { t: "Rapport de contrôle anti-refus", d: hasVigilance ? "Dont points de vigilance rédigés" : "Règles dures : chronologie, RGE, montants" },
+    { t: "Checklist de conformité", d: "Pièces à réunir et mentions obligatoires" },
+    ...(cerfaTitre ? [{ t: "Attestation sur l'honneur", d: "Modèle réglementaire, à imprimer et signer" }] : []),
+  ];
 
   return (
     <Document title={`Pack — ${c.beneficiaire.prenom} ${c.beneficiaire.nom}`} author="Dossimo">
       <Page size="A4" style={styles.page}>
         <Header
-          docType="Pack documentaire"
-          title={`${c.beneficiaire.prenom} ${c.beneficiaire.nom}`}
-          subtitle={`${poste} · ${c.fiche}`}
+          eyebrow={`Pack documentaire ${dispoLabel(data)}`}
+          title={poste}
+          subtitle={`Fiche ${data.regle?.versionFormulaire ?? c.fiche}`}
+          refTop={packRef(data)}
+          refSub={`${c.beneficiaire.prenom} ${c.beneficiaire.nom}`}
         />
 
-        <View
-          style={{
-            borderRadius: 4,
-            padding: 12,
-            marginBottom: 16,
-            backgroundColor: conforme ? COLORS.okSoft : COLORS.dangerSoft,
-          }}
-        >
-          <Text
-            style={{
-              fontFamily: "Helvetica-Bold",
-              fontSize: 12,
-              color: conforme ? COLORS.ok : COLORS.danger,
-            }}
-          >
-            {conforme
-              ? "Aucun point bloquant détecté au contrôle automatique."
-              : `${rapport.nbBloquants} point(s) bloquant(s) à corriger avant dépôt.`}
-          </Text>
-          <Text style={{ marginTop: 3, color: COLORS.muted }}>
-            {rapport.nbAvertissements > 0
-              ? `${rapport.nbAvertissements} point(s) à vérifier. `
-              : ""}
-            Détail dans le rapport de contrôle ci-joint.
-          </Text>
+        <View style={styles.twoCol}>
+          {/* Santé du dossier */}
+          <View style={{ width: 190 }}>
+            <View style={[styles.card, { marginBottom: 0 }]}>
+              <Text style={styles.sectionTitle}>Santé du dossier</Text>
+              <Text
+                style={{
+                  alignSelf: "flex-start",
+                  fontFamily: "Helvetica-Bold",
+                  fontSize: 9.5,
+                  color: statutColor,
+                  borderWidth: 1,
+                  borderColor: statutColor,
+                  borderRadius: 12,
+                  paddingHorizontal: 9,
+                  paddingVertical: 3,
+                  marginTop: 2,
+                }}
+              >
+                {conforme ? "Prêt à vérifier" : "Non déposable"}
+              </Text>
+              <HealthRow n={rapport.nbBloquants} label="points bloquants" color={COLORS.danger} />
+              <HealthRow n={rapport.nbAvertissements} label="à vérifier" color={COLORS.warn} />
+              <HealthRow n={nbConformes} label="conformes" color={COLORS.ok} />
+            </View>
+          </View>
+
+          {/* Identité du dossier */}
+          <View style={styles.col}>
+            <Row label="Bénéficiaire" value={`${c.beneficiaire.prenom} ${c.beneficiaire.nom}`} />
+            <Row label="Logement" value={`${c.beneficiaire.adresse}, ${c.beneficiaire.code_postal} ${c.beneficiaire.commune}`} />
+            <Row label="Profil" value={`${OCCUPATIONS[c.beneficiaire.occupation]} · ${PRECARITES[c.beneficiaire.precarite]}`} />
+            <Row label="Opération" value={`${poste} (${c.fiche})`} />
+            <Row label="N° de pack" value={packRef(data)} />
+            <Row label="Préparé le" value={dateFr(data.dossier.created_at?.slice(0, 10) ?? null)} />
+          </View>
         </View>
 
-        <Section title="Ce pack contient">
-          {sommaire.map((titre, i) => (
-            <View
-              key={i}
-              style={{ flexDirection: "row", gap: 8, paddingVertical: 4 }}
-              wrap={false}
-            >
-              <Text style={{ fontFamily: "Helvetica-Bold", color: COLORS.tampon }}>
-                {i + 1}.
-              </Text>
-              <Text style={{ flex: 1 }}>{titre}</Text>
-            </View>
-          ))}
-        </Section>
+        <View style={{ marginTop: 20 }}>
+          <Text style={styles.sectionTitle}>Composition du pack</Text>
+          <View style={{ flexDirection: "row", gap: 10 }}>
+            {sommaire.map((s, i) => (
+              <View
+                key={i}
+                style={[styles.card, { flex: 1, marginBottom: 0 }]}
+                wrap={false}
+              >
+                <Text style={{ fontFamily: "Helvetica-Bold", fontSize: 15, color: COLORS.accent }}>
+                  {i + 1}
+                </Text>
+                <Text style={{ fontFamily: "Helvetica-Bold", fontSize: 9.5, marginTop: 4 }}>{s.t}</Text>
+                <Text style={{ fontSize: 8, color: COLORS.muted, marginTop: 2 }}>{s.d}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
 
-        <View style={styles.brandCard}>
-          <Text>
+        <View style={{ marginTop: 20 }}>
+          <NoteCard>
             Toutes les pièces de ce pack sont générées depuis la même saisie
             unique : elles sont cohérentes entre elles par construction (un écart
             devis/facture, premier motif de refus, devient structurellement
             impossible). Ce pack est une aide à la préparation : l&apos;artisan et
             son client déposent eux-mêmes le dossier auprès de l&apos;organisme
             compétent.
-          </Text>
+          </NoteCard>
         </View>
 
         <Footer />
