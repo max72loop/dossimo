@@ -1,25 +1,21 @@
-feat(cerfa): pre-remplissage de l'AH de l'oblige (Cas 1 - PDF a champs)
+feat(llm): vigilance IA enrichie (ecarts pieces reelles + motifs de refus + pieces requises)
 
-Donne le VRAI document : l'artisan televerse l'attestation sur l'honneur que
-son oblige lui a remise ; si c'est un PDF a champs (AcroForm), Dossimo y reporte
-les valeurs de la saisie unique et la rend pre-remplie, prete a verifier/signer.
-Aucun calage par oblige : le mapping des champs est fait par le LLM a partir du
-nom technique + du libelle (tooltip /TU) de chaque champ.
+La brique de points de vigilance ne voyait ni les pieces reelles ni les pieces
+requises, et son prompt manquait d'ancrage metier. On l'enrichit :
 
-Garde-fou central : on n'ecrit jamais de valeur inventee. Le prompt interdit
-toute correspondance incertaine, on ne conserve que les mappings >= 0.7 vers un
-champ reellement present, et les champs propres a l'oblige (n° de dossier, etc.)
-restent vides. Traitement en memoire : le PDF source n'est pas conserve.
+- Contexte : ajout des ecarts piece<->saisie (Chantier 1) comme signal anti-refus
+  prioritaire, de la liste des pieces requises et des mentions obligatoires
+  devis/facture. buildContext devient async (getDossierPieces auth-scope).
+- Prompt : ancrage sur les 10 principaux motifs de refus CEE isolation (coherence
+  inter-pieces, role actif et incitatif, RGE, mentions obligatoires, ACERMI,
+  anciennete, chronologie, AH signee, double valorisation, pieces manquantes) ;
+  consigne de citer les valeurs en ecart ; 3 a 7 points tries par criticite.
 
-- acroform-inspect.ts : enumere les champs (nom, type, tooltip, options).
-- oblige-fill.ts : canonicalFacts (faits du dossier), mapAhFields (mapping LLM),
-  fillUploadedAh (remplissage par type + aplatissement, non bloquant).
-- oblige-actions.ts : action auth-scopee remplirAhOblige (validation PDF/taille,
-  detection AcroForm, renvoie le PDF pre-rempli en base64 + recap).
-- composant client ah-oblige-fill : upload -> telechargement + champs restants.
-- UI dossier : bloc propose sous le formulaire officiel (cote CEE).
+Valide en reel : sur un dossier avec devis divergent (surface 80!=95, TTC
+4431!=4620), le LLM remonte les 2 ecarts en "important" avec les valeurs exactes,
+plus le role actif/incitatif manquant et les pieces non televersees.
 
-Valide en banc d'essai : 17/19 champs remplis sur une AH synthetique, les 2
-champs non connaissables laisses vides, case a cocher geree, PDF aplati OK.
+- maxDuration=60 sur la page dossier : le contexte enrichi + LLM depasse le
+  timeout de fonction par defaut de Vercel.
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>

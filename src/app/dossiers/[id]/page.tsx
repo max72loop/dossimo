@@ -23,6 +23,10 @@ import { SEVERITE_LABEL, type Finding, type Severite } from "@/lib/rules/types";
 
 export const metadata = { title: "Dossier — Dossimo" };
 
+// L'analyse assistée (points de vigilance) appelle un LLM sur un contexte enrichi :
+// on relève le plafond de durée de la fonction (défaut trop court sur Vercel).
+export const maxDuration = 60;
+
 const euro = (n: number | null) =>
   n == null ? "—" : n.toLocaleString("fr-FR", { style: "currency", currency: "EUR" });
 
