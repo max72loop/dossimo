@@ -6,6 +6,7 @@ import { getDossierPieces } from "@/lib/piece/get";
 import { resolveCerfaTemplate } from "@/lib/cerfa/registry";
 import { PointsVigilanceIA } from "@/components/dossier/points-vigilance-ia";
 import { PiecesJustificatives } from "@/components/dossier/pieces-justificatives";
+import { AhObligeFill } from "@/components/dossier/ah-oblige-fill";
 import {
   LOGEMENT_TYPES,
   OCCUPATIONS,
@@ -266,6 +267,10 @@ export default async function DossierPage({
           >
             ↓ Formulaire officiel pré-rempli (PDF)
           </a>
+        )}
+
+        {cerfa.ok && cerfa.template.kind === "reproduction" && (
+          <AhObligeFill dossierId={id} />
         )}
       </section>
 
