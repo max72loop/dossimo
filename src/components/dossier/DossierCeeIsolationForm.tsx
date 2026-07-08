@@ -131,7 +131,7 @@ export function DossierCeeIsolationForm({
     <form onSubmit={handleSubmit(onSubmit)} onKeyDown={onKeyDown} className="pb-16" noValidate>
       {/* Progression */}
       <div className="mb-8">
-        <div className="mb-3 flex flex-wrap gap-1.5">
+        <div className="mb-3 grid grid-cols-3 gap-1.5 sm:grid-cols-6">
           {ETAPES.map((s, i) => {
             const fait = i < etape;
             const actif = i === etape;
@@ -142,7 +142,8 @@ export function DossierCeeIsolationForm({
                 type="button"
                 onClick={() => aller(i)}
                 disabled={!accessible}
-                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors disabled:cursor-not-allowed ${
+                title={s.titre}
+                className={`flex w-full min-w-0 items-center justify-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-medium transition-colors disabled:cursor-not-allowed ${
                   actif
                     ? "bg-encre text-papier"
                     : fait
@@ -151,13 +152,13 @@ export function DossierCeeIsolationForm({
                 }`}
               >
                 <span
-                  className={`flex h-4 w-4 items-center justify-center rounded-full text-[10px] ${
+                  className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[10px] ${
                     actif ? "bg-papier text-encre" : fait ? "bg-succes text-blanc-casse" : "bg-papier-fonce text-ardoise"
                   }`}
                 >
                   {fait ? "✓" : i + 1}
                 </span>
-                {s.titre}
+                <span className="truncate">{s.titre}</span>
               </button>
             );
           })}
