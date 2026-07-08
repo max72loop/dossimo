@@ -49,6 +49,21 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Apparition d'une étape d'assistant : léger fondu montant. */
+@keyframes stepIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.animate-step {
+  animation: stepIn 0.25s ease-out;
+}
+
 body {
   background: var(--color-papier);
   color: var(--color-encre);
