@@ -1,0 +1,124 @@
+import { describe, it, expect } from "vitest";
+
+import { controlerDossierCeeIsolation } from "@/lib/rules/cee-isolation";
+import type { DossierComplet } from "@/lib/dossier/get-dossier";
+import type { RegleMetierResolue } from "@/lib/rules/regles-metier";
+
+const AUJ = new Date("2026-07-01T00:00:00");
+
+/** Règle CEE combles par défaut (comme seedée). */
+function regleCombles(over: Partial<RegleMetierResolue["condition"]> = {}): RegleMetierResolue {
+  return {
+    version: 1,
+    versionFormulaire: "BAR-EN-101 vA64.6",
+    pieces: [],
+    mentions: [],
+    condition: { r_min: 7, tva_taux: 0.055, anciennete_min_ans: 2, ...over },
+  };
+}
+
+/** Dossier conforme de référence (CEE combles), surchargable. */
+function dossier(over: {
+  dispositif?: "cee" | "maprimerenov";
+  regle?: RegleMetierResolue | null;
+  travaux?: Record<string, unknown>;
+  dates?: Record<string, unknown>;
+  logement?: Record<string, unknown>;
+  montants?: Record<string, unknown>;
+  rge?: Record<string, unknown>;
+} = {}): DossierComplet {
+  return {
+    dossier: { dispositif: over.dispositif ?? "cee", created_at: "2026-06-01" },
+    artisan: null,
+    caracteristiques: {
+      fiche: "BAR-EN-101",
+      beneficiaire: {
+        nom: "Martin", prenom: "Claire", adresse: "12 rue des Lilas",
+        code_postal: "93100", commune: "Montreuil", email: null, telephone: null,
+        occupation: "proprietaire_occupant", precarite: "precaire",
+      },
+      logement: { type: "maison", annee_construction: 1985, residence: "principale", surface_habitable: 90, ...over.logement },
+      travaux: {
+        type_isolation: "combles_perdus", fiche: "BAR-EN-101", surface_isolee_m2: 95,
+        isolant_type: "laine de verre", isolant_marque: "Isover", isolant_reference: "IBR 300",
+        resistance_thermique_r: 7.5, epaisseur_mm: 300, ...over.travaux,
+      },
+      montants: { ht: 4200, ttc: 4431, prime_estime: 1800, ...over.montants },
+      rge: { numero: "QB/12345", domaine: "Qualibat 7131", date_debut: "2024-01-01", date_fin: "2027-12-31", ...over.rge },
+    },
+    dates: { visite_technique: "2026-03-05", devis: "2026-03-10", debut_travaux: "2026-04-01", fin_travaux: "2026-04-05", facture: "2026-04-10", ...over.dates },
+    regle: over.regle === undefined ? regleCombles() : over.regle,
+  } as unknown as DossierComplet;
+}
+
+const codes = (d: DossierComplet) =>
+  controlerDossierCeeIsolation(d, AUJ).findings.map((f) => `${f.code}:${f.severite}`);
+
+describe("controlerDossierCeeIsolation", () => {
+  it("dossier de référence : conforme, aucun bloquant", () => {
+    const r = controlerDossierCeeIsolation(dossier(), AUJ);
+    expect(r.conforme).toBe(true);
+    expect(r.nbBloquants).toBe(0);
+  });
+
+  it("travaux commencés avant le devis : bloquant", () => {
+    const r = controlerDossierCeeIsolation(
+      dossier({ dates: { devis: "2026-04-10", debut_travaux: "2026-04-01" } }),
+      AUJ,
+    );
+    expect(r.conforme).toBe(false);
+    expect(codes(dossier({ dates: { devis: "2026-04-10", debut_travaux: "2026-04-01" } })))
+      .toContain("chrono_devis_travaux:bloquant");
+  });
+
+  it("RGE expirée à la date du devis : bloquant", () => {
+    const r = controlerDossierCeeIsolation(dossier({ rge: { date_fin: "2025-01-01" } }), AUJ);
+    expect(r.conforme).toBe(false);
+    expect(codes(dossier({ rge: { date_fin: "2025-01-01" } }))).toContain("rge_validite:bloquant");
+  });
+
+  it("R insuffisant selon le seuil de la règle : bloquant", () => {
+    const r = controlerDossierCeeIsolation(dossier({ travaux: { resistance_thermique_r: 6 } }), AUJ);
+    expect(r.conforme).toBe(false);
+    expect(codes(dossier({ travaux: { resistance_thermique_r: 6 } }))).toContain("technique_resistance:bloquant");
+  });
+
+  it("seuil R piloté par la règle : R=4 conforme si r_min=3 (planchers)", () => {
+    const r = controlerDossierCeeIsolation(
+      dossier({ travaux: { resistance_thermique_r: 4 }, regle: regleCombles({ r_min: 3 }) }),
+      AUJ,
+    );
+    expect(codes(dossier({ travaux: { resistance_thermique_r: 4 }, regle: regleCombles({ r_min: 3 }) })))
+      .toContain("technique_resistance:ok");
+    expect(r.conforme).toBe(true);
+  });
+
+  it("ancienneté : logement 2018 conforme en CEE (2 ans) mais bloqué en MPR (15 ans)", () => {
+    const cee = controlerDossierCeeIsolation(dossier({ logement: { annee_construction: 2018 } }), AUJ);
+    expect(cee.conforme).toBe(true);
+
+    const mpr = controlerDossierCeeIsolation(
+      dossier({ dispositif: "maprimerenov", logement: { annee_construction: 2018 }, regle: regleCombles({ anciennete_min_ans: 15 }) }),
+      AUJ,
+    );
+    expect(mpr.conforme).toBe(false);
+  });
+
+  it("MPR sans règle active pour le geste : bloquant (non éligible)", () => {
+    const r = controlerDossierCeeIsolation(dossier({ dispositif: "maprimerenov", regle: null }), AUJ);
+    expect(r.conforme).toBe(false);
+    expect(codes(dossier({ dispositif: "maprimerenov", regle: null }))).toContain("eligibilite_dispositif:bloquant");
+  });
+
+  it("taux de TVA inhabituel : avertissement (non bloquant)", () => {
+    // TTC = HT * 1.10 -> 10 % au lieu de 5,5 %
+    const r = controlerDossierCeeIsolation(dossier({ montants: { ht: 4200, ttc: 4620 } }), AUJ);
+    expect(r.conforme).toBe(true);
+    expect(codes(dossier({ montants: { ht: 4200, ttc: 4620 } }))).toContain("montants_tva:avertissement");
+  });
+
+  it("TTC inférieur au HT : bloquant", () => {
+    const r = controlerDossierCeeIsolation(dossier({ montants: { ht: 4200, ttc: 4000 } }), AUJ);
+    expect(r.conforme).toBe(false);
+  });
+});

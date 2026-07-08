@@ -8,6 +8,8 @@ import { PaywallCta } from "@/components/dossier/paywall-cta";
 import { PRIX_DOSSIER_LABEL } from "@/lib/stripe/client";
 import { getAdminEmail } from "@/lib/auth/is-admin";
 import { ETAPE_PAR_STATUT, PARCOURS } from "@/lib/dossier/parcours";
+import { controlerDossierCeeIsolation } from "@/lib/rules/cee-isolation";
+import { TableauDeBord, type StatsTableau } from "@/components/dossier/tableau-de-bord";
 
 export const metadata = { title: "Mes dossiers · Dossimo" };
 
@@ -30,25 +32,68 @@ export default async function DossiersPage() {
   const { data: dossiers } = await supabase
     .from("dossiers")
     .select(
-      "id, statut, type_travaux, commune, code_postal, montant_estime, created_at, caracteristiques_techniques_json",
+      "id, statut, dispositif, type_travaux, commune, code_postal, montant_estime, created_at, caracteristiques_techniques_json, dates_json",
     )
     .order("created_at", { ascending: false });
 
   const rows = dossiers ?? [];
   const adminEmail = await getAdminEmail();
 
-  // Accès (paiement) calculé pour toute la liste en 1 requête supplémentaire :
-  // le dossier le plus ancien est offert (§10) ; les autres nécessitent un
-  // paiement encaissé. Voir src/lib/dossier/acces.ts pour la logique côté PDF.
+  // Accès (paiement) calculé pour toute la liste. Le dossier le plus ancien est
+  // offert (§10) ; les autres nécessitent un paiement encaissé.
   const { data: paiements } = await supabase
     .from("paiements")
-    .select("dossier_id")
+    .select("dossier_id, montant")
     .eq("statut", "paye");
   const paidSet = new Set((paiements ?? []).map((p) => p.dossier_id));
+  const revenu = (paiements ?? []).reduce((s, p) => s + (Number(p.montant) || 0), 0);
   // rows est trié du plus récent au plus ancien → le dernier est le plus ancien.
   const gratuitId = rows.length ? rows[rows.length - 1].id : null;
   const acces = (id: string): "gratuit" | "paye" | "verrouille" =>
     id === gratuitId ? "gratuit" : paidSet.has(id) ? "paye" : "verrouille";
+
+  // Règles actives (1 requête) pour évaluer la conformité de chaque dossier.
+  const { data: regles } = await supabase
+    .from("regles_metier")
+    .select("dispositif, type_travaux, condition_json")
+    .eq("actif", true);
+  const reglesMap = new Map(
+    (regles ?? []).map((r) => [
+      `${r.dispositif}:${r.type_travaux}`,
+      { condition: r.condition_json, pieces: [], mentions: [], version: 1, versionFormulaire: null },
+    ]),
+  );
+
+  // Statistiques du tableau de bord.
+  const parEtat = Object.fromEntries(
+    PARCOURS.map((e) => [e.statut, 0]),
+  ) as StatsTableau["parEtat"];
+  let conformes = 0;
+  let baseConformite = 0;
+  for (const d of rows) {
+    parEtat[d.statut] = (parEtat[d.statut] ?? 0) + 1;
+    try {
+      const data = {
+        dossier: { dispositif: d.dispositif },
+        artisan: null,
+        caracteristiques: d.caracteristiques_techniques_json,
+        dates: d.dates_json,
+        regle: reglesMap.get(`${d.dispositif}:${d.type_travaux}`) ?? null,
+      } as unknown as Parameters<typeof controlerDossierCeeIsolation>[0];
+      baseConformite += 1;
+      if (controlerDossierCeeIsolation(data).conforme) conformes += 1;
+    } catch {
+      // dossier incomplet : exclu du calcul de conformité.
+    }
+  }
+  const stats: StatsTableau = {
+    total: rows.length,
+    parEtat,
+    payes: paidSet.size,
+    revenu,
+    conformes,
+    tauxConformite: baseConformite ? Math.round((conformes / baseConformite) * 100) : null,
+  };
 
   return (
     <div className="mx-auto max-w-[1280px] px-8 py-12">
@@ -71,6 +116,12 @@ export default async function DossiersPage() {
           </Link>
         )}
       </div>
+
+      {rows.length > 0 && (
+        <div className="mt-8">
+          <TableauDeBord stats={stats} />
+        </div>
+      )}
 
       {rows.length === 0 ? (
         <div className="mt-10 flex flex-col items-center justify-center rounded border border-dashed border-filigrane bg-blanc-casse px-6 py-16 text-center">
