@@ -11,6 +11,8 @@ export type Dispositif = "maprimerenov" | "cee";
 export type StatutAbonnement = "aucun" | "actif" | "expire";
 export type TypePaiement = "abonnement" | "ponctuel";
 export type StatutPaiement = "en_attente" | "paye" | "echoue" | "rembourse";
+export type TypePiece = "devis" | "facture" | "autre";
+export type StatutExtraction = "en_attente" | "ok" | "echec";
 
 export type Json =
   | string
@@ -189,6 +191,47 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["leads"]["Insert"]>;
         Relationships: [];
       };
+      pieces_justificatives: {
+        Row: {
+          id: string;
+          dossier_id: string;
+          type: TypePiece;
+          storage_path: string;
+          nom_fichier: string | null;
+          mime: string | null;
+          taille: number | null;
+          extraction_json: Json;
+          extraction_statut: StatutExtraction;
+          extraction_erreur: string | null;
+          created_at: string;
+          extracted_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          dossier_id: string;
+          type: TypePiece;
+          storage_path: string;
+          nom_fichier?: string | null;
+          mime?: string | null;
+          taille?: number | null;
+          extraction_json?: Json;
+          extraction_statut?: StatutExtraction;
+          extraction_erreur?: string | null;
+          created_at?: string;
+          extracted_at?: string | null;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["pieces_justificatives"]["Insert"]
+        >;
+        Relationships: [
+          {
+            foreignKeyName: "pieces_justificatives_dossier_id_fkey";
+            columns: ["dossier_id"];
+            referencedRelation: "dossiers";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
@@ -198,6 +241,8 @@ export interface Database {
       statut_abonnement: StatutAbonnement;
       type_paiement: TypePaiement;
       statut_paiement: StatutPaiement;
+      type_piece: TypePiece;
+      statut_extraction: StatutExtraction;
     };
     CompositeTypes: Record<string, never>;
   };
@@ -209,3 +254,5 @@ export type Dossier = Database["public"]["Tables"]["dossiers"]["Row"];
 export type RegleMetier = Database["public"]["Tables"]["regles_metier"]["Row"];
 export type Paiement = Database["public"]["Tables"]["paiements"]["Row"];
 export type Lead = Database["public"]["Tables"]["leads"]["Row"];
+export type PieceJustificative =
+  Database["public"]["Tables"]["pieces_justificatives"]["Row"];

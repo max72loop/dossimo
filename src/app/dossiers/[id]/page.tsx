@@ -2,8 +2,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { getDossier } from "@/lib/dossier/get-dossier";
+import { getDossierPieces } from "@/lib/piece/get";
 import { resolveCerfaTemplate } from "@/lib/cerfa/registry";
 import { PointsVigilanceIA } from "@/components/dossier/points-vigilance-ia";
+import { PiecesJustificatives } from "@/components/dossier/pieces-justificatives";
 import {
   LOGEMENT_TYPES,
   OCCUPATIONS,
@@ -115,6 +117,9 @@ export default async function DossierPage({
     dates.devis || dossier.created_at,
   );
 
+  // Pièces réelles uploadées + écarts avec la saisie.
+  const piecesReelles = await getDossierPieces(data);
+
   return (
     <main className="mx-auto max-w-4xl px-8 py-10">
       <Link
@@ -177,6 +182,9 @@ export default async function DossierPage({
           ))}
         </ul>
       </section>
+
+      {/* Pièces réelles (devis/facture) : cohérence avec la saisie */}
+      <PiecesJustificatives dossierId={id} initial={piecesReelles} />
 
       {/* Points de vigilance rédigés (LLM, à la demande) */}
       <PointsVigilanceIA dossierId={id} />
