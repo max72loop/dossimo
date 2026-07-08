@@ -6,11 +6,15 @@ import path from "node:path";
 import { PDFDocument } from "pdf-lib";
 
 import type { DossierComplet } from "@/lib/dossier/get-dossier";
-import { resolveCerfaTemplate, type CerfaTemplate } from "@/lib/cerfa/registry";
-import { buildPlaceholderDoc } from "@/lib/cerfa/placeholder-template";
+import {
+  resolveCerfaTemplate,
+  type CerfaTemplate,
+  type CerfaKind,
+} from "@/lib/cerfa/registry";
 import { fillAndFlatten } from "@/lib/cerfa/fill";
 import { fillByOverlay } from "@/lib/cerfa/overlay";
 import { mapDossierToAhCee, mapDossierToMandatMpr } from "@/lib/cerfa/mapping";
+import { renderAhCeePdf } from "@/lib/pack/render";
 
 export interface CerfaMeta {
   id: string;
@@ -18,6 +22,7 @@ export interface CerfaMeta {
   arrete: string;
   version: string;
   official: boolean;
+  kind: CerfaKind;
 }
 
 export type GenerateResult =
@@ -30,6 +35,7 @@ const toMeta = (t: CerfaTemplate): CerfaMeta => ({
   arrete: t.arrete,
   version: t.version,
   official: t.official,
+  kind: t.kind,
 });
 
 /** Date pertinente pour choisir la version : date de devis, sinon création. */
@@ -80,10 +86,20 @@ export async function generateCerfa(data: DossierComplet): Promise<GenerateResul
     return { ok: true, bytes, meta: toMeta(t) };
   }
 
-  // acroform : PDF officiel à champs si présent, sinon placeholder généré.
-  const doc = t.official
-    ? await PDFDocument.load(new Uint8Array(await readFile(officialPath(t))))
-    : await buildPlaceholderDoc(t);
+  if (t.strategy === "reproduction") {
+    // Reproduction fidèle du modèle réglementaire (React-PDF), pré-remplie.
+    const buf = await renderAhCeePdf(data, {
+      titre: t.titre,
+      arrete: t.arrete,
+      version: t.version,
+    });
+    return { ok: true, bytes: new Uint8Array(buf), meta: toMeta(t) };
+  }
+
+  // acroform : PDF officiel réel à champs (déposé dans public/cerfa/).
+  const doc = await PDFDocument.load(
+    new Uint8Array(await readFile(officialPath(t))),
+  );
   const bytes = await fillAndFlatten(doc, mapDossierToAhCee(data));
   return { ok: true, bytes, meta: toMeta(t) };
 }

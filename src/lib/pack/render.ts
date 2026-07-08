@@ -9,6 +9,10 @@ import {
   ControleDocument,
   RecapDocument,
 } from "@/lib/pack/documents";
+import {
+  AttestationHonneurDocument,
+  type AhRef,
+} from "@/lib/cerfa/ah-document";
 import { controlerDossierCeeIsolation } from "@/lib/rules/cee-isolation";
 import type { PointVigilance } from "@/lib/llm/vigilance";
 
@@ -34,6 +38,18 @@ export function renderControlePdf(
       data,
       rapport,
       vigilance,
+    }) as unknown as DocElement,
+  );
+}
+
+export function renderAhCeePdf(
+  data: DossierComplet,
+  ref: AhRef,
+): Promise<Buffer> {
+  return renderToBuffer(
+    createElement(AttestationHonneurDocument, {
+      data,
+      ref,
     }) as unknown as DocElement,
   );
 }

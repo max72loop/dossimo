@@ -237,20 +237,23 @@ export default async function DossierPage({
           {cerfa.ok && (
             <span
               className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium ${
-                cerfa.template.official
+                cerfa.template.kind === "officiel"
                   ? "bg-succes-bg text-succes"
-                  : "bg-avertissement-bg text-avertissement"
+                  : "bg-tampon/10 text-tampon"
               }`}
             >
-              {cerfa.template.official ? "Officiel" : "Modèle non officiel"}
+              {cerfa.template.kind === "officiel" ? "Officiel" : "Reproduction conforme"}
             </span>
           )}
         </div>
 
-        {cerfa.ok && !cerfa.template.official && (
-          <p className="mt-3 rounded border-l-4 border-avertissement bg-avertissement-bg px-3 py-2 text-xs text-avertissement">
-            Modèle de travail à champs (filigrane « NON OFFICIEL »). À remplacer
-            par le PDF officiel de l&apos;attestation avant tout dépôt.
+        {cerfa.ok && cerfa.template.kind === "reproduction" && (
+          <p className="mt-3 rounded border-l-4 border-tampon bg-tampon/5 px-3 py-2 text-xs text-ardoise">
+            L&apos;attestation sur l&apos;honneur CEE n&apos;est pas un Cerfa
+            remplissable : c&apos;est un modèle réglementaire imprimé et signé à la
+            main. Dossimo en produit une <strong>reproduction fidèle du modèle en
+            vigueur</strong>, pré-remplie depuis votre saisie. À imprimer, puis dater
+            et signer de façon manuscrite (bénéficiaire + professionnel) avant dépôt.
           </p>
         )}
 

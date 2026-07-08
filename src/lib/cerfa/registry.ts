@@ -18,7 +18,16 @@
 
 import type { Dispositif } from "@/lib/database.types";
 
-export type CerfaStrategy = "acroform" | "overlay";
+export type CerfaStrategy = "acroform" | "overlay" | "reproduction";
+
+/**
+ * Nature du document produit :
+ *  - `officiel`      : PDF officiel réel (rempli par overlay ou acroform).
+ *  - `reproduction`  : reproduction fidèle du modèle réglementaire quand il
+ *    n'existe pas de PDF officiel remplissable/canonique (cas de l'AH CEE, qui
+ *    est un modèle statique, spécifique à l'obligé et versionné par arrêté).
+ */
+export type CerfaKind = "officiel" | "reproduction";
 
 export interface CerfaField {
   name: string;
@@ -46,8 +55,9 @@ export interface CerfaTemplate {
   version: string;
   effectiveFrom: string; // ISO (YYYY-MM-DD)
   effectiveTo: string | null;
-  /** true = document officiel réel ; false = placeholder généré. */
+  /** true = document officiel réel ; false = reproduction fidèle du modèle. */
   official: boolean;
+  kind: CerfaKind;
   strategy: CerfaStrategy;
   /** Champs canoniques (stratégie acroform). */
   fields?: readonly CerfaField[];
@@ -110,13 +120,15 @@ const TEMPLATES: CerfaTemplate[] = [
     id: "ah-cee-bar-en",
     dispositif: "cee",
     fiches: ["BAR-EN-101", "BAR-EN-102", "BAR-EN-103"],
-    titre: "Attestation sur l'honneur — CEE Isolation (BAR-EN)",
-    arrete: "Arrêté du 22 décembre 2014 modifié — modèle d'attestation sur l'honneur",
-    version: "2024-10",
+    titre: "Attestation sur l'honneur — CEE Isolation (fiches BAR-EN)",
+    arrete:
+      "Modèle réglementaire CEE — arrêtés des 4 et 22 décembre 2014 modifiés ; fiche BAR-EN v. A54.5 applicable au 01/01/2024",
+    version: "2024-01",
     effectiveFrom: "2024-01-01",
     effectiveTo: null,
     official: false,
-    strategy: "acroform",
+    kind: "reproduction",
+    strategy: "reproduction",
     fields: AH_CEE_FIELDS,
   },
   {
@@ -129,6 +141,7 @@ const TEMPLATES: CerfaTemplate[] = [
     effectiveFrom: "2024-10-15",
     effectiveTo: null,
     official: true,
+    kind: "officiel",
     strategy: "overlay",
     file: "cerfa-16089-02-mandat-mpr.pdf",
     overlay: MANDAT_MPR_OVERLAY,
