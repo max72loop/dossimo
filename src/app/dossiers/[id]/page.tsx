@@ -11,6 +11,7 @@ import { AhObligeFill } from "@/components/dossier/ah-oblige-fill";
 import { PaywallCta } from "@/components/dossier/paywall-cta";
 import { accesDossier } from "@/lib/dossier/acces";
 import { PRIX_DOSSIER_LABEL } from "@/lib/stripe/client";
+import { estimerPrime } from "@/lib/dossier/prime";
 import {
   LOGEMENT_TYPES,
   OCCUPATIONS,
@@ -139,6 +140,9 @@ export default async function DossierPage({
   // à la fois les téléchargements (routes PDF) et le détail affiché ici.
   const acces = await accesDossier(data);
 
+  // Estimation indicative de prime (barème piloté par la règle métier).
+  const prime = estimerPrime(data);
+
   return (
     <main className="mx-auto max-w-4xl px-8 py-10">
       <Link
@@ -261,6 +265,37 @@ export default async function DossierPage({
           </p>
         )}
       </section>
+
+      {/* Estimation indicative de prime (barème piloté par la règle métier) */}
+      {prime && (
+        <section className="mb-6 rounded border border-filigrane bg-blanc-casse p-5 shadow-sm">
+          <div className="flex items-end justify-between gap-4">
+            <div>
+              <h2 className="font-serif text-base font-semibold text-encre">
+                Prime {prime.dispositif} — estimation
+              </h2>
+              <p className="mt-1 text-xs text-ardoise">{prime.base}</p>
+            </div>
+            <p className="shrink-0 font-serif text-2xl font-semibold text-terre-cuite">
+              ≈ {euro(prime.montant)}
+            </p>
+          </div>
+          {c.montants.prime_estime != null &&
+            Math.abs(c.montants.prime_estime - prime.montant) > 1 && (
+              <p className="mt-2 text-xs text-ardoise">
+                Montant saisi dans le dossier :{" "}
+                <span className="font-medium text-encre">
+                  {euro(c.montants.prime_estime)}
+                </span>{" "}
+                — l&apos;estimation Dossimo diffère, vérifiez la saisie ou le barème.
+              </p>
+            )}
+          <p className="mt-2 text-[11px] text-encre-claire">
+            Estimation indicative, calculée depuis le barème de la règle métier
+            (éditable dans l&apos;admin). Ne vaut pas notification de la prime.
+          </p>
+        </section>
+      )}
 
       {/* Sections de valeur : verrouillées tant que le dossier n'est pas débloqué */}
       {acces.debloque && (

@@ -39,6 +39,33 @@ function parsePieces(raw: string): { ok: true; value: unknown[] } | { ok: false;
   return { ok: true, value: parsed.data };
 }
 
+const primeSchema = z.object({
+  par_m2: z
+    .object({ classique: z.number(), precaire: z.number(), grande_precarite: z.number() })
+    .partial()
+    .optional(),
+  plafond: z.number().nullable().optional(),
+});
+
+/** Parse le barème de prime (objet JSON) ; vide → pas de barème. */
+function parsePrime(
+  raw: string,
+): { ok: true; value: unknown | undefined } | { ok: false; error: string } {
+  const trimmed = (raw ?? "").trim();
+  if (!trimmed || trimmed === "{}" || trimmed === "null") return { ok: true, value: undefined };
+  let json: unknown;
+  try {
+    json = JSON.parse(trimmed);
+  } catch {
+    return { ok: false, error: "Barème prime : JSON invalide." };
+  }
+  const parsed = primeSchema.safeParse(json);
+  if (!parsed.success) {
+    return { ok: false, error: "Barème prime : format attendu { par_m2: { classique, precaire, grande_precarite }, plafond }." };
+  }
+  return { ok: true, value: parsed.data };
+}
+
 /** Valide et parse un JSON de mentions (tableau de chaînes). */
 function parseMentions(raw: string): { ok: true; value: string[] } | { ok: false; error: string } {
   let json: unknown;
@@ -63,6 +90,7 @@ export interface RegleUpdateInput {
   actif: boolean;
   pieces_json: string;
   mentions_json: string;
+  prime_json: string;
 }
 
 /** Met à jour une règle métier (admin uniquement). */
@@ -73,11 +101,14 @@ export async function updateRegle(input: RegleUpdateInput): Promise<RegleActionR
   if (!pieces.ok) return pieces;
   const mentions = parseMentions(input.mentions_json);
   if (!mentions.ok) return mentions;
+  const prime = parsePrime(input.prime_json);
+  if (!prime.ok) return prime;
 
   const condition = conditionSchema.parse({
     ...(input.r_min != null ? { r_min: input.r_min } : {}),
     ...(input.tva_taux != null ? { tva_taux: input.tva_taux } : {}),
     ...(input.anciennete_min_ans != null ? { anciennete_min_ans: input.anciennete_min_ans } : {}),
+    ...(prime.value ? { prime: prime.value } : {}),
   });
 
   const admin = createAdminClient();
@@ -110,6 +141,7 @@ export interface RegleCreateInput {
   version_formulaire: string;
   pieces_json: string;
   mentions_json: string;
+  prime_json: string;
 }
 
 /** Crée une nouvelle règle (nouveau couple ou nouvelle version). Admin uniquement. */
@@ -121,11 +153,14 @@ export async function createRegle(input: RegleCreateInput): Promise<RegleActionR
   if (!pieces.ok) return pieces;
   const mentions = parseMentions(input.mentions_json);
   if (!mentions.ok) return mentions;
+  const prime = parsePrime(input.prime_json);
+  if (!prime.ok) return prime;
 
   const condition = conditionSchema.parse({
     ...(input.r_min != null ? { r_min: input.r_min } : {}),
     ...(input.tva_taux != null ? { tva_taux: input.tva_taux } : {}),
     ...(input.anciennete_min_ans != null ? { anciennete_min_ans: input.anciennete_min_ans } : {}),
+    ...(prime.value ? { prime: prime.value } : {}),
   });
 
   const admin = createAdminClient();

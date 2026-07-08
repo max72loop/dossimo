@@ -14,11 +14,27 @@ import type { Database, Dispositif } from "@/lib/database.types";
  * règle active n'existe (résolution best-effort, jamais bloquante).
  */
 
+/** Barème de prime (indicatif, éditable) : montant €/m² par catégorie de revenus. */
+const primeSchema = z
+  .object({
+    par_m2: z
+      .object({
+        classique: z.number(),
+        precaire: z.number(),
+        grande_precarite: z.number(),
+      })
+      .partial()
+      .optional(),
+    plafond: z.number().nullable().optional(),
+  })
+  .optional();
+
 const conditionSchema = z
   .object({
     r_min: z.number().optional(),
     tva_taux: z.number().optional(),
     anciennete_min_ans: z.number().optional(),
+    prime: primeSchema,
   })
   .passthrough();
 
