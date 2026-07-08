@@ -208,22 +208,35 @@ export default async function DossierPage({
           Pack documentaire généré depuis la saisie unique. Toutes les pièces
           dérivent des mêmes données.
         </p>
-        <div className="mt-3 flex flex-wrap gap-2">
+        <div className="mt-3 flex flex-wrap items-center gap-2">
           <a
-            href={`/dossiers/${id}/recap.pdf`}
+            href={`/dossiers/${id}/pack.pdf`}
             target="_blank"
             rel="noopener"
             className="inline-flex h-10 items-center rounded bg-terre-cuite px-4 text-sm font-medium text-blanc-casse transition-colors hover:bg-terre-cuite-hover"
           >
-            ↓ Récapitulatif client (PDF)
+            ↓ Pack complet (PDF unique)
+          </a>
+          <span className="text-xs text-encre-claire">
+            page de garde · récap · rapport · checklist · attestation
+          </span>
+        </div>
+        <div className="mt-2 flex flex-wrap gap-2">
+          <a
+            href={`/dossiers/${id}/recap.pdf`}
+            target="_blank"
+            rel="noopener"
+            className="inline-flex h-8 items-center rounded border border-filigrane bg-blanc-casse px-3 text-xs font-medium text-ardoise transition-colors hover:bg-papier"
+          >
+            Récapitulatif seul
           </a>
           <a
             href={`/dossiers/${id}/checklist.pdf`}
             target="_blank"
             rel="noopener"
-            className="inline-flex h-10 items-center rounded border border-encre bg-blanc-casse px-4 text-sm font-medium text-encre transition-colors hover:bg-papier"
+            className="inline-flex h-8 items-center rounded border border-filigrane bg-blanc-casse px-3 text-xs font-medium text-ardoise transition-colors hover:bg-papier"
           >
-            ↓ Checklist de conformité (PDF)
+            Checklist seule
           </a>
         </div>
       </div>

@@ -2,18 +2,21 @@ import "server-only";
 
 import { createElement } from "react";
 import { renderToBuffer } from "@react-pdf/renderer";
+import { PDFDocument } from "pdf-lib";
 
 import type { DossierComplet } from "@/lib/dossier/get-dossier";
 import {
   ChecklistDocument,
   ControleDocument,
+  PackCoverDocument,
   RecapDocument,
 } from "@/lib/pack/documents";
+import { controlerDossierCeeIsolation } from "@/lib/rules/cee-isolation";
+import type { RapportControle } from "@/lib/rules/types";
 import {
   AttestationHonneurDocument,
   type AhRef,
 } from "@/lib/cerfa/ah-document";
-import { controlerDossierCeeIsolation } from "@/lib/rules/cee-isolation";
 import type { PointVigilance } from "@/lib/llm/vigilance";
 
 // renderToBuffer type son argument comme un élément <Document> ; nos wrappers
@@ -52,6 +55,38 @@ export function renderAhCeePdf(
       ref,
     }) as unknown as DocElement,
   );
+}
+
+export function renderPackCoverPdf(
+  data: DossierComplet,
+  opts: { rapport: RapportControle; cerfaTitre?: string; hasVigilance: boolean },
+): Promise<Buffer> {
+  return renderToBuffer(
+    createElement(PackCoverDocument, { data, ...opts }) as unknown as DocElement,
+  );
+}
+
+/** Rapport déterministe seul (pour la page de garde, sans re-rendre le PDF). */
+export function controlePack(data: DossierComplet): RapportControle {
+  return controlerDossierCeeIsolation(data);
+}
+
+/**
+ * Concatène plusieurs PDF (déjà rendus) en un seul, dans l'ordre fourni.
+ * Sert à assembler le pack complet en un unique fichier téléchargeable.
+ */
+export async function mergePdfs(
+  parts: Array<Uint8Array | Buffer>,
+): Promise<Uint8Array> {
+  const out = await PDFDocument.create();
+  for (const part of parts) {
+    const src = await PDFDocument.load(
+      part instanceof Buffer ? new Uint8Array(part) : part,
+    );
+    const pages = await out.copyPages(src, src.getPageIndices());
+    for (const page of pages) out.addPage(page);
+  }
+  return out.save();
 }
 
 /** Slug de fichier à partir du nom du bénéficiaire. */

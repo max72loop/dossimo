@@ -330,3 +330,96 @@ export function ChecklistDocument({ data }: { data: DossierComplet }) {
     </Document>
   );
 }
+
+// ---------------------------------------------------------------------------
+// Page de garde du pack complet (PDF fusionné)
+// ---------------------------------------------------------------------------
+export function PackCoverDocument({
+  data,
+  rapport,
+  cerfaTitre,
+  hasVigilance,
+}: {
+  data: DossierComplet;
+  rapport: RapportControle;
+  cerfaTitre?: string;
+  hasVigilance: boolean;
+}) {
+  const { caracteristiques: c } = data;
+  const travaux = TYPES_ISOLATION[c.travaux.type_isolation];
+  const conforme = rapport.conforme;
+
+  const sommaire = [
+    "Récapitulatif client — la saisie unique dont tout le pack découle",
+    `Rapport de contrôle anti-refus${hasVigilance ? " (dont points de vigilance rédigés)" : ""}`,
+    "Checklist de conformité — pièces à réunir et mentions obligatoires",
+    cerfaTitre ?? null,
+  ].filter(Boolean) as string[];
+
+  return (
+    <Document title={`Pack — ${c.beneficiaire.prenom} ${c.beneficiaire.nom}`} author="Dossimo">
+      <Page size="A4" style={styles.page}>
+        <Header
+          docType="Pack documentaire"
+          title={`${c.beneficiaire.prenom} ${c.beneficiaire.nom}`}
+          subtitle={`${travaux.label} · ${c.fiche}`}
+        />
+
+        <View
+          style={{
+            borderRadius: 4,
+            padding: 12,
+            marginBottom: 16,
+            backgroundColor: conforme ? COLORS.okSoft : COLORS.dangerSoft,
+          }}
+        >
+          <Text
+            style={{
+              fontFamily: "Helvetica-Bold",
+              fontSize: 12,
+              color: conforme ? COLORS.ok : COLORS.danger,
+            }}
+          >
+            {conforme
+              ? "Aucun point bloquant détecté au contrôle automatique."
+              : `${rapport.nbBloquants} point(s) bloquant(s) à corriger avant dépôt.`}
+          </Text>
+          <Text style={{ marginTop: 3, color: COLORS.muted }}>
+            {rapport.nbAvertissements > 0
+              ? `${rapport.nbAvertissements} point(s) à vérifier. `
+              : ""}
+            Détail dans le rapport de contrôle ci-joint.
+          </Text>
+        </View>
+
+        <Section title="Ce pack contient">
+          {sommaire.map((titre, i) => (
+            <View
+              key={i}
+              style={{ flexDirection: "row", gap: 8, paddingVertical: 4 }}
+              wrap={false}
+            >
+              <Text style={{ fontFamily: "Helvetica-Bold", color: COLORS.tampon }}>
+                {i + 1}.
+              </Text>
+              <Text style={{ flex: 1 }}>{titre}</Text>
+            </View>
+          ))}
+        </Section>
+
+        <View style={styles.brandCard}>
+          <Text>
+            Toutes les pièces de ce pack sont générées depuis la même saisie
+            unique : elles sont cohérentes entre elles par construction (un écart
+            devis/facture, premier motif de refus, devient structurellement
+            impossible). Ce pack est une aide à la préparation : l&apos;artisan et
+            son client déposent eux-mêmes le dossier auprès de l&apos;organisme
+            compétent.
+          </Text>
+        </View>
+
+        <Footer />
+      </Page>
+    </Document>
+  );
+}
