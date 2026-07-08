@@ -114,7 +114,10 @@ export default async function DossierPage({
   if (!data) notFound();
 
   const { dossier, artisan, caracteristiques: c, dates } = data;
-  const travaux = TYPES_ISOLATION[c.travaux.type_isolation];
+  const estIsolation = (c.geste ?? "isolation") === "isolation";
+  const posteLabel = estIsolation
+    ? TYPES_ISOLATION[c.travaux.type_isolation].label
+    : "Pompe à chaleur air/eau";
   const pieces = piecesCeeIsolation(data);
   const mentionsDevis = mentionsObligatoires(data).filter(
     (m) => m.document === "Devis",
@@ -161,7 +164,7 @@ export default async function DossierPage({
             {c.beneficiaire.prenom} {c.beneficiaire.nom}
           </h1>
           <p className="mt-1 text-sm text-ardoise">
-            {travaux.label} · <span className="font-mono text-xs">{c.fiche}</span>{" "}
+            {posteLabel} · <span className="font-mono text-xs">{c.fiche}</span>{" "}
             · {c.beneficiaire.commune}{" "}
             <span className="font-mono text-xs">({c.beneficiaire.code_postal})</span>
           </p>
@@ -317,6 +320,19 @@ export default async function DossierPage({
         </>
       )}
 
+      {!estIsolation && (
+        <section className="mb-6 rounded border border-filigrane bg-blanc-casse p-5 shadow-sm">
+          <h2 className="font-serif text-base font-semibold text-encre">Documents du pack</h2>
+          <p className="mt-1 text-sm text-ardoise">
+            Le contrôle anti-refus et l&apos;estimation de prime sont déjà actifs pour
+            ce geste. Les documents du pack (récapitulatif, checklist, attestation)
+            arrivent bientôt pour la pompe à chaleur.
+          </p>
+        </section>
+      )}
+
+      {estIsolation && (
+        <>
       {/* Pack documentaire */}
       <div className="mt-6 mb-6 rounded border border-filigrane bg-papier-fonce p-5">
         <p className="text-sm text-encre">
@@ -429,6 +445,9 @@ export default async function DossierPage({
         )}
       </section>
 
+        </>
+      )}
+
       {/* Données du dossier */}
       <div className="grid gap-4 sm:grid-cols-2">
         <Card title="Bénéficiaire">
@@ -455,11 +474,23 @@ export default async function DossierPage({
         </Card>
 
         <Card title="Travaux">
-          <Row label="Poste" value={`${travaux.label} (${c.fiche})`} />
-          <Row label="Surface isolée" value={`${c.travaux.surface_isolee_m2} m²`} mono />
-          <Row label="Isolant" value={c.travaux.isolant_type} />
-          <Row label="Résistance R" value={`${c.travaux.resistance_thermique_r} m²·K/W`} mono />
-          <Row label="Marque / réf." value={[c.travaux.isolant_marque, c.travaux.isolant_reference].filter(Boolean).join(" ") || "—"} />
+          <Row label="Poste" value={`${posteLabel} (${c.fiche})`} />
+          {estIsolation ? (
+            <>
+              <Row label="Surface isolée" value={`${c.travaux.surface_isolee_m2} m²`} mono />
+              <Row label="Isolant" value={c.travaux.isolant_type} />
+              <Row label="Résistance R" value={`${c.travaux.resistance_thermique_r} m²·K/W`} mono />
+              <Row label="Marque / réf." value={[c.travaux.isolant_marque, c.travaux.isolant_reference].filter(Boolean).join(" ") || "—"} />
+            </>
+          ) : (
+            <>
+              <Row label="ETAS" value={c.pac?.etas != null ? `${c.pac.etas} %` : "—"} mono />
+              <Row label="Puissance" value={c.pac?.puissance_kw != null ? `${c.pac.puissance_kw} kW` : "—"} mono />
+              <Row label="Régime" value={c.pac?.temperature === "basse" ? "Basse température" : c.pac?.temperature === "moyenne_haute" ? "Moyenne / haute" : "—"} />
+              <Row label="Marque / réf." value={[c.pac?.marque, c.pac?.reference].filter(Boolean).join(" ") || "—"} />
+              <Row label="Régulateur" value={c.pac?.regulateur_classe || "—"} />
+            </>
+          )}
         </Card>
 
         <Card title="Chronologie">

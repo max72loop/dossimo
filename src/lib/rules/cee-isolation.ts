@@ -31,7 +31,8 @@ export function controlerDossierCeeIsolation(
   const tvaAttendue = cond?.tva_taux ?? TVA_ISOLATION_DEFAUT;
   const ancienneteMin = cond?.anciennete_min_ans ?? ANCIENNETE_MIN_DEFAUT;
   const rMin =
-    cond?.r_min ?? TYPES_ISOLATION[c.travaux.type_isolation].r_min;
+    cond?.r_min ??
+    (c.travaux?.type_isolation ? TYPES_ISOLATION[c.travaux.type_isolation].r_min : 0);
 
   const dispositif = data.dossier.dispositif;
   const dispositifLabel =
@@ -200,35 +201,77 @@ export function controlerDossierCeeIsolation(
   }
 
   // ---------------------------------------------------------------------
-  // Performance technique (R minimal — piloté par la règle métier)
+  // Performance technique (seuil piloté par la règle métier, selon le geste)
   // ---------------------------------------------------------------------
-  if (c.travaux.resistance_thermique_r < rMin) {
-    add({
-      code: "technique_resistance",
-      categorie: "technique",
-      severite: "bloquant",
-      titre: "Résistance thermique R insuffisante",
-      detail: `R = ${c.travaux.resistance_thermique_r} m²·K/W, en dessous du minimum de ${rMin} attendu pour ce poste (${TYPES_ISOLATION[c.travaux.type_isolation].label}).`,
-    });
+  if ((c.geste ?? "isolation") === "pac_air_eau") {
+    // Pompe à chaleur air/eau : efficacité énergétique saisonnière (ETAS).
+    // Seuil selon le régime de température (basse ~126 %, moyenne/haute ~111 %),
+    // surchargeable par la règle métier.
+    const etasMin = cond?.etas_min ?? (c.pac?.temperature === "basse" ? 126 : 111);
+    const etas = c.pac?.etas;
+    if (etas == null) {
+      add({
+        code: "technique_etas",
+        categorie: "technique",
+        severite: "avertissement",
+        titre: "ETAS non renseignée",
+        detail: "L'efficacité énergétique saisonnière (ETAS) est nécessaire pour vérifier l'éligibilité de la PAC.",
+      });
+    } else if (etas < etasMin) {
+      add({
+        code: "technique_etas",
+        categorie: "technique",
+        severite: "bloquant",
+        titre: "ETAS insuffisante",
+        detail: `ETAS = ${etas} %, en dessous du minimum de ${etasMin} % attendu pour ce type de pompe à chaleur.`,
+      });
+    } else {
+      add({
+        code: "technique_etas",
+        categorie: "technique",
+        severite: "ok",
+        titre: "ETAS conforme",
+        detail: `ETAS = ${etas} % >= ${etasMin} %.`,
+      });
+    }
+    if (!c.pac?.regulateur_classe) {
+      add({
+        code: "technique_regulateur",
+        categorie: "technique",
+        severite: "avertissement",
+        titre: "Classe du régulateur non renseignée",
+        detail: "Un régulateur de classe IV à VIII est requis (BAR-TH-171). Renseignez-la et vérifiez la note de dimensionnement.",
+      });
+    }
   } else {
-    add({
-      code: "technique_resistance",
-      categorie: "technique",
-      severite: "ok",
-      titre: "Résistance thermique R conforme",
-      detail: `R = ${c.travaux.resistance_thermique_r} >= ${rMin} m²·K/W.`,
-    });
-  }
+    if (c.travaux.resistance_thermique_r < rMin) {
+      add({
+        code: "technique_resistance",
+        categorie: "technique",
+        severite: "bloquant",
+        titre: "Résistance thermique R insuffisante",
+        detail: `R = ${c.travaux.resistance_thermique_r} m²·K/W, en dessous du minimum de ${rMin} attendu pour ce poste (${TYPES_ISOLATION[c.travaux.type_isolation].label}).`,
+      });
+    } else {
+      add({
+        code: "technique_resistance",
+        categorie: "technique",
+        severite: "ok",
+        titre: "Résistance thermique R conforme",
+        detail: `R = ${c.travaux.resistance_thermique_r} >= ${rMin} m²·K/W.`,
+      });
+    }
 
-  if (!c.travaux.isolant_marque || !c.travaux.isolant_reference) {
-    add({
-      code: "technique_produit",
-      categorie: "pieces",
-      severite: "avertissement",
-      titre: "Marque ou référence de l'isolant manquante",
-      detail:
-        "La marque et la référence de l'isolant sont obligatoires sur le devis et la facture. Complétez-les pour éviter un refus.",
-    });
+    if (!c.travaux.isolant_marque || !c.travaux.isolant_reference) {
+      add({
+        code: "technique_produit",
+        categorie: "pieces",
+        severite: "avertissement",
+        titre: "Marque ou référence de l'isolant manquante",
+        detail:
+          "La marque et la référence de l'isolant sont obligatoires sur le devis et la facture. Complétez-les pour éviter un refus.",
+      });
+    }
   }
 
   // ---------------------------------------------------------------------

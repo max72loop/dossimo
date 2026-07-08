@@ -17,14 +17,24 @@ export interface EstimationPrime {
 
 export function estimerPrime(data: DossierComplet): EstimationPrime | null {
   const prime = data.regle?.condition?.prime;
-  const parM2 = prime?.par_m2;
-  if (!parM2) return null;
-
+  if (!prime) return null;
   const precarite = data.caracteristiques.beneficiaire.precarite;
+  const dispositif =
+    data.dossier.dispositif === "maprimerenov" ? "MaPrimeRénov'" : "CEE";
+
+  // Forfait (montant fixe, ex. pompe à chaleur).
+  if (prime.forfait) {
+    const f = prime.forfait[precarite];
+    if (f == null) return null;
+    return { montant: Math.round(f), base: "forfait selon le profil de revenus", dispositif };
+  }
+
+  // Montant au m² (isolation).
+  const parM2 = prime.par_m2;
+  const surface = data.caracteristiques.travaux?.surface_isolee_m2;
+  if (!parM2 || surface == null) return null;
   const taux = parM2[precarite];
   if (taux == null) return null;
-
-  const surface = data.caracteristiques.travaux.surface_isolee_m2;
   let montant = taux * surface;
   const plafonne = prime.plafond != null && montant > prime.plafond;
   if (plafonne && prime.plafond != null) montant = prime.plafond;
@@ -32,7 +42,6 @@ export function estimerPrime(data: DossierComplet): EstimationPrime | null {
   return {
     montant: Math.round(montant),
     base: `${taux} €/m² × ${surface} m²${plafonne ? ` (plafonné à ${prime.plafond} €)` : ""}`,
-    dispositif:
-      data.dossier.dispositif === "maprimerenov" ? "MaPrimeRénov'" : "CEE",
+    dispositif,
   };
 }

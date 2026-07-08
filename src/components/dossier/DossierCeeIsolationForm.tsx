@@ -25,7 +25,7 @@ const isolationOptions = Object.fromEntries(
 type Champ = Path<CeeIsolationInput>;
 
 const ETAPES: { titre: string; champs: Champ[] }[] = [
-  { titre: "Dispositif", champs: ["dispositif"] },
+  { titre: "Dispositif", champs: ["dispositif", "geste"] },
   {
     titre: "Entreprise",
     champs: [
@@ -49,6 +49,8 @@ const ETAPES: { titre: string; champs: Champ[] }[] = [
     champs: [
       "type_isolation", "surface_isolee_m2", "isolant_type", "resistance_thermique_r",
       "isolant_marque", "isolant_reference", "epaisseur_mm",
+      "pac_etas", "pac_puissance_kw", "pac_temperature", "pac_marque",
+      "pac_reference", "pac_regulateur_classe",
     ],
   },
   {
@@ -87,6 +89,8 @@ export function DossierCeeIsolationForm({
   const typeIsolation = watch("type_isolation");
   const rMin = typeIsolation ? TYPES_ISOLATION[typeIsolation]?.r_min : undefined;
   const dispositif = watch("dispositif");
+  const geste = watch("geste");
+  const estPac = geste === "pac_air_eau";
 
   async function suivant() {
     const ok = await trigger(ETAPES[etape].champs);
@@ -192,6 +196,14 @@ export function DossierCeeIsolationForm({
               error={errors.dispositif}
               register={register("dispositif")}
             />
+            <SelectField
+              label="Type de geste"
+              required
+              options={{ isolation: "Isolation", pac_air_eau: "Pompe à chaleur air/eau" }}
+              hint="Détermine les caractéristiques techniques demandées."
+              error={errors.geste}
+              register={register("geste")}
+            />
           </Section>
         )}
 
@@ -239,7 +251,28 @@ export function DossierCeeIsolationForm({
           </Section>
         )}
 
-        {etape === 4 && (
+        {etape === 4 && estPac && (
+          <Section
+            title="Pompe à chaleur air/eau"
+            description="Caractéristiques techniques de la PAC (fiche BAR-TH-171)."
+          >
+            <SelectField
+              label="Régime de température"
+              required
+              options={{ basse: "Basse température", moyenne_haute: "Moyenne / haute température" }}
+              hint="Conditionne l'ETAS minimale (basse ≈ 126 %, moyenne/haute ≈ 111 %)."
+              error={errors.pac_temperature}
+              register={register("pac_temperature")}
+            />
+            <TextField label="ETAS (%)" required type="number" step="1" inputMode="numeric" hint="Efficacité énergétique saisonnière du chauffage." error={errors.pac_etas} register={register("pac_etas")} />
+            <TextField label="Puissance (kW)" required type="number" step="0.1" inputMode="decimal" error={errors.pac_puissance_kw} register={register("pac_puissance_kw")} />
+            <TextField label="Marque" required error={errors.pac_marque} register={register("pac_marque")} />
+            <TextField label="Référence / modèle" error={errors.pac_reference} register={register("pac_reference")} />
+            <TextField label="Classe du régulateur" placeholder="Ex. IV à VIII" hint="Un régulateur de classe IV à VIII est requis." error={errors.pac_regulateur_classe} register={register("pac_regulateur_classe")} />
+          </Section>
+        )}
+
+        {etape === 4 && !estPac && (
           <Section
             title="Travaux d'isolation"
             description="Caractéristiques techniques du poste isolé."

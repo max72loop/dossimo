@@ -37,6 +37,26 @@ export const TYPES_ISOLATION = {
 
 export type TypeIsolation = keyof typeof TYPES_ISOLATION;
 
+// ---------------------------------------------------------------------------
+// Référentiel chauffage (première famille hors isolation)
+// ---------------------------------------------------------------------------
+export const TYPES_PAC = {
+  air_eau: { label: "Pompe à chaleur air/eau", fiche: "BAR-TH-171" },
+} as const;
+export type TypePac = keyof typeof TYPES_PAC;
+
+/** Familles de gestes couvertes. Chaque dossier appartient à une famille. */
+export const FAMILLES = {
+  isolation: "Isolation",
+  pac_air_eau: "Pompe à chaleur air/eau",
+} as const;
+export type Famille = keyof typeof FAMILLES;
+
+/** type_travaux -> famille de geste (isolation ou chauffage). */
+export function familleDeGeste(typeTravaux: string): Famille {
+  return typeTravaux === "pac_air_eau" ? "pac_air_eau" : "isolation";
+}
+
 export const OCCUPATIONS = {
   proprietaire_occupant: "Propriétaire occupant",
   proprietaire_bailleur: "Propriétaire bailleur",
@@ -90,6 +110,9 @@ export const ceeIsolationSchema = z.object({
   // --- Dispositif visé ---
   dispositif: z.enum(["cee", "maprimerenov"]).default("cee"),
 
+  // --- Famille de geste (isolation ou chauffage) ---
+  geste: z.enum(["isolation", "pac_air_eau"]).default("isolation"),
+
   // --- Entreprise (artisan RGE) ---
   entreprise: z.string().min(1, requis),
   siret: z
@@ -142,17 +165,24 @@ export const ceeIsolationSchema = z.object({
   ),
   logement_surface_habitable: nombreOptionnel,
 
-  // --- Travaux (isolation) ---
-  type_isolation: z.enum(
-    Object.keys(TYPES_ISOLATION) as [keyof typeof TYPES_ISOLATION],
-    { error: requis },
-  ),
-  surface_isolee_m2: nombrePositif("Surface invalide"),
-  isolant_type: z.string().min(1, requis),
+  // --- Travaux : isolation (requis si geste = isolation, cf. superRefine) ---
+  type_isolation: z
+    .enum(Object.keys(TYPES_ISOLATION) as [keyof typeof TYPES_ISOLATION])
+    .optional(),
+  surface_isolee_m2: nombreOptionnel,
+  isolant_type: z.string().optional().default(""),
   isolant_marque: z.string().optional().default(""),
   isolant_reference: z.string().optional().default(""),
-  resistance_thermique_r: nombrePositif("Résistance R invalide"),
+  resistance_thermique_r: nombreOptionnel,
   epaisseur_mm: nombreOptionnel,
+
+  // --- Travaux : pompe à chaleur air/eau (requis si geste = pac_air_eau) ---
+  pac_etas: nombreOptionnel,
+  pac_puissance_kw: nombreOptionnel,
+  pac_temperature: z.enum(["basse", "moyenne_haute"]).optional(),
+  pac_marque: z.string().optional().default(""),
+  pac_reference: z.string().optional().default(""),
+  pac_regulateur_classe: z.string().optional().default(""),
 
   // --- Chronologie (dates_json) — clé du contrôle anti-refus ---
   date_visite_technique: dateISOOptionnelle,
@@ -168,6 +198,23 @@ export const ceeIsolationSchema = z.object({
   // Aides publiques perçues hors CEE (ex. MaPrimeRénov') — obligatoire sur l'AH
   // depuis la 6e période (01/04/2026). Laisser vide = aucune aide.
   montant_aides_publiques: nombreOptionnel,
+}).superRefine((v, ctx) => {
+  const requisSi = (champ: string, valeur: unknown, msg = requis) => {
+    if (valeur == null || valeur === "") {
+      ctx.addIssue({ code: "custom", path: [champ], message: msg });
+    }
+  };
+  if (v.geste === "pac_air_eau") {
+    requisSi("pac_etas", v.pac_etas, "ETAS requis (%)");
+    requisSi("pac_puissance_kw", v.pac_puissance_kw, "Puissance requise (kW)");
+    requisSi("pac_temperature", v.pac_temperature);
+    requisSi("pac_marque", v.pac_marque);
+  } else {
+    requisSi("type_isolation", v.type_isolation);
+    requisSi("surface_isolee_m2", v.surface_isolee_m2, "Surface requise");
+    requisSi("isolant_type", v.isolant_type);
+    requisSi("resistance_thermique_r", v.resistance_thermique_r, "Résistance R requise");
+  }
 });
 
 export type CeeIsolationInput = z.input<typeof ceeIsolationSchema>;
@@ -176,6 +223,7 @@ export type CeeIsolationData = z.output<typeof ceeIsolationSchema>;
 /** Valeurs par défaut du formulaire (tous les champs contrôlés). */
 export const ceeIsolationDefaults: CeeIsolationInput = {
   dispositif: "cee",
+  geste: "isolation",
   entreprise: "",
   siret: "",
   rge_numero: "",
@@ -200,12 +248,18 @@ export const ceeIsolationDefaults: CeeIsolationInput = {
   logement_residence: undefined as unknown as keyof typeof RESIDENCES,
   logement_surface_habitable: "",
   type_isolation: undefined as unknown as TypeIsolation,
-  surface_isolee_m2: "" as unknown as number,
+  surface_isolee_m2: "",
   isolant_type: "",
   isolant_marque: "",
   isolant_reference: "",
-  resistance_thermique_r: "" as unknown as number,
+  resistance_thermique_r: "",
   epaisseur_mm: "",
+  pac_etas: "",
+  pac_puissance_kw: "",
+  pac_temperature: undefined as unknown as "basse" | "moyenne_haute",
+  pac_marque: "",
+  pac_reference: "",
+  pac_regulateur_classe: "",
   date_visite_technique: "",
   date_devis: "",
   date_debut_travaux: "",

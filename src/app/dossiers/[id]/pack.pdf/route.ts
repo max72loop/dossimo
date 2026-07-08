@@ -10,7 +10,7 @@ import {
 } from "@/lib/pack/render";
 import { generateCerfa } from "@/lib/cerfa/generate";
 import { storedVigilance } from "@/lib/llm/vigilance";
-import { verrouLivrable } from "@/lib/dossier/acces";
+import { verrouGesteDocumente, verrouLivrable } from "@/lib/dossier/acces";
 
 export const runtime = "nodejs";
 
@@ -26,6 +26,9 @@ export async function GET(
   const { id } = await params;
   const data = await getDossier(id);
   if (!data) return new Response("Dossier introuvable", { status: 404 });
+
+  const gesteVerrou = verrouGesteDocumente(data);
+  if (gesteVerrou) return gesteVerrou;
 
   const verrou = await verrouLivrable(data);
   if (verrou) return verrou;

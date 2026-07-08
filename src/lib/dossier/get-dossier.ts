@@ -12,8 +12,10 @@ import type {
   TypeIsolation,
 } from "@/lib/dossier/cee-isolation";
 
-/** Forme typée de `caracteristiques_techniques_json` pour un dossier CEE isolation. */
+/** Forme typée de `caracteristiques_techniques_json` d'un dossier. */
 export interface CeeIsolationCaracteristiques {
+  /** Famille de geste ; absent = isolation (dossiers créés avant le multi-geste). */
+  geste?: "isolation" | "pac_air_eau";
   fiche: string;
   beneficiaire: {
     nom: string;
@@ -33,14 +35,26 @@ export interface CeeIsolationCaracteristiques {
     surface_habitable: number | null;
   };
   travaux: {
-    type_isolation: TypeIsolation;
     fiche: string;
+    // Isolation (présents pour la famille isolation).
+    type_isolation: TypeIsolation;
     surface_isolee_m2: number;
     isolant_type: string;
     isolant_marque: string | null;
     isolant_reference: string | null;
     resistance_thermique_r: number;
     epaisseur_mm: number | null;
+  };
+  /** Bloc technique de la PAC air/eau (présent pour la famille pac_air_eau). */
+  pac?: {
+    type_pac: "air_eau";
+    fiche: string;
+    etas: number;
+    puissance_kw: number;
+    temperature: "basse" | "moyenne_haute";
+    marque: string | null;
+    reference: string | null;
+    regulateur_classe: string | null;
   };
   montants: {
     ht: number;

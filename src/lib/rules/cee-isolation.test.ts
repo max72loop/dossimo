@@ -122,3 +122,85 @@ describe("controlerDossierCeeIsolation", () => {
     expect(r.conforme).toBe(false);
   });
 });
+
+/** Règle CEE pompe à chaleur air/eau (forfait, sans etas_min figé). */
+function reglePac(over: Partial<RegleMetierResolue["condition"]> = {}): RegleMetierResolue {
+  return {
+    version: 1,
+    versionFormulaire: "BAR-TH-171 vA78.4",
+    pieces: [],
+    mentions: [],
+    condition: {
+      tva_taux: 0.055,
+      anciennete_min_ans: 2,
+      prime: { forfait: { grande_precarite: 4500, precaire: 3500, classique: 2500 } },
+      ...over,
+    },
+  };
+}
+
+/** Dossier PAC air/eau de référence (conforme), surchargeable. */
+function dossierPac(over: { pac?: Record<string, unknown>; regle?: RegleMetierResolue | null } = {}): DossierComplet {
+  const base = dossier();
+  return {
+    ...base,
+    caracteristiques: {
+      ...base.caracteristiques,
+      geste: "pac_air_eau",
+      fiche: "BAR-TH-171",
+      pac: {
+        type_pac: "air_eau", fiche: "BAR-TH-171", etas: 130, puissance_kw: 8,
+        temperature: "basse", marque: "Atlantic", reference: "Alfea Excellia",
+        regulateur_classe: "IV", ...over.pac,
+      },
+    },
+    regle: over.regle === undefined ? reglePac() : over.regle,
+  } as unknown as DossierComplet;
+}
+
+const codesPac = (d: DossierComplet) =>
+  controlerDossierCeeIsolation(d, AUJ).findings.map((f) => `${f.code}:${f.severite}`);
+
+describe("controlerDossierCeeIsolation — PAC air/eau (BAR-TH-171)", () => {
+  it("PAC de référence : conforme, ETAS ok", () => {
+    const r = controlerDossierCeeIsolation(dossierPac(), AUJ);
+    expect(r.conforme).toBe(true);
+    expect(codesPac(dossierPac())).toContain("technique_etas:ok");
+  });
+
+  it("ETAS insuffisante en basse température (< 126 %) : bloquant", () => {
+    const r = controlerDossierCeeIsolation(dossierPac({ pac: { etas: 120 } }), AUJ);
+    expect(r.conforme).toBe(false);
+    expect(codesPac(dossierPac({ pac: { etas: 120 } }))).toContain("technique_etas:bloquant");
+  });
+
+  it("seuil ETAS piloté par le régime : 115 % conforme en moyenne/haute (>= 111 %)", () => {
+    const r = controlerDossierCeeIsolation(
+      dossierPac({ pac: { etas: 115, temperature: "moyenne_haute" } }),
+      AUJ,
+    );
+    expect(codesPac(dossierPac({ pac: { etas: 115, temperature: "moyenne_haute" } })))
+      .toContain("technique_etas:ok");
+    expect(r.conforme).toBe(true);
+  });
+
+  it("etas_min de la règle surcharge le défaut régime : 128 requis => 126 bloqué", () => {
+    const r = controlerDossierCeeIsolation(
+      dossierPac({ pac: { etas: 126 }, regle: reglePac({ etas_min: 128 }) }),
+      AUJ,
+    );
+    expect(r.conforme).toBe(false);
+  });
+
+  it("classe de régulateur manquante : avertissement (non bloquant)", () => {
+    const r = controlerDossierCeeIsolation(dossierPac({ pac: { regulateur_classe: null } }), AUJ);
+    expect(r.conforme).toBe(true);
+    expect(codesPac(dossierPac({ pac: { regulateur_classe: null } })))
+      .toContain("technique_regulateur:avertissement");
+  });
+
+  it("ne déclenche aucun contrôle d'isolation (R) sur une PAC", () => {
+    const cs = codesPac(dossierPac());
+    expect(cs.some((c) => c.startsWith("technique_resistance"))).toBe(false);
+  });
+});

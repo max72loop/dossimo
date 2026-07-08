@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { TYPES_ISOLATION, ceeIsolationSchema } from "@/lib/dossier/cee-isolation";
+import { TYPES_ISOLATION, TYPES_PAC, ceeIsolationSchema } from "@/lib/dossier/cee-isolation";
 
 export type CreateDossierResult =
   | { ok: true; dossierId: string }
@@ -67,7 +67,35 @@ export async function createDossierCeeIsolation(
     .eq("id", artisanId);
 
   // --- 2. Dossier : mapping de la saisie unique ---
-  const fiche = TYPES_ISOLATION[d.type_isolation].fiche;
+  const isPac = d.geste === "pac_air_eau";
+  const fiche = isPac ? TYPES_PAC.air_eau.fiche : TYPES_ISOLATION[d.type_isolation!].fiche;
+  const typeTravaux = isPac ? "pac_air_eau" : (d.type_isolation as string);
+
+  const blocTechnique = isPac
+    ? {
+        pac: {
+          type_pac: "air_eau",
+          fiche,
+          etas: d.pac_etas,
+          puissance_kw: d.pac_puissance_kw,
+          temperature: d.pac_temperature,
+          marque: d.pac_marque || null,
+          reference: d.pac_reference || null,
+          regulateur_classe: d.pac_regulateur_classe || null,
+        },
+      }
+    : {
+        travaux: {
+          type_isolation: d.type_isolation,
+          fiche,
+          surface_isolee_m2: d.surface_isolee_m2,
+          isolant_type: d.isolant_type,
+          isolant_marque: d.isolant_marque || null,
+          isolant_reference: d.isolant_reference || null,
+          resistance_thermique_r: d.resistance_thermique_r,
+          epaisseur_mm: d.epaisseur_mm ?? null,
+        },
+      };
 
   const { data: dossier, error: dossierErr } = await supabase
     .from("dossiers")
@@ -75,7 +103,7 @@ export async function createDossierCeeIsolation(
       artisan_id: artisanId,
       statut: "nouveau",
       dispositif: d.dispositif,
-      type_travaux: d.type_isolation,
+      type_travaux: typeTravaux,
       commune: d.client_commune,
       code_postal: d.client_code_postal,
       statut_rge: d.rge_numero,
@@ -89,6 +117,7 @@ export async function createDossierCeeIsolation(
         facture: d.date_facture ?? null,
       },
       caracteristiques_techniques_json: {
+        geste: d.geste,
         fiche,
         beneficiaire: {
           nom: d.client_nom,
@@ -107,16 +136,7 @@ export async function createDossierCeeIsolation(
           residence: d.logement_residence,
           surface_habitable: d.logement_surface_habitable ?? null,
         },
-        travaux: {
-          type_isolation: d.type_isolation,
-          fiche,
-          surface_isolee_m2: d.surface_isolee_m2,
-          isolant_type: d.isolant_type,
-          isolant_marque: d.isolant_marque || null,
-          isolant_reference: d.isolant_reference || null,
-          resistance_thermique_r: d.resistance_thermique_r,
-          epaisseur_mm: d.epaisseur_mm ?? null,
-        },
+        ...blocTechnique,
         montants: {
           ht: d.montant_ht,
           ttc: d.montant_ttc,

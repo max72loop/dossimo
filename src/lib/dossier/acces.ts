@@ -63,3 +63,19 @@ export async function verrouLivrable(
     { status: 402 },
   );
 }
+
+/**
+ * Garde de génération documentaire par geste. Les documents du pack (récap,
+ * checklist, Cerfa, AH) ne sont pour l'instant modélisés que pour l'isolation.
+ * Le contrôle anti-refus et l'estimation de prime, eux, couvrent déjà tous les
+ * gestes ; seule la fabrication des PDF est en attente (Phase 1b). Renvoie une
+ * réponse 422 pour un geste non encore documenté, sinon `null`.
+ */
+export function verrouGesteDocumente(data: DossierComplet): Response | null {
+  const geste = data.caracteristiques.geste ?? "isolation";
+  if (geste === "isolation") return null;
+  return new Response(
+    "Documents du pack indisponibles pour ce geste : le rapport de contrôle et l'estimation restent accessibles.",
+    { status: 422 },
+  );
+}
