@@ -1,91 +1,22 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
 
 import { getAdminEmail } from "@/lib/auth/is-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Dispositif } from "@/lib/database.types";
+import {
+  fusionnerCondition,
+  parseMentions,
+  parsePieces,
+  parsePrime,
+  type SeuilsInput,
+} from "@/lib/regles/condition";
 
 export type RegleActionResult = { ok: true } | { ok: false; error: string };
 
-const pieceSchema = z.object({
-  id: z.string().min(1),
-  label: z.string().min(1),
-  description: z.string(),
-  obligatoire: z.boolean(),
-});
-
-const conditionSchema = z
-  .object({
-    r_min: z.number().optional(),
-    tva_taux: z.number().optional(),
-    anciennete_min_ans: z.number().optional(),
-  })
-  .passthrough();
-
-/** Valide et parse un JSON de pièces envoyé par le formulaire (texte). */
-function parsePieces(raw: string): { ok: true; value: unknown[] } | { ok: false; error: string } {
-  let json: unknown;
-  try {
-    json = JSON.parse(raw);
-  } catch {
-    return { ok: false, error: "Pièces : JSON invalide." };
-  }
-  const parsed = z.array(pieceSchema).safeParse(json);
-  if (!parsed.success) {
-    return { ok: false, error: "Pièces : chaque entrée doit avoir id, label, description, obligatoire." };
-  }
-  return { ok: true, value: parsed.data };
-}
-
-const primeSchema = z.object({
-  par_m2: z
-    .object({ classique: z.number(), precaire: z.number(), grande_precarite: z.number() })
-    .partial()
-    .optional(),
-  plafond: z.number().nullable().optional(),
-});
-
-/** Parse le barème de prime (objet JSON) ; vide → pas de barème. */
-function parsePrime(
-  raw: string,
-): { ok: true; value: unknown | undefined } | { ok: false; error: string } {
-  const trimmed = (raw ?? "").trim();
-  if (!trimmed || trimmed === "{}" || trimmed === "null") return { ok: true, value: undefined };
-  let json: unknown;
-  try {
-    json = JSON.parse(trimmed);
-  } catch {
-    return { ok: false, error: "Barème prime : JSON invalide." };
-  }
-  const parsed = primeSchema.safeParse(json);
-  if (!parsed.success) {
-    return { ok: false, error: "Barème prime : format attendu { par_m2: { classique, precaire, grande_precarite }, plafond }." };
-  }
-  return { ok: true, value: parsed.data };
-}
-
-/** Valide et parse un JSON de mentions (tableau de chaînes). */
-function parseMentions(raw: string): { ok: true; value: string[] } | { ok: false; error: string } {
-  let json: unknown;
-  try {
-    json = JSON.parse(raw || "[]");
-  } catch {
-    return { ok: false, error: "Mentions : JSON invalide." };
-  }
-  const parsed = z.array(z.string()).safeParse(json);
-  if (!parsed.success) {
-    return { ok: false, error: "Mentions : tableau de textes attendu (ex. [\"Fiche CEE : {fiche}\"])." };
-  }
-  return { ok: true, value: parsed.data };
-}
-
-export interface RegleUpdateInput {
+export interface RegleUpdateInput extends SeuilsInput {
   id: string;
-  r_min?: number | null;
-  tva_taux?: number | null;
-  anciennete_min_ans?: number | null;
   version_formulaire: string;
   actif: boolean;
   pieces_json: string;
@@ -104,14 +35,21 @@ export async function updateRegle(input: RegleUpdateInput): Promise<RegleActionR
   const prime = parsePrime(input.prime_json);
   if (!prime.ok) return prime;
 
-  const condition = conditionSchema.parse({
-    ...(input.r_min != null ? { r_min: input.r_min } : {}),
-    ...(input.tva_taux != null ? { tva_taux: input.tva_taux } : {}),
-    ...(input.anciennete_min_ans != null ? { anciennete_min_ans: input.anciennete_min_ans } : {}),
-    ...(prime.value ? { prime: prime.value } : {}),
-  });
-
   const admin = createAdminClient();
+
+  // Merge sur la condition existante : on ne repart pas d'un objet vide, pour
+  // préserver toute clé non exposée par le formulaire de ce geste.
+  const { data: existing, error: readErr } = await admin
+    .from("regles_metier")
+    .select("condition_json")
+    .eq("id", input.id)
+    .maybeSingle();
+  if (readErr || !existing) {
+    return { ok: false, error: "Règle introuvable." };
+  }
+  const base = (existing.condition_json ?? {}) as Record<string, unknown>;
+  const condition = fusionnerCondition(base, input, prime.value);
+
   const { error } = await admin
     .from("regles_metier")
     .update({
@@ -131,13 +69,10 @@ export async function updateRegle(input: RegleUpdateInput): Promise<RegleActionR
   return { ok: true };
 }
 
-export interface RegleCreateInput {
+export interface RegleCreateInput extends SeuilsInput {
   dispositif: Dispositif;
   type_travaux: string;
   version: number;
-  r_min?: number | null;
-  tva_taux?: number | null;
-  anciennete_min_ans?: number | null;
   version_formulaire: string;
   pieces_json: string;
   mentions_json: string;
@@ -156,12 +91,8 @@ export async function createRegle(input: RegleCreateInput): Promise<RegleActionR
   const prime = parsePrime(input.prime_json);
   if (!prime.ok) return prime;
 
-  const condition = conditionSchema.parse({
-    ...(input.r_min != null ? { r_min: input.r_min } : {}),
-    ...(input.tva_taux != null ? { tva_taux: input.tva_taux } : {}),
-    ...(input.anciennete_min_ans != null ? { anciennete_min_ans: input.anciennete_min_ans } : {}),
-    ...(prime.value ? { prime: prime.value } : {}),
-  });
+  // Création : condition vide + seuils saisis (les null sont ignorés).
+  const condition = fusionnerCondition({}, input, prime.value);
 
   const admin = createAdminClient();
   const { error } = await admin.from("regles_metier").insert({

@@ -9,6 +9,36 @@ import {
   type RegleActionResult,
 } from "@/lib/regles/admin-actions";
 import type { Dispositif } from "@/lib/database.types";
+import { FAMILLES, familleDeGeste, type Famille } from "@/lib/dossier/cee-isolation";
+
+/**
+ * Seuil technique édité selon la famille de geste : chaque geste a UN critère
+ * (R pour l'isolation, ETAS pour la PAC, COP pour le CET, rendement pour le
+ * bois). Piloté par la table, jamais codé en dur dans le contrôle.
+ */
+const SEUIL_PAR_FAMILLE: Record<
+  Famille,
+  { name: "r_min" | "etas_min" | "cop_min" | "rendement_min"; label: string; step: string }
+> = {
+  isolation: { name: "r_min", label: "R minimal (m²·K/W)", step: "0.1" },
+  pac_air_eau: { name: "etas_min", label: "ETAS minimal (%)", step: "1" },
+  cet: { name: "cop_min", label: "COP minimal", step: "0.1" },
+  bois: { name: "rendement_min", label: "Rendement minimal (%)", step: "0.1" },
+};
+
+/** Indication de barème (mode + gabarit JSON) selon la famille de geste. */
+function gabaritPrime(famille: Famille): { hint: string; exemple: string } {
+  if (famille === "isolation") {
+    return {
+      hint: "{ par_m2: { classique, precaire, grande_precarite }, plafond }",
+      exemple: '{ "par_m2": { "classique": 10, "precaire": 15, "grande_precarite": 20 } }',
+    };
+  }
+  return {
+    hint: "{ forfait: { classique, precaire, grande_precarite } }",
+    exemple: '{ "forfait": { "classique": 2500, "precaire": 3500, "grande_precarite": 4500 } }',
+  };
+}
 
 const input =
   "mt-1 h-9 w-full rounded border border-filigrane bg-blanc-casse px-2.5 text-sm text-encre outline-none focus:border-tampon focus:ring-2 focus:ring-tampon/15";
@@ -35,6 +65,9 @@ export interface RegleRow {
   version_formulaire: string | null;
   condition: {
     r_min?: number;
+    etas_min?: number;
+    cop_min?: number;
+    rendement_min?: number;
     tva_taux?: number;
     anciennete_min_ans?: number;
     prime?: unknown;
@@ -46,14 +79,22 @@ export interface RegleRow {
 export function RegleEditor({ row }: { row: RegleRow }) {
   const router = useRouter();
   const [res, setRes] = useState<RegleActionResult | "saving" | null>(null);
+  const famille = familleDeGeste(row.type_travaux);
+  const seuil = SEUIL_PAR_FAMILLE[famille];
+  const prime = gabaritPrime(famille);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setRes("saving");
     const fd = new FormData(e.currentTarget);
+    // Seul le seuil du geste est présent dans le formulaire ; les autres partent
+    // à null (retirés au merge), ce qui nettoie d'éventuelles clés parasites.
     const r = await updateRegle({
       id: row.id,
       r_min: num(fd.get("r_min")),
+      etas_min: num(fd.get("etas_min")),
+      cop_min: num(fd.get("cop_min")),
+      rendement_min: num(fd.get("rendement_min")),
       tva_taux: num(fd.get("tva_taux")),
       anciennete_min_ans: num(fd.get("anciennete_min_ans")),
       version_formulaire: String(fd.get("version_formulaire") ?? ""),
@@ -72,10 +113,13 @@ export function RegleEditor({ row }: { row: RegleRow }) {
       className={`rounded border p-4 ${row.actif ? "border-filigrane bg-blanc-casse" : "border-dashed border-filigrane bg-papier/40"}`}
     >
       <div className="flex items-center justify-between gap-3">
-        <h3 className="font-mono text-sm font-semibold text-encre">
-          {row.dispositif} · {row.type_travaux}{" "}
-          <span className="text-encre-claire">v{row.version}</span>
-        </h3>
+        <div>
+          <h3 className="font-mono text-sm font-semibold text-encre">
+            {row.dispositif} · {row.type_travaux}{" "}
+            <span className="text-encre-claire">v{row.version}</span>
+          </h3>
+          <span className="text-xs text-tampon">{FAMILLES[famille]}</span>
+        </div>
         <label className="flex items-center gap-1.5 text-xs text-ardoise">
           <input type="checkbox" name="actif" defaultChecked={row.actif} />
           Active
@@ -84,8 +128,14 @@ export function RegleEditor({ row }: { row: RegleRow }) {
 
       <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <div>
-          <label className={label}>R minimal</label>
-          <input className={input} type="number" step="0.1" name="r_min" defaultValue={row.condition.r_min ?? ""} />
+          <label className={label}>{seuil.label}</label>
+          <input
+            className={input}
+            type="number"
+            step={seuil.step}
+            name={seuil.name}
+            defaultValue={row.condition[seuil.name] ?? ""}
+          />
         </div>
         <div>
           <label className={label}>Taux TVA (ex. 0.055)</label>
@@ -113,7 +163,8 @@ export function RegleEditor({ row }: { row: RegleRow }) {
 
       <div className="mt-3">
         <label className={label}>
-          Mentions obligatoires devis + facture (JSON) · variables {"{fiche}"} {"{surface}"} {"{r}"}
+          Mentions obligatoires devis + facture (JSON)
+          {famille === "isolation" ? " · variables {fiche} {surface} {r}" : " · variables {fiche}"}
         </label>
         <textarea
           name="mentions_json"
@@ -124,9 +175,7 @@ export function RegleEditor({ row }: { row: RegleRow }) {
       </div>
 
       <div className="mt-3">
-        <label className={label}>
-          Barème prime (JSON) · {"{ par_m2: { classique, precaire, grande_precarite }, plafond }"}
-        </label>
+        <label className={label}>Barème prime (JSON) · {prime.hint}</label>
         <textarea
           name="prime_json"
           rows={3}
@@ -161,6 +210,9 @@ export function RegleCreator() {
       type_travaux: String(fd.get("type_travaux") ?? ""),
       version: Number(fd.get("version") ?? 1),
       r_min: num(fd.get("r_min")),
+      etas_min: num(fd.get("etas_min")),
+      cop_min: num(fd.get("cop_min")),
+      rendement_min: num(fd.get("rendement_min")),
       tva_taux: num(fd.get("tva_taux")),
       anciennete_min_ans: num(fd.get("anciennete_min_ans")),
       version_formulaire: String(fd.get("version_formulaire") ?? ""),
@@ -195,10 +247,6 @@ export function RegleCreator() {
           <input className={input} type="number" step="1" name="version" defaultValue={1} />
         </div>
         <div>
-          <label className={label}>R minimal</label>
-          <input className={input} type="number" step="0.1" name="r_min" />
-        </div>
-        <div>
           <label className={label}>Taux TVA</label>
           <input className={input} type="number" step="0.001" name="tva_taux" defaultValue={0.055} />
         </div>
@@ -206,10 +254,34 @@ export function RegleCreator() {
           <label className={label}>Ancienneté min (ans)</label>
           <input className={input} type="number" step="1" name="anciennete_min_ans" defaultValue={2} />
         </div>
-        <div className="sm:col-span-3">
-          <label className={label}>Version de fiche</label>
-          <input className={input} type="text" name="version_formulaire" placeholder="ex. BAR-EN-103" />
+      </div>
+
+      <p className="mt-3 text-xs text-ardoise">
+        Seuil technique · renseignez celui du geste : R (isolation), ETAS (PAC),
+        COP (chauffe-eau thermo), rendement (bois).
+      </p>
+      <div className="mt-1 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div>
+          <label className={label}>R min (isolation)</label>
+          <input className={input} type="number" step="0.1" name="r_min" />
         </div>
+        <div>
+          <label className={label}>ETAS min (PAC)</label>
+          <input className={input} type="number" step="1" name="etas_min" />
+        </div>
+        <div>
+          <label className={label}>COP min (CET)</label>
+          <input className={input} type="number" step="0.1" name="cop_min" />
+        </div>
+        <div>
+          <label className={label}>Rendement min (bois)</label>
+          <input className={input} type="number" step="0.1" name="rendement_min" />
+        </div>
+      </div>
+
+      <div className="mt-3">
+        <label className={label}>Version de fiche</label>
+        <input className={input} type="text" name="version_formulaire" placeholder="ex. BAR-TH-171 vA78.4" />
       </div>
       <div className="mt-3">
         <label className={label}>Pièces requises (JSON)</label>
@@ -230,7 +302,9 @@ export function RegleCreator() {
         />
       </div>
       <div className="mt-3">
-        <label className={label}>Barème prime (JSON)</label>
+        <label className={label}>
+          Barème prime (JSON) · isolation {"{ par_m2: {…} }"} · chauffage {"{ forfait: {…} }"}
+        </label>
         <textarea
           name="prime_json"
           rows={2}
