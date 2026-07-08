@@ -9,53 +9,23 @@ const NAV = [
   { href: "#faq", label: "FAQ" },
 ];
 
-/* Logo — une fiche dossier (rectangle vertical, pile de documents) frappée
-   d'un petit tampon rond terre cuite. Géométrique, statique. */
+/* Logo Dossimo : mot-signe « dossimo » (Unbounded), deux « o » en gris.
+   Rendu typographique (net et responsive), fidèle au kit de marque. */
 export function Logo({
   className = "",
-  mono = false,
+  variant = "encre",
 }: {
   className?: string;
-  mono?: boolean;
+  variant?: "encre" | "nuit";
 }) {
-  const stamp = mono ? "currentColor" : "var(--color-terre-cuite)";
+  const ink = variant === "nuit" ? "text-blanc-casse" : "text-encre";
+  const grey = variant === "nuit" ? "text-[#79828d]" : "text-encre-claire";
   return (
-    <Link href="/" className={`flex items-center gap-2.5 ${className}`}>
-      <svg
-        width="30"
-        height="32"
-        viewBox="0 0 30 32"
-        fill="none"
-        aria-hidden
-        className="text-encre"
+    <Link href="/" className={`inline-flex items-center ${className}`} aria-label="Dossimo">
+      <span
+        className={`font-display text-[1.4rem] font-bold lowercase leading-none tracking-[-0.02em] ${ink}`}
       >
-        <rect
-          x="4.5"
-          y="3"
-          width="16"
-          height="24"
-          rx="1.5"
-          fill="var(--color-blanc-casse)"
-          stroke="currentColor"
-          strokeWidth="2"
-        />
-        <path
-          d="M8.5 9.5h8M8.5 13.5h8M8.5 17.5h5"
-          stroke="currentColor"
-          strokeWidth="1.8"
-          strokeLinecap="round"
-        />
-        <circle cx="21.5" cy="24.5" r="5.5" fill={stamp} />
-        <path
-          d="m19.2 24.6 1.6 1.6 3-3.2"
-          stroke="var(--color-blanc-casse)"
-          strokeWidth="1.6"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-      <span className="font-serif text-lg font-semibold tracking-tight text-encre">
-        Dossimo
+        d<span className={grey}>o</span>ssim<span className={grey}>o</span>
       </span>
     </Link>
   );

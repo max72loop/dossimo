@@ -9,7 +9,7 @@ import { PaywallCta } from "@/components/dossier/paywall-cta";
 import { PRIX_DOSSIER_LABEL } from "@/lib/stripe/client";
 import { getAdminEmail } from "@/lib/auth/is-admin";
 
-export const metadata = { title: "Mes dossiers — Dossimo" };
+export const metadata = { title: "Mes dossiers · Dossimo" };
 
 const STATUT: Record<StatutDossier, { label: string; cls: string; dot: string }> = {
   nouveau: { label: "Nouveau", cls: "bg-papier-fonce text-ardoise", dot: "bg-encre-claire" },
@@ -60,7 +60,7 @@ export default async function DossiersPage() {
             Mes dossiers
           </h1>
           <p className="mt-2 text-ardoise">
-            Bonjour {artisan.prenom} — vos dossiers MaPrimeRénov&rsquo; et CEE,
+            Bonjour {artisan.prenom} · vos dossiers MaPrimeRénov&rsquo; et CEE,
             au même endroit.
           </p>
         </div>

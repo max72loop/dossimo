@@ -76,7 +76,7 @@ export function PointsVigilanceIA({
       <div className="flex items-start justify-between gap-4">
         <div>
           <h2 className="font-serif text-lg font-semibold text-encre">
-            Points de vigilance — analyse assistée
+            Points de vigilance · analyse assistée
           </h2>
           <p className="mt-1 text-xs text-ardoise">
             Complète le contrôle automatique par des points contextuels rédigés.
@@ -147,8 +147,8 @@ export function PointsVigilanceIA({
           )}
           <p className="mt-4 text-[11px] text-encre-claire">
             {formatHorodatage(etat.genereLe)
-              ? `Généré le ${formatHorodatage(etat.genereLe)} — `
-              : "Généré automatiquement — "}
+              ? `Généré le ${formatHorodatage(etat.genereLe)} · `
+              : "Généré automatiquement · "}
             à relire. Inclus dans le rapport de contrôle. Ne remplace pas le
             contrôle de conformité ni la décision de l&apos;instructeur.
           </p>

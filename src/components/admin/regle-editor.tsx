@@ -113,7 +113,7 @@ export function RegleEditor({ row }: { row: RegleRow }) {
 
       <div className="mt-3">
         <label className={label}>
-          Mentions obligatoires devis + facture (JSON) — variables {"{fiche}"} {"{surface}"} {"{r}"}
+          Mentions obligatoires devis + facture (JSON) · variables {"{fiche}"} {"{surface}"} {"{r}"}
         </label>
         <textarea
           name="mentions_json"
@@ -125,7 +125,7 @@ export function RegleEditor({ row }: { row: RegleRow }) {
 
       <div className="mt-3">
         <label className={label}>
-          Barème prime (JSON) — {"{ par_m2: { classique, precaire, grande_precarite }, plafond }"}
+          Barème prime (JSON) · {"{ par_m2: { classique, precaire, grande_precarite }, plafond }"}
         </label>
         <textarea
           name="prime_json"

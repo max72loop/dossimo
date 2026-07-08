@@ -26,7 +26,7 @@ import {
 import { controlerDossierCeeIsolation } from "@/lib/rules/cee-isolation";
 import { SEVERITE_LABEL, type Finding, type Severite } from "@/lib/rules/types";
 
-export const metadata = { title: "Dossier — Dossimo" };
+export const metadata = { title: "Dossier · Dossimo" };
 
 // L'analyse assistée (points de vigilance) appelle un LLM sur un contexte enrichi :
 // on relève le plafond de durée de la fonction (défaut trop court sur Vercel).
@@ -166,7 +166,7 @@ export default async function DossierPage({
         {acces.gratuit ? (
           <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-tampon/10 px-3 py-1 text-xs font-medium text-tampon">
             <span className="h-1.5 w-1.5 rounded-full bg-tampon" />
-            Premier dossier — offert
+            Premier dossier · offert
           </span>
         ) : acces.paye ? (
           <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-succes-bg px-3 py-1 text-xs font-medium text-succes">
@@ -182,7 +182,7 @@ export default async function DossierPage({
 
       {sp.paye && acces.debloque && (
         <div className="mb-6 rounded border-l-4 border-succes bg-succes-bg px-4 py-3 text-sm text-succes">
-          Paiement confirmé — le pack est débloqué. Vous pouvez télécharger tous les
+          Paiement confirmé · le pack est débloqué. Vous pouvez télécharger tous les
           documents ci-dessous.
         </div>
       )}
@@ -209,7 +209,7 @@ export default async function DossierPage({
             complet et télécharger les documents (attestation, checklist, rapport…).
           </p>
           {sp.annule && (
-            <p className="mt-2 text-xs text-ardoise">Paiement annulé — vous pouvez réessayer.</p>
+            <p className="mt-2 text-xs text-ardoise">Paiement annulé · vous pouvez réessayer.</p>
           )}
           <div className="mt-4">
             <PaywallCta dossierId={id} prix={PRIX_DOSSIER_LABEL} />
@@ -272,7 +272,7 @@ export default async function DossierPage({
           <div className="flex items-end justify-between gap-4">
             <div>
               <h2 className="font-serif text-base font-semibold text-encre">
-                Prime {prime.dispositif} — estimation
+                Prime {prime.dispositif} · estimation
               </h2>
               <p className="mt-1 text-xs text-ardoise">{prime.base}</p>
             </div>
@@ -287,7 +287,7 @@ export default async function DossierPage({
                 <span className="font-medium text-encre">
                   {euro(c.montants.prime_estime)}
                 </span>{" "}
-                — l&apos;estimation Dossimo diffère, vérifiez la saisie ou le barème.
+                · l&apos;estimation Dossimo diffère, vérifiez la saisie ou le barème.
               </p>
             )}
           <p className="mt-2 text-[11px] text-encre-claire">
@@ -476,7 +476,7 @@ export default async function DossierPage({
       {/* Checklist */}
       <section className="mt-8 rounded border border-filigrane bg-blanc-casse p-5 shadow-sm">
         <h2 className="mb-1 font-serif text-base font-semibold text-encre">
-          Checklist — pièces à réunir
+          Checklist · pièces à réunir
         </h2>
         <p className="mb-4 text-xs text-ardoise">
           Le contrôle automatisé anti-refus (chronologie, RGE, cohérence des
@@ -500,7 +500,7 @@ export default async function DossierPage({
         </ul>
 
         <h3 className="mt-6 mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-ardoise">
-          Mentions obligatoires — devis ET facture
+          Mentions obligatoires · devis ET facture
         </h3>
         <ul className="space-y-2">
           {mentionsDevis.map((m, i) => (
@@ -513,7 +513,7 @@ export default async function DossierPage({
       </section>
 
       <p className="mt-8 text-center text-xs text-encre-claire">
-        Dossimo — service indépendant d&apos;aide à la préparation de dossier,
+        Dossimo · service indépendant d&apos;aide à la préparation de dossier,
         non affilié à l&apos;Anah ni à France Rénov&apos;.
       </p>
     </main>

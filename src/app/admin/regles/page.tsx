@@ -10,7 +10,7 @@ import {
 } from "@/components/admin/regle-editor";
 import type { Dispositif } from "@/lib/database.types";
 
-export const metadata = { title: "Règles métier — Admin Dossimo" };
+export const metadata = { title: "Règles métier · Admin Dossimo" };
 
 export default async function AdminReglesPage() {
   const admin = await getAdminEmail();
@@ -57,7 +57,7 @@ export default async function AdminReglesPage() {
         </h1>
         <p className="mt-2 text-sm text-ardoise">
           Paramètres par couple dispositif + travaux (seuils, TVA, ancienneté,
-          pièces, version de fiche). Modifiables ici, sans redéploiement — le
+          pièces, version de fiche). Modifiables ici, sans redéploiement · le
           contrôle anti-refus et le pack les lisent en direct.
         </p>
         <p className="mt-1 text-xs text-encre-claire">Connecté en admin : {admin}</p>

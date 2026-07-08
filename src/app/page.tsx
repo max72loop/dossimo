@@ -248,7 +248,7 @@ function Probleme() {
           </h2>
           <p className="mt-4 text-lg leading-relaxed text-ardoise">
             Les refus MaPrimeRénov&rsquo; et CEE viennent presque toujours des
-            mêmes erreurs — des erreurs qu&rsquo;on peut détecter avant le dépôt.
+            mêmes erreurs, des erreurs qu&rsquo;on peut détecter avant le dépôt.
           </p>
         </div>
 
@@ -271,7 +271,7 @@ function Probleme() {
           ))}
         </div>
 
-        {/* Point de vigilance illustré — bandeau à bordure gauche épaisse. */}
+        {/* Point de vigilance illustré · bandeau à bordure gauche épaisse. */}
         <div className="mt-6 flex items-start gap-3 rounded border-l-4 border-avertissement bg-avertissement-bg px-5 py-4">
           <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-avertissement" strokeWidth={1.5} />
           <p className="text-sm text-encre">
@@ -309,7 +309,7 @@ function Difference() {
           </h2>
           <p className="mt-4 text-lg leading-relaxed text-ardoise">
             Dossimo ne dépose jamais le dossier et ne touche jamais la prime.
-            C&rsquo;est un choix — celui de vous laisser maître de votre affaire.
+            C&rsquo;est un choix : celui de vous laisser maître de votre affaire.
           </p>
         </div>
 
@@ -455,7 +455,7 @@ function Pricing() {
             </h2>
             <p className="mt-4 max-w-xl text-lg leading-relaxed text-papier/75">
               Un tarif simple par dossier, sans abonnement imposé. Vous ne payez
-              que la sécurité que vous utilisez — et votre prime reste
+              que la sécurité que vous utilisez, et votre prime reste
               entièrement à vous.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
@@ -521,7 +521,7 @@ function Faq() {
     },
     {
       q: "Comment Dossimo évite-t-il les refus ?",
-      a: "Toutes les pièces sont générées depuis une saisie unique — l'incohérence entre elles devient impossible — et un moteur de contrôle vérifie chronologie, RGE, éligibilité, performance et cohérence des montants avant le dépôt.",
+      a: "Toutes les pièces sont générées depuis une saisie unique : l'incohérence entre elles devient impossible, et un moteur de contrôle vérifie chronologie, RGE, éligibilité, performance et cohérence des montants avant le dépôt.",
     },
     {
       q: "Est-ce que c'est légal ?",

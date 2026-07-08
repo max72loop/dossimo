@@ -1,47 +1,48 @@
 @import "tailwindcss";
 
 /* ------------------------------------------------------------------ Theme
-   « Atelier Conforme » — l'atelier numérique de la conformité.
-   Encre, bleu tampon, terre cuite, papier. Source Serif 4 aux titres, Inter
-   à l'interface, Geist Mono aux données techniques. Sobre, précis, tangible. */
+   Identité Dossimo : monochrome encre + gris, fond crème, bleu pour les liens
+   et actions. Aligné sur le kit logo (Unbounded, encre #16202B, gris #9AA1A9,
+   crème #F3F0E9, bleu #35507F). Sobre, net, moderne. */
 @theme {
   /* Couleurs de marque */
-  --color-encre: #1a1f2c;
-  --color-tampon: #2e5c8a;
-  --color-terre-cuite: #c45d3c;
-  --color-terre-cuite-hover: #a84d32;
-  --color-papier: #f7f5f0;
-  --color-blanc-casse: #fdfcfa;
-  --color-ardoise: #5a6573;
-  --color-filigrane: #dcd8d0;
-  --color-encre-claire: #8a94a6;
+  --color-encre: #16202b;
+  --color-tampon: #35507f;
+  --color-terre-cuite: #35507f;
+  --color-terre-cuite-hover: #2a3f65;
+  --color-papier: #f3f0e9;
+  --color-blanc-casse: #fbf9f3;
+  --color-ardoise: #5b636d;
+  --color-filigrane: #e2ddd1;
+  --color-encre-claire: #9aa1a9;
 
   /* Fonds neutres utilitaires */
-  --color-papier-fonce: #f0eee9;
+  --color-papier-fonce: #eae6dc;
 
   /* Couleurs sémantiques */
   --color-succes: #2d6a4f;
-  --color-succes-bg: #e8f4ef;
+  --color-succes-bg: #e7f1ea;
   --color-erreur: #9b2c2c;
-  --color-erreur-bg: #f9ebeb;
-  --color-avertissement: #b38600;
-  --color-avertissement-bg: #fdf3d7;
-  --color-info: #2e5c8a;
-  --color-info-bg: #e8f0f7;
+  --color-erreur-bg: #f6e9e6;
+  --color-avertissement: #a8730b;
+  --color-avertissement-bg: #f6eed6;
+  --color-info: #35507f;
+  --color-info-bg: #e9edf4;
 
   /* Typographie */
   --font-sans: var(--font-inter), system-ui, sans-serif;
   --font-serif: var(--font-source-serif), Georgia, serif;
   --font-mono: var(--font-geist-mono), "SFMono-Regular", monospace;
+  --font-display: var(--font-unbounded), var(--font-inter), sans-serif;
 
-  /* Rayons — comme un papier découpé */
-  --radius-sm: 4px;
-  --radius: 4px;
-  --radius-md: 8px;
+  /* Rayons — arrondis doux, comme l'icône */
+  --radius-sm: 6px;
+  --radius: 8px;
+  --radius-md: 12px;
 
   /* Ombres très discrètes */
-  --shadow-sm: 0 1px 2px rgba(26, 31, 44, 0.04);
-  --shadow-md: 0 4px 6px rgba(26, 31, 44, 0.06);
+  --shadow-sm: 0 1px 2px rgba(22, 32, 43, 0.05);
+  --shadow-md: 0 6px 16px rgba(22, 32, 43, 0.08);
 }
 
 html {

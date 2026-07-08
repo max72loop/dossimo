@@ -48,8 +48,8 @@ export function PaywallCta({
         {busy
           ? "Ouverture…"
           : compact
-            ? `Débloquer — ${prix}`
-            : `Débloquer le pack — ${prix}`}
+            ? `Débloquer · ${prix}`
+            : `Débloquer le pack · ${prix}`}
       </button>
       {error && <p className="mt-1.5 text-xs text-erreur">{error}</p>}
     </div>

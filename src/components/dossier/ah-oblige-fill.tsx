@@ -67,7 +67,7 @@ export function AhObligeFill({ dossierId }: { dossierId: string }) {
       <p className="mt-1 text-xs text-ardoise">
         Téléversez le PDF que votre financeur (obligé) vous a remis. S&apos;il est
         remplissable, Dossimo y reporte les valeurs de votre saisie et vous le rend
-        pré-rempli — vous n&apos;avez plus qu&apos;à vérifier, dater et signer.
+        pré-rempli · vous n&apos;avez plus qu&apos;à vérifier, dater et signer.
       </p>
 
       <label className="mt-3 inline-flex h-9 cursor-pointer items-center rounded bg-tampon px-4 text-sm font-medium text-blanc-casse transition-colors hover:bg-tampon/90">
@@ -91,7 +91,7 @@ export function AhObligeFill({ dossierId }: { dossierId: string }) {
       {state.kind === "done" && (
         <div className="mt-3 rounded border-l-4 border-succes bg-succes-bg px-3 py-2 text-xs text-ardoise">
           <p className="font-medium text-succes">
-            PDF pré-rempli téléchargé — {state.applied} / {state.total} champ
+            PDF pré-rempli téléchargé · {state.applied} / {state.total} champ
             {state.total > 1 ? "s" : ""} renseigné{state.applied > 1 ? "s" : ""}.
           </p>
           {state.vides.length > 0 && (

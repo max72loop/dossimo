@@ -5,7 +5,7 @@ import { getCurrentArtisan } from "@/lib/auth/get-artisan";
 import type { CeeIsolationInput } from "@/lib/dossier/cee-isolation";
 
 export const metadata = {
-  title: "Nouveau dossier CEE isolation — Dossimo",
+  title: "Nouveau dossier CEE isolation · Dossimo",
 };
 
 export default async function NouveauDossierPage() {
@@ -35,7 +35,7 @@ export default async function NouveauDossierPage() {
           ← Mes dossiers
         </Link>
         <h1 className="mt-4 font-serif text-3xl font-semibold tracking-tight text-encre">
-          Nouveau dossier — CEE isolation
+          Nouveau dossier · CEE isolation
         </h1>
         <p className="mt-3 text-ardoise">
           Une seule saisie. Le pack documentaire et le contrôle anti-refus en

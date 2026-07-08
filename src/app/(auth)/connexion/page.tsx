@@ -1,6 +1,6 @@
 import { SignInForm } from "@/components/auth/auth-forms";
 
-export const metadata = { title: "Connexion — Dossimo" };
+export const metadata = { title: "Connexion · Dossimo" };
 
 export default function ConnexionPage() {
   return (

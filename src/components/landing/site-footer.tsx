@@ -28,7 +28,7 @@ export function SiteFooter() {
               <h3 className="label text-encre-claire">Dispositifs</h3>
               <ul className="mt-4 space-y-2.5 text-sm text-ardoise">
                 <li>MaPrimeRénov&rsquo;</li>
-                <li>CEE — Certificats d&rsquo;Économies d&rsquo;Énergie</li>
+                <li>CEE · Certificats d&rsquo;Économies d&rsquo;Énergie</li>
               </ul>
             </div>
             <div>
@@ -50,7 +50,7 @@ export function SiteFooter() {
             l&rsquo;intégralité de la prime.
           </p>
           <p className="mt-4 font-mono text-xs text-encre-claire">
-            © {new Date().getFullYear()} Dossimo — Île-de-France.
+            © {new Date().getFullYear()} Dossimo · Île-de-France.
           </p>
         </div>
       </div>

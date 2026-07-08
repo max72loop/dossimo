@@ -6,18 +6,18 @@ import { StyleSheet } from "@react-pdf/renderer";
  * (React-PDF n'utilise que les polices standard : Helvetica ici.)
  */
 export const COLORS = {
-  ink: "#1a1f2c", // encre
-  muted: "#5a6573", // ardoise
-  line: "#dcd8d0", // filigrane
-  brand: "#c45d3c", // terre cuite (marque / accents)
-  tampon: "#2e5c8a", // bleu tampon (titres de section, info)
-  tamponSoft: "#e8f0f7",
+  ink: "#16202b", // encre
+  muted: "#5b636d", // ardoise
+  line: "#e2ddd1", // filigrane
+  brand: "#16202b", // mot-signe encre (documents monochromes)
+  tampon: "#35507f", // bleu de marque (titres de section, info)
+  tamponSoft: "#e9edf4",
   ok: "#2d6a4f", // succès
-  okSoft: "#e8f4ef",
+  okSoft: "#e7f1ea",
   danger: "#9b2c2c", // erreur
-  dangerSoft: "#f9ebeb",
-  warn: "#b38600", // vigilance
-  warnSoft: "#fdf3d7",
+  dangerSoft: "#f6e9e6",
+  warn: "#a8730b", // vigilance
+  warnSoft: "#f6eed6",
 };
 
 export const styles = StyleSheet.create({

@@ -19,7 +19,7 @@ import {
 import { Section, SelectField, TextField } from "@/components/dossier/fields";
 
 const isolationOptions = Object.fromEntries(
-  Object.entries(TYPES_ISOLATION).map(([k, v]) => [k, `${v.label} — ${v.fiche}`]),
+  Object.entries(TYPES_ISOLATION).map(([k, v]) => [k, `${v.label} · ${v.fiche}`]),
 ) as Record<string, string>;
 
 export function DossierCeeIsolationForm({
@@ -76,8 +76,8 @@ export function DossierCeeIsolationForm({
         title="Dispositif visé"
         description={
           dispositif === "maprimerenov"
-            ? "MaPrimeRénov' — dépôt en ligne par le client sur maprimerenov.gouv.fr. Logement achevé depuis plus de 15 ans. En 2026, l'isolation des murs n'est plus éligible au parcours par geste."
-            : "CEE — dossier remis à un obligé. Logement achevé depuis plus de 2 ans."
+            ? "MaPrimeRénov' · dépôt en ligne par le client sur maprimerenov.gouv.fr. Logement achevé depuis plus de 15 ans. En 2026, l'isolation des murs n'est plus éligible au parcours par geste."
+            : "CEE · dossier remis à un obligé. Logement achevé depuis plus de 2 ans."
         }
       >
         <SelectField
@@ -151,7 +151,7 @@ export function DossierCeeIsolationForm({
 
       <Section
         title="Chronologie"
-        description="L'ordre des dates conditionne l'éligibilité — cœur du contrôle anti-refus."
+        description="L'ordre des dates conditionne l'éligibilité · cœur du contrôle anti-refus."
       >
         <TextField label="Date de visite technique" type="date" error={errors.date_visite_technique} register={register("date_visite_technique")} />
         <TextField label="Date du devis signé" required type="date" hint="Doit précéder le début des travaux." error={errors.date_devis} register={register("date_devis")} />
@@ -164,7 +164,7 @@ export function DossierCeeIsolationForm({
         <TextField label="Montant HT (€)" required type="number" step="0.01" inputMode="decimal" error={errors.montant_ht} register={register("montant_ht")} />
         <TextField label="Montant TTC (€)" required type="number" step="0.01" inputMode="decimal" error={errors.montant_ttc} register={register("montant_ttc")} />
         <TextField label="Prime CEE estimée (€)" type="number" step="0.01" inputMode="decimal" error={errors.montant_prime_estime} register={register("montant_prime_estime")} />
-        <TextField label="Aides publiques hors CEE (€) — ex. MaPrimeRénov'" type="number" step="0.01" inputMode="decimal" error={errors.montant_aides_publiques} register={register("montant_aides_publiques")} />
+        <TextField label="Aides publiques hors CEE (€) · ex. MaPrimeRénov'" type="number" step="0.01" inputMode="decimal" error={errors.montant_aides_publiques} register={register("montant_aides_publiques")} />
       </Section>
 
       {serverError && (

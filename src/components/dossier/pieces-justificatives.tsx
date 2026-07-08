@@ -99,7 +99,7 @@ function PieceCard({
           )}
           {echec && (
             <p className="mt-1 text-xs text-avertissement">
-              Lecture automatique impossible — {piece.extraction_erreur ?? "document illisible."}
+              Lecture automatique impossible · {piece.extraction_erreur ?? "document illisible."}
             </p>
           )}
         </div>
@@ -153,7 +153,7 @@ export function PiecesJustificatives({
   return (
     <section className="mt-6 rounded border border-filigrane bg-blanc-casse p-5 shadow-sm">
       <h2 className="font-serif text-base font-semibold text-encre">
-        Pièces réelles — cohérence avec la saisie
+        Pièces réelles · cohérence avec la saisie
       </h2>
       <p className="mt-1 text-xs text-ardoise">
         Ajoutez le devis et la facture réels : Dossimo en lit les valeurs et les

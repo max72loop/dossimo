@@ -1,6 +1,6 @@
 import { SignUpForm } from "@/components/auth/auth-forms";
 
-export const metadata = { title: "Créer un compte — Dossimo" };
+export const metadata = { title: "Créer un compte · Dossimo" };
 
 export default function InscriptionPage() {
   return (
