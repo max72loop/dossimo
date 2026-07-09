@@ -28,6 +28,8 @@ export interface RapportControle {
   findings: Finding[];
   nbBloquants: number;
   nbAvertissements: number;
+  /** Points de contrôle passés (severite « ok »). */
+  nbConformes: number;
   /** Aucun point bloquant → le dossier peut être déposé. */
   conforme: boolean;
 }

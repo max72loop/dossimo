@@ -74,6 +74,12 @@ export default async function DossiersPage() {
   // Paliers de prix chargés une fois (grille en base) puis appliqués par ligne.
   const tiers = await getActiveTiers(supabase);
   const prixParDossier = new Map<string, string>();
+  // Résumé de contrôle par dossier : sert d'aperçu (compteur de bloquants) sur
+  // les lignes verrouillées, sans exposer le détail (voir page dossier).
+  const controleParDossier = new Map<
+    string,
+    { nbBloquants: number; conforme: boolean }
+  >();
   for (const d of rows) {
     parEtat[d.statut] = (parEtat[d.statut] ?? 0) + 1;
     try {
@@ -85,7 +91,12 @@ export default async function DossiersPage() {
         regle: reglesMap.get(`${d.dispositif}:${d.type_travaux}`) ?? null,
       } as unknown as Parameters<typeof controlerDossierCeeIsolation>[0];
       baseConformite += 1;
-      if (controlerDossierCeeIsolation(data).conforme) conformes += 1;
+      const rapport = controlerDossierCeeIsolation(data);
+      if (rapport.conforme) conformes += 1;
+      controleParDossier.set(d.id, {
+        nbBloquants: rapport.nbBloquants,
+        conforme: rapport.conforme,
+      });
       const aide = estimerPrime(data);
       prixParDossier.set(
         d.id,
@@ -226,8 +237,21 @@ export default async function DossiersPage() {
                         ) : (
                           // relative z-10 : le CTA de paiement reste cliquable au-dessus
                           // de l'overlay qui rend toute la ligne cliquable.
-                          <div className="relative z-10 w-fit">
+                          <div className="relative z-10 flex w-fit flex-col items-start gap-1.5">
                             <PaywallCta dossierId={d.id} prix={prixParDossier.get(d.id) ?? "149 €"} compact />
+                            {(() => {
+                              const ctrl = controleParDossier.get(d.id);
+                              if (!ctrl) return null;
+                              return ctrl.nbBloquants > 0 ? (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-erreur-bg px-2 py-0.5 text-[10px] font-medium text-erreur">
+                                  {ctrl.nbBloquants} bloquant{ctrl.nbBloquants > 1 ? "s" : ""}
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-succes-bg px-2 py-0.5 text-[10px] font-medium text-succes">
+                                  Aucun bloquant
+                                </span>
+                              );
+                            })()}
                           </div>
                         )}
                       </td>

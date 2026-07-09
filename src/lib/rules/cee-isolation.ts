@@ -398,11 +398,13 @@ export function controlerDossierCeeIsolation(
   const nbAvertissements = findings.filter(
     (f) => f.severite === "avertissement",
   ).length;
+  const nbConformes = findings.filter((f) => f.severite === "ok").length;
 
   return {
     findings,
     nbBloquants,
     nbAvertissements,
+    nbConformes,
     conforme: nbBloquants === 0,
   };
 }
