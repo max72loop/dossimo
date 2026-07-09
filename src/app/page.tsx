@@ -32,6 +32,7 @@ export default function Home() {
         <PourQui />
         <Etapes />
         <Features />
+        <CasConcrets />
         <Pricing />
         <Contact />
         <Faq />
@@ -497,6 +498,82 @@ function Features() {
             </div>
           ))}
         </div>
+      </Shell>
+    </section>
+  );
+}
+
+/* ----------------------------------------------------------- Cas concrets */
+/* Exemples illustratifs, explicitement présentés comme représentatifs et non
+   comme des témoignages nominatifs (pas de fausse preuve sociale). À remplacer
+   par de vrais retours d'artisans dès qu'ils seront disponibles. */
+function CasConcrets() {
+  const cas = [
+    {
+      chantier: "Isolation des combles perdus",
+      dispositif: "CEE · BAR-EN-101",
+      detecte:
+        "La résistance thermique n'était pas mentionnée sur le devis. Signalée avant dépôt, ajoutée en une ligne.",
+      issue: "Dossier déposé sans point bloquant.",
+    },
+    {
+      chantier: "Chauffe-eau thermodynamique",
+      dispositif: "CEE · BAR-TH-148",
+      detecte:
+        "Le devis était daté après le début des travaux déclaré. Incohérence de chronologie remontée immédiatement.",
+      issue: "Dates corrigées, motif de refus évité.",
+    },
+    {
+      chantier: "Appareil de chauffage au bois",
+      dispositif: "CEE · BAR-TH-112",
+      detecte:
+        "Un montant différait entre devis et facture. La saisie unique a rendu l'écart impossible à reproduire.",
+      issue: "Cohérence des pièces garantie.",
+    },
+  ];
+  return (
+    <section className="py-20 sm:py-24">
+      <Shell>
+        <div className="max-w-2xl">
+          <SectionLabel>Cas concrets</SectionLabel>
+          <h2 className="mt-5 font-serif text-3xl font-semibold tracking-tight text-encre sm:text-[2.25rem] sm:leading-tight">
+            Ce que le contrôle anti-refus repère, concrètement
+          </h2>
+          <p className="mt-4 text-lg leading-relaxed text-ardoise">
+            Exemples représentatifs des points bloquants les plus courants,
+            détectés avant le dépôt.
+          </p>
+        </div>
+
+        <div className="mt-12 grid gap-5 md:grid-cols-3">
+          {cas.map((c) => (
+            <div
+              key={c.chantier}
+              className="flex flex-col rounded border border-filigrane bg-blanc-casse p-6 shadow-sm"
+            >
+              <p className="font-mono text-xs text-tampon">{c.dispositif}</p>
+              <h3 className="mt-2 font-serif text-lg font-semibold text-encre">
+                {c.chantier}
+              </h3>
+              <p className="mt-3 flex-1 text-sm leading-relaxed text-ardoise">
+                {c.detecte}
+              </p>
+              <p className="mt-4 flex items-start gap-2 border-t border-filigrane pt-4 text-sm font-medium text-encre">
+                <CheckCircle2
+                  className="mt-0.5 h-4 w-4 shrink-0 text-succes"
+                  strokeWidth={1.5}
+                />
+                {c.issue}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        <p className="mt-6 text-xs leading-relaxed text-encre-claire">
+          Exemples illustratifs des contrôles effectués, à des fins de
+          démonstration. Ils ne constituent pas des témoignages de clients
+          identifiés.
+        </p>
       </Shell>
     </section>
   );

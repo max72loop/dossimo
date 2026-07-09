@@ -15,12 +15,12 @@ export function SiteFooter() {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-10 sm:grid-cols-3">
+          <div className="grid grid-cols-2 gap-10 sm:grid-cols-4">
             <div>
               <h3 className="label text-encre-claire">Produit</h3>
               <ul className="mt-4 space-y-2.5 text-sm text-ardoise">
-                <li><a href="#etapes" className="transition-colors hover:text-encre">Méthode</a></li>
-                <li><a href="#difference" className="transition-colors hover:text-encre">Vs mandataire</a></li>
+                <li><Link href="/#etapes" className="transition-colors hover:text-encre">Méthode</Link></li>
+                <li><Link href="/#difference" className="transition-colors hover:text-encre">Vs mandataire</Link></li>
                 <li><Link href="/dossiers/nouveau" className="transition-colors hover:text-encre">Créer un dossier</Link></li>
               </ul>
             </div>
@@ -34,8 +34,16 @@ export function SiteFooter() {
             <div>
               <h3 className="label text-encre-claire">Ressources</h3>
               <ul className="mt-4 space-y-2.5 text-sm text-ardoise">
-                <li><a href="#faq" className="transition-colors hover:text-encre">Questions fréquentes</a></li>
-                <li><a href="#contact" className="transition-colors hover:text-encre">Contact</a></li>
+                <li><Link href="/#faq" className="transition-colors hover:text-encre">Questions fréquentes</Link></li>
+                <li><Link href="/#contact" className="transition-colors hover:text-encre">Contact</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="label text-encre-claire">Légal</h3>
+              <ul className="mt-4 space-y-2.5 text-sm text-ardoise">
+                <li><Link href="/mentions-legales" className="transition-colors hover:text-encre">Mentions légales</Link></li>
+                <li><Link href="/cgv" className="transition-colors hover:text-encre">CGV</Link></li>
+                <li><Link href="/confidentialite" className="transition-colors hover:text-encre">Confidentialité</Link></li>
               </ul>
             </div>
           </div>
