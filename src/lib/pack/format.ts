@@ -1,14 +1,11 @@
-// fr-FR insère une espace fine insécable (U+202F) ou insécable (U+00A0) comme
-// séparateur de milliers ; ces glyphes manquent aux polices PDF standard et
-// s'affichent alors comme "/". On les normalise en espace ordinaire.
-const NBSP = /[  ]/g;
+import { formatEurosPdf } from "@/lib/format/montant";
 
-export const euro = (n: number | null | undefined) =>
-  n == null
-    ? "—"
-    : n
-        .toLocaleString("fr-FR", { style: "currency", currency: "EUR" })
-        .replace(NBSP, " ");
+/**
+ * Formatage des documents PDF. Le format monétaire est centralisé dans
+ * `@/lib/format/montant` : `formatEurosPdf` normalise les espaces insécables,
+ * absentes des polices PDF standard (elles s'y affichent « / »).
+ */
+export const euro = formatEurosPdf;
 
 export const dateFr = (s: string | null | undefined) => {
   if (!s) return "—";

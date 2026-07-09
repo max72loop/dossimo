@@ -1,4 +1,5 @@
 import type { DossierComplet } from "@/lib/dossier/get-dossier";
+import { formatEuros } from "@/lib/format/montant";
 
 /**
  * Estimation INDICATIVE du montant de prime, à partir du barème porté par la
@@ -41,7 +42,7 @@ export function estimerPrime(data: DossierComplet): EstimationPrime | null {
 
   return {
     montant: Math.round(montant),
-    base: `${taux} €/m² × ${surface} m²${plafonne ? ` (plafonné à ${prime.plafond} €)` : ""}`,
+    base: `${taux} €/m² × ${surface} m²${plafonne ? ` (plafonné à ${formatEuros(prime.plafond)})` : ""}`,
     dispositif,
   };
 }
