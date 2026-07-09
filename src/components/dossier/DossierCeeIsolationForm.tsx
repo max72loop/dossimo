@@ -6,6 +6,8 @@ import { useForm, type Path } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { createDossierCeeIsolation } from "@/lib/dossier/actions";
+import { verifierSiretRge } from "@/lib/dossier/verification-actions";
+import type { VerificationEntreprise } from "@/lib/verification/types";
 import {
   LOGEMENT_TYPES,
   OCCUPATIONS,
@@ -64,6 +66,78 @@ const ETAPES: { titre: string; champs: Champ[] }[] = [
   },
 ];
 
+type Ton = "ok" | "erreur" | "avert" | "neutre";
+
+const TON_CLASS: Record<Ton, string> = {
+  ok: "text-succes",
+  erreur: "text-erreur",
+  avert: "text-avertissement",
+  neutre: "text-ardoise",
+};
+
+function LigneStatut({ ton, texte }: { ton: Ton; texte: string }) {
+  return (
+    <p className={`flex items-start gap-2 text-sm ${TON_CLASS[ton]}`}>
+      <span aria-hidden className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-current" />
+      <span>{texte}</span>
+    </p>
+  );
+}
+
+/** Restitue le résultat de vérification SIRET + RGE sous les champs entreprise. */
+function VerifPanel({ v }: { v: VerificationEntreprise }) {
+  const nom = v.entreprise.denomination;
+  const ent: { ton: Ton; texte: string } = (() => {
+    switch (v.entreprise.statut) {
+      case "actif":
+        return { ton: "ok", texte: `${nom ?? "Établissement"} · actif au répertoire SIRENE` };
+      case "ferme":
+        return { ton: "erreur", texte: `${nom ?? "Établissement"} fermé au répertoire SIRENE` };
+      case "introuvable":
+        return { ton: "erreur", texte: "SIRET introuvable au répertoire SIRENE" };
+      case "indisponible":
+        return { ton: "avert", texte: "Annuaire des entreprises indisponible, réessayez" };
+      default:
+        return { ton: "neutre", texte: "Vérification du SIRET désactivée" };
+    }
+  })();
+
+  const q = v.rge.retenue;
+  const rge: { ton: Ton; texte: string } = (() => {
+    switch (v.rge.statut) {
+      case "couvert":
+        return {
+          ton: "ok",
+          texte: q
+            ? `Qualification RGE confirmée : ${q.qualification || q.domaine}${q.domaine && q.qualification ? ` (${q.domaine})` : ""}`
+            : "Qualification RGE confirmée à l'annuaire officiel",
+        };
+      case "expire":
+        return { ton: "erreur", texte: "Qualification RGE expirée à la date du devis" };
+      case "domaine_absent":
+        return { ton: "erreur", texte: "Aucune qualification RGE pour ce type de geste" };
+      case "aucune":
+        return { ton: "erreur", texte: "Aucune qualification RGE trouvée pour ce SIRET" };
+      case "indisponible":
+        return { ton: "avert", texte: "Annuaire RGE indisponible, réessayez" };
+      default:
+        return { ton: "neutre", texte: "Vérification RGE désactivée" };
+    }
+  })();
+
+  return (
+    <div className="mt-3 space-y-1.5 rounded border border-filigrane bg-papier p-3">
+      {v.mode === "demo" && (
+        <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-tampon">
+          Mode démonstration · vérification simulée
+        </p>
+      )}
+      <LigneStatut ton={ent.ton} texte={ent.texte} />
+      <LigneStatut ton={rge.ton} texte={rge.texte} />
+    </div>
+  );
+}
+
 export function DossierCeeIsolationForm({
   initialValues,
 }: {
@@ -80,6 +154,8 @@ export function DossierCeeIsolationForm({
     watch,
     trigger,
     setError,
+    setValue,
+    getValues,
     formState: { errors, isSubmitting },
   } = useForm<CeeIsolationInput>({
     resolver: zodResolver(ceeIsolationSchema),
@@ -95,6 +171,41 @@ export function DossierCeeIsolationForm({
   const estPac = geste === "pac_air_eau";
   const estCet = geste === "cet";
   const estBois = geste === "bois";
+
+  // Vérification SIRET + RGE contre les annuaires officiels (à la demande).
+  const [verif, setVerif] = useState<VerificationEntreprise | null>(null);
+  const [verifLoading, setVerifLoading] = useState(false);
+  const [verifError, setVerifError] = useState<string | null>(null);
+
+  async function verifierEntrepriseSaisie() {
+    setVerifError(null);
+    setVerif(null);
+    setVerifLoading(true);
+    const res = await verifierSiretRge({
+      siret: getValues("siret") ?? "",
+      geste: getValues("geste") ?? "isolation",
+      dateDevis: getValues("date_devis") || null,
+    });
+    setVerifLoading(false);
+    if (!res.ok) {
+      setVerifError(res.error);
+      return;
+    }
+    const v = res.verification;
+    setVerif(v);
+    // Préremplissage depuis les données officielles : le fictif devient
+    // impossible à saisir puisque les champs viennent de l'annuaire.
+    if (v.entreprise.denomination) {
+      setValue("entreprise", v.entreprise.denomination, { shouldValidate: true });
+    }
+    const q = v.rge.retenue ?? v.rge.qualifications[0];
+    if (q) {
+      setValue("rge_numero", q.numero, { shouldValidate: true });
+      setValue("rge_domaine", q.qualification || q.domaine, { shouldValidate: true });
+      if (q.date_debut) setValue("rge_date_debut", q.date_debut, { shouldValidate: true });
+      if (q.date_fin) setValue("rge_date_fin", q.date_fin, { shouldValidate: true });
+    }
+  }
 
   async function suivant() {
     const ok = await trigger(ETAPES[etape].champs);
@@ -224,6 +335,26 @@ export function DossierCeeIsolationForm({
           >
             <TextField label="Raison sociale" required error={errors.entreprise} register={register("entreprise")} />
             <TextField label="SIRET" required placeholder="14 chiffres" inputMode="numeric" error={errors.siret} register={register("siret")} />
+
+            <div className="sm:col-span-2">
+              <button
+                type="button"
+                onClick={verifierEntrepriseSaisie}
+                disabled={verifLoading}
+                className="inline-flex h-10 items-center rounded border border-tampon bg-tampon/5 px-4 text-sm font-medium text-tampon transition-colors hover:bg-tampon/10 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {verifLoading ? "Vérification…" : "Vérifier l'entreprise et la qualification RGE"}
+              </button>
+              <p className="mt-1.5 text-xs text-encre-claire">
+                Contrôle le SIRET (annuaire SIRENE) et la qualification RGE (annuaire ADEME / France Rénov'),
+                puis préremplit les champs ci-dessous depuis les données officielles.
+              </p>
+              {verifError && (
+                <p className="mt-2 text-xs text-erreur">{verifError}</p>
+              )}
+              {verif && <VerifPanel v={verif} />}
+            </div>
+
             <TextField label="N° de qualification RGE" required error={errors.rge_numero} register={register("rge_numero")} />
             <TextField label="Domaine RGE" required placeholder="Ex. Qualibat 7131 – Isolation thermique" error={errors.rge_domaine} register={register("rge_domaine")} />
             <TextField label="RGE valide à partir du" type="date" error={errors.rge_date_debut} register={register("rge_date_debut")} />

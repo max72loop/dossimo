@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 
-import { controlerDossierCeeIsolation } from "@/lib/rules/cee-isolation";
+import { controlerDossier } from "@/lib/rules/controle-dossier";
 import type { DossierComplet } from "@/lib/dossier/get-dossier";
 import type { RegleMetierResolue } from "@/lib/rules/regles-metier";
 
@@ -52,17 +52,17 @@ function dossier(over: {
 }
 
 const codes = (d: DossierComplet) =>
-  controlerDossierCeeIsolation(d, AUJ).findings.map((f) => `${f.code}:${f.severite}`);
+  controlerDossier(d, AUJ).findings.map((f) => `${f.code}:${f.severite}`);
 
-describe("controlerDossierCeeIsolation", () => {
+describe("controlerDossier", () => {
   it("dossier de référence : conforme, aucun bloquant", () => {
-    const r = controlerDossierCeeIsolation(dossier(), AUJ);
+    const r = controlerDossier(dossier(), AUJ);
     expect(r.conforme).toBe(true);
     expect(r.nbBloquants).toBe(0);
   });
 
   it("travaux commencés avant le devis : bloquant", () => {
-    const r = controlerDossierCeeIsolation(
+    const r = controlerDossier(
       dossier({ dates: { devis: "2026-04-10", debut_travaux: "2026-04-01" } }),
       AUJ,
     );
@@ -72,19 +72,19 @@ describe("controlerDossierCeeIsolation", () => {
   });
 
   it("RGE expirée à la date du devis : bloquant", () => {
-    const r = controlerDossierCeeIsolation(dossier({ rge: { date_fin: "2025-01-01" } }), AUJ);
+    const r = controlerDossier(dossier({ rge: { date_fin: "2025-01-01" } }), AUJ);
     expect(r.conforme).toBe(false);
     expect(codes(dossier({ rge: { date_fin: "2025-01-01" } }))).toContain("rge_validite:bloquant");
   });
 
   it("R insuffisant selon le seuil de la règle : bloquant", () => {
-    const r = controlerDossierCeeIsolation(dossier({ travaux: { resistance_thermique_r: 6 } }), AUJ);
+    const r = controlerDossier(dossier({ travaux: { resistance_thermique_r: 6 } }), AUJ);
     expect(r.conforme).toBe(false);
     expect(codes(dossier({ travaux: { resistance_thermique_r: 6 } }))).toContain("technique_resistance:bloquant");
   });
 
   it("seuil R piloté par la règle : R=4 conforme si r_min=3 (planchers)", () => {
-    const r = controlerDossierCeeIsolation(
+    const r = controlerDossier(
       dossier({ travaux: { resistance_thermique_r: 4 }, regle: regleCombles({ r_min: 3 }) }),
       AUJ,
     );
@@ -94,10 +94,10 @@ describe("controlerDossierCeeIsolation", () => {
   });
 
   it("ancienneté : logement 2018 conforme en CEE (2 ans) mais bloqué en MPR (15 ans)", () => {
-    const cee = controlerDossierCeeIsolation(dossier({ logement: { annee_construction: 2018 } }), AUJ);
+    const cee = controlerDossier(dossier({ logement: { annee_construction: 2018 } }), AUJ);
     expect(cee.conforme).toBe(true);
 
-    const mpr = controlerDossierCeeIsolation(
+    const mpr = controlerDossier(
       dossier({ dispositif: "maprimerenov", logement: { annee_construction: 2018 }, regle: regleCombles({ anciennete_min_ans: 15 }) }),
       AUJ,
     );
@@ -105,20 +105,20 @@ describe("controlerDossierCeeIsolation", () => {
   });
 
   it("MPR sans règle active pour le geste : bloquant (non éligible)", () => {
-    const r = controlerDossierCeeIsolation(dossier({ dispositif: "maprimerenov", regle: null }), AUJ);
+    const r = controlerDossier(dossier({ dispositif: "maprimerenov", regle: null }), AUJ);
     expect(r.conforme).toBe(false);
     expect(codes(dossier({ dispositif: "maprimerenov", regle: null }))).toContain("eligibilite_dispositif:bloquant");
   });
 
   it("taux de TVA inhabituel : avertissement (non bloquant)", () => {
     // TTC = HT * 1.10 -> 10 % au lieu de 5,5 %
-    const r = controlerDossierCeeIsolation(dossier({ montants: { ht: 4200, ttc: 4620 } }), AUJ);
+    const r = controlerDossier(dossier({ montants: { ht: 4200, ttc: 4620 } }), AUJ);
     expect(r.conforme).toBe(true);
     expect(codes(dossier({ montants: { ht: 4200, ttc: 4620 } }))).toContain("montants_tva:avertissement");
   });
 
   it("TTC inférieur au HT : bloquant", () => {
-    const r = controlerDossierCeeIsolation(dossier({ montants: { ht: 4200, ttc: 4000 } }), AUJ);
+    const r = controlerDossier(dossier({ montants: { ht: 4200, ttc: 4000 } }), AUJ);
     expect(r.conforme).toBe(false);
   });
 });
@@ -159,23 +159,23 @@ function dossierPac(over: { pac?: Record<string, unknown>; regle?: RegleMetierRe
 }
 
 const codesPac = (d: DossierComplet) =>
-  controlerDossierCeeIsolation(d, AUJ).findings.map((f) => `${f.code}:${f.severite}`);
+  controlerDossier(d, AUJ).findings.map((f) => `${f.code}:${f.severite}`);
 
-describe("controlerDossierCeeIsolation — PAC air/eau (BAR-TH-171)", () => {
+describe("controlerDossier — PAC air/eau (BAR-TH-171)", () => {
   it("PAC de référence : conforme, ETAS ok", () => {
-    const r = controlerDossierCeeIsolation(dossierPac(), AUJ);
+    const r = controlerDossier(dossierPac(), AUJ);
     expect(r.conforme).toBe(true);
     expect(codesPac(dossierPac())).toContain("technique_etas:ok");
   });
 
   it("ETAS insuffisante en basse température (< 126 %) : bloquant", () => {
-    const r = controlerDossierCeeIsolation(dossierPac({ pac: { etas: 120 } }), AUJ);
+    const r = controlerDossier(dossierPac({ pac: { etas: 120 } }), AUJ);
     expect(r.conforme).toBe(false);
     expect(codesPac(dossierPac({ pac: { etas: 120 } }))).toContain("technique_etas:bloquant");
   });
 
   it("seuil ETAS piloté par le régime : 115 % conforme en moyenne/haute (>= 111 %)", () => {
-    const r = controlerDossierCeeIsolation(
+    const r = controlerDossier(
       dossierPac({ pac: { etas: 115, temperature: "moyenne_haute" } }),
       AUJ,
     );
@@ -185,7 +185,7 @@ describe("controlerDossierCeeIsolation — PAC air/eau (BAR-TH-171)", () => {
   });
 
   it("etas_min de la règle surcharge le défaut régime : 128 requis => 126 bloqué", () => {
-    const r = controlerDossierCeeIsolation(
+    const r = controlerDossier(
       dossierPac({ pac: { etas: 126 }, regle: reglePac({ etas_min: 128 }) }),
       AUJ,
     );
@@ -193,7 +193,7 @@ describe("controlerDossierCeeIsolation — PAC air/eau (BAR-TH-171)", () => {
   });
 
   it("classe de régulateur manquante : avertissement (non bloquant)", () => {
-    const r = controlerDossierCeeIsolation(dossierPac({ pac: { regulateur_classe: null } }), AUJ);
+    const r = controlerDossier(dossierPac({ pac: { regulateur_classe: null } }), AUJ);
     expect(r.conforme).toBe(true);
     expect(codesPac(dossierPac({ pac: { regulateur_classe: null } })))
       .toContain("technique_regulateur:avertissement");
@@ -240,23 +240,23 @@ function dossierCet(over: { cet?: Record<string, unknown>; regle?: RegleMetierRe
 }
 
 const codesCet = (d: DossierComplet) =>
-  controlerDossierCeeIsolation(d, AUJ).findings.map((f) => `${f.code}:${f.severite}`);
+  controlerDossier(d, AUJ).findings.map((f) => `${f.code}:${f.severite}`);
 
-describe("controlerDossierCeeIsolation — chauffe-eau thermodynamique (BAR-TH-148)", () => {
+describe("controlerDossier — chauffe-eau thermodynamique (BAR-TH-148)", () => {
   it("CET de référence : conforme, COP ok", () => {
-    const r = controlerDossierCeeIsolation(dossierCet(), AUJ);
+    const r = controlerDossier(dossierCet(), AUJ);
     expect(r.conforme).toBe(true);
     expect(codesCet(dossierCet())).toContain("technique_cop:ok");
   });
 
   it("COP insuffisant (< 2,5) : bloquant", () => {
-    const r = controlerDossierCeeIsolation(dossierCet({ cet: { cop: 2.2 } }), AUJ);
+    const r = controlerDossier(dossierCet({ cet: { cop: 2.2 } }), AUJ);
     expect(r.conforme).toBe(false);
     expect(codesCet(dossierCet({ cet: { cop: 2.2 } }))).toContain("technique_cop:bloquant");
   });
 
   it("cop_min de la règle surcharge le défaut : 3,2 requis => 3,0 bloqué", () => {
-    const r = controlerDossierCeeIsolation(
+    const r = controlerDossier(
       dossierCet({ cet: { cop: 3.0 }, regle: regleCet({ cop_min: 3.2 }) }),
       AUJ,
     );
@@ -305,23 +305,23 @@ function dossierBois(over: { bois?: Record<string, unknown>; regle?: RegleMetier
 }
 
 const codesBois = (d: DossierComplet) =>
-  controlerDossierCeeIsolation(d, AUJ).findings.map((f) => `${f.code}:${f.severite}`);
+  controlerDossier(d, AUJ).findings.map((f) => `${f.code}:${f.severite}`);
 
-describe("controlerDossierCeeIsolation — appareil de chauffage au bois (BAR-TH-112)", () => {
+describe("controlerDossier — appareil de chauffage au bois (BAR-TH-112)", () => {
   it("appareil de référence : conforme, rendement ok", () => {
-    const r = controlerDossierCeeIsolation(dossierBois(), AUJ);
+    const r = controlerDossier(dossierBois(), AUJ);
     expect(r.conforme).toBe(true);
     expect(codesBois(dossierBois())).toContain("technique_rendement:ok");
   });
 
   it("rendement insuffisant en granulés (< 80 %) : bloquant", () => {
-    const r = controlerDossierCeeIsolation(dossierBois({ bois: { rendement: 78 } }), AUJ);
+    const r = controlerDossier(dossierBois({ bois: { rendement: 78 } }), AUJ);
     expect(r.conforme).toBe(false);
     expect(codesBois(dossierBois({ bois: { rendement: 78 } }))).toContain("technique_rendement:bloquant");
   });
 
   it("seuil selon combustible : 76 % conforme en bûches (>= 75 %)", () => {
-    const r = controlerDossierCeeIsolation(
+    const r = controlerDossier(
       dossierBois({ bois: { rendement: 76, combustible: "buches" } }),
       AUJ,
     );
@@ -331,7 +331,7 @@ describe("controlerDossierCeeIsolation — appareil de chauffage au bois (BAR-TH
   });
 
   it("rendement_min de la règle surcharge le défaut : 92 requis => 90 bloqué", () => {
-    const r = controlerDossierCeeIsolation(
+    const r = controlerDossier(
       dossierBois({ bois: { rendement: 90 }, regle: regleBois({ rendement_min: 92 }) }),
       AUJ,
     );

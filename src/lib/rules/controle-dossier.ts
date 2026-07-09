@@ -1,5 +1,6 @@
 import type { DossierComplet } from "@/lib/dossier/get-dossier";
-import { TYPES_ISOLATION } from "@/lib/dossier/cee-isolation";
+import { TYPES_ISOLATION, familleDeGeste } from "@/lib/dossier/cee-isolation";
+import { DOMAINE_ATTENDU_LABEL } from "@/lib/verification/domaines";
 import { dateFr } from "@/lib/pack/format";
 import type { Finding, RapportControle } from "@/lib/rules/types";
 
@@ -15,10 +16,10 @@ function parseDate(s: string | null | undefined): Date | null {
 const jour = 86_400_000;
 
 /**
- * Contrôle déterministe d'un dossier CEE isolation.
+ * Contrôle déterministe d'un dossier (CEE ou MaPrimeRénov', tous gestes).
  * @param today date de référence (injectable pour les tests).
  */
-export function controlerDossierCeeIsolation(
+export function controlerDossier(
   data: DossierComplet,
   today: Date = new Date(),
 ): RapportControle {
@@ -136,45 +137,150 @@ export function controlerDossierCeeIsolation(
   }
 
   // ---------------------------------------------------------------------
-  // Qualification RGE
+  // Identité entreprise (SIRENE) + qualification RGE (annuaires officiels)
   // ---------------------------------------------------------------------
-  if (dRgeFin && dDevis) {
-    if (dRgeFin < dDevis) {
+  const verif = c.verification;
+  const famille = familleDeGeste(c.geste ?? "isolation");
+
+  // Vérification du SIRET auprès de l'Annuaire des Entreprises (SIRENE).
+  if (verif && verif.entreprise.statut !== "non_verifie") {
+    const nom = verif.entreprise.denomination;
+    const suffixeNom = nom ? ` (${nom})` : "";
+    if (verif.entreprise.statut === "actif") {
       add({
-        code: "rge_validite",
-        categorie: "rge",
-        severite: "bloquant",
-        titre: "Qualification RGE expirée à la date du devis",
-        detail: `La qualification RGE (valable jusqu'au ${dateFr(c.rge.date_fin)}) était expirée à la signature du devis. La qualification doit être valide à cette date.`,
-      });
-    } else {
-      add({
-        code: "rge_validite",
-        categorie: "rge",
+        code: "entreprise_siret",
+        categorie: "entreprise",
         severite: "ok",
-        titre: "Qualification RGE valide à la date du devis",
-        detail: "La qualification RGE couvre la date de signature du devis.",
+        titre: "Entreprise active au répertoire SIRENE",
+        detail: `SIRET ${verif.siret} confirmé${suffixeNom} et actif au répertoire officiel des entreprises.`,
+      });
+    } else if (verif.entreprise.statut === "ferme") {
+      add({
+        code: "entreprise_siret",
+        categorie: "entreprise",
+        severite: "bloquant",
+        titre: "Établissement fermé au répertoire SIRENE",
+        detail: `Le SIRET ${verif.siret}${suffixeNom} correspond à un établissement fermé. Une facture émise par un établissement cessé est un motif de refus.`,
+      });
+    } else if (verif.entreprise.statut === "introuvable") {
+      add({
+        code: "entreprise_siret",
+        categorie: "entreprise",
+        severite: "bloquant",
+        titre: "SIRET introuvable au répertoire SIRENE",
+        detail: `Le SIRET ${verif.siret} n'existe pas au répertoire officiel des entreprises. Vérifiez la saisie : un SIRET erroné bloque le dossier.`,
+      });
+    } else if (verif.entreprise.statut === "indisponible") {
+      add({
+        code: "entreprise_siret",
+        categorie: "entreprise",
+        severite: "avertissement",
+        titre: "SIRET non vérifié (annuaire indisponible)",
+        detail:
+          "L'Annuaire des Entreprises était injoignable au moment du contrôle. Le SIRET n'a pas pu être confirmé automatiquement ; vérifiez-le manuellement.",
       });
     }
-  } else if (!dRgeFin) {
-    add({
-      code: "rge_date_fin_manquante",
-      categorie: "rge",
-      severite: "avertissement",
-      titre: "Date de fin de validité RGE manquante",
-      detail: "Impossible de vérifier la validité de la qualification RGE.",
-    });
   }
 
-  if (dRgeDebut && dDevis && dDevis < dRgeDebut) {
-    add({
-      code: "rge_debut",
-      categorie: "rge",
-      severite: "bloquant",
-      titre: "Devis antérieur au début de validité RGE",
-      detail:
-        "Le devis a été signé avant la prise d'effet de la qualification RGE.",
-    });
+  // Qualification RGE via l'annuaire ADEME / France Rénov'. Quand l'annuaire a
+  // tranché, il fait autorité sur les dates RGE auto-déclarées (voir plus bas).
+  const rgeRegistreTranche =
+    verif != null &&
+    (verif.rge.statut === "couvert" ||
+      verif.rge.statut === "expire" ||
+      verif.rge.statut === "domaine_absent" ||
+      verif.rge.statut === "aucune");
+
+  if (verif && verif.rge.statut !== "non_verifie") {
+    const q = verif.rge.retenue;
+    const domaineLabel = DOMAINE_ATTENDU_LABEL[famille];
+    if (verif.rge.statut === "couvert") {
+      add({
+        code: "rge_annuaire",
+        categorie: "rge",
+        severite: "ok",
+        titre: "Qualification RGE confirmée à l'annuaire officiel",
+        detail: `${q?.qualification || "Qualification RGE"}${q?.domaine ? ` — ${q.domaine}` : ""}${q?.organisme ? ` (${q.organisme})` : ""} : valide à la date du devis dans l'annuaire RGE ADEME / France Rénov'.`,
+      });
+    } else if (verif.rge.statut === "expire") {
+      add({
+        code: "rge_annuaire",
+        categorie: "rge",
+        severite: "bloquant",
+        titre: "Qualification RGE expirée à la date du devis (annuaire officiel)",
+        detail: `Une qualification RGE « ${domaineLabel} » existe pour ce SIRET mais n'était pas valide à la date du devis selon l'annuaire officiel. La qualification doit couvrir cette date.`,
+      });
+    } else if (verif.rge.statut === "domaine_absent") {
+      add({
+        code: "rge_annuaire",
+        categorie: "rge",
+        severite: "bloquant",
+        titre: "Aucune qualification RGE pour ce type de geste (annuaire officiel)",
+        detail: `L'entreprise a des qualifications RGE, mais aucune pour le domaine « ${domaineLabel} » requis par ce geste. Le dispositif exige une qualification RGE du bon domaine à la date du devis.`,
+      });
+    } else if (verif.rge.statut === "aucune") {
+      add({
+        code: "rge_annuaire",
+        categorie: "rge",
+        severite: "bloquant",
+        titre: "Aucune qualification RGE trouvée pour ce SIRET (annuaire officiel)",
+        detail:
+          "L'annuaire RGE ADEME / France Rénov' ne recense aucune qualification RGE pour ce SIRET. Sans qualification RGE valide au moment du devis, le dossier sera refusé.",
+      });
+    } else if (verif.rge.statut === "indisponible") {
+      add({
+        code: "rge_annuaire",
+        categorie: "rge",
+        severite: "avertissement",
+        titre: "Qualification RGE non vérifiée (annuaire indisponible)",
+        detail:
+          "L'annuaire RGE était injoignable au moment du contrôle. La qualification n'a pas pu être confirmée automatiquement ; vérifiez-la manuellement.",
+      });
+    }
+  }
+
+  // Contrôle de repli sur les dates RGE AUTO-DÉCLARÉES : seulement si l'annuaire
+  // officiel n'a pas tranché (mode dégradé, dossier antérieur au contrôle,
+  // panne réseau). Sinon l'annuaire, plus fiable, prime.
+  if (!rgeRegistreTranche) {
+    if (dRgeFin && dDevis) {
+      if (dRgeFin < dDevis) {
+        add({
+          code: "rge_validite",
+          categorie: "rge",
+          severite: "bloquant",
+          titre: "Qualification RGE expirée à la date du devis",
+          detail: `La qualification RGE (valable jusqu'au ${dateFr(c.rge.date_fin)}) était expirée à la signature du devis. La qualification doit être valide à cette date.`,
+        });
+      } else {
+        add({
+          code: "rge_validite",
+          categorie: "rge",
+          severite: "ok",
+          titre: "Qualification RGE valide à la date du devis",
+          detail: "La qualification RGE couvre la date de signature du devis.",
+        });
+      }
+    } else if (!dRgeFin) {
+      add({
+        code: "rge_date_fin_manquante",
+        categorie: "rge",
+        severite: "avertissement",
+        titre: "Date de fin de validité RGE manquante",
+        detail: "Impossible de vérifier la validité de la qualification RGE.",
+      });
+    }
+
+    if (dRgeDebut && dDevis && dDevis < dRgeDebut) {
+      add({
+        code: "rge_debut",
+        categorie: "rge",
+        severite: "bloquant",
+        titre: "Devis antérieur au début de validité RGE",
+        detail:
+          "Le devis a été signé avant la prise d'effet de la qualification RGE.",
+      });
+    }
   }
 
   // ---------------------------------------------------------------------
@@ -398,11 +504,13 @@ export function controlerDossierCeeIsolation(
   const nbAvertissements = findings.filter(
     (f) => f.severite === "avertissement",
   ).length;
+  const nbConformes = findings.filter((f) => f.severite === "ok").length;
 
   return {
     findings,
     nbBloquants,
     nbAvertissements,
+    nbConformes,
     conforme: nbBloquants === 0,
   };
 }

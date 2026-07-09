@@ -32,7 +32,7 @@ import {
   mentionsObligatoires,
   piecesCeeIsolation,
 } from "@/lib/pack/pieces-cee-isolation";
-import { controlerDossierCeeIsolation } from "@/lib/rules/cee-isolation";
+import { controlerDossier } from "@/lib/rules/controle-dossier";
 import { SEVERITE_LABEL, type Finding, type Severite } from "@/lib/rules/types";
 
 export const metadata = { title: "Dossier · Dossimo" };
@@ -127,7 +127,7 @@ export default async function DossierPage({
   const mentionsDevis = mentionsObligatoires(data).filter(
     (m) => m.document === "Devis",
   );
-  const rapport = controlerDossierCeeIsolation(data);
+  const rapport = controlerDossier(data);
   const findingsTries = [...rapport.findings].sort(
     (a, b) => SEVERITE_ORDER[a.severite] - SEVERITE_ORDER[b.severite],
   );
@@ -245,6 +245,9 @@ export default async function DossierPage({
             {rapport.nbAvertissements > 0 && (
               <> · {rapport.nbAvertissements} à vérifier</>
             )}
+            {rapport.nbConformes > 0 && (
+              <> · <span className="font-semibold text-succes">{rapport.nbConformes} conforme{rapport.nbConformes > 1 ? "s" : ""}</span></>
+            )}
             . Débloquez pour voir le détail, les points de vigilance, générer le pack
             complet et télécharger les documents (attestation, checklist, rapport…).
           </p>
@@ -292,7 +295,10 @@ export default async function DossierPage({
                 ? "Aucun point bloquant détecté."
                 : `${rapport.nbBloquants} point(s) bloquant(s) à corriger avant dépôt.`}
               {rapport.nbAvertissements > 0 &&
-                ` · ${rapport.nbAvertissements} à vérifier.`}
+                ` · ${rapport.nbAvertissements} à vérifier`}
+              {rapport.nbConformes > 0 &&
+                ` · ${rapport.nbConformes} point(s) conforme(s)`}
+              {(rapport.nbAvertissements > 0 || rapport.nbConformes > 0) && "."}
             </p>
           </div>
           {acces.debloque && (

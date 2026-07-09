@@ -5,7 +5,8 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getDossier } from "@/lib/dossier/get-dossier";
 import { applyReferralCode } from "@/lib/referral";
-import { TYPES_BOIS, TYPES_CET, TYPES_ISOLATION, TYPES_PAC, ceeIsolationSchema } from "@/lib/dossier/cee-isolation";
+import { TYPES_BOIS, TYPES_CET, TYPES_ISOLATION, TYPES_PAC, ceeIsolationSchema, familleDeGeste } from "@/lib/dossier/cee-isolation";
+import { verifierEntreprise } from "@/lib/verification/verifier";
 
 export type CreateDossierResult =
   | { ok: true; dossierId: string; referral?: "applied" | "failed" }
@@ -69,6 +70,15 @@ export async function createDossierCeeIsolation(
       qualification_rge: d.rge_numero,
     })
     .eq("id", artisanId);
+
+  // Vérification SIRET + RGE contre les annuaires officiels, figée dans le
+  // dossier. Fait autorité (non contournable côté client) ; ne lève jamais
+  // (une panne réseau → statut « indisponible », pas d'échec de création).
+  const verification = await verifierEntreprise({
+    siret: d.siret,
+    famille: familleDeGeste(d.geste),
+    dateDevis: d.date_devis,
+  });
 
   // --- 2. Dossier : mapping de la saisie unique (par famille de geste) ---
   let fiche: string;
@@ -186,6 +196,7 @@ export async function createDossierCeeIsolation(
           date_debut: d.rge_date_debut ?? null,
           date_fin: d.rge_date_fin,
         },
+        verification,
       },
       formule: null,
     })

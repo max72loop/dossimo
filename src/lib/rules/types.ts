@@ -10,6 +10,7 @@ export type Severite = "bloquant" | "avertissement" | "ok";
 
 export type CategorieControle =
   | "chronologie"
+  | "entreprise"
   | "rge"
   | "eligibilite"
   | "technique"
@@ -28,6 +29,8 @@ export interface RapportControle {
   findings: Finding[];
   nbBloquants: number;
   nbAvertissements: number;
+  /** Points de contrôle passés (severite « ok »). */
+  nbConformes: number;
   /** Aucun point bloquant → le dossier peut être déposé. */
   conforme: boolean;
 }
