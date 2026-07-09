@@ -4,6 +4,7 @@ import {
   fetchRegleActive,
   type RegleMetierResolue,
 } from "@/lib/rules/regles-metier";
+import type { VerificationEntreprise } from "@/lib/verification/types";
 import type {
   OCCUPATIONS,
   PRECARITES,
@@ -88,6 +89,13 @@ export interface CeeIsolationCaracteristiques {
     date_debut: string | null;
     date_fin: string;
   };
+  /**
+   * Résultat de la vérification SIRET + RGE contre les annuaires officiels,
+   * figé à la création du dossier. Optionnel : absent des dossiers créés avant
+   * l'introduction du contrôle (le moteur de règles retombe alors sur les seuls
+   * contrôles de dates auto-déclarées).
+   */
+  verification?: VerificationEntreprise;
 }
 
 export interface DossierDates {

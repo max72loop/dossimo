@@ -32,7 +32,7 @@ import {
   mentionsObligatoires,
   piecesCeeIsolation,
 } from "@/lib/pack/pieces-cee-isolation";
-import { controlerDossierCeeIsolation } from "@/lib/rules/cee-isolation";
+import { controlerDossier } from "@/lib/rules/controle-dossier";
 import { SEVERITE_LABEL, type Finding, type Severite } from "@/lib/rules/types";
 
 export const metadata = { title: "Dossier · Dossimo" };
@@ -127,7 +127,7 @@ export default async function DossierPage({
   const mentionsDevis = mentionsObligatoires(data).filter(
     (m) => m.document === "Devis",
   );
-  const rapport = controlerDossierCeeIsolation(data);
+  const rapport = controlerDossier(data);
   const findingsTries = [...rapport.findings].sort(
     (a, b) => SEVERITE_ORDER[a.severite] - SEVERITE_ORDER[b.severite],
   );

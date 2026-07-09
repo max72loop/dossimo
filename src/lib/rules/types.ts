@@ -10,6 +10,7 @@ export type Severite = "bloquant" | "avertissement" | "ok";
 
 export type CategorieControle =
   | "chronologie"
+  | "entreprise"
   | "rge"
   | "eligibilite"
   | "technique"

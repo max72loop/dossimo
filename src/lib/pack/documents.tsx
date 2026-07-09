@@ -227,6 +227,7 @@ const SEV_ORDER: Record<Severite, number> = { bloquant: 0, avertissement: 1, ok:
 /** Libellés lisibles des catégories de contrôle (sinon le slug brut). */
 const CATEGORIE_LABEL: Record<string, string> = {
   chronologie: "Chronologie",
+  entreprise: "Entreprise (SIRENE)",
   rge: "Qualification RGE",
   eligibilite: "Éligibilité",
   technique: "Performance technique",

@@ -11,7 +11,7 @@ import {
   PackCoverDocument,
   RecapDocument,
 } from "@/lib/pack/documents";
-import { controlerDossierCeeIsolation } from "@/lib/rules/cee-isolation";
+import { controlerDossier } from "@/lib/rules/controle-dossier";
 import type { RapportControle } from "@/lib/rules/types";
 import {
   AttestationHonneurDocument,
@@ -35,7 +35,7 @@ export function renderControlePdf(
   data: DossierComplet,
   vigilance?: PointVigilance[],
 ): Promise<Buffer> {
-  const rapport = controlerDossierCeeIsolation(data);
+  const rapport = controlerDossier(data);
   return renderToBuffer(
     createElement(ControleDocument, {
       data,
@@ -68,7 +68,7 @@ export function renderPackCoverPdf(
 
 /** Rapport déterministe seul (pour la page de garde, sans re-rendre le PDF). */
 export function controlePack(data: DossierComplet): RapportControle {
-  return controlerDossierCeeIsolation(data);
+  return controlerDossier(data);
 }
 
 /**

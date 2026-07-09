@@ -4,7 +4,7 @@ import { z } from "zod";
 
 import type { DossierComplet } from "@/lib/dossier/get-dossier";
 import type { Dispositif } from "@/lib/database.types";
-import { controlerDossierCeeIsolation } from "@/lib/rules/cee-isolation";
+import { controlerDossier } from "@/lib/rules/controle-dossier";
 import {
   LOGEMENT_TYPES,
   OCCUPATIONS,
@@ -106,7 +106,7 @@ function systemPrompt(dispositif: Dispositif): string {
 
 async function buildContext(data: DossierComplet): Promise<string> {
   const c = data.caracteristiques;
-  const rapport = controlerDossierCeeIsolation(data);
+  const rapport = controlerDossier(data);
   const travaux = TYPES_ISOLATION[c.travaux.type_isolation];
 
   // Pièces réelles téléversées + écarts avec la saisie (Chantier 1) : signal

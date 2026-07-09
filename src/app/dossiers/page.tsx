@@ -9,7 +9,7 @@ import { prixPack, getActiveTiers } from "@/lib/pricing";
 import { estimerPrime } from "@/lib/dossier/prime";
 import { getAdminEmail } from "@/lib/auth/is-admin";
 import { ETAPE_PAR_STATUT, PARCOURS } from "@/lib/dossier/parcours";
-import { controlerDossierCeeIsolation } from "@/lib/rules/cee-isolation";
+import { controlerDossier } from "@/lib/rules/controle-dossier";
 import { TableauDeBord, type StatsTableau } from "@/components/dossier/tableau-de-bord";
 
 export const metadata = { title: "Mes dossiers · Dossimo" };
@@ -89,9 +89,9 @@ export default async function DossiersPage() {
         caracteristiques: d.caracteristiques_techniques_json,
         dates: d.dates_json,
         regle: reglesMap.get(`${d.dispositif}:${d.type_travaux}`) ?? null,
-      } as unknown as Parameters<typeof controlerDossierCeeIsolation>[0];
+      } as unknown as Parameters<typeof controlerDossier>[0];
       baseConformite += 1;
-      const rapport = controlerDossierCeeIsolation(data);
+      const rapport = controlerDossier(data);
       if (rapport.conforme) conformes += 1;
       controleParDossier.set(d.id, {
         nbBloquants: rapport.nbBloquants,
