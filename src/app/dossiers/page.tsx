@@ -5,8 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentArtisan } from "@/lib/auth/get-artisan";
 import { TYPES_ISOLATION, type TypeIsolation } from "@/lib/dossier/cee-isolation";
 import { PaywallCta } from "@/components/dossier/paywall-cta";
-import { prixPack, getActiveTiers } from "@/lib/pricing";
-import { estimerPrime } from "@/lib/dossier/prime";
+import { prixDossier } from "@/lib/stripe/pricing";
 import { getAdminEmail } from "@/lib/auth/is-admin";
 import { ETAPE_PAR_STATUT, PARCOURS } from "@/lib/dossier/parcours";
 import { controlerDossierCeeIsolation } from "@/lib/rules/cee-isolation";
@@ -71,8 +70,6 @@ export default async function DossiersPage() {
   ) as StatsTableau["parEtat"];
   let conformes = 0;
   let baseConformite = 0;
-  // Paliers de prix chargés une fois (grille en base) puis appliqués par ligne.
-  const tiers = await getActiveTiers(supabase);
   const prixParDossier = new Map<string, string>();
   for (const d of rows) {
     parEtat[d.statut] = (parEtat[d.statut] ?? 0) + 1;
@@ -86,11 +83,7 @@ export default async function DossiersPage() {
       } as unknown as Parameters<typeof controlerDossierCeeIsolation>[0];
       baseConformite += 1;
       if (controlerDossierCeeIsolation(data).conforme) conformes += 1;
-      const aide = estimerPrime(data);
-      prixParDossier.set(
-        d.id,
-        prixPack(aide ? Math.round(aide.montant * 100) : null, tiers).label,
-      );
+      prixParDossier.set(d.id, prixDossier(data).label);
     } catch {
       // dossier incomplet : exclu du calcul de conformité.
     }
@@ -173,17 +166,12 @@ export default async function DossiersPage() {
                   const poste = TYPES_ISOLATION[d.type_travaux as TypeIsolation];
                   const st = STATUT[d.statut] ?? PARCOURS[0];
                   return (
-                    <tr
-                      key={d.id}
-                      className="group relative cursor-pointer transition-colors hover:bg-papier"
-                    >
+                    <tr key={d.id} className="transition-colors hover:bg-papier">
                       <td className="px-5 py-3">
                         <Link
                           href={`/dossiers/${d.id}`}
-                          className="font-medium text-encre transition-colors group-hover:text-tampon"
+                          className="font-medium text-encre hover:text-tampon"
                         >
-                          {/* Overlay « stretched link » : rend toute la ligne cliquable. */}
-                          <span className="absolute inset-0" aria-hidden="true" />
                           {b ? `${b.prenom ?? ""} ${b.nom ?? ""}`.trim() || "—" : "—"}
                         </Link>
                       </td>
@@ -224,11 +212,7 @@ export default async function DossiersPage() {
                             Débloqué
                           </span>
                         ) : (
-                          // relative z-10 : le CTA de paiement reste cliquable au-dessus
-                          // de l'overlay qui rend toute la ligne cliquable.
-                          <div className="relative z-10 w-fit">
-                            <PaywallCta dossierId={d.id} prix={prixParDossier.get(d.id) ?? "149 €"} compact />
-                          </div>
+                          <PaywallCta dossierId={d.id} prix={prixParDossier.get(d.id) ?? "149 €"} compact />
                         )}
                       </td>
                     </tr>
