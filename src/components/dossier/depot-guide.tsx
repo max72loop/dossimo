@@ -4,26 +4,17 @@ import type { Dispositif } from "@/lib/database.types";
 /**
  * Bloc d'aide contextuel « Où déposer ce dossier » : à qui, quand, quoi envoyer,
  * selon le dispositif. Rappelle que Dossimo ne dépose jamais (CLAUDE.md §2).
- * Présentationnel — pas d'état, server component.
+ * Présentationnel — pas d'état, server component. Le titre est porté par la
+ * section repliable qui l'enveloppe.
  */
 export function DepotGuide({ dispositif }: { dispositif: Dispositif }) {
   const g = depotGuide(dispositif);
 
   return (
-    <section className="mb-6 rounded border border-filigrane bg-blanc-casse p-5 shadow-sm">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h2 className="font-serif text-base font-semibold text-encre">
-            Où déposer ce dossier
-          </h2>
-          <p className="mt-1 text-xs text-ardoise">
-            Parcours de dépôt propre à {g.dispositifLabel}. {g.quiDepose}
-          </p>
-        </div>
-        <span className="shrink-0 rounded-full bg-tampon/10 px-3 py-1 text-xs font-medium text-tampon">
-          {g.dispositifLabel}
-        </span>
-      </div>
+    <div>
+      <span className="inline-flex rounded-full bg-tampon/10 px-3 py-1 text-xs font-medium text-tampon">
+        {g.dispositifLabel}
+      </span>
 
       <dl className="mt-4 space-y-4">
         {/* À qui / où */}
@@ -77,6 +68,6 @@ export function DepotGuide({ dispositif }: { dispositif: Dispositif }) {
         dossier et ne touche pas la prime. Vous gardez la main sur votre client et
         votre relation.
       </p>
-    </section>
+    </div>
   );
 }

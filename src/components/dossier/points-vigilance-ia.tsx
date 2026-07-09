@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import { BTN_SECONDAIRE } from "@/components/ui/boutons";
 import { genererPointsVigilance } from "@/lib/llm/actions";
 import type { PointVigilance, VigilanceResult } from "@/lib/llm/vigilance";
 
@@ -72,21 +73,17 @@ export function PointsVigilanceIA({
   }
 
   return (
-    <section className="mt-6 rounded border border-filigrane bg-blanc-casse p-6 shadow-sm">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h2 className="font-serif text-lg font-semibold text-encre">
-            Points de vigilance · analyse assistée
-          </h2>
-          <p className="mt-1 text-xs text-ardoise">
-            Complète le contrôle automatique par des points contextuels rédigés.
-            Conseil de préparation, non affilié à l&apos;Anah.
-          </p>
-        </div>
+    <div>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <p className="max-w-xl text-xs text-ardoise">
+          Complète le contrôle automatique par des points contextuels rédigés. Ce
+          sont des conseils de préparation, pas des points bloquants : ceux-ci
+          figurent au contrôle anti-refus. Non affilié à l&apos;Anah.
+        </p>
         <button
           onClick={lancer}
           disabled={etat.statut === "loading"}
-          className="inline-flex h-10 shrink-0 items-center rounded bg-terre-cuite px-4 text-sm font-medium text-blanc-casse transition-colors hover:bg-terre-cuite-hover disabled:cursor-not-allowed disabled:opacity-60"
+          className={`shrink-0 ${BTN_SECONDAIRE}`}
         >
           {etat.statut === "loading"
             ? "Analyse…"
@@ -154,6 +151,6 @@ export function PointsVigilanceIA({
           </p>
         </>
       )}
-    </section>
+    </div>
   );
 }

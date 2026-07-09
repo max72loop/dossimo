@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import { getDossier } from "@/lib/dossier/get-dossier";
 import { getDossierPieces } from "@/lib/piece/get";
+import { nbEcarts } from "@/lib/piece/compare";
 import { resolveCerfaTemplate } from "@/lib/cerfa/registry";
 import { storedVigilance } from "@/lib/llm/vigilance";
 import { PointsVigilanceIA } from "@/components/dossier/points-vigilance-ia";
@@ -13,10 +14,19 @@ import { PaywallCta } from "@/components/dossier/paywall-cta";
 import { CreditsCta } from "@/components/dossier/credits-cta";
 import { ParcoursSelector } from "@/components/dossier/parcours-selector";
 import { DepotGuide } from "@/components/dossier/depot-guide";
+import { VerdictHero } from "@/components/dossier/verdict-hero";
+import { ActionsRestantes } from "@/components/dossier/actions-restantes";
+import { MetriquesValeur } from "@/components/dossier/metriques-valeur";
+import { ConversionOffert } from "@/components/dossier/conversion-offert";
+import { SectionRepliable } from "@/components/ui/section-repliable";
+import { BTN_PRINCIPAL, BTN_SECONDAIRE, BTN_SECONDAIRE_SM } from "@/components/ui/boutons";
 import { accesDossier } from "@/lib/dossier/acces";
 import { createClient } from "@/lib/supabase/server";
 import { prixPack, getActiveTiers, labelEuros } from "@/lib/pricing";
 import { estimerPrime } from "@/lib/dossier/prime";
+import { syntheseDossier } from "@/lib/dossier/synthese";
+import { formatEuros } from "@/lib/format/montant";
+import { depotGuide } from "@/lib/dossier/depot-guide";
 import {
   LOGEMENT_TYPES,
   OCCUPATIONS,
@@ -40,9 +50,6 @@ export const metadata = { title: "Dossier · Dossimo" };
 // L'analyse assistée (points de vigilance) appelle un LLM sur un contexte enrichi :
 // on relève le plafond de durée de la fonction (défaut trop court sur Vercel).
 export const maxDuration = 60;
-
-const euro = (n: number | null) =>
-  n == null ? "—" : n.toLocaleString("fr-FR", { style: "currency", currency: "EUR" });
 
 const date = (s: string | null) =>
   !s ? "—" : new Date(s).toLocaleDateString("fr-FR");
@@ -96,12 +103,11 @@ function FindingRow({ f }: { f: Finding }) {
   );
 }
 
+/** Carte de données du récapitulatif (repliée par défaut, poids visuel léger). */
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="rounded border border-filigrane bg-blanc-casse p-5 shadow-sm">
-      <h2 className="mb-3 font-serif text-base font-semibold text-encre">
-        {title}
-      </h2>
+    <section className="rounded border border-filigrane bg-papier/40 p-5">
+      <h3 className="mb-3 font-serif text-base font-semibold text-encre">{title}</h3>
       <dl>{children}</dl>
     </section>
   );
@@ -166,6 +172,33 @@ export default async function DossierPage({
   const netLabel = netCents != null ? labelEuros(netCents) : prix.label;
   const soldeCredits = data.artisan?.credit_balance_cents ?? 0;
 
+  // Synthèse d'affichage : complétude, actions restantes, risque, métriques.
+  // Dérivée du rapport déterministe et des pièces réelles — aucune règle ici.
+  const synthese = syntheseDossier({
+    rapport,
+    pieces: piecesReelles.map(({ piece, comparaisons }) => ({
+      type: piece.type,
+      lue: piece.extraction_statut === "ok",
+      nbEcarts: nbEcarts(comparaisons),
+    })),
+    statut: dossier.statut,
+    mentionsTotal: mentionsDevis.length,
+  });
+
+  // Montant mis en avant : celui que l'artisan a retenu (saisi), à défaut
+  // l'estimation du barème. Le hero et la carte prime affichent le même.
+  const primeRetenue = c.montants.prime_estime ?? prime?.montant ?? null;
+  const guide = depotGuide(dossier.dispositif);
+
+  // Action principale unique et contextuelle : réunir les pièces tant qu'elles
+  // manquent, sinon récupérer le pack. Quand le dossier est verrouillé, le
+  // paiement EST l'action principale : on n'en affiche pas de seconde.
+  const ctaPrincipal = !acces.debloque
+    ? null
+    : synthese.piecesCompletes
+      ? { href: `/dossiers/${id}/pack.pdf`, label: "Télécharger le pack complet", externe: true }
+      : { href: "#pieces", label: "Ajouter devis + facture", externe: false };
+
   return (
     <main className="mx-auto max-w-4xl px-8 py-10">
       <Link
@@ -175,6 +208,7 @@ export default async function DossierPage({
         ← Nouveau dossier
       </Link>
 
+      {/* 1. En-tête */}
       <div className="mt-4 mb-6 flex items-start justify-between gap-4">
         <div>
           <h1 className="font-serif text-3xl font-semibold tracking-tight text-encre">
@@ -203,21 +237,16 @@ export default async function DossierPage({
         )}
       </div>
 
-      <ParcoursSelector dossierId={id} statut={dossier.statut} />
-
-      <DepotGuide dispositif={dossier.dispositif} />
-
       {sp.paye && acces.debloque && (
         <div className="mb-6 rounded border-l-4 border-succes bg-succes-bg px-4 py-3 text-sm text-succes">
           Paiement confirmé · le pack est débloqué. Vous pouvez télécharger tous les
           documents ci-dessous.
         </div>
       )}
-
       {sp.parrain === "ok" && (
         <div className="mb-6 rounded border-l-4 border-succes bg-succes-bg px-4 py-3 text-sm text-succes">
-          Code parrain enregistré · la remise de 30 € s'appliquera à votre premier
-          dossier payant.
+          Code parrain enregistré · la remise de 30 € s&apos;appliquera à votre
+          premier dossier payant.
         </div>
       )}
       {sp.parrain === "ko" && (
@@ -227,32 +256,67 @@ export default async function DossierPage({
         </div>
       )}
 
+      {/* 2. Verdict */}
+      <VerdictHero
+        synthese={synthese}
+        primeRetenue={primeRetenue}
+        primeLabel={prime ? `Prime ${prime.dispositif} retenue` : "Prime retenue"}
+      />
+
+      {/* 3. Action principale unique + actions secondaires */}
+      {ctaPrincipal && (
+        <div className="mb-6 flex flex-wrap items-center gap-3">
+          {ctaPrincipal.externe ? (
+            <a
+              href={ctaPrincipal.href}
+              target="_blank"
+              rel="noopener"
+              className={BTN_PRINCIPAL}
+            >
+              ↓ {ctaPrincipal.label}
+            </a>
+          ) : (
+            <a href={ctaPrincipal.href} className={BTN_PRINCIPAL}>
+              {ctaPrincipal.label}
+            </a>
+          )}
+          <a
+            href={`/dossiers/${id}/rapport.pdf`}
+            target="_blank"
+            rel="noopener"
+            className={BTN_SECONDAIRE}
+          >
+            Rapport de contrôle (PDF)
+          </a>
+          {cerfa.ok && (
+            <a
+              href={`/dossiers/${id}/cerfa.pdf`}
+              target="_blank"
+              rel="noopener"
+              className={BTN_SECONDAIRE}
+            >
+              Formulaire officiel
+            </a>
+          )}
+        </div>
+      )}
+
+      {/* Paywall : quand le dossier est verrouillé, le déblocage est l'action
+          principale de l'écran (seul bouton plein). */}
       {!acces.debloque && (
-        <section className="mb-6 rounded border border-terre-cuite/30 bg-terre-cuite/5 p-5 shadow-sm">
+        <section className="mb-6 rounded-md border border-terre-cuite/30 bg-terre-cuite/5 p-5 shadow-sm">
           <h2 className="font-serif text-base font-semibold text-encre">
             Débloquez ce dossier pour accéder au pack
           </h2>
           <p className="mt-1 text-sm text-ardoise">
-            Le contrôle anti-refus a analysé ce dossier :{" "}
-            {rapport.nbBloquants > 0 ? (
-              <span className="font-semibold text-erreur">
-                {rapport.nbBloquants} point{rapport.nbBloquants > 1 ? "s" : ""} bloquant
-                {rapport.nbBloquants > 1 ? "s" : ""}
-              </span>
-            ) : (
-              <span className="font-semibold text-succes">aucun point bloquant</span>
-            )}
-            {rapport.nbAvertissements > 0 && (
-              <> · {rapport.nbAvertissements} à vérifier</>
-            )}
-            {rapport.nbConformes > 0 && (
-              <> · <span className="font-semibold text-succes">{rapport.nbConformes} conforme{rapport.nbConformes > 1 ? "s" : ""}</span></>
-            )}
-            . Débloquez pour voir le détail, les points de vigilance, générer le pack
-            complet et télécharger les documents (attestation, checklist, rapport…).
+            Débloquez pour voir le détail de chaque contrôle, les points de
+            vigilance, générer le pack complet et télécharger les documents
+            (attestation, checklist, rapport…).
           </p>
           {sp.annule && (
-            <p className="mt-2 text-xs text-ardoise">Paiement annulé · vous pouvez réessayer.</p>
+            <p className="mt-2 text-xs text-ardoise">
+              Paiement annulé · vous pouvez réessayer.
+            </p>
           )}
           {discountParrain > 0 && (
             <p className="mt-2 text-xs text-succes">
@@ -277,68 +341,52 @@ export default async function DossierPage({
         </section>
       )}
 
-      {/* Rapport de contrôle déterministe */}
-      <section className="mb-6 overflow-hidden rounded border border-filigrane bg-blanc-casse shadow-sm">
-        <div
-          className={`flex items-center justify-between gap-4 px-5 py-4 ${
-            rapport.conforme ? "bg-succes-bg" : "bg-erreur-bg"
-          }`}
-        >
-          <div>
-            <h2 className="font-serif text-base font-semibold text-encre">
-              Rapport de contrôle anti-refus
-            </h2>
-            <p
-              className={`text-sm ${rapport.conforme ? "text-succes" : "text-erreur"}`}
-            >
-              {rapport.conforme
-                ? "Aucun point bloquant détecté."
-                : `${rapport.nbBloquants} point(s) bloquant(s) à corriger avant dépôt.`}
-              {rapport.nbAvertissements > 0 &&
-                ` · ${rapport.nbAvertissements} à vérifier`}
-              {rapport.nbConformes > 0 &&
-                ` · ${rapport.nbConformes} point(s) conforme(s)`}
-              {(rapport.nbAvertissements > 0 || rapport.nbConformes > 0) && "."}
-            </p>
-          </div>
-          {acces.debloque && (
-            <a
-              href={`/dossiers/${id}/rapport.pdf`}
-              target="_blank"
-              rel="noopener"
-              className="shrink-0 rounded border border-encre bg-blanc-casse px-3 py-1.5 text-xs font-medium text-encre transition hover:bg-papier-fonce"
-            >
-              ↓ Rapport PDF
-            </a>
-          )}
-        </div>
-        {acces.debloque ? (
-          <ul className="divide-y divide-filigrane px-5 py-2">
-            {findingsTries.map((f) => (
-              <FindingRow key={f.code} f={f} />
-            ))}
-          </ul>
-        ) : (
-          <p className="px-5 py-4 text-sm text-ardoise">
-            🔒 Le détail des points de contrôle est verrouillé. Débloquez le dossier
-            ci-dessus pour voir chaque point et sa correction.
-          </p>
-        )}
-      </section>
+      {/* 4. Actions restantes */}
+      <ActionsRestantes synthese={synthese} />
 
-      {/* Estimation indicative de prime (barème piloté par la règle métier) */}
+      {/* 5. Métriques de valeur */}
+      <MetriquesValeur synthese={synthese} />
+
+      {/* 6. Pièces réelles : étape active */}
+      {acces.debloque ? (
+        <PiecesJustificatives
+          dossierId={id}
+          initial={piecesReelles}
+          nbMentions={mentionsDevis.length}
+        />
+      ) : (
+        <section className="mb-6 rounded border border-filigrane bg-blanc-casse p-5 shadow-sm">
+          <h2 className="font-serif text-base font-semibold text-encre">
+            Contrôle des pièces réelles
+          </h2>
+          <p className="mt-1 text-sm text-ardoise">
+            🔒 Débloquez le dossier pour téléverser le devis et la facture : Dossimo
+            les relit et vérifie les {mentionsDevis.length} mentions obligatoires
+            face à votre saisie.
+          </p>
+        </section>
+      )}
+
+      {/* Prime · le montant retenu d'abord, l'écart en note secondaire */}
       {prime && (
         <section className="mb-6 rounded border border-filigrane bg-blanc-casse p-5 shadow-sm">
-          <div className="flex items-end justify-between gap-4">
+          <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
               <h2 className="font-serif text-base font-semibold text-encre">
                 Prime {prime.dispositif} · estimation
               </h2>
-              <p className="mt-1 text-xs text-ardoise">{prime.base}</p>
+              <p className="mt-1 text-xs text-ardoise">Barème appliqué : {prime.base}</p>
             </div>
-            <p className="shrink-0 font-serif text-2xl font-semibold text-terre-cuite">
-              ≈ {euro(prime.montant)}
-            </p>
+            <div className="shrink-0 text-right">
+              <p className="font-serif text-2xl font-semibold text-terre-cuite">
+                {formatEuros(primeRetenue)}
+              </p>
+              <p className="mt-0.5 text-xs text-ardoise">
+                {c.montants.prime_estime != null
+                  ? "Montant retenu"
+                  : "Estimation Dossimo"}
+              </p>
+            </div>
           </div>
           {c.montants.prime_estime != null &&
             Math.abs(c.montants.prime_estime - prime.montant) > 1 && (
@@ -350,197 +398,243 @@ export default async function DossierPage({
                 precariteLabel={PRECARITES[c.beneficiaire.precarite]}
               />
             )}
-          <p className="mt-2 text-[11px] text-encre-claire">
+          <p className="mt-3 text-[11px] text-encre-claire">
             Estimation indicative, calculée depuis le barème de la règle métier
             (éditable dans l&apos;admin). Ne vaut pas notification de la prime.
           </p>
         </section>
       )}
 
-      {/* Sections de valeur : verrouillées tant que le dossier n'est pas débloqué */}
-      {acces.debloque && (
-        <>
-          {/* Pièces réelles (devis/facture) : cohérence avec la saisie */}
-          <PiecesJustificatives dossierId={id} initial={piecesReelles} />
+      {/* 7. Parcours du dossier */}
+      <ParcoursSelector dossierId={id} statut={dossier.statut} />
 
-          {/* Points de vigilance rédigés (LLM, à la demande, persistés) */}
-          <PointsVigilanceIA
-            dossierId={id}
-            initial={vigilance?.points}
-            initialAt={vigilance?.at}
-          />
-        </>
-      )}
+      {/* 8. Détails repliés */}
+      <h2 className="mt-8 mb-3 text-xs font-semibold uppercase tracking-[0.12em] text-ardoise">
+        Détails du dossier
+      </h2>
 
-      {/* Pack documentaire */}
-      <div className="mt-6 mb-6 rounded border border-filigrane bg-papier-fonce p-5">
-        <p className="text-sm text-encre">
-          Pack documentaire généré depuis la saisie unique. Toutes les pièces
-          dérivent des mêmes données.
-        </p>
+      <SectionRepliable
+        titre="Détail des contrôles anti-refus"
+        resume={`${rapport.findings.length} points de contrôle · ${synthese.nbControlesPasses} conformes${rapport.nbAvertissements > 0 ? ` · ${rapport.nbAvertissements} à vérifier` : ""}${rapport.nbBloquants > 0 ? ` · ${rapport.nbBloquants} bloquants` : ""}`}
+        ouvertParDefaut={rapport.nbBloquants > 0}
+      >
         {acces.debloque ? (
           <>
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              <a
-                href={`/dossiers/${id}/pack.pdf`}
-                target="_blank"
-                rel="noopener"
-                className="inline-flex h-10 items-center rounded bg-terre-cuite px-4 text-sm font-medium text-blanc-casse transition-colors hover:bg-terre-cuite-hover"
-              >
-                ↓ Pack complet (PDF unique)
-              </a>
-              <span className="text-xs text-encre-claire">
-                page de garde · récap · rapport · checklist · attestation
-              </span>
-            </div>
-            <div className="mt-2 flex flex-wrap gap-2">
-              <a
-                href={`/dossiers/${id}/recap.pdf`}
-                target="_blank"
-                rel="noopener"
-                className="inline-flex h-8 items-center rounded border border-filigrane bg-blanc-casse px-3 text-xs font-medium text-ardoise transition-colors hover:bg-papier"
-              >
-                Récapitulatif seul
-              </a>
-              <a
-                href={`/dossiers/${id}/checklist.pdf`}
-                target="_blank"
-                rel="noopener"
-                className="inline-flex h-8 items-center rounded border border-filigrane bg-blanc-casse px-3 text-xs font-medium text-ardoise transition-colors hover:bg-papier"
-              >
-                Checklist seule
-              </a>
-            </div>
+            <ul className="divide-y divide-filigrane">
+              {findingsTries.map((f) => (
+                <FindingRow key={f.code} f={f} />
+              ))}
+            </ul>
+            <a
+              href={`/dossiers/${id}/rapport.pdf`}
+              target="_blank"
+              rel="noopener"
+              className={`mt-4 ${BTN_SECONDAIRE_SM}`}
+            >
+              ↓ Rapport PDF
+            </a>
           </>
+        ) : (
+          <p className="text-sm text-ardoise">
+            🔒 Le détail des points de contrôle est verrouillé. Débloquez le dossier
+            pour voir chaque point et sa correction.
+          </p>
+        )}
+      </SectionRepliable>
+
+      <SectionRepliable
+        titre="Récapitulatif complet"
+        resume="Bénéficiaire, entreprise, logement, travaux, chronologie, montants"
+      >
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Card title="Bénéficiaire">
+            <Row label="Nom" value={`${c.beneficiaire.prenom} ${c.beneficiaire.nom}`} />
+            <Row label="Adresse" value={c.beneficiaire.adresse} />
+            <Row
+              label="Commune"
+              value={`${c.beneficiaire.commune} (${c.beneficiaire.code_postal})`}
+            />
+            <Row label="Occupation" value={OCCUPATIONS[c.beneficiaire.occupation]} />
+            <Row label="Revenus" value={PRECARITES[c.beneficiaire.precarite]} />
+          </Card>
+
+          <Card title="Entreprise (RGE)">
+            <Row label="Raison sociale" value={artisan?.entreprise ?? "—"} />
+            <Row label="SIRET" value={artisan?.siret ?? "—"} mono />
+            <Row label="N° RGE" value={c.rge.numero} mono />
+            <Row label="Domaine" value={c.rge.domaine} />
+            <Row label="RGE valable jusqu'au" value={date(c.rge.date_fin)} mono />
+          </Card>
+
+          <Card title="Logement">
+            <Row label="Type" value={LOGEMENT_TYPES[c.logement.type]} />
+            <Row
+              label="Année de construction"
+              value={c.logement.annee_construction}
+              mono
+            />
+            <Row label="Usage" value={RESIDENCES[c.logement.residence]} />
+            <Row
+              label="Surface habitable"
+              value={
+                c.logement.surface_habitable
+                  ? `${c.logement.surface_habitable} m²`
+                  : "—"
+              }
+              mono
+            />
+          </Card>
+
+          <Card title={titreSectionTechnique(c)}>
+            <Row label="Poste" value={`${poste} (${c.fiche})`} />
+            {lignesTechniques(c).map((l) => (
+              <Row key={l.label} label={l.label} value={l.value} mono={l.mono} />
+            ))}
+          </Card>
+
+          <Card title="Chronologie">
+            <Row label="Visite technique" value={date(dates.visite_technique)} mono />
+            <Row label="Devis signé" value={date(dates.devis)} mono />
+            <Row label="Début travaux" value={date(dates.debut_travaux)} mono />
+            <Row label="Fin travaux" value={date(dates.fin_travaux)} mono />
+            <Row label="Facture" value={date(dates.facture)} mono />
+          </Card>
+
+          <Card title="Montants">
+            <Row label="Montant HT" value={formatEuros(c.montants.ht)} mono />
+            <Row label="Montant TTC" value={formatEuros(c.montants.ttc)} mono />
+            <Row
+              label="Prime retenue"
+              value={formatEuros(c.montants.prime_estime)}
+              mono
+            />
+            <Row label="Statut" value={dossier.statut} />
+          </Card>
+        </div>
+      </SectionRepliable>
+
+      <SectionRepliable
+        titre="Où déposer ce dossier"
+        resume={`${guide.dispositifLabel} · ${guide.quiDepose}`}
+      >
+        <DepotGuide dispositif={dossier.dispositif} />
+      </SectionRepliable>
+
+      <SectionRepliable
+        titre="Pack documentaire"
+        resume="Page de garde · récapitulatif · rapport · checklist · attestation"
+      >
+        <p className="text-sm text-ardoise">
+          Pack généré depuis la saisie unique. Toutes les pièces dérivent des mêmes
+          données : une incohérence entre devis et facture est structurellement
+          impossible.
+        </p>
+        {acces.debloque ? (
+          <div className="mt-4 flex flex-wrap gap-2">
+            <a
+              href={`/dossiers/${id}/pack.pdf`}
+              target="_blank"
+              rel="noopener"
+              className={BTN_SECONDAIRE_SM}
+            >
+              ↓ Pack complet (PDF unique)
+            </a>
+            <a
+              href={`/dossiers/${id}/recap.pdf`}
+              target="_blank"
+              rel="noopener"
+              className={BTN_SECONDAIRE_SM}
+            >
+              Récapitulatif seul
+            </a>
+            <a
+              href={`/dossiers/${id}/checklist.pdf`}
+              target="_blank"
+              rel="noopener"
+              className={BTN_SECONDAIRE_SM}
+            >
+              Checklist seule
+            </a>
+          </div>
         ) : (
           <p className="mt-3 text-sm text-ardoise">
             🔒 Téléchargements verrouillés. Débloquez le dossier pour obtenir le pack
             complet et chaque document.
           </p>
         )}
-      </div>
+      </SectionRepliable>
 
-      {/* Formulaire officiel (Cerfa) */}
-      <section className="mb-6 rounded border border-filigrane bg-blanc-casse p-5 shadow-sm">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h2 className="font-serif text-base font-semibold text-encre">
-              Formulaire officiel
-            </h2>
-            {cerfa.ok ? (
-              <>
-                <p className="mt-1 text-sm text-ardoise">{cerfa.template.titre}</p>
+      <SectionRepliable
+        titre="Formulaire officiel"
+        resume={
+          cerfa.ok
+            ? `${cerfa.template.titre} · version ${cerfa.template.version}`
+            : cerfa.reason
+        }
+      >
+        {cerfa.ok ? (
+          <>
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <p className="text-sm text-encre">{cerfa.template.titre}</p>
                 <p className="mt-0.5 text-xs text-encre-claire">
                   {cerfa.template.arrete} · version{" "}
                   <span className="font-mono">{cerfa.template.version}</span>
                 </p>
-              </>
-            ) : (
-              <p className="mt-1 text-sm text-erreur">{cerfa.reason}</p>
+              </div>
+              <span
+                className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium ${
+                  cerfa.template.kind === "officiel"
+                    ? "bg-succes-bg text-succes"
+                    : "bg-tampon/10 text-tampon"
+                }`}
+              >
+                {cerfa.template.kind === "officiel"
+                  ? "Officiel"
+                  : "Reproduction conforme"}
+              </span>
+            </div>
+
+            {cerfa.template.kind === "reproduction" && (
+              <p className="mt-3 rounded border-l-4 border-tampon bg-tampon/5 px-3 py-2 text-xs text-ardoise">
+                L&apos;attestation sur l&apos;honneur CEE n&apos;est pas un Cerfa
+                remplissable : c&apos;est un modèle réglementaire imprimé et signé à
+                la main. Dossimo en produit une{" "}
+                <strong>reproduction fidèle du modèle en vigueur</strong>,
+                pré-remplie depuis votre saisie. À imprimer, puis dater et signer de
+                façon manuscrite (bénéficiaire + professionnel) avant dépôt.
+              </p>
             )}
-          </div>
-          {cerfa.ok && (
-            <span
-              className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium ${
-                cerfa.template.kind === "officiel"
-                  ? "bg-succes-bg text-succes"
-                  : "bg-tampon/10 text-tampon"
-              }`}
-            >
-              {cerfa.template.kind === "officiel" ? "Officiel" : "Reproduction conforme"}
-            </span>
-          )}
-        </div>
 
-        {cerfa.ok && cerfa.template.kind === "reproduction" && (
-          <p className="mt-3 rounded border-l-4 border-tampon bg-tampon/5 px-3 py-2 text-xs text-ardoise">
-            L&apos;attestation sur l&apos;honneur CEE n&apos;est pas un Cerfa
-            remplissable : c&apos;est un modèle réglementaire imprimé et signé à la
-            main. Dossimo en produit une <strong>reproduction fidèle du modèle en
-            vigueur</strong>, pré-remplie depuis votre saisie. À imprimer, puis dater
-            et signer de façon manuscrite (bénéficiaire + professionnel) avant dépôt.
-          </p>
+            {acces.debloque ? (
+              <a
+                href={`/dossiers/${id}/cerfa.pdf`}
+                target="_blank"
+                rel="noopener"
+                className={`mt-4 ${BTN_SECONDAIRE_SM}`}
+              >
+                ↓ Formulaire officiel pré-rempli (PDF)
+              </a>
+            ) : (
+              <p className="mt-4 text-sm text-ardoise">
+                🔒 Débloquez le dossier pour télécharger l&apos;attestation
+                pré-remplie.
+              </p>
+            )}
+
+            {cerfa.template.kind === "reproduction" && acces.debloque && (
+              <AhObligeFill dossierId={id} />
+            )}
+          </>
+        ) : (
+          <p className="text-sm text-erreur">{cerfa.reason}</p>
         )}
+      </SectionRepliable>
 
-        {cerfa.ok && acces.debloque && (
-          <a
-            href={`/dossiers/${id}/cerfa.pdf`}
-            target="_blank"
-            rel="noopener"
-            className="mt-4 inline-flex h-10 items-center rounded bg-encre px-4 text-sm font-medium text-papier transition-colors hover:bg-encre/90"
-          >
-            ↓ Formulaire officiel pré-rempli (PDF)
-          </a>
-        )}
-
-        {cerfa.ok && !acces.debloque && (
-          <p className="mt-4 text-sm text-ardoise">
-            🔒 Débloquez le dossier pour télécharger l&apos;attestation pré-remplie.
-          </p>
-        )}
-
-        {cerfa.ok && cerfa.template.kind === "reproduction" && acces.debloque && (
-          <AhObligeFill dossierId={id} />
-        )}
-      </section>
-
-      {/* Données du dossier */}
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Card title="Bénéficiaire">
-          <Row label="Nom" value={`${c.beneficiaire.prenom} ${c.beneficiaire.nom}`} />
-          <Row label="Adresse" value={c.beneficiaire.adresse} />
-          <Row label="Commune" value={`${c.beneficiaire.commune} (${c.beneficiaire.code_postal})`} />
-          <Row label="Occupation" value={OCCUPATIONS[c.beneficiaire.occupation]} />
-          <Row label="Revenus" value={PRECARITES[c.beneficiaire.precarite]} />
-        </Card>
-
-        <Card title="Entreprise (RGE)">
-          <Row label="Raison sociale" value={artisan?.entreprise ?? "—"} />
-          <Row label="SIRET" value={artisan?.siret ?? "—"} mono />
-          <Row label="N° RGE" value={c.rge.numero} mono />
-          <Row label="Domaine" value={c.rge.domaine} />
-          <Row label="RGE valable jusqu'au" value={date(c.rge.date_fin)} mono />
-        </Card>
-
-        <Card title="Logement">
-          <Row label="Type" value={LOGEMENT_TYPES[c.logement.type]} />
-          <Row label="Année de construction" value={c.logement.annee_construction} mono />
-          <Row label="Usage" value={RESIDENCES[c.logement.residence]} />
-          <Row label="Surface habitable" value={c.logement.surface_habitable ? `${c.logement.surface_habitable} m²` : "—"} mono />
-        </Card>
-
-        <Card title={titreSectionTechnique(c)}>
-          <Row label="Poste" value={`${poste} (${c.fiche})`} />
-          {lignesTechniques(c).map((l) => (
-            <Row key={l.label} label={l.label} value={l.value} mono={l.mono} />
-          ))}
-        </Card>
-
-        <Card title="Chronologie">
-          <Row label="Visite technique" value={date(dates.visite_technique)} mono />
-          <Row label="Devis signé" value={date(dates.devis)} mono />
-          <Row label="Début travaux" value={date(dates.debut_travaux)} mono />
-          <Row label="Fin travaux" value={date(dates.fin_travaux)} mono />
-          <Row label="Facture" value={date(dates.facture)} mono />
-        </Card>
-
-        <Card title="Montants">
-          <Row label="Montant HT" value={euro(c.montants.ht)} mono />
-          <Row label="Montant TTC" value={euro(c.montants.ttc)} mono />
-          <Row label="Prime CEE estimée" value={euro(c.montants.prime_estime)} mono />
-          <Row label="Statut" value={dossier.statut} />
-        </Card>
-      </div>
-
-      {/* Checklist */}
-      <section className="mt-8 rounded border border-filigrane bg-blanc-casse p-5 shadow-sm">
-        <h2 className="mb-1 font-serif text-base font-semibold text-encre">
-          Checklist · pièces à réunir
-        </h2>
-        <p className="mb-4 text-xs text-ardoise">
-          Le contrôle automatisé anti-refus (chronologie, RGE, cohérence des
-          montants) s&apos;ajoute au rapport de contrôle.
-        </p>
+      <SectionRepliable
+        titre="Checklist · pièces à réunir"
+        resume={`${pieces.length} pièces · ${mentionsDevis.length} mentions obligatoires sur le devis et la facture`}
+      >
         <ul className="space-y-3">
           {pieces.map((p) => (
             <li key={p.id} className="flex gap-3">
@@ -569,7 +663,23 @@ export default async function DossierPage({
             </li>
           ))}
         </ul>
-      </section>
+      </SectionRepliable>
+
+      {acces.debloque && (
+        <SectionRepliable
+          titre="Points de vigilance · analyse assistée"
+          resume="Conseils contextuels rédigés, en complément du contrôle automatique"
+        >
+          <PointsVigilanceIA
+            dossierId={id}
+            initial={vigilance?.points}
+            initialAt={vigilance?.at}
+          />
+        </SectionRepliable>
+      )}
+
+      {/* 9. Conversion · uniquement pour le dossier offert */}
+      {acces.gratuit && <ConversionOffert prixLabel={prix.label} />}
 
       <p className="mt-8 text-center text-xs text-encre-claire">
         Dossimo · service indépendant d&apos;aide à la préparation de dossier,
