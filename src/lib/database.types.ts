@@ -19,6 +19,21 @@ export type StatutPaiement = "en_attente" | "paye" | "echoue" | "rembourse";
 export type TypePiece = "devis" | "facture" | "autre";
 export type StatutExtraction = "en_attente" | "ok" | "echec";
 
+// Pricing + parrainage (migrations 0012 / 0013).
+export type DossierBillingStatus =
+  | "draft"
+  | "priced"
+  | "paid"
+  | "deposited"
+  | "refused"
+  | "paid_out";
+export type ReferralStatus =
+  | "pending"
+  | "rewarded"
+  | "capped"
+  | "self_blocked";
+export type ReferralCreditStatus = "active" | "expired" | "consumed";
+
 export type Json =
   | string
   | number
@@ -43,6 +58,8 @@ export interface Database {
           siret: string | null;
           qualification_rge: string | null;
           statut_abonnement: StatutAbonnement;
+          referral_code: string | null;
+          credit_balance_cents: number;
           created_at: string;
         };
         Insert: {
@@ -57,6 +74,8 @@ export interface Database {
           siret?: string | null;
           qualification_rge?: string | null;
           statut_abonnement?: StatutAbonnement;
+          referral_code?: string | null;
+          credit_balance_cents?: number;
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["artisans"]["Insert"]>;
@@ -81,6 +100,15 @@ export interface Database {
           delivered_at: string | null;
           vigilance_json: Json | null;
           vigilance_at: string | null;
+          estimated_aid_cents: number | null;
+          tier_id: string | null;
+          base_price_cents: number | null;
+          discount_cents: number;
+          credit_applied_cents: number;
+          final_price_cents: number | null;
+          status: DossierBillingStatus;
+          price_locked_at: string | null;
+          price_warning: boolean;
         };
         Insert: {
           id?: string;
@@ -100,6 +128,15 @@ export interface Database {
           delivered_at?: string | null;
           vigilance_json?: Json | null;
           vigilance_at?: string | null;
+          estimated_aid_cents?: number | null;
+          tier_id?: string | null;
+          base_price_cents?: number | null;
+          discount_cents?: number;
+          credit_applied_cents?: number;
+          final_price_cents?: number | null;
+          status?: DossierBillingStatus;
+          price_locked_at?: string | null;
+          price_warning?: boolean;
         };
         Update: Partial<Database["public"]["Tables"]["dossiers"]["Insert"]>;
         Relationships: [
@@ -241,9 +278,169 @@ export interface Database {
           },
         ];
       };
+      pricing_tiers: {
+        Row: {
+          id: string;
+          name: string;
+          aid_min_cents: number;
+          aid_max_cents: number | null;
+          price_cents: number;
+          active: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          aid_min_cents: number;
+          aid_max_cents?: number | null;
+          price_cents: number;
+          active?: boolean;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["pricing_tiers"]["Insert"]>;
+        Relationships: [];
+      };
+      referrals: {
+        Row: {
+          id: string;
+          referrer_id: string;
+          referee_id: string;
+          code_used: string;
+          status: ReferralStatus;
+          referee_first_dossier_id: string | null;
+          rewarded_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          referrer_id: string;
+          referee_id: string;
+          code_used: string;
+          status?: ReferralStatus;
+          referee_first_dossier_id?: string | null;
+          rewarded_at?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["referrals"]["Insert"]>;
+        Relationships: [
+          {
+            foreignKeyName: "referrals_referrer_id_fkey";
+            columns: ["referrer_id"];
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "referrals_referee_id_fkey";
+            columns: ["referee_id"];
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      referral_credits: {
+        Row: {
+          id: string;
+          artisan_id: string;
+          amount_cents: number;
+          source_referral_id: string | null;
+          issued_at: string;
+          expires_at: string;
+          consumed_cents: number;
+          status: ReferralCreditStatus;
+        };
+        Insert: {
+          id?: string;
+          artisan_id: string;
+          amount_cents: number;
+          source_referral_id?: string | null;
+          issued_at?: string;
+          expires_at: string;
+          consumed_cents?: number;
+          status?: ReferralCreditStatus;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["referral_credits"]["Insert"]
+        >;
+        Relationships: [
+          {
+            foreignKeyName: "referral_credits_artisan_id_fkey";
+            columns: ["artisan_id"];
+            referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "referral_credits_source_referral_id_fkey";
+            columns: ["source_referral_id"];
+            referencedRelation: "referrals";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      credit_applications: {
+        Row: {
+          id: string;
+          credit_id: string;
+          dossier_id: string;
+          amount_cents: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          credit_id: string;
+          dossier_id: string;
+          amount_cents: number;
+          created_at?: string;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["credit_applications"]["Insert"]
+        >;
+        Relationships: [
+          {
+            foreignKeyName: "credit_applications_credit_id_fkey";
+            columns: ["credit_id"];
+            referencedRelation: "referral_credits";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "credit_applications_dossier_id_fkey";
+            columns: ["dossier_id"];
+            referencedRelation: "dossiers";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      price_dossier: {
+        Args: { p_dossier_id: string; p_estimated_aid_cents?: number | null };
+        Returns: Database["public"]["Tables"]["dossiers"]["Row"];
+      };
+      apply_referral_code: {
+        Args: { p_referee_id: string; p_code: string };
+        Returns: Database["public"]["Tables"]["referrals"]["Row"];
+      };
+      claim_referee_discount: {
+        Args: { p_dossier_id: string };
+        Returns: Database["public"]["Tables"]["dossiers"]["Row"];
+      };
+      apply_credits_to_dossier: {
+        Args: { p_dossier_id: string };
+        Returns: Database["public"]["Tables"]["dossiers"]["Row"];
+      };
+      confirm_dossier_payment: {
+        Args: { p_dossier_id: string };
+        Returns: Database["public"]["Tables"]["dossiers"]["Row"];
+      };
+      expire_old_credits: {
+        Args: Record<string, never>;
+        Returns: number;
+      };
+      refresh_credit_balance: {
+        Args: { p_artisan_id: string };
+        Returns: undefined;
+      };
+    };
     Enums: {
       statut_dossier: StatutDossier;
       dispositif: Dispositif;
@@ -252,6 +449,9 @@ export interface Database {
       statut_paiement: StatutPaiement;
       type_piece: TypePiece;
       statut_extraction: StatutExtraction;
+      dossier_billing_status: DossierBillingStatus;
+      referral_status: ReferralStatus;
+      referral_credit_status: ReferralCreditStatus;
     };
     CompositeTypes: Record<string, never>;
   };
@@ -265,3 +465,9 @@ export type Paiement = Database["public"]["Tables"]["paiements"]["Row"];
 export type Lead = Database["public"]["Tables"]["leads"]["Row"];
 export type PieceJustificative =
   Database["public"]["Tables"]["pieces_justificatives"]["Row"];
+export type PricingTier = Database["public"]["Tables"]["pricing_tiers"]["Row"];
+export type Referral = Database["public"]["Tables"]["referrals"]["Row"];
+export type ReferralCredit =
+  Database["public"]["Tables"]["referral_credits"]["Row"];
+export type CreditApplication =
+  Database["public"]["Tables"]["credit_applications"]["Row"];

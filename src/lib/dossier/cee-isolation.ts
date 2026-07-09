@@ -274,6 +274,10 @@ export const ceeIsolationSchema = z.object({
   // Aides publiques perçues hors CEE (ex. MaPrimeRénov') — obligatoire sur l'AH
   // depuis la 6e période (01/04/2026). Laisser vide = aucune aide.
   montant_aides_publiques: nombreOptionnel,
+
+  // Parrainage artisan → artisan : code du parrain saisi au 1er dossier
+  // (−30 € de remise). Facultatif ; validé côté serveur (apply_referral_code).
+  code_parrain: z.string().optional().default(""),
 }).superRefine((v, ctx) => {
   const requisSi = (champ: string, valeur: unknown, msg = requis) => {
     if (valeur == null || valeur === "") {
@@ -364,4 +368,5 @@ export const ceeIsolationDefaults: CeeIsolationInput = {
   montant_ttc: "" as unknown as number,
   montant_prime_estime: "",
   montant_aides_publiques: "",
+  code_parrain: "",
 };

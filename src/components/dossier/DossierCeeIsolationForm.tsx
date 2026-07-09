@@ -113,7 +113,13 @@ export function DossierCeeIsolationForm({
     setServerError(null);
     const result = await createDossierCeeIsolation(values);
     if (result.ok) {
-      router.push(`/dossiers/${result.dossierId}`);
+      const parrain =
+        result.referral === "applied"
+          ? "?parrain=ok"
+          : result.referral === "failed"
+            ? "?parrain=ko"
+            : "";
+      router.push(`/dossiers/${result.dossierId}${parrain}`);
       return;
     }
     setServerError(result.error);
@@ -226,6 +232,13 @@ export function DossierCeeIsolationForm({
             <TextField label="Prénom du signataire" required error={errors.signataire_prenom} register={register("signataire_prenom")} />
             <TextField label="Email" required type="email" error={errors.email} register={register("email")} />
             <TextField label="Téléphone" error={errors.telephone} register={register("telephone")} />
+            <TextField
+              label="Code parrain (facultatif)"
+              placeholder="Ex. AB12CD34"
+              hint="Reçu d'un autre artisan Dossimo : −30 € sur votre premier dossier."
+              error={errors.code_parrain}
+              register={register("code_parrain")}
+            />
           </Section>
         )}
 

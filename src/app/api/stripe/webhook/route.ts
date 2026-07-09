@@ -2,6 +2,7 @@ import type Stripe from "stripe";
 
 import { getStripe, isStripeConfigured } from "@/lib/stripe/client";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { confirmDossierPayment } from "@/lib/pricing";
 
 export const runtime = "nodejs";
 
@@ -49,6 +50,19 @@ export async function POST(req: Request) {
       if (error && error.code !== "23505") {
         console.error("[stripe] enregistrement paiement:", error.message);
         return new Response("Erreur d'enregistrement.", { status: 500 });
+      }
+
+      // Fige le prix du dossier et déclenche la récompense parrain. Idempotent
+      // côté SQL (no-op si déjà figé) : un rejeu Stripe ne double pas le crédit.
+      // En cas d'échec, on renvoie 500 pour que Stripe réessaie (l'insert de
+      // paiement ci-dessus retombera alors en 23505, acquitté).
+      if (dossierId) {
+        try {
+          await confirmDossierPayment(admin, dossierId);
+        } catch (err) {
+          console.error("[stripe] confirm_dossier_payment:", err);
+          return new Response("Erreur de confirmation.", { status: 500 });
+        }
       }
     }
   }

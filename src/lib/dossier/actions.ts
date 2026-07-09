@@ -1,10 +1,11 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { applyReferralCode } from "@/lib/referral";
 import { TYPES_BOIS, TYPES_CET, TYPES_ISOLATION, TYPES_PAC, ceeIsolationSchema } from "@/lib/dossier/cee-isolation";
 
 export type CreateDossierResult =
-  | { ok: true; dossierId: string }
+  | { ok: true; dossierId: string; referral?: "applied" | "failed" }
   | { ok: false; error: string; fieldErrors?: Record<string, string[]> };
 
 /**
@@ -195,5 +196,15 @@ export async function createDossierCeeIsolation(
     };
   }
 
-  return { ok: true, dossierId: dossier.id };
+  // --- 3. Code parrain (facultatif) : applique −30 € sur ce 1er dossier ---
+  // Best-effort : un code invalide (inconnu, déjà utilisé, compte déjà payant)
+  // ne fait jamais échouer la création. apply_referral_code revérifie tout.
+  let referral: "applied" | "failed" | undefined;
+  const code = d.code_parrain?.trim();
+  if (code) {
+    const res = await applyReferralCode(supabase, artisanId, code);
+    referral = res.ok && res.referral.status === "pending" ? "applied" : "failed";
+  }
+
+  return { ok: true, dossierId: dossier.id, referral };
 }

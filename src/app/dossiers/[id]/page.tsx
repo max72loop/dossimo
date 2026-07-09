@@ -9,9 +9,12 @@ import { PointsVigilanceIA } from "@/components/dossier/points-vigilance-ia";
 import { PiecesJustificatives } from "@/components/dossier/pieces-justificatives";
 import { AhObligeFill } from "@/components/dossier/ah-oblige-fill";
 import { PaywallCta } from "@/components/dossier/paywall-cta";
+import { CreditsCta } from "@/components/dossier/credits-cta";
 import { ParcoursSelector } from "@/components/dossier/parcours-selector";
+import { DepotGuide } from "@/components/dossier/depot-guide";
 import { accesDossier } from "@/lib/dossier/acces";
-import { prixDossier } from "@/lib/stripe/pricing";
+import { createClient } from "@/lib/supabase/server";
+import { prixPack, getActiveTiers, labelEuros } from "@/lib/pricing";
 import { estimerPrime } from "@/lib/dossier/prime";
 import {
   LOGEMENT_TYPES,
@@ -108,7 +111,7 @@ export default async function DossierPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ paye?: string; annule?: string }>;
+  searchParams: Promise<{ paye?: string; annule?: string; parrain?: string }>;
 }) {
   const { id } = await params;
   const sp = await searchParams;
@@ -147,8 +150,20 @@ export default async function DossierPage({
 
   // Estimation indicative de prime (barème piloté par la règle métier).
   const prime = estimerPrime(data);
-  // Prix du dossier par palier (selon la prime estimée).
-  const prix = prixDossier(data);
+  // Prix du pack par palier (grille en base), indexé sur l'aide estimée. Même
+  // source de vérité que le checkout : l'affiché correspond au facturé.
+  const supabase = await createClient();
+  const tiers = await getActiveTiers(supabase);
+  const prix = prixPack(prime ? Math.round(prime.montant * 100) : null, tiers);
+
+  // Net à payer : final_price_cents (net de remise filleul + crédits déjà
+  // appliqués) s'il existe, sinon le prix de base du palier. Crédits parrain
+  // disponibles pour proposer le bouton « utiliser mes crédits ».
+  const creditApplied = data.dossier.credit_applied_cents ?? 0;
+  const discountParrain = data.dossier.discount_cents ?? 0;
+  const netCents = data.dossier.final_price_cents ?? prix.cents;
+  const netLabel = netCents != null ? labelEuros(netCents) : prix.label;
+  const soldeCredits = data.artisan?.credit_balance_cents ?? 0;
 
   return (
     <main className="mx-auto max-w-4xl px-8 py-10">
@@ -189,10 +204,25 @@ export default async function DossierPage({
 
       <ParcoursSelector dossierId={id} statut={dossier.statut} />
 
+      <DepotGuide dispositif={dossier.dispositif} />
+
       {sp.paye && acces.debloque && (
         <div className="mb-6 rounded border-l-4 border-succes bg-succes-bg px-4 py-3 text-sm text-succes">
           Paiement confirmé · le pack est débloqué. Vous pouvez télécharger tous les
           documents ci-dessous.
+        </div>
+      )}
+
+      {sp.parrain === "ok" && (
+        <div className="mb-6 rounded border-l-4 border-succes bg-succes-bg px-4 py-3 text-sm text-succes">
+          Code parrain enregistré · la remise de 30 € s'appliquera à votre premier
+          dossier payant.
+        </div>
+      )}
+      {sp.parrain === "ko" && (
+        <div className="mb-6 rounded border-l-4 border-avertissement bg-avertissement-bg px-4 py-3 text-sm text-avertissement">
+          Code parrain non appliqué · code inconnu, déjà utilisé, ou compte ayant
+          déjà réglé un dossier.
         </div>
       )}
 
@@ -220,8 +250,22 @@ export default async function DossierPage({
           {sp.annule && (
             <p className="mt-2 text-xs text-ardoise">Paiement annulé · vous pouvez réessayer.</p>
           )}
-          <div className="mt-4">
-            <PaywallCta dossierId={id} prix={prix.label} />
+          {discountParrain > 0 && (
+            <p className="mt-2 text-xs text-succes">
+              Remise parrain de {labelEuros(discountParrain)} appliquée sur ce dossier.
+            </p>
+          )}
+          {creditApplied > 0 && (
+            <p className="mt-2 text-xs text-succes">
+              {labelEuros(creditApplied)} de crédits parrain appliqués
+              {netCents != null && <> · reste {netLabel} à régler</>}.
+            </p>
+          )}
+          <div className="mt-4 flex flex-wrap items-start gap-3">
+            <PaywallCta dossierId={id} prix={netLabel} />
+            {soldeCredits > 0 && creditApplied === 0 && (netCents ?? 0) > 0 && (
+              <CreditsCta dossierId={id} soldeLabel={labelEuros(soldeCredits)} />
+            )}
           </div>
           <p className="mt-3 text-xs text-encre-claire">
             Paiement unique par Stripe. Le premier dossier de votre compte est offert.
