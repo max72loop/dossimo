@@ -3,16 +3,15 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { BTN_SECONDAIRE_SM } from "@/components/ui/boutons";
+import { formatEuros } from "@/lib/format/montant";
 import { updateMontantPrime } from "@/lib/dossier/actions";
 
-const euro = (n: number) =>
-  n.toLocaleString("fr-FR", { style: "currency", currency: "EUR" });
-
 /**
- * Écart entre le montant de prime saisi et l'estimation Dossimo (barème). Au
- * lieu d'une simple alerte « vérifiez la saisie ou le barème », propose deux
- * actions directes : ajuster le montant en un geste (avec un raccourci vers la
- * valeur du barème) et voir le détail du barème appliqué pour trancher.
+ * Note secondaire sous le montant retenu : le barème Dossimo n'arrive pas au
+ * même chiffre que la saisie. Ce n'est ni une alerte ni un motif de refus, donc
+ * ton neutre et actions directes — aligner la saisie en un geste, ou consulter
+ * le barème appliqué pour trancher. Le montant retenu reste celui de la saisie.
  */
 export function EcartPrime({
   dossierId,
@@ -35,7 +34,7 @@ export function EcartPrime({
   const [error, setError] = useState<string | null>(null);
 
   const ecart = saisi - estimation;
-  const sens = ecart > 0 ? "au-dessus" : "en dessous";
+  const sens = ecart > 0 ? "en dessous du montant retenu" : "au-dessus du montant retenu";
 
   async function save(montant: number) {
     setSaving(true);
@@ -60,17 +59,17 @@ export function EcartPrime({
   }
 
   return (
-    <div className="mt-3 rounded border border-avertissement-bg bg-avertissement-bg/40 p-3">
-      <p className="text-xs text-encre">
-        Montant saisi :{" "}
-        <span className="font-medium">{euro(saisi)}</span>, soit{" "}
-        <span className="font-medium">{euro(Math.abs(ecart))}</span> {sens} de
-        l&apos;estimation Dossimo. Alignez la saisie si c&apos;est une erreur de
-        frappe, sinon vérifiez le barème.
+    <div className="mt-4 rounded border border-filigrane bg-papier/60 p-3">
+      <p className="text-xs text-ardoise">
+        Le barème Dossimo estime cette prime à{" "}
+        <span className="font-medium text-encre">{formatEuros(estimation)}</span>, soit{" "}
+        <span className="font-medium text-encre">{formatEuros(Math.abs(ecart))}</span>{" "}
+        {sens}. Alignez la saisie si c&apos;est une erreur de frappe, sinon conservez
+        votre montant : c&apos;est lui qui est repris dans le pack.
       </p>
 
       {!editing ? (
-        <div className="mt-2 flex flex-wrap gap-2">
+        <div className="mt-2.5 flex flex-wrap gap-2">
           <button
             type="button"
             onClick={() => {
@@ -78,23 +77,28 @@ export function EcartPrime({
               setError(null);
               setEditing(true);
             }}
-            className="rounded bg-encre px-2.5 py-1 text-xs font-medium text-blanc-casse transition hover:bg-encre/90"
+            className={BTN_SECONDAIRE_SM}
           >
             Ajuster le montant
           </button>
           <button
             type="button"
             onClick={() => setShowBareme((v) => !v)}
-            className="rounded border border-filigrane px-2.5 py-1 text-xs font-medium text-encre transition hover:bg-blanc-casse"
+            aria-expanded={showBareme}
+            className={BTN_SECONDAIRE_SM}
           >
             {showBareme ? "Masquer le barème" : "Voir le barème appliqué"}
           </button>
         </div>
       ) : (
-        <div className="mt-2">
+        <div className="mt-2.5">
           <div className="flex flex-wrap items-center gap-2">
             <div className="relative">
+              <label htmlFor="montant-prime" className="sr-only">
+                Montant de prime retenu, en euros
+              </label>
               <input
+                id="montant-prime"
                 type="number"
                 step="1"
                 min="0"
@@ -108,7 +112,7 @@ export function EcartPrime({
                   }
                 }}
                 autoFocus
-                className="w-32 rounded border border-filigrane bg-blanc-casse px-2 py-1 pr-6 text-sm text-encre focus:border-encre focus:outline-none"
+                className="h-9 w-32 rounded border border-filigrane bg-blanc-casse px-2 pr-6 text-sm text-encre focus:border-encre focus:outline-none"
               />
               <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-xs text-ardoise">
                 €
@@ -118,7 +122,7 @@ export function EcartPrime({
               type="button"
               onClick={submitFromInput}
               disabled={saving}
-              className="rounded bg-encre px-2.5 py-1 text-xs font-medium text-blanc-casse transition hover:bg-encre/90 disabled:opacity-60"
+              className={BTN_SECONDAIRE_SM}
             >
               {saving ? "…" : "Enregistrer"}
             </button>
@@ -129,7 +133,7 @@ export function EcartPrime({
                 setError(null);
               }}
               disabled={saving}
-              className="text-xs text-ardoise underline-offset-2 hover:underline"
+              className="text-xs text-ardoise underline-offset-2 hover:underline disabled:opacity-60"
             >
               Annuler
             </button>
@@ -139,7 +143,7 @@ export function EcartPrime({
             onClick={() => setValue(String(estimation))}
             className="mt-2 text-xs text-tampon underline-offset-2 hover:underline"
           >
-            = estimation Dossimo ({euro(estimation)})
+            Reprendre l&apos;estimation Dossimo ({formatEuros(estimation)})
           </button>
         </div>
       )}
@@ -147,10 +151,10 @@ export function EcartPrime({
       {error && <p className="mt-2 text-xs text-erreur">{error}</p>}
 
       {showBareme && (
-        <p className="mt-2 border-t border-avertissement-bg pt-2 text-xs text-ardoise">
-          <span className="font-medium text-encre">{euro(estimation)}</span> ={" "}
-          {base}. Profil de revenus retenu : {precariteLabel}. Barème piloté par
-          la règle métier (éditable dans l&apos;admin).
+        <p className="mt-2.5 border-t border-filigrane pt-2.5 text-xs text-ardoise">
+          <span className="font-medium text-encre">{formatEuros(estimation)}</span> ={" "}
+          {base}. Profil de revenus retenu : {precariteLabel}. Barème piloté par la
+          règle métier (éditable dans l&apos;admin).
         </p>
       )}
     </div>
