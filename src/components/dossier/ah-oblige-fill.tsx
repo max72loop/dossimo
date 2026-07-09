@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 
+import { BTN_SECONDAIRE_SM } from "@/components/ui/boutons";
 import { remplirAhOblige } from "@/lib/cerfa/oblige-actions";
 
 type State =
@@ -70,7 +71,7 @@ export function AhObligeFill({ dossierId }: { dossierId: string }) {
         pré-rempli · vous n&apos;avez plus qu&apos;à vérifier, dater et signer.
       </p>
 
-      <label className="mt-3 inline-flex h-9 cursor-pointer items-center rounded bg-tampon px-4 text-sm font-medium text-blanc-casse transition-colors hover:bg-tampon/90">
+      <label className={`mt-3 cursor-pointer ${BTN_SECONDAIRE_SM}`}>
         {state.kind === "loading" ? "Appariement…" : "Téléverser l'AH de l'obligé"}
         <input
           ref={inputRef}

@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { BTN_SECONDAIRE } from "@/components/ui/boutons";
 import { uploadPiece, deletePiece } from "@/lib/piece/actions";
 import type { PieceAvecEcarts } from "@/lib/piece/get";
 import type { Comparaison } from "@/lib/piece/compare";
@@ -119,9 +120,12 @@ function PieceCard({
 export function PiecesJustificatives({
   dossierId,
   initial,
+  nbMentions,
 }: {
   dossierId: string;
   initial: PieceAvecEcarts[];
+  /** Nombre de mentions obligatoires contrôlées sur le devis. */
+  nbMentions: number;
 }) {
   const router = useRouter();
   const [type, setType] = useState<TypePiece>("devis");
@@ -151,14 +155,17 @@ export function PiecesJustificatives({
   }
 
   return (
-    <section className="mt-6 rounded border border-filigrane bg-blanc-casse p-5 shadow-sm">
-      <h2 className="font-serif text-base font-semibold text-encre">
-        Pièces réelles · cohérence avec la saisie
+    <section
+      id="pieces"
+      className="mb-6 scroll-mt-6 rounded-md border border-tampon/25 bg-blanc-casse p-5 shadow-sm"
+    >
+      <h2 className="font-serif text-lg font-semibold text-encre">
+        Ajoutez votre devis, Dossimo vérifie {nbMentions} mentions obligatoires
       </h2>
-      <p className="mt-1 text-xs text-ardoise">
-        Ajoutez le devis et la facture réels : Dossimo en lit les valeurs et les
-        compare à votre saisie. Un écart (surface, R, montants, dates…) devient
-        visible avant dépôt. Vous restez juge.
+      <p className="mt-1.5 text-sm text-ardoise">
+        Dossimo relit la pièce et compare surface, résistance R, montants, dates et
+        mentions RGE à votre saisie. Un écart devient visible avant le dépôt, pas
+        après le refus. Vous restez juge.
       </p>
 
       <div className="mt-4 flex flex-wrap items-center gap-3">
@@ -177,7 +184,7 @@ export function PiecesJustificatives({
             </button>
           ))}
         </div>
-        <label className="inline-flex h-9 cursor-pointer items-center rounded bg-terre-cuite px-4 text-sm font-medium text-blanc-casse transition-colors hover:bg-terre-cuite-hover">
+        <label className={`cursor-pointer ${BTN_SECONDAIRE}`}>
           {status === "loading" ? "Analyse…" : `Ajouter ${TYPE_LABEL[type].toLowerCase()}`}
           <input
             ref={inputRef}
@@ -209,9 +216,10 @@ export function PiecesJustificatives({
           ))}
         </div>
       ) : (
-        <p className="mt-4 text-sm text-ardoise">
-          Aucune pièce ajoutée. Le contrôle ci-dessus porte sur la saisie ; ajoutez
-          le devis et la facture pour vérifier qu&apos;ils concordent.
+        <p className="mt-4 rounded border border-dashed border-filigrane bg-papier/40 px-4 py-3 text-sm text-ardoise">
+          Les contrôles anti-refus portent pour l&apos;instant sur votre saisie.
+          Ajoutez le devis puis la facture : Dossimo vérifie qu&apos;ils concordent
+          entre eux et avec le dossier, la première cause de refus.
         </p>
       )}
     </section>

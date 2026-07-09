@@ -9,8 +9,12 @@ export default defineConfig({
       "server-only": path.resolve(process.cwd(), "test/stubs/empty.ts"),
     },
   },
+  // Le tsconfig Next porte `jsx: "preserve"` (Next fait la transformation) : en
+  // test, on demande à esbuild la transformation automatique pour pouvoir rendre
+  // les composants présentationnels.
+  esbuild: { jsx: "automatic" },
   test: {
     environment: "node",
-    include: ["src/**/*.test.ts"],
+    include: ["src/**/*.test.ts", "src/**/*.test.tsx"],
   },
 });
