@@ -1,6 +1,9 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
+
 import { createClient } from "@/lib/supabase/server";
+import { getDossier } from "@/lib/dossier/get-dossier";
 import { applyReferralCode } from "@/lib/referral";
 import { TYPES_BOIS, TYPES_CET, TYPES_ISOLATION, TYPES_PAC, ceeIsolationSchema } from "@/lib/dossier/cee-isolation";
 
@@ -207,4 +210,48 @@ export async function createDossierCeeIsolation(
   }
 
   return { ok: true, dossierId: dossier.id, referral };
+}
+
+/**
+ * Ajuste le montant de prime saisi dans un dossier (le champ que l'artisan
+ * remplit depuis son devis/facture). Utilisé par l'écart entre l'estimation
+ * Dossimo (barème) et la saisie : plutôt qu'une simple alerte, l'artisan
+ * corrige en un geste. Écrit aux deux endroits où la valeur vit (colonne
+ * `montant_estime` + `caracteristiques_techniques_json.montants.prime_estime`)
+ * pour garder pack, contrôle et affichage cohérents. Auth-scopé : `getDossier`
+ * renvoie null si le dossier n'appartient pas à l'artisan connecté (RLS).
+ */
+export async function updateMontantPrime(
+  dossierId: string,
+  montant: number | null,
+): Promise<{ ok: boolean; error?: string }> {
+  if (montant != null && (!Number.isFinite(montant) || montant < 0)) {
+    return { ok: false, error: "Montant invalide." };
+  }
+
+  const data = await getDossier(dossierId);
+  if (!data) return { ok: false, error: "Dossier introuvable." };
+
+  const supabase = await createClient();
+  const carac = data.caracteristiques;
+  const nextCarac = {
+    ...carac,
+    montants: { ...carac.montants, prime_estime: montant },
+  };
+
+  const { error } = await supabase
+    .from("dossiers")
+    .update({
+      montant_estime: montant,
+      caracteristiques_techniques_json: nextCarac,
+    })
+    .eq("id", dossierId);
+
+  if (error) {
+    console.error("[dossier] updateMontantPrime:", error.message);
+    return { ok: false, error: "Enregistrement impossible." };
+  }
+
+  revalidatePath(`/dossiers/${dossierId}`);
+  return { ok: true };
 }

@@ -7,6 +7,7 @@ import { resolveCerfaTemplate } from "@/lib/cerfa/registry";
 import { storedVigilance } from "@/lib/llm/vigilance";
 import { PointsVigilanceIA } from "@/components/dossier/points-vigilance-ia";
 import { PiecesJustificatives } from "@/components/dossier/pieces-justificatives";
+import { EcartPrime } from "@/components/dossier/ecart-prime";
 import { AhObligeFill } from "@/components/dossier/ah-oblige-fill";
 import { PaywallCta } from "@/components/dossier/paywall-cta";
 import { CreditsCta } from "@/components/dossier/credits-cta";
@@ -335,13 +336,13 @@ export default async function DossierPage({
           </div>
           {c.montants.prime_estime != null &&
             Math.abs(c.montants.prime_estime - prime.montant) > 1 && (
-              <p className="mt-2 text-xs text-ardoise">
-                Montant saisi dans le dossier :{" "}
-                <span className="font-medium text-encre">
-                  {euro(c.montants.prime_estime)}
-                </span>{" "}
-                · l&apos;estimation Dossimo diffère, vérifiez la saisie ou le barème.
-              </p>
+              <EcartPrime
+                dossierId={id}
+                saisi={c.montants.prime_estime}
+                estimation={prime.montant}
+                base={prime.base}
+                precariteLabel={PRECARITES[c.beneficiaire.precarite]}
+              />
             )}
           <p className="mt-2 text-[11px] text-encre-claire">
             Estimation indicative, calculée depuis le barème de la règle métier
