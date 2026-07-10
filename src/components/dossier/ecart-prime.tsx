@@ -153,8 +153,8 @@ export function EcartPrime({
       {showBareme && (
         <p className="mt-2.5 border-t border-filigrane pt-2.5 text-xs text-ardoise">
           <span className="font-medium text-encre">{formatEuros(estimation)}</span> ={" "}
-          {base}. Profil de revenus retenu : {precariteLabel}. Barème piloté par la
-          règle métier (éditable dans l&apos;admin).
+          {base}. Profil de revenus retenu : {precariteLabel}. Barème de référence
+          tenu à jour par Dossimo.
         </p>
       )}
     </div>
