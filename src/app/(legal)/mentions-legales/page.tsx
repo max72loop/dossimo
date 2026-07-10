@@ -26,10 +26,18 @@ export default function MentionsLegalesPage() {
           <LegalRow label="Siège social">{editeur.adresse}</LegalRow>
           <LegalRow label="SIREN">{editeur.siren}</LegalRow>
           <LegalRow label="SIRET (siège)">{editeur.siret}</LegalRow>
-          <LegalRow label="RCS">{editeur.rcs}</LegalRow>
-          <LegalRow label="TVA intracommunautaire">
-            {editeur.tvaIntracom}
-          </LegalRow>
+          {/* Mentions non universelles : une entreprise individuelle de
+              prestation de services intellectuels n'est pas immatriculée au
+              RCS, et la franchise en base n'ouvre pas de n° de TVA
+              intracommunautaire. On les omet plutôt que d'afficher un vide. */}
+          {editeur.rcs && <LegalRow label="RCS">{editeur.rcs}</LegalRow>}
+          {editeur.tvaIntracom ? (
+            <LegalRow label="TVA intracommunautaire">
+              {editeur.tvaIntracom}
+            </LegalRow>
+          ) : (
+            <LegalRow label="TVA">{editeur.tva.mention}</LegalRow>
+          )}
           <LegalRow label="Directeur de la publication">
             {editeur.directeurPublication}
           </LegalRow>
