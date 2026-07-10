@@ -1,3 +1,4 @@
+import { BarreCompletude } from "@/components/dossier/barre-completude";
 import { formatEuros } from "@/lib/format/montant";
 import type { SyntheseDossier } from "@/lib/dossier/synthese";
 
@@ -78,21 +79,7 @@ export function VerdictHero({
               : `Il reste ${nbActionsRestantes} action${nbActionsRestantes > 1 ? "s" : ""} avant Prêt à déposer`}
           </span>
         </div>
-        <div
-          role="progressbar"
-          aria-valuenow={pourcentage}
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-label="Complétude du dossier"
-          className="mt-2 h-2 w-full overflow-hidden rounded-full bg-blanc-casse"
-        >
-          <div
-            className={`h-full rounded-full transition-[width] ${
-              conforme ? "bg-succes" : "bg-avertissement"
-            }`}
-            style={{ width: `${pourcentage}%` }}
-          />
-        </div>
+        <BarreCompletude pourcentage={pourcentage} conforme={conforme} />
       </div>
     </section>
   );

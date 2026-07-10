@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { AnimatePresence, motion } from "motion/react";
 
 import { BTN_SECONDAIRE } from "@/components/ui/boutons";
 import { uploadPiece, deletePiece } from "@/lib/piece/actions";
@@ -205,15 +206,28 @@ export function PiecesJustificatives({
       )}
 
       {initial.length > 0 ? (
-        <div className="mt-4 space-y-3">
-          {initial.map((item) => (
-            <PieceCard
-              key={item.piece.id}
-              dossierId={dossierId}
-              item={item}
-              onChanged={() => router.refresh()}
-            />
-          ))}
+        <div className="mt-4 flex flex-col gap-3">
+          {/* `initial={false}` : les pièces déjà présentes au chargement ne
+              s'animent pas. Seuls un ajout et une suppression bougent, et
+              `layout` fait glisser les voisines au lieu de les faire sauter. */}
+          <AnimatePresence initial={false} mode="popLayout">
+            {initial.map((item) => (
+              <motion.div
+                key={item.piece.id}
+                layout
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.96 }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
+              >
+                <PieceCard
+                  dossierId={dossierId}
+                  item={item}
+                  onChanged={() => router.refresh()}
+                />
+              </motion.div>
+            ))}
+          </AnimatePresence>
         </div>
       ) : (
         <p className="mt-4 rounded border border-dashed border-filigrane bg-papier/40 px-4 py-3 text-sm text-ardoise">
