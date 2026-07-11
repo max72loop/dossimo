@@ -3,6 +3,7 @@ import { describe, it, expect } from "vitest";
 import {
   selectTier,
   computeQuote,
+  grilleAffichee,
   labelEuros,
   MAX_PRICE_RATIO,
 } from "@/lib/pricing";
@@ -111,5 +112,30 @@ describe("labelEuros", () => {
   it("garde les centimes quand nécessaire", () => {
     expect(labelEuros(11900)).toBe("119 €");
     expect(labelEuros(1250)).toBe("12,50 €");
+  });
+});
+
+describe("grilleAffichee — ce que la vitrine annonce", () => {
+  it("annonce la grille réellement facturée, palier haut compris", () => {
+    // Le bug corrigé : la landing et les CGV promettaient « de 49 € à 149 € » via
+    // une grille codée en dur, alors que le checkout facturait jusqu'à 249 €.
+    // La vitrine lit désormais les mêmes paliers que le checkout.
+    const g = grilleAffichee(TIERS)!;
+    expect(g.minLabel).toBe("49 €");
+    expect(g.maxLabel).toBe("249 €");
+    expect(g.paliers).toEqual(["49 €", "149 €", "249 €"]);
+  });
+
+  it("ignore les paliers désactivés", () => {
+    const g = grilleAffichee(
+      TIERS.map((t) => (t.price_cents === 24900 ? { ...t, active: false } : t)),
+    )!;
+    expect(g.maxLabel).toBe("149 €");
+    expect(g.paliers).toEqual(["49 €", "149 €"]);
+  });
+
+  it("null si aucun palier : l'appelant tait le prix plutôt que d'en inventer un", () => {
+    expect(grilleAffichee([])).toBeNull();
+    expect(grilleAffichee(TIERS.map((t) => ({ ...t, active: false })))).toBeNull();
   });
 });

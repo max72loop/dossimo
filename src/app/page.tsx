@@ -17,23 +17,38 @@ import {
 import { SiteHeader } from "@/components/landing/site-header";
 import { SiteFooter } from "@/components/landing/site-footer";
 import { LeadForm } from "@/components/landing/lead-form";
-import { fourchettePrix } from "@/lib/stripe/pricing";
+import { FOCUS } from "@/components/ui/boutons";
+import { grillePublique } from "@/lib/landing/grille-publique";
+import type { GrilleAffichee } from "@/lib/pricing";
 
-export default function Home() {
+/**
+ * Anneau de focus pour les CTA posés sur le bloc encre (section Tarification) :
+ * l'anneau `encre` de `FOCUS` y serait invisible, fond contre fond.
+ */
+const FOCUS_SOMBRE =
+  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-papier";
+
+export default async function Home() {
+  // Grille lue en base (`pricing_tiers`), la MÊME que celle du checkout : le prix
+  // annoncé ici est celui qui sera facturé. `null` si la base est injoignable — on
+  // tait alors le tarif plutôt que d'en afficher un faux (§10).
+  const grille = await grillePublique();
+
   return (
     <div className="flex min-h-full flex-col bg-papier">
+      <JsonLd grille={grille} />
       <SiteHeader />
 
       <main className="flex-1">
         <Hero />
-        <TrustStrip />
+        <TrustStrip grille={grille} />
         <Probleme />
         <Difference />
         <PourQui />
         <Etapes />
         <Features />
         <CasConcrets />
-        <Pricing />
+        <Pricing grille={grille} />
         <Contact />
         <Faq />
       </main>
@@ -65,7 +80,7 @@ function Hero() {
       <div className="pointer-events-none absolute -right-32 -top-32 -z-10 h-96 w-96 rounded-full bg-tampon/10 blur-3xl" />
       <div className="mx-auto grid max-w-[1280px] items-center gap-16 px-8 py-20 lg:grid-cols-[1.05fr_0.95fr] lg:py-24">
         <div>
-          <SectionLabel>Pour les artisans RGE indépendants d&rsquo;Île-de-France</SectionLabel>
+          <SectionLabel>Pour les artisans RGE indépendants</SectionLabel>
 
           <h1 className="mt-6 font-serif text-[2.75rem] font-semibold leading-[1.08] tracking-tight text-encre sm:text-[3.25rem]">
             Des dossiers de prime qui passent.{" "}
@@ -83,14 +98,14 @@ function Hero() {
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <Link
               href="/dossiers/nouveau"
-              className="group inline-flex h-12 items-center gap-2 rounded-lg bg-terre-cuite px-6 text-sm font-semibold text-blanc-casse transition-colors hover:bg-terre-cuite-hover"
+              className={`group inline-flex h-12 items-center gap-2 rounded-lg bg-terre-cuite px-6 text-sm font-semibold text-blanc-casse transition-colors hover:bg-terre-cuite-hover ${FOCUS}`}
             >
               Créer mon dossier gratuit
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </Link>
             <a
               href="#etapes"
-              className="inline-flex h-12 items-center gap-2 rounded-lg border border-encre px-6 text-sm font-medium text-encre transition-colors hover:bg-papier-fonce"
+              className={`inline-flex h-12 items-center gap-2 rounded-lg border border-encre px-6 text-sm font-medium text-encre transition-colors hover:bg-papier-fonce ${FOCUS}`}
             >
               Comment ça marche
             </a>
@@ -202,11 +217,73 @@ function StatusBadge({
   );
 }
 
+/* ---------------------------------------------------------------- JSON-LD */
+/**
+ * Données structurées : `Organization` (identité de marque) et `FAQPage` (Google
+ * peut afficher les questions directement dans ses résultats). Les questions sont
+ * lues depuis `FAQ_ITEMS`, la même source que le rendu : un balisage qui
+ * annoncerait autre chose que la page serait trompeur, et sanctionné comme tel.
+ *
+ * Aucun prix n'est balisé si la grille est illisible : plutôt rien qu'un tarif faux.
+ */
+function JsonLd({ grille }: { grille: GrilleAffichee | null }) {
+  const site = process.env.NEXT_PUBLIC_SITE_URL || "https://dossimo.app";
+
+  const donnees = [
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      name: "Dossimo",
+      url: site,
+      description:
+        "Service indépendant d'aide à la préparation et au contrôle de conformité de dossiers MaPrimeRénov' et CEE, destiné aux artisans RGE indépendants.",
+      slogan: "Des dossiers de prime qui passent. Du premier coup.",
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: FAQ_ITEMS.map((it) => ({
+        "@type": "Question",
+        name: it.q,
+        acceptedAnswer: { "@type": "Answer", text: it.a },
+      })),
+    },
+    ...(grille
+      ? [
+          {
+            "@context": "https://schema.org",
+            "@type": "Service",
+            name: "Préparation et contrôle de dossier MaPrimeRénov' / CEE",
+            provider: { "@type": "Organization", name: "Dossimo" },
+            areaServed: "FR",
+            offers: {
+              "@type": "AggregateOffer",
+              priceCurrency: "EUR",
+              lowPrice: grille.paliers[0].replace(/[^\d]/g, ""),
+              highPrice: grille.paliers.at(-1)!.replace(/[^\d]/g, ""),
+              offerCount: grille.paliers.length,
+            },
+          },
+        ]
+      : []),
+  ];
+
+  return (
+    <script
+      type="application/ld+json"
+      // Contenu entièrement statique et maîtrisé (aucune saisie utilisateur).
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(donnees) }}
+    />
+  );
+}
+
 /* ------------------------------------------------------------ TrustStrip */
-function TrustStrip() {
+function TrustStrip({ grille }: { grille: GrilleAffichee | null }) {
   const items = [
     "Premier dossier offert",
-    "À partir de 49 € par dossier",
+    // Prix dérivé de la grille en base, jamais écrit en dur : sans elle, on annonce
+    // la gratuité du premier dossier sans avancer de chiffre.
+    grille ? `À partir de ${grille.minLabel} par dossier` : "Forfait fixe par dossier",
     "MaPrimeRénov' + CEE",
     "Vous gardez votre prime",
   ];
@@ -377,7 +454,7 @@ function PourQui() {
             <div className="mt-8">
               <Link
                 href="/dossiers/nouveau"
-                className="group inline-flex h-12 items-center gap-2 rounded-lg bg-terre-cuite px-6 text-sm font-semibold text-blanc-casse transition-colors hover:bg-terre-cuite-hover"
+                className={`group inline-flex h-12 items-center gap-2 rounded-lg bg-terre-cuite px-6 text-sm font-semibold text-blanc-casse transition-colors hover:bg-terre-cuite-hover ${FOCUS}`}
               >
                 Essayer, c&rsquo;est gratuit
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
@@ -580,8 +657,7 @@ function CasConcrets() {
 }
 
 /* --------------------------------------------------------------- Pricing */
-function Pricing() {
-  const { minLabel: minPrix, maxLabel: maxPrix } = fourchettePrix();
+function Pricing({ grille }: { grille: GrilleAffichee | null }) {
   return (
     <section className="py-20 sm:py-24">
       <Shell>
@@ -589,28 +665,51 @@ function Pricing() {
           <div className="max-w-2xl">
             <p className="label text-papier/70">Tarification</p>
             <h2 className="mt-5 font-serif text-3xl font-semibold tracking-tight text-papier sm:text-[2.25rem] sm:leading-tight">
-              Le premier dossier est offert. Ensuite,{" "}
-              <span className="font-mono text-blanc-casse">
-                de {minPrix} à {maxPrix}
-              </span>{" "}
-              selon la taille du dossier.
+              {grille ? (
+                <>
+                  Le premier dossier est offert. Ensuite,{" "}
+                  <span className="font-mono text-blanc-casse">
+                    de {grille.minLabel} à {grille.maxLabel}
+                  </span>{" "}
+                  selon le montant de l&apos;aide.
+                </>
+              ) : (
+                <>
+                  Le premier dossier est offert. Ensuite, un{" "}
+                  <span className="font-mono text-blanc-casse">forfait fixe</span>{" "}
+                  selon le montant de l&apos;aide.
+                </>
+              )}
             </h2>
             <p className="mt-4 max-w-xl text-lg leading-relaxed text-papier/75">
-              Un forfait fixe, adapté à la taille du dossier : un petit chantier
-              paie moins. Jamais un pourcentage de votre prime, qui reste
-              entièrement à vous. Sans abonnement imposé.
+              Un forfait fixe, indexé sur l&apos;aide que le dossier va chercher :
+              un petit chantier paie moins. Jamais un pourcentage de votre prime,
+              qui reste entièrement à vous. Sans abonnement imposé.
             </p>
+
+            {grille && grille.paliers.length > 1 && (
+              <ul className="mt-8 flex flex-wrap gap-2">
+                {grille.paliers.map((prix) => (
+                  <li
+                    key={prix}
+                    className="rounded border border-papier/25 px-3 py-1.5 font-mono text-sm text-blanc-casse"
+                  >
+                    {prix}
+                  </li>
+                ))}
+              </ul>
+            )}
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <Link
                 href="/dossiers/nouveau"
-                className="group inline-flex h-12 items-center gap-2 rounded-lg bg-papier px-6 text-sm font-semibold text-encre transition-colors hover:bg-blanc-casse"
+                className={`group inline-flex h-12 items-center gap-2 rounded-lg bg-papier px-6 text-sm font-semibold text-encre transition-colors hover:bg-blanc-casse ${FOCUS_SOMBRE}`}
               >
                 Créer mon premier dossier
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </Link>
               <a
                 href="#contact"
-                className="inline-flex h-12 items-center gap-2 rounded-lg border border-papier/30 px-6 text-sm font-medium text-papier transition-colors hover:bg-papier/10"
+                className={`inline-flex h-12 items-center gap-2 rounded-lg border border-papier/30 px-6 text-sm font-medium text-papier transition-colors hover:bg-papier/10 ${FOCUS_SOMBRE}`}
               >
                 Être recontacté
               </a>
@@ -653,29 +752,37 @@ function Contact() {
 }
 
 /* ------------------------------------------------------------------- Faq */
+/**
+ * Source unique de la FAQ : elle alimente à la fois le rendu et le balisage
+ * JSON-LD (`FAQPage`). Google peut afficher ces questions directement dans ses
+ * résultats — encore faut-il que le texte affiché et le texte balisé soient le
+ * même, sous peine de balisage trompeur.
+ */
+const FAQ_ITEMS = [
+  {
+    q: "Dossimo dépose-t-il le dossier à ma place ?",
+    a: "Non, jamais. Le dépôt est réservé aux mandataires habilités par l'Anah. Dossimo produit le pack complet et vérifié ; vous et votre client déposez vous-mêmes et conservez la prime.",
+  },
+  {
+    q: "En quoi est-ce différent d'un mandataire ?",
+    a: "Un mandataire prend la main sur votre dossier et capte tout ou partie de la prime. Dossimo ne s'intercale jamais : il sécurise seulement la conformité avant dépôt. Vous restez maître de votre client et de votre prime.",
+  },
+  {
+    q: "Quels dispositifs sont couverts ?",
+    a: "MaPrimeRénov' et les CEE (Certificats d'Économies d'Énergie), avec leurs fiches BAR et leurs mentions obligatoires.",
+  },
+  {
+    q: "Comment Dossimo évite-t-il les refus ?",
+    a: "Toutes les pièces sont générées depuis une saisie unique : l'incohérence entre elles devient impossible, et un moteur de contrôle vérifie chronologie, RGE, éligibilité, performance et cohérence des montants avant le dépôt.",
+  },
+  {
+    q: "Est-ce que c'est légal ?",
+    a: "Oui. Dossimo est un service indépendant d'aide à la préparation de dossier, non affilié à l'Anah ni à France Rénov'. Il n'effectue aucune démarche à votre place.",
+  },
+] as const;
+
 function Faq() {
-  const items = [
-    {
-      q: "Dossimo dépose-t-il le dossier à ma place ?",
-      a: "Non, jamais. Le dépôt est réservé aux mandataires habilités par l'Anah. Dossimo produit le pack complet et vérifié ; vous et votre client déposez vous-mêmes et conservez la prime.",
-    },
-    {
-      q: "En quoi est-ce différent d'un mandataire ?",
-      a: "Un mandataire prend la main sur votre dossier et capte tout ou partie de la prime. Dossimo ne s'intercale jamais : il sécurise seulement la conformité avant dépôt. Vous restez maître de votre client et de votre prime.",
-    },
-    {
-      q: "Quels dispositifs sont couverts ?",
-      a: "MaPrimeRénov' et les CEE (Certificats d'Économies d'Énergie), avec leurs fiches BAR et leurs mentions obligatoires.",
-    },
-    {
-      q: "Comment Dossimo évite-t-il les refus ?",
-      a: "Toutes les pièces sont générées depuis une saisie unique : l'incohérence entre elles devient impossible, et un moteur de contrôle vérifie chronologie, RGE, éligibilité, performance et cohérence des montants avant le dépôt.",
-    },
-    {
-      q: "Est-ce que c'est légal ?",
-      a: "Oui. Dossimo est un service indépendant d'aide à la préparation de dossier, non affilié à l'Anah ni à France Rénov'. Il n'effectue aucune démarche à votre place.",
-    },
-  ];
+  const items = FAQ_ITEMS;
   return (
     <section id="faq" className="py-20 sm:py-24">
       <div className="mx-auto max-w-[760px] px-8">
