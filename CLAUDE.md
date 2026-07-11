@@ -7,14 +7,14 @@
 
 ## 1. Le projet en une phrase
 
-Dossimo est un outil web qui aide les **artisans RGE indépendants d'Île-de-France**
+Dossimo est un outil web qui aide les **artisans RGE indépendants**
 à produire des dossiers **MaPrimeRénov'** et **CEE** conformes et anti-refus, sans
 passer par un mandataire, en gardant la main sur leur client et leur prime.
 
 ## 2. Positionnement — à ne jamais perdre de vue
 
 - Dossimo **ne dépose jamais** le dossier et **ne touche jamais** la prime. Le dépôt
-  sur `maprimerenov.gouv.fr` est réservé aux mandataires habilités par l'Anah — un
+  sur `maprimerenov.gouv.fr` est réservé aux mandataires habilités par l'Anah, un
   rôle que Dossimo refuse d'endosser **par choix stratégique**.
 - Dossimo produit le **pack documentaire complet et vérifié**, que l'artisan et son
   client déposent eux-mêmes.
@@ -23,7 +23,8 @@ passer par un mandataire, en gardant la main sur leur client et leur prime.
   Dossimo sécurise juste la conformité avant dépôt.
 - **Conséquence juridique** : Dossimo est un service indépendant d'aide à la
   préparation de dossier, **non affilié à l'Anah ni à France Rénov'**. Cette mention
-  doit figurer partout où c'est pertinent.
+  doit figurer partout où c'est pertinent : landing, espace artisan, chaque PDF
+  généré (récap, checklist, rapport), e-mails transactionnels.
 
 ## 3. Dispositifs couverts
 
@@ -44,17 +45,20 @@ Le cœur de valeur n'est pas le remplissage mais la **cohérence garantie** et l
 unique, l'incohérence entre devis et facture (un des premiers motifs de refus)
 devient **structurellement impossible**.
 
-## 5. Architecture technique cible
+## 5. Architecture technique — décisions actées
 
 | Domaine | Choix |
 |---|---|
-| Front + espace artisan | Next.js sur Vercel |
+| Front + espace artisan | Next.js (TypeScript) sur Vercel |
 | Base de données + stockage | Supabase (PostgreSQL + Storage) |
 | Paiement | Stripe |
 | Emailing | Resend |
-| Remplissage PDF Cerfa à champs | `pdf-lib` (Node), ou `pypdf` si service Python séparé |
-| Génération depuis template | React-PDF, ou HTML → PDF via Puppeteer |
-| Moteur de règles | Code déterministe (règles dures) + LLM via API Anthropic (règles souples, rédaction des points de vigilance) |
+| Génération PDF depuis template | **React-PDF** (en production : récap, checklist, rapport) |
+| Remplissage PDF Cerfa à champs | **`pdf-lib`** (Node), à implémenter à l'étape 2 du §9 |
+| Moteur de règles | Code déterministe (règles dures) + LLM via API Openrouter (règles souples, rédaction des points de vigilance) |
+
+> Décision : pas de service Python séparé (`pypdf` écarté), pas de Puppeteer.
+> Tout reste dans le runtime Node/Next.js tant qu'aucun besoin ne l'impose.
 
 ## 6. Pipeline en cinq étages
 
@@ -83,6 +87,8 @@ de formulaire Cerfa en vigueur.
 **`paiements`** — `id`, `dossier_id` ou `artisan_id`, `stripe_id`, `montant`,
 `statut`, `type` (`abonnement` | `ponctuel`), `created_at`.
 
+**`leads`** — capture du formulaire landing (migration 0001).
+
 ## 8. Point technique critique — versionnement des Cerfa
 
 Les formulaires Cerfa changent de version par arrêté (numéro à cinq chiffres +
@@ -90,37 +96,88 @@ indice de version). Chaque **modèle maître doit être versionné et surveillé
 Dossimo génère un dossier sur un vieux modèle et **fabrique lui-même le motif de
 refus** qu'il prétend éviter. La table `regles_metier` pilote la version en vigueur.
 
+**Processus de surveillance** : vérification mensuelle (1er du mois) des versions
+en vigueur sur `service-public.fr` et les fiches CEE de l'ATEE ; en cas de nouvelle
+version, mettre à jour `version_formulaire` dans `regles_metier`, archiver l'ancien
+modèle maître dans `templates/cerfa/archive/`, et consigner le changement dans
+`CHANGELOG-cerfa.md`. Aucune génération ne doit pointer un modèle absent de la
+table active.
+
 ## 9. Ordre de construction — du plus utile au plus ambitieux
 
-1. **Un seul couple dispositif + type de travaux : CEE isolation.** Génération depuis
-   template (récap client + checklist) + règles dures de contrôle. C'est ce qui crée
-   de la valeur le plus vite, sans dépendre d'un Cerfa officiel.
+1. ~~Un seul couple dispositif + type de travaux : CEE isolation~~ ✅ fait.
 2. Ajouter le **remplissage des Cerfa officiels** du même dispositif, avec le
-   versionnement.
+   versionnement (§8). ← **étape en cours**
 3. **Brancher le LLM** pour les règles souples et les points de vigilance rédigés.
-4. **Étendre** aux autres dispositifs et types de travaux — en enrichissant la
+4. **Étendre** aux autres dispositifs et types de travaux, en enrichissant la
    **table de règles, pas le code**.
 
-En parallèle : la landing page existe déjà en HTML statique (vitrine + capteur de
-leads) ; son formulaire devra être branché sur **Supabase + Resend**.
+## 10. Modèle économique
 
-## 10. Décisions ouvertes — à ne pas coder en dur
-
-- **Pricing non figé**, fixé après test de prix terrain. Ne pas coder de grille
-  rigide, garder une structure souple. Hypothèse provisoire : **premier dossier
-  gratuit** (produit d'appel), puis **prix unique ~149 € / dossier** ; abonnement
-  décidé plus tard, une fois connu le coût de production réel d'un dossier.
+- **Grille en vigueur : trois paliers, 49 € / 149 € / 249 € par dossier.**
+  Le détail de ce que couvre chaque palier vit dans Stripe et sur la landing,
+  **jamais en dur dans le code** : garder la structure de pricing souple
+  (table ou config), la grille peut encore bouger après retours terrain.
+- Abonnement : décision reportée, à trancher une fois connu le coût de production
+  réel d'un dossier.
+- Système de **parrainage artisan** actif, à prendre en compte dans le tunnel
+  de paiement.
 - **Le nom « Dossimo »** doit être validé par recherche d'antériorité INPI +
-  vérification du domaine `dossimo.fr` avant tout dépôt de marque.
+  vérification du domaine avant tout dépôt de marque. Domaine principal :
+  `dossimo.app`, redirection 301 `dossimo.pro` → `dossimo.app`.
 
-## 11. Premières tâches
+## 11. Conventions du repo
 
-- [x] Initialiser un projet Next.js + TypeScript, le connecter à Supabase.
-- [x] Créer le schéma de base de données (modèle §7) → `supabase/migrations/0001_initial_schema.sql`.
-- [x] Construire le formulaire de saisie unique pour le couple **CEE isolation** → `/dossiers/nouveau`.
-- [x] Implémenter la génération depuis template (récap client + checklist) → PDF React-PDF : `/dossiers/[id]/recap.pdf` & `/checklist.pdf`.
-- [x] Implémenter les premières règles dures de contrôle : chronologie,
-      qualification RGE, mentions obligatoires CEE → `src/lib/rules/`, rapport `/dossiers/[id]/rapport.pdf`.
-- [x] Brancher le formulaire de la landing sur Supabase + Resend (capture de leads)
-      → table `leads` (migration 0001), Server Action `src/lib/landing/actions.ts`
-      (insert service-role + e-mails Resend best-effort), formulaire `src/components/landing/lead-form.tsx`.
+**Commandes**
+
+```bash
+npm run dev          # serveur de dev Next.js
+npm run build        # build de production
+npm run lint         # ESLint
+npm run test         # tests (Vitest)          ← à compléter si différent
+npx supabase db push # appliquer les migrations locales
+npx supabase migration new <nom>  # nouvelle migration
+```
+
+**Structure des dossiers clés**
+
+```
+src/lib/rules/        # règles dures du moteur de contrôle
+src/lib/landing/      # Server Actions de la landing (leads, Resend)
+src/components/landing/  # composants de la vitrine
+supabase/migrations/  # schéma versionné, jamais de modif directe en prod
+templates/cerfa/      # modèles maîtres Cerfa versionnés (+ archive/)
+```
+
+**Règles de travail**
+
+- Code et identifiants en anglais, contenu utilisateur (PDF, e-mails, UI) en français.
+- Toute nouvelle règle métier passe par `regles_metier` ou `src/lib/rules/`,
+  jamais dispersée dans les composants.
+- Chaque règle dure a un test avec un cas conforme et un cas de refus.
+- Migrations Supabase uniquement additives une fois en prod (pas de `DROP` sans plan).
+
+## 12. Environnement et secrets
+
+- Variables dans `.env.local` (jamais committé), modèle dans `.env.example` :
+  - `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+  - `SUPABASE_SERVICE_ROLE_KEY` (Server Actions uniquement, jamais côté client)
+  - `RESEND_API_KEY`
+  - `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` (mode **test** en local et preview)
+  - `ANTHROPIC_API_KEY` (étape 3 du §9)
+- Les clés service-role et Stripe live ne vivent que dans les variables Vercel
+  (production). Aucun secret dans le code, les migrations ou les PDF de test.
+
+## 13. Prochaines tâches
+
+- [ ] Implémenter le remplissage des Cerfa officiels CEE isolation avec `pdf-lib`,
+      piloté par `version_formulaire` de `regles_metier`.
+- [ ] Mettre en place le processus de surveillance Cerfa (§8) et créer
+      `CHANGELOG-cerfa.md`.
+- [ ] Ajouter l'assemblage du pack complet avec vérification de cohérence croisée
+      (étage 4 du pipeline).
+- [ ] Brancher l'API Anthropic pour les règles souples et la rédaction des points
+      de vigilance.
+- [ ] Intégrer la grille 49/149/249 € dans Stripe + tunnel de paiement, structure
+      de pricing en config.
+- [ ] Prendre en compte le parrainage dans le tunnel (code parrain à la souscription).
