@@ -51,6 +51,19 @@ function dossier(over: {
   } as unknown as DossierComplet;
 }
 
+/**
+ * Caractéristiques communes SANS le bloc `travaux`. `createDossierCeeIsolation`
+ * construit `travaux` OU `pac`/`cet`/`bois`, jamais les deux : les fixtures des
+ * gestes non-isolation doivent refléter cette forme, sinon elles masquent tout
+ * lecteur qui suppose `travaux` présent.
+ */
+function baseSansTravaux() {
+  const base = dossier();
+  const carac = { ...base.caracteristiques } as Record<string, unknown>;
+  delete carac.travaux;
+  return { base, carac };
+}
+
 const codes = (d: DossierComplet) =>
   controlerDossier(d, AUJ).findings.map((f) => `${f.code}:${f.severite}`);
 
@@ -141,11 +154,11 @@ function reglePac(over: Partial<RegleMetierResolue["condition"]> = {}): RegleMet
 
 /** Dossier PAC air/eau de référence (conforme), surchargeable. */
 function dossierPac(over: { pac?: Record<string, unknown>; regle?: RegleMetierResolue | null } = {}): DossierComplet {
-  const base = dossier();
+  const { base, carac } = baseSansTravaux();
   return {
     ...base,
     caracteristiques: {
-      ...base.caracteristiques,
+      ...carac,
       geste: "pac_air_eau",
       fiche: "BAR-TH-171",
       pac: {
@@ -222,11 +235,11 @@ function regleCet(over: Partial<RegleMetierResolue["condition"]> = {}): RegleMet
 }
 
 function dossierCet(over: { cet?: Record<string, unknown>; regle?: RegleMetierResolue | null } = {}): DossierComplet {
-  const base = dossier();
+  const { base, carac } = baseSansTravaux();
   return {
     ...base,
     caracteristiques: {
-      ...base.caracteristiques,
+      ...carac,
       geste: "cet",
       fiche: "BAR-TH-148",
       cet: {
@@ -287,11 +300,11 @@ function regleBois(over: Partial<RegleMetierResolue["condition"]> = {}): RegleMe
 }
 
 function dossierBois(over: { bois?: Record<string, unknown>; regle?: RegleMetierResolue | null } = {}): DossierComplet {
-  const base = dossier();
+  const { base, carac } = baseSansTravaux();
   return {
     ...base,
     caracteristiques: {
-      ...base.caracteristiques,
+      ...carac,
       geste: "bois",
       fiche: "BAR-TH-112",
       bois: {
