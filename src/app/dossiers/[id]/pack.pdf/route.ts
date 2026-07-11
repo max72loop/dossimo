@@ -1,6 +1,6 @@
 import { getDossier } from "@/lib/dossier/get-dossier";
+import { rapportComplet } from "@/lib/dossier/rapport";
 import {
-  controlePack,
   mergePdfs,
   packSlug,
   renderChecklistPdf,
@@ -34,7 +34,9 @@ export async function GET(
   if (verrou) return verrou;
 
   const stored = storedVigilance(data);
-  const rapport = controlePack(data);
+  // Saisie + pièces réelles : la page de garde et le rapport du pack portent le
+  // même verdict que l'écran, écarts et mentions manquantes compris.
+  const { rapport } = await rapportComplet(data);
 
   // Le formulaire officiel peut ne pas être résolu (aucun modèle en vigueur) :
   // le pack reste produit sans lui, plutôt que d'échouer.
@@ -47,7 +49,7 @@ export async function GET(
       hasVigilance: !!stored && stored.points.length > 0,
     }),
     renderRecapPdf(data),
-    renderControlePdf(data, stored?.points),
+    renderControlePdf(data, stored?.points, rapport),
     renderChecklistPdf(data),
   ]);
 

@@ -31,15 +31,20 @@ export function renderChecklistPdf(data: DossierComplet): Promise<Buffer> {
   return renderToBuffer(createElement(ChecklistDocument, { data }) as unknown as DocElement);
 }
 
+/**
+ * Rapport de contrôle. `rapport` doit venir de `rapportComplet()` (saisie + pièces
+ * réelles) : sans lui, on retombe sur le contrôle de la seule saisie, qui ignore les
+ * écarts et les mentions manquantes relevés sur le devis et la facture.
+ */
 export function renderControlePdf(
   data: DossierComplet,
   vigilance?: PointVigilance[],
+  rapport?: RapportControle,
 ): Promise<Buffer> {
-  const rapport = controlerDossier(data);
   return renderToBuffer(
     createElement(ControleDocument, {
       data,
-      rapport,
+      rapport: rapport ?? controlerDossier(data),
       vigilance,
     }) as unknown as DocElement,
   );
@@ -64,11 +69,6 @@ export function renderPackCoverPdf(
   return renderToBuffer(
     createElement(PackCoverDocument, { data, ...opts }) as unknown as DocElement,
   );
-}
-
-/** Rapport déterministe seul (pour la page de garde, sans re-rendre le PDF). */
-export function controlePack(data: DossierComplet): RapportControle {
-  return controlerDossier(data);
 }
 
 /**
