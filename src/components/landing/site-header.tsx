@@ -8,6 +8,7 @@ const NAV = [
   { href: "#probleme", label: "Le problème" },
   { href: "#difference", label: "Vs mandataire" },
   { href: "#etapes", label: "Méthode" },
+  { href: "#relecture", label: "Relecture" },
   { href: "#faq", label: "FAQ" },
 ];
 

@@ -9,6 +9,7 @@ import {
   FolderCheck,
   Lock,
   RefreshCw,
+  ScanSearch,
   ShieldCheck,
   Stamp,
   XCircle,
@@ -46,6 +47,7 @@ export default async function Home() {
         <Difference />
         <PourQui />
         <Etapes />
+        <Relecture />
         <Features />
         <CasConcrets />
         <Pricing grille={grille} />
@@ -88,8 +90,10 @@ function Hero() {
           </h1>
 
           <p className="mt-6 max-w-xl text-lg leading-relaxed text-ardoise">
-            Dossimo prépare et vérifie vos dossiers MaPrimeRénov&rsquo; et CEE,
-            conformes et anti-refus. Sans mandataire :{" "}
+            Dossimo prépare vos dossiers MaPrimeRénov&rsquo; et CEE,{" "}
+            <span className="text-encre">relit vos devis et vos factures</span>, et
+            signale ce qui ferait refuser le dossier — avant le dépôt. Sans
+            mandataire :{" "}
             <span className="text-encre">
               vous gardez votre client et l&rsquo;intégralité de votre prime.
             </span>
@@ -499,6 +503,11 @@ function Etapes() {
       body: "Dossimo vérifie la chronologie, la qualification RGE, l'éligibilité, la performance et la cohérence des montants.",
     },
     {
+      icon: ScanSearch,
+      title: "Vos pièces relues",
+      body: "Vous déposez le devis et la facture : Dossimo les relit et signale les mentions manquantes et les écarts.",
+    },
+    {
       icon: FolderCheck,
       title: "Pack prêt à déposer",
       body: "Récapitulatif client, checklist des pièces et rapport de contrôle. Vous et votre client déposez, sereins.",
@@ -510,15 +519,16 @@ function Etapes() {
         <div className="max-w-2xl">
           <SectionLabel>La méthode</SectionLabel>
           <h2 className="mt-5 font-serif text-3xl font-semibold tracking-tight text-encre sm:text-[2.25rem] sm:leading-tight">
-            De la saisie au dépôt, en trois temps
+            De la saisie au dépôt, en quatre temps
           </h2>
           <p className="mt-4 text-lg leading-relaxed text-ardoise">
             Comme toutes les pièces viennent de la même saisie,
             l&rsquo;incohérence entre elles devient structurellement impossible.
+            Restent vos documents réels — Dossimo les relit aussi.
           </p>
         </div>
 
-        <div className="mt-12 grid gap-8 md:grid-cols-3">
+        <div className="mt-12 grid gap-8 sm:grid-cols-2 md:grid-cols-4">
           {steps.map((s, i) => (
             <div key={s.title} className="border-t border-encre pt-5">
               <div className="flex items-center justify-between">
@@ -541,11 +551,142 @@ function Etapes() {
   );
 }
 
+/* ------------------------------------------------------------- Relecture */
+/**
+ * La relecture des pièces réelles : le seul contrôle que l'artisan ne peut pas
+ * faire seul, et ce qui distingue Dossimo d'un simple générateur de documents.
+ *
+ * Le texte décrit la MÉCANIQUE (Dossimo relit, compare, signale ; l'artisan tranche)
+ * sans promettre de taux de détection : aucun chiffre de performance n'est avancé,
+ * faute d'en avoir un qui soit mesuré.
+ */
+function Relecture() {
+  return (
+    <section id="relecture" className="border-y border-filigrane bg-papier-fonce/60 py-20 sm:py-24">
+      <div className="mx-auto grid max-w-[1280px] items-center gap-14 px-8 lg:grid-cols-[1fr_0.9fr]">
+        <div>
+          <SectionLabel>La relecture</SectionLabel>
+          <h2 className="mt-5 font-serif text-3xl font-semibold tracking-tight text-encre sm:text-[2.25rem] sm:leading-tight">
+            Envoyez votre devis.{" "}
+            <span className="text-tampon">Dossimo le relit.</span>
+          </h2>
+          <p className="mt-5 text-lg leading-relaxed text-ardoise">
+            Un dossier peut être refusé alors que tous les chiffres sont justes :
+            il suffit qu&rsquo;une <span className="text-encre">mention obligatoire</span>{" "}
+            manque au devis — la certification de l&rsquo;isolant, la résistance
+            thermique, le numéro RGE. C&rsquo;est la vérification que personne ne
+            fait, parce qu&rsquo;elle demande de relire chaque document ligne à ligne.
+          </p>
+          <p className="mt-4 text-lg leading-relaxed text-ardoise">
+            Déposez le devis et la facture : Dossimo les relit, les compare à votre
+            dossier <span className="text-encre">et entre eux</span>, et signale ce
+            qui manque ou diverge. Il ne corrige rien tout seul :{" "}
+            <span className="text-encre">vous restez juge</span>.
+          </p>
+
+          <ul className="mt-8 space-y-3">
+            {[
+              "Les mentions exigées par la fiche, cherchées une par une dans le document.",
+              "Surface, résistance, montants, dates : la pièce confrontée à votre saisie.",
+              "Le devis confronté à la facture — la première cause de refus à l'instruction.",
+            ].map((p) => (
+              <li key={p} className="flex items-start gap-3 text-[0.95rem] leading-relaxed text-encre">
+                <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-succes" strokeWidth={1.5} />
+                {p}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <RelectureCard />
+      </div>
+    </section>
+  );
+}
+
+/* Reproduction de ce que le produit affiche réellement après lecture d'un devis. */
+function RelectureCard() {
+  const lignes = [
+    { statut: "ok", texte: "Fiche CEE : BAR-EN-101" },
+    { statut: "ok", texte: "Surface isolée : 95 m²" },
+    { statut: "ok", texte: "Marque et référence de l'isolant posé" },
+    {
+      statut: "ecart",
+      texte: "Résistance thermique R = 7,5 m²·K/W",
+      releve: "R = 6,5 m²·K/W",
+    },
+    {
+      statut: "absent",
+      texte: "Certification de l'isolant (ACERMI ou équivalent)",
+    },
+  ] as const;
+
+  return (
+    <div>
+      <div className="rounded border border-filigrane bg-blanc-casse p-5 shadow-md">
+        <div className="flex items-center justify-between border-b border-filigrane pb-3">
+          <div>
+            <p className="font-serif text-base font-semibold text-encre">
+              Mentions obligatoires
+            </p>
+            <p className="mt-0.5 font-mono text-xs text-ardoise">
+              devis-combles.pdf
+            </p>
+          </div>
+          <StatusBadge tone="erreur">2 à corriger</StatusBadge>
+        </div>
+
+        <ul className="mt-4 space-y-2">
+          {lignes.map((l) => (
+            <li
+              key={l.texte}
+              className={`rounded-sm px-2.5 py-2 text-[0.813rem] leading-snug ${
+                l.statut === "ok"
+                  ? "bg-papier/70"
+                  : l.statut === "ecart"
+                    ? "bg-erreur-bg/70"
+                    : "bg-erreur-bg/70"
+              }`}
+            >
+              <div className="flex items-start gap-2">
+                {l.statut === "ok" ? (
+                  <CheckCircle2 className="mt-px h-4 w-4 shrink-0 text-succes" strokeWidth={1.5} />
+                ) : (
+                  <XCircle className="mt-px h-4 w-4 shrink-0 text-erreur" strokeWidth={1.5} />
+                )}
+                <div className="min-w-0">
+                  <span className="text-encre">{l.texte}</span>
+                  {l.statut === "absent" && (
+                    <span className="ml-1.5 font-medium text-erreur">
+                      — absente du document
+                    </span>
+                  )}
+                  {l.statut === "ecart" && (
+                    <p className="mt-0.5 font-mono text-[11px] text-ardoise">
+                      Relevé : «&nbsp;{l.releve}&nbsp;»
+                    </p>
+                  )}
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <p className="mt-3 text-xs leading-relaxed text-ardoise">
+        Exemple d&rsquo;affichage du contrôle. Dossimo cite ce qui est écrit sur le
+        document et vous laisse trancher.
+      </p>
+    </div>
+  );
+}
+
 /* -------------------------------------------------------------- Features */
 function Features() {
   const feats = [
     { icon: RefreshCw, title: "Cohérence garantie", body: "Une saisie unique alimente toutes les pièces : plus d'écart entre devis et facture." },
     { icon: ShieldCheck, title: "Contrôle anti-refus", body: "Chronologie, RGE, seuils de performance, montants : les motifs de refus détectés avant dépôt." },
+    { icon: ScanSearch, title: "Pièces relues", body: "Devis et facture relus, comparés à votre dossier et entre eux : mentions manquantes et écarts signalés." },
     { icon: FolderCheck, title: "Pack complet", body: "Récapitulatif, checklist des pièces et rapport de contrôle, prêts à télécharger." },
     { icon: FileText, title: "MaPrimeRénov' + CEE", body: "Les deux dispositifs, dont les fiches BAR et leurs mentions obligatoires." },
     { icon: Lock, title: "Vous gardez la prime", body: "Dossimo ne s'intercale jamais : la prime revient à votre client, la relation reste la vôtre." },
@@ -774,6 +915,10 @@ const FAQ_ITEMS = [
   {
     q: "Comment Dossimo évite-t-il les refus ?",
     a: "Toutes les pièces sont générées depuis une saisie unique : l'incohérence entre elles devient impossible, et un moteur de contrôle vérifie chronologie, RGE, éligibilité, performance et cohérence des montants avant le dépôt.",
+  },
+  {
+    q: "Que fait Dossimo de mon devis et de ma facture ?",
+    a: "Il les relit. Dossimo y cherche une par une les mentions obligatoires exigées par la fiche, compare les valeurs relevées à votre dossier, et confronte le devis à la facture. Ce qui manque ou diverge vous est signalé, avec le passage du document concerné. Dossimo ne modifie jamais vos documents : il constate, vous tranchez.",
   },
   {
     q: "Est-ce que c'est légal ?",
