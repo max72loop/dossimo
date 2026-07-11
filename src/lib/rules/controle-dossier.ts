@@ -432,13 +432,26 @@ export function controlerDossier(
       });
     }
   } else {
-    if (c.travaux.resistance_thermique_r < rMin) {
+    // Isolation. Le bloc `travaux` est le bloc technique de cette famille ; son
+    // absence signale une donnée incohérente (geste isolation sans ses
+    // caractéristiques), signalée comme les autres blocs techniques absents.
+    const t = c.travaux;
+    if (!t) {
+      add({
+        code: "technique_resistance",
+        categorie: "technique",
+        severite: "avertissement",
+        titre: "Caractéristiques techniques de l'isolation manquantes",
+        detail:
+          "Surface, résistance thermique R et isolant ne sont pas renseignés : la conformité technique n'a pas pu être contrôlée.",
+      });
+    } else if (t.resistance_thermique_r < rMin) {
       add({
         code: "technique_resistance",
         categorie: "technique",
         severite: "bloquant",
         titre: "Résistance thermique R insuffisante",
-        detail: `R = ${c.travaux.resistance_thermique_r} m²·K/W, en dessous du minimum de ${rMin} attendu pour ce poste (${TYPES_ISOLATION[c.travaux.type_isolation].label}).`,
+        detail: `R = ${t.resistance_thermique_r} m²·K/W, en dessous du minimum de ${rMin} attendu pour ce poste (${TYPES_ISOLATION[t.type_isolation].label}).`,
       });
     } else {
       add({
@@ -446,11 +459,11 @@ export function controlerDossier(
         categorie: "technique",
         severite: "ok",
         titre: "Résistance thermique R conforme",
-        detail: `R = ${c.travaux.resistance_thermique_r} >= ${rMin} m²·K/W.`,
+        detail: `R = ${t.resistance_thermique_r} >= ${rMin} m²·K/W.`,
       });
     }
 
-    if (!c.travaux.isolant_marque || !c.travaux.isolant_reference) {
+    if (t && (!t.isolant_marque || !t.isolant_reference)) {
       add({
         code: "technique_produit",
         categorie: "pieces",

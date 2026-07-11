@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 import { LegalDoc, LegalSection } from "@/components/legal/legal-doc";
 import { editeur, derniereMajLegale } from "@/lib/legal/editeur";
-import { fourchettePrix } from "@/lib/stripe/pricing";
+import { grillePublique } from "@/lib/landing/grille-publique";
 
 export const metadata: Metadata = {
   title: "Conditions générales de vente · Dossimo",
@@ -10,8 +10,12 @@ export const metadata: Metadata = {
     "Conditions générales de vente du service de préparation de dossiers Dossimo.",
 };
 
-export default function CgvPage() {
-  const { minLabel, maxLabel } = fourchettePrix();
+export default async function CgvPage() {
+  // Grille lue en base — la même que celle du checkout. Un montant écrit ici ENGAGE
+  // contractuellement : il ne peut pas venir d'une constante qui a divergé du prix
+  // réellement facturé. Si la grille est illisible, on renvoie au tarif affiché
+  // avant paiement plutôt que d'avancer une fourchette.
+  const grille = await grillePublique();
 
   return (
     <LegalDoc
@@ -44,12 +48,24 @@ export default function CgvPage() {
       <LegalSection titre="3. Prix">
         <p>
           Le premier dossier est offert. Les dossiers suivants sont facturés à un{" "}
-          <strong>forfait fixe par dossier</strong>, compris entre {minLabel} et{" "}
-          {maxLabel} selon la taille du dossier (estimée à partir de la prime).
-          Le tarif applicable est affiché avant tout paiement. Il s&rsquo;agit
-          d&rsquo;un forfait fixe et <strong>jamais d&rsquo;un pourcentage</strong>{" "}
-          de la prime, qui revient intégralement au Client et à son bénéficiaire.
+          <strong>forfait fixe par dossier</strong>
+          {grille ? (
+            <>
+              , compris entre {grille.minLabel} et {grille.maxLabel}
+            </>
+          ) : null}
+          , déterminé par paliers selon le montant de l&rsquo;aide estimée du
+          dossier. Le tarif applicable est affiché avant tout paiement et fait foi.
+          Il s&rsquo;agit d&rsquo;un forfait fixe et{" "}
+          <strong>jamais d&rsquo;un pourcentage</strong> de la prime, qui revient
+          intégralement au Client et à son bénéficiaire.
         </p>
+        {grille && grille.paliers.length > 1 && (
+          <p>
+            Paliers en vigueur à la date de mise à jour des présentes conditions
+            : {grille.paliers.join(", ")}.
+          </p>
+        )}
         <p>
           Les prix sont indiqués en euros. Le régime de TVA applicable est précisé
           sur la facture émise après paiement.

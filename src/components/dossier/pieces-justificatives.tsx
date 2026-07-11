@@ -7,6 +7,7 @@ import { BTN_SECONDAIRE } from "@/components/ui/boutons";
 import { uploadPiece, deletePiece } from "@/lib/piece/actions";
 import type { PieceAvecEcarts } from "@/lib/piece/get";
 import type { Comparaison } from "@/lib/piece/compare";
+import type { MentionVerifiee } from "@/lib/piece/mentions";
 import type { TypePiece } from "@/lib/database.types";
 
 const TYPE_LABEL: Record<TypePiece, string> = {
@@ -57,6 +58,78 @@ function EcartsTable({ comps }: { comps: Comparaison[] }) {
   );
 }
 
+/** Confiance de lecture en dessous de laquelle une mention « absente » reste un doute. */
+const CONFIANCE_MIN = 0.6;
+
+/**
+ * Mentions obligatoires relevées sur le document. C'est le contrôle que l'artisan
+ * ne sait pas faire seul : une mention manquante fait refuser un dossier dont tous
+ * les chiffres sont justes. On cite le verbatim du document plutôt que d'affirmer.
+ */
+function MentionsTable({ mentions }: { mentions: MentionVerifiee[] }) {
+  return (
+    <div className="mt-3 space-y-1.5">
+      {mentions.map((m, i) => {
+        const douteuse = m.statut === "absente" && m.confiance < CONFIANCE_MIN;
+        return (
+          <div
+            key={i}
+            className={`rounded px-2.5 py-1.5 text-xs ${
+              m.statut === "presente"
+                ? "bg-papier/60"
+                : douteuse
+                  ? "bg-avertissement-bg/60"
+                  : "bg-erreur-bg/60"
+            }`}
+          >
+            <div className="flex items-start gap-2">
+              <span className="shrink-0 pt-px">
+                {m.statut === "presente" && <span className="text-succes">✓</span>}
+                {m.statut === "divergente" && (
+                  <span className="font-semibold text-erreur">≠</span>
+                )}
+                {m.statut === "absente" && (
+                  <span
+                    className={
+                      douteuse
+                        ? "font-semibold text-avertissement"
+                        : "font-semibold text-erreur"
+                    }
+                  >
+                    ✗
+                  </span>
+                )}
+              </span>
+              <div className="min-w-0">
+                <span className="text-encre">{m.mention}</span>
+                {m.statut === "absente" && (
+                  <span
+                    className={`ml-1.5 font-medium ${douteuse ? "text-avertissement" : "text-erreur"}`}
+                  >
+                    {douteuse
+                      ? "— non lisible sur ce document"
+                      : "— absente du document"}
+                  </span>
+                )}
+                {m.statut === "divergente" && (
+                  <span className="ml-1.5 font-medium text-erreur">
+                    — le document porte autre chose
+                  </span>
+                )}
+                {m.verbatim && m.statut !== "presente" && (
+                  <p className="mt-0.5 font-mono text-[11px] text-ardoise">
+                    Relevé : « {m.verbatim} »
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function PieceCard({
   dossierId,
   item,
@@ -67,9 +140,17 @@ function PieceCard({
   onChanged: () => void;
 }) {
   const [busy, setBusy] = useState(false);
-  const { piece, comparaisons } = item;
+  const { piece, comparaisons, mentions } = item;
   const ecarts = comparaisons.filter((c) => c.statut === "ecart").length;
   const echec = piece.extraction_statut !== "ok";
+
+  // Mentions manquantes ou contredites, à confiance de lecture suffisante : ce
+  // sont des motifs de refus, pas des suggestions.
+  const mentionsKo = (mentions ?? []).filter(
+    (m) =>
+      m.statut === "divergente" ||
+      (m.statut === "absente" && m.confiance >= CONFIANCE_MIN),
+  ).length;
 
   async function remove() {
     setBusy(true);
@@ -88,13 +169,28 @@ function PieceCard({
             <span className="truncate text-sm text-encre">{piece.nom_fichier}</span>
           </div>
           {!echec && (
-            <p className="mt-1 text-xs">
+            <p className="mt-1 flex flex-wrap gap-x-2 text-xs">
               {ecarts > 0 ? (
                 <span className="font-medium text-erreur">
                   {ecarts} écart{ecarts > 1 ? "s" : ""} avec la saisie
                 </span>
               ) : (
                 <span className="text-succes">Cohérent avec la saisie ✓</span>
+              )}
+              {mentions !== null && (
+                <>
+                  <span className="text-filigrane">·</span>
+                  {mentionsKo > 0 ? (
+                    <span className="font-medium text-erreur">
+                      {mentionsKo} mention{mentionsKo > 1 ? "s" : ""} obligatoire
+                      {mentionsKo > 1 ? "s" : ""} en défaut
+                    </span>
+                  ) : (
+                    <span className="text-succes">
+                      {mentions.length} mentions obligatoires présentes ✓
+                    </span>
+                  )}
+                </>
               )}
             </p>
           )}
@@ -113,6 +209,14 @@ function PieceCard({
         </button>
       </div>
       {!echec && comparaisons.length > 0 && <EcartsTable comps={comparaisons} />}
+      {!echec && mentions !== null && mentions.length > 0 && (
+        <>
+          <p className="mt-4 text-[11px] font-medium uppercase tracking-wide text-encre-claire">
+            Mentions obligatoires relevées sur le document
+          </p>
+          <MentionsTable mentions={mentions} />
+        </>
+      )}
     </div>
   );
 }

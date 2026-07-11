@@ -1,11 +1,14 @@
 import Link from "next/link";
 
 import { getCurrentUser } from "@/lib/auth/get-artisan";
+import { MobileMenu } from "@/components/landing/mobile-menu";
+import { FOCUS } from "@/components/ui/boutons";
 
 const NAV = [
   { href: "#probleme", label: "Le problème" },
   { href: "#difference", label: "Vs mandataire" },
   { href: "#etapes", label: "Méthode" },
+  { href: "#relecture", label: "Relecture" },
   { href: "#faq", label: "FAQ" },
 ];
 
@@ -49,19 +52,23 @@ export async function SiteHeader() {
             </a>
           ))}
         </nav>
-        <div className="flex items-center gap-5">
+        <div className="flex items-center gap-3 sm:gap-5">
+          {/* Sur téléphone, ces deux liens cèdent la place au menu : le CTA seul
+              tiendrait, mais « Connexion » disparaissait sous 640 px — un artisan
+              déjà inscrit n'avait aucun accès à son espace depuis l'accueil. */}
           <Link
             href={user ? "/dossiers" : "/connexion"}
-            className="hidden text-sm text-tampon underline-offset-4 transition hover:underline sm:block"
+            className={`hidden text-sm text-tampon underline-offset-4 transition hover:underline md:block ${FOCUS}`}
           >
             {user ? "Mon espace" : "Connexion"}
           </Link>
           <Link
             href={user ? "/dossiers/nouveau" : "/inscription"}
-            className="inline-flex h-10 items-center rounded bg-terre-cuite px-5 text-sm font-medium text-blanc-casse transition-colors hover:bg-terre-cuite-hover"
+            className={`hidden h-10 items-center rounded bg-terre-cuite px-5 text-sm font-medium text-blanc-casse transition-colors hover:bg-terre-cuite-hover md:inline-flex ${FOCUS}`}
           >
             Créer un dossier
           </Link>
+          <MobileMenu nav={NAV} connecte={!!user} />
         </div>
       </div>
     </header>

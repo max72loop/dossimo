@@ -87,8 +87,8 @@ describe("VerdictHero", () => {
   it("annonce Prêt à déposer quand tout est fait", () => {
     const s = synthese({
       pieces: [
-        { type: "devis", lue: true, nbEcarts: 0 },
-        { type: "facture", lue: true, nbEcarts: 0 },
+        { type: "devis", lue: true, nbEcarts: 0, mentionsPresentes: 6 },
+        { type: "facture", lue: true, nbEcarts: 0, mentionsPresentes: 6 },
       ],
       statut: "pret_depot",
     });
@@ -115,8 +115,8 @@ describe("ActionsRestantes", () => {
   it("accorde les libellés en genre", () => {
     const s = synthese({
       pieces: [
-        { type: "devis", lue: true, nbEcarts: 0 },
-        { type: "facture", lue: true, nbEcarts: 0 },
+        { type: "devis", lue: true, nbEcarts: 0, mentionsPresentes: 6 },
+        { type: "facture", lue: true, nbEcarts: 0, mentionsPresentes: 6 },
       ],
     });
     const html = renderToStaticMarkup(<ActionsRestantes synthese={s} />);
@@ -155,7 +155,7 @@ describe("MetriquesValeur", () => {
   });
 
   it("compte les mentions vérifiées une fois le devis lu", () => {
-    const s = synthese({ pieces: [{ type: "devis", lue: true, nbEcarts: 0 }] });
+    const s = synthese({ pieces: [{ type: "devis", lue: true, nbEcarts: 0, mentionsPresentes: 6 }] });
     const html = renderToStaticMarkup(<MetriquesValeur synthese={s} />);
     expect(html).toContain("6 / 6");
   });

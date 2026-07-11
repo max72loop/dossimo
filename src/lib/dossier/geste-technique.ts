@@ -58,8 +58,11 @@ export function lignesTechniques(
     ];
   }
 
-  // Isolation (défaut, y compris dossiers antérieurs au multi-geste).
+  // Isolation (défaut, y compris dossiers antérieurs au multi-geste). Le bloc
+  // peut manquer si le geste déclaré n'a pas son bloc technique (donnée
+  // incohérente) : on rend une liste vide plutôt que de lever.
   const t = c.travaux;
+  if (!t) return [];
   return [
     { label: "Surface isolée", value: `${t.surface_isolee_m2} m²`, mono: true },
     { label: "Isolant", value: t.isolant_type },

@@ -249,6 +249,8 @@ export interface Database {
           extraction_json: Json;
           extraction_statut: StatutExtraction;
           extraction_erreur: string | null;
+          /** Mentions obligatoires relevées sur la pièce. null = non vérifié. */
+          mentions_json: Json | null;
           created_at: string;
           extracted_at: string | null;
         };
@@ -263,6 +265,7 @@ export interface Database {
           extraction_json?: Json;
           extraction_statut?: StatutExtraction;
           extraction_erreur?: string | null;
+          mentions_json?: Json | null;
           created_at?: string;
           extracted_at?: string | null;
         };

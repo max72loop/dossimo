@@ -41,12 +41,11 @@ function interpolerMention(
 }
 
 /**
- * Mentions qui DOIVENT figurer sur le devis ET la facture (fiches BAR-EN).
- * Templates pilotés par la règle métier éditable (§7/§9.4), avec repli codé.
+ * Mentions exigées, interpolées aux valeurs du dossier — la liste UNE fois, sans
+ * la redite Devis/Facture. C'est la référence que le contrôle des pièces confronte
+ * au document réel : chaque entrée est le texte qui doit figurer noir sur blanc.
  */
-export function mentionsObligatoires(
-  data: DossierComplet,
-): MentionObligatoire[] {
+export function mentionsTemplates(data: DossierComplet): string[] {
   const { travaux, fiche } = data.caracteristiques;
   // La PAC n'a pas de bloc `travaux` : on retombe sur la fiche du dossier et on
   // laisse les placeholders {surface}/{r} vides (les mentions PAC n'en ont pas).
@@ -58,10 +57,19 @@ export function mentionsObligatoires(
   const templates = data.regle?.mentions?.length
     ? data.regle.mentions
     : MENTIONS_DEFAUT;
+  return templates.map((tpl) => interpolerMention(tpl, vals));
+}
 
-  const communes: MentionObligatoire[] = templates.map((tpl) => ({
+/**
+ * Mentions qui DOIVENT figurer sur le devis ET la facture (fiches BAR-EN).
+ * Templates pilotés par la règle métier éditable (§7/§9.4), avec repli codé.
+ */
+export function mentionsObligatoires(
+  data: DossierComplet,
+): MentionObligatoire[] {
+  const communes: MentionObligatoire[] = mentionsTemplates(data).map((mention) => ({
     document: "Devis" as const,
-    mention: interpolerMention(tpl, vals),
+    mention,
   }));
   // Les mêmes mentions sont exigées à l'identique sur la facture.
   const surFacture = communes.map((m) => ({ ...m, document: "Facture" as const }));

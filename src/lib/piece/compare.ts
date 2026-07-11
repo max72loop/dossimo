@@ -83,38 +83,45 @@ export function comparerPiece(
     ex.code_postal ? norm(c.beneficiaire.code_postal) === norm(ex.code_postal) : null,
   );
 
-  // Travaux
-  push(
-    "Surface isolée",
-    `${c.travaux.surface_isolee_m2} m²`,
-    ex.surface_isolee_m2 != null ? `${ex.surface_isolee_m2} m²` : "—",
-    ex.surface_isolee_m2 != null
-      ? numEq(c.travaux.surface_isolee_m2, ex.surface_isolee_m2, 0.5)
-      : null,
-  );
-  push(
-    "Résistance R",
-    `${c.travaux.resistance_thermique_r}`,
-    ex.resistance_thermique_r != null ? `${ex.resistance_thermique_r}` : "—",
-    ex.resistance_thermique_r != null
-      ? numEq(c.travaux.resistance_thermique_r, ex.resistance_thermique_r, 0.05)
-      : null,
-  );
-  if (c.travaux.isolant_marque) {
+  // Travaux — bloc propre à l'isolation. Les dossiers PAC / CET / bois portent
+  // `pac` / `cet` / `bois` à la place et n'ont PAS de bloc `travaux` : on ne
+  // compare alors que les champs communs ci-dessus et ci-dessous. Leurs champs
+  // techniques (ETAS, COP, rendement) ne sont pas encore extraits des pièces —
+  // les omettre vaut mieux que les afficher « non lus » à tort.
+  const t = c.travaux;
+  if (t) {
     push(
-      "Marque isolant",
-      c.travaux.isolant_marque,
-      ex.isolant_marque ?? "—",
-      ex.isolant_marque ? strMatch(c.travaux.isolant_marque, ex.isolant_marque) : null,
+      "Surface isolée",
+      `${t.surface_isolee_m2} m²`,
+      ex.surface_isolee_m2 != null ? `${ex.surface_isolee_m2} m²` : "—",
+      ex.surface_isolee_m2 != null
+        ? numEq(t.surface_isolee_m2, ex.surface_isolee_m2, 0.5)
+        : null,
     );
-  }
-  if (c.travaux.isolant_reference) {
     push(
-      "Référence isolant",
-      c.travaux.isolant_reference,
-      ex.isolant_reference ?? "—",
-      ex.isolant_reference ? strMatch(c.travaux.isolant_reference, ex.isolant_reference) : null,
+      "Résistance R",
+      `${t.resistance_thermique_r}`,
+      ex.resistance_thermique_r != null ? `${ex.resistance_thermique_r}` : "—",
+      ex.resistance_thermique_r != null
+        ? numEq(t.resistance_thermique_r, ex.resistance_thermique_r, 0.05)
+        : null,
     );
+    if (t.isolant_marque) {
+      push(
+        "Marque isolant",
+        t.isolant_marque,
+        ex.isolant_marque ?? "—",
+        ex.isolant_marque ? strMatch(t.isolant_marque, ex.isolant_marque) : null,
+      );
+    }
+    if (t.isolant_reference) {
+      push(
+        "Référence isolant",
+        t.isolant_reference,
+        ex.isolant_reference ?? "—",
+        ex.isolant_reference ? strMatch(t.isolant_reference, ex.isolant_reference) : null,
+      );
+    }
   }
 
   // Montants
