@@ -35,9 +35,14 @@ export interface CeeIsolationCaracteristiques {
     residence: keyof typeof RESIDENCES;
     surface_habitable: number | null;
   };
-  travaux: {
+  /**
+   * Bloc technique de l'isolation — présent pour la seule famille isolation.
+   * Absent des dossiers PAC / CET / bois, qui portent `pac` / `cet` / `bois` à
+   * la place : tout lecteur doit donc le garder optionnel (`travaux?.`) ou
+   * s'exécuter dans une branche déjà filtrée par `geste`.
+   */
+  travaux?: {
     fiche: string;
-    // Isolation (présents pour la famille isolation).
     type_isolation: TypeIsolation;
     surface_isolee_m2: number;
     isolant_type: string;

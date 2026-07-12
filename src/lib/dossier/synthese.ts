@@ -61,6 +61,12 @@ export interface PieceSynthese {
   /** L'extraction automatique a abouti : la pièce a pu être comparée. */
   lue: boolean;
   nbEcarts: number;
+  /**
+   * Mentions obligatoires effectivement relevées sur le document. `null` = le
+   * contrôle des mentions n'a pas tourné sur cette pièce (pièce antérieure, ou
+   * document illisible) — ce n'est pas la même chose que zéro mention trouvée.
+   */
+  mentionsPresentes: number | null;
 }
 
 export interface ActionRestante {
@@ -95,6 +101,7 @@ function pieceEtat(pieces: readonly PieceSynthese[], type: TypePiece) {
     presente: trouvees.length > 0,
     lue: lue != null,
     nbEcarts: lue?.nbEcarts ?? 0,
+    mentionsPresentes: lue?.mentionsPresentes ?? null,
   };
 }
 
@@ -216,13 +223,11 @@ export function syntheseDossier({
         ? "moyen"
         : "faible";
 
-  // Mentions obligatoires vérifiées automatiquement : tant qu'aucun devis n'est
-  // lu, aucune mention n'est contrôlée. Dès qu'il l'est, on retire une mention
-  // par écart relevé. Heuristique explicite, à affiner quand l'extraction
-  // remontera la présence mention par mention.
-  const mentionsVerifiees = devis.lue
-    ? Math.max(0, mentionsTotal - devis.nbEcarts)
-    : 0;
+  // Mentions obligatoires réellement relevées sur le devis, comptées une par une
+  // par le contrôle des pièces. Tant qu'aucun devis n'est déposé (ou que son
+  // contrôle n'a pas tourné), rien n'est vérifié : on annonce 0, jamais un chiffre
+  // rassurant qui ne repose sur rien.
+  const mentionsVerifiees = devis.mentionsPresentes ?? 0;
 
   return {
     actions,

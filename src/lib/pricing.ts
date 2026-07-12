@@ -95,7 +95,40 @@ export function labelEuros(cents: number): string {
   );
 }
 
-/** Charge les paliers actifs (référentiel lisible par tout utilisateur connecté). */
+/**
+ * Grille tarifaire telle qu'on l'ANNONCE (landing, CGV). Dérivée des paliers actifs,
+ * jamais écrite en dur : ce que la vitrine promet est ce que le checkout facture.
+ *
+ * `null` si aucun palier n'est lisible (base injoignable, grille vide). Les appelants
+ * doivent alors taire le prix plutôt qu'en inventer un — annoncer un tarif faux est
+ * pire que ne pas l'annoncer, a fortiori dans des CGV.
+ */
+export interface GrilleAffichee {
+  minLabel: string;
+  maxLabel: string;
+  /** Prix de chaque palier, du plus bas au plus haut ("49 €", "149 €", "249 €"). */
+  paliers: string[];
+}
+
+export function grilleAffichee(
+  tiers: readonly PricingTier[],
+): GrilleAffichee | null {
+  const cents = tiers
+    .filter((t) => t.active)
+    .map((t) => t.price_cents)
+    .sort((a, b) => a - b);
+  if (cents.length === 0) return null;
+  return {
+    minLabel: labelEuros(cents[0]),
+    maxLabel: labelEuros(cents[cents.length - 1]),
+    paliers: cents.map(labelEuros),
+  };
+}
+
+/**
+ * Charge les paliers actifs. Référentiel PUBLIC : lisible aussi par un visiteur
+ * anonyme (migration 0015), pour que la vitrine et le checkout lisent la même grille.
+ */
 export async function getActiveTiers(client: Client): Promise<PricingTier[]> {
   const { data, error } = await client
     .from("pricing_tiers")

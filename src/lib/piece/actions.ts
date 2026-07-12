@@ -4,13 +4,21 @@ import { getDossier } from "@/lib/dossier/get-dossier";
 import { createClient } from "@/lib/supabase/server";
 import { extractPiece } from "@/lib/piece/extract";
 import { comparerPiece, type Comparaison } from "@/lib/piece/compare";
-import type { TypePiece } from "@/lib/database.types";
+import { verifierMentions, type MentionVerifiee } from "@/lib/piece/mentions";
+import { mentionsTemplates } from "@/lib/pack/pieces-cee-isolation";
+import type { Json, TypePiece } from "@/lib/database.types";
 
 const MIMES_OK = new Set(["image/jpeg", "image/png", "image/webp", "application/pdf"]);
 const TAILLE_MAX = 15 * 1024 * 1024; // 15 Mo
 
 export type UploadResult =
-  | { ok: true; comparaisons: Comparaison[]; statut: "ok" | "echec"; message?: string }
+  | {
+      ok: true;
+      comparaisons: Comparaison[];
+      mentions: MentionVerifiee[];
+      statut: "ok" | "echec";
+      message?: string;
+    }
   | { ok: false; error: string };
 
 /**
@@ -53,15 +61,24 @@ export async function uploadPiece(
     return { ok: false, error: "Échec de l'envoi du fichier." };
   }
 
-  // Extraction VLM (best-effort : la pièce est conservée même si l'IA échoue).
-  const ex = await extractPiece({
-    bytes,
-    mime: file.type,
-    filename: file.name,
-    type,
-  });
+  // Deux passes VLM sur le même document, en parallèle (best-effort : la pièce est
+  // conservée même si l'IA échoue) :
+  //  1. les VALEURS, que le code compare ensuite à la saisie (écarts) ;
+  //  2. les MENTIONS OBLIGATOIRES exigées par la fiche, que le document doit porter.
+  // La seconde est celle qui attrape les refus « chiffres justes, mention manquante ».
+  const [ex, mn] = await Promise.all([
+    extractPiece({ bytes, mime: file.type, filename: file.name, type }),
+    verifierMentions({
+      bytes,
+      mime: file.type,
+      filename: file.name,
+      type,
+      mentions: mentionsTemplates(data),
+    }),
+  ]);
 
   const comparaisons = ex.ok ? comparerPiece(data, ex.data, type) : [];
+  const mentions = mn.ok ? mn.mentions : [];
 
   const { error: insErr } = await supabase.from("pieces_justificatives").insert({
     id: pieceId,
@@ -74,6 +91,9 @@ export async function uploadPiece(
     extraction_json: ex.ok ? ex.data : null,
     extraction_statut: ex.ok ? "ok" : "echec",
     extraction_erreur: ex.ok ? null : ex.message ?? "Extraction impossible.",
+    // null (et non []) si le contrôle n'a pas tourné : « non vérifié » n'est pas
+    // « aucune mention manquante ».
+    mentions_json: mn.ok ? (mn.mentions as unknown as Json) : null,
     extracted_at: new Date().toISOString(),
   });
   if (insErr) {
@@ -86,6 +106,7 @@ export async function uploadPiece(
     statut: ex.ok ? "ok" : "echec",
     message: ex.ok ? undefined : ex.message,
     comparaisons,
+    mentions,
   };
 }
 

@@ -9,8 +9,11 @@ import {
   LOGEMENT_TYPES,
   OCCUPATIONS,
   PRECARITES,
-  TYPES_ISOLATION,
 } from "@/lib/dossier/cee-isolation";
+import {
+  lignesTechniques,
+  titreSectionTechnique,
+} from "@/lib/dossier/geste-technique";
 import { SEVERITE_LABEL } from "@/lib/rules/types";
 import { isLlmConfigured, openRouterChat } from "@/lib/llm/openrouter";
 import { getDossierPieces } from "@/lib/piece/get";
@@ -107,7 +110,6 @@ function systemPrompt(dispositif: Dispositif): string {
 async function buildContext(data: DossierComplet): Promise<string> {
   const c = data.caracteristiques;
   const rapport = controlerDossier(data);
-  const travaux = TYPES_ISOLATION[c.travaux.type_isolation];
 
   // Pièces réelles téléversées + écarts avec la saisie (Chantier 1) : signal
   // anti-refus le plus concret. Vide si l'artisan n'a rien encore téléversé.
@@ -127,14 +129,15 @@ async function buildContext(data: DossierComplet): Promise<string> {
   const contexte = {
     dispositif: data.dossier.dispositif,
     fiche: c.fiche,
+    // Bloc technique du geste réel (isolation, PAC, CET ou bois). `lignesTechniques`
+    // est le point unique de vérité de ce dispatch : un dossier ne porte que le bloc
+    // de sa famille, et supposer l'isolation ici enverrait un contexte faux au LLM
+    // — ou lèverait, pour les gestes sans bloc `travaux`.
     travaux: {
-      poste: travaux?.label ?? c.travaux.type_isolation,
-      surface_isolee_m2: c.travaux.surface_isolee_m2,
-      resistance_thermique_r: c.travaux.resistance_thermique_r,
-      isolant_type: c.travaux.isolant_type,
-      isolant_marque: c.travaux.isolant_marque,
-      isolant_reference: c.travaux.isolant_reference,
-      epaisseur_mm: c.travaux.epaisseur_mm,
+      poste: titreSectionTechnique(c),
+      ...Object.fromEntries(
+        lignesTechniques(c).map((l) => [l.label, l.value]),
+      ),
     },
     beneficiaire: {
       occupation: OCCUPATIONS[c.beneficiaire.occupation],

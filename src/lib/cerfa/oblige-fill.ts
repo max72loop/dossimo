@@ -11,7 +11,8 @@ import {
 } from "pdf-lib";
 
 import type { DossierComplet } from "@/lib/dossier/get-dossier";
-import { LOGEMENT_TYPES, TYPES_ISOLATION } from "@/lib/dossier/cee-isolation";
+import { LOGEMENT_TYPES, posteLabel } from "@/lib/dossier/cee-isolation";
+import { lignesTechniques } from "@/lib/dossier/geste-technique";
 import { dateFr, euro } from "@/lib/pack/format";
 import { winAnsiSafe } from "@/lib/cerfa/winansi";
 import { openRouterChat } from "@/lib/llm/openrouter";
@@ -38,8 +39,6 @@ const CONFIDENCE_MIN = 0.7;
 export function canonicalFacts(data: DossierComplet): Fact[] {
   const c = data.caracteristiques;
   const b = c.beneficiaire;
-  const t = c.travaux;
-  const travaux = TYPES_ISOLATION[t.type_isolation];
   const plus2ans = new Date().getFullYear() - c.logement.annee_construction > 2;
 
   const raw: [string, string | null | undefined][] = [
@@ -55,13 +54,14 @@ export function canonicalFacts(data: DossierComplet): Fact[] {
     ["Année de construction", String(c.logement.annee_construction)],
     ["Logement achevé depuis plus de 2 ans", plus2ans ? "Oui" : "Non"],
     ["Fiche CEE", c.fiche],
-    ["Nature des travaux", travaux.label],
-    ["Surface isolée (m²)", String(t.surface_isolee_m2)],
-    ["Résistance thermique R (m²·K/W)", String(t.resistance_thermique_r)],
-    ["Marque de l'isolant", t.isolant_marque],
-    ["Référence de l'isolant", t.isolant_reference],
-    ["Type d'isolant", t.isolant_type],
-    ["Épaisseur de l'isolant (mm)", t.epaisseur_mm ? String(t.epaisseur_mm) : null],
+    ["Nature des travaux", posteLabel(c)],
+    // Caractéristiques techniques du geste réel. Un dossier ne porte que le bloc
+    // de sa famille (`travaux` pour l'isolation, `pac` / `cet` / `bois` sinon) :
+    // les lire via le dispatch commun évite d'apparier des champs d'isolation à
+    // l'AH d'une PAC — et de lever sur les dossiers sans bloc `travaux`.
+    ...lignesTechniques(c).map(
+      (l): [string, string] => [l.label, l.value],
+    ),
     ["Date de visite préalable", frOrNull(data.dates.visite_technique)],
     ["Date d'acceptation du devis", frOrNull(data.dates.devis)],
     ["Date de début des travaux", frOrNull(data.dates.debut_travaux)],

@@ -49,16 +49,21 @@ export function SiteFooter() {
           </div>
         </div>
 
+        {/*
+          Mention légale : en `ardoise` et non `encre-claire`. Ce dernier tombe à
+          ~2,3:1 sur le fond papier, sous le seuil AA (4,5:1) — le texte qui engage
+          juridiquement était le moins lisible de la page.
+        */}
         <div className="mt-12 border-t border-filigrane pt-6">
-          <p className="max-w-3xl text-xs leading-relaxed text-encre-claire">
+          <p className="max-w-3xl text-xs leading-relaxed text-ardoise">
             Dossimo est un service indépendant d&rsquo;aide à la préparation de
             dossier, non affilié à l&rsquo;Anah ni à France Rénov&rsquo;. Dossimo
             ne dépose jamais le dossier et ne perçoit jamais la prime :
             l&rsquo;artisan et son client déposent eux-mêmes et conservent
             l&rsquo;intégralité de la prime.
           </p>
-          <p className="mt-4 font-mono text-xs text-encre-claire">
-            © {new Date().getFullYear()} Dossimo · Île-de-France.
+          <p className="mt-4 font-mono text-xs text-ardoise">
+            © {new Date().getFullYear()} Dossimo.
           </p>
         </div>
       </div>

@@ -1,5 +1,5 @@
 import type { DossierComplet } from "@/lib/dossier/get-dossier";
-import { LOGEMENT_TYPES, TYPES_ISOLATION } from "@/lib/dossier/cee-isolation";
+import { LOGEMENT_TYPES, posteLabel } from "@/lib/dossier/cee-isolation";
 
 /** Valeurs à injecter dans les champs de l'attestation, indexées par nom de champ. */
 export type CerfaValues = Record<string, string | boolean>;
@@ -18,13 +18,19 @@ const eur = (n: number | null): string =>
 export function mapDossierToAhCee(data: DossierComplet): CerfaValues {
   const c = data.caracteristiques;
   const dates = data.dates;
-  const travaux = TYPES_ISOLATION[c.travaux.type_isolation];
+  // Les champs `travaux_*` de l'AH à champs (AH_CEE_FIELDS) décrivent une
+  // isolation : surface, résistance R, isolant, épaisseur. Les gestes PAC / CET /
+  // bois n'ont pas de bloc `travaux` et résolvent leurs propres modèles (fiches
+  // BAR-TH), rendus par reproduction. On laisse donc ces champs vides plutôt que
+  // d'y écrire des valeurs d'un autre geste : une AH fausse fabriquerait le motif
+  // de refus que Dossimo prétend éviter (CLAUDE.md §8).
+  const t = c.travaux;
 
   const anneeCourante = new Date().getFullYear();
-  const isolant =
-    [c.travaux.isolant_marque, c.travaux.isolant_reference]
-      .filter(Boolean)
-      .join(" ") || c.travaux.isolant_type;
+  const isolant = t
+    ? [t.isolant_marque, t.isolant_reference].filter(Boolean).join(" ") ||
+      t.isolant_type
+    : "";
 
   return {
     beneficiaire_nom_prenom: `${c.beneficiaire.prenom} ${c.beneficiaire.nom}`,
@@ -38,11 +44,11 @@ export function mapDossierToAhCee(data: DossierComplet): CerfaValues {
     pro_rge_numero: c.rge.numero,
     pro_rge_domaine: c.rge.domaine,
     travaux_fiche: c.fiche,
-    travaux_nature: travaux.label,
-    travaux_surface: String(c.travaux.surface_isolee_m2),
-    travaux_resistance: String(c.travaux.resistance_thermique_r),
+    travaux_nature: posteLabel(c),
+    travaux_surface: t ? String(t.surface_isolee_m2) : "",
+    travaux_resistance: t ? String(t.resistance_thermique_r) : "",
     travaux_isolant: isolant,
-    travaux_epaisseur: c.travaux.epaisseur_mm ? String(c.travaux.epaisseur_mm) : "",
+    travaux_epaisseur: t?.epaisseur_mm ? String(t.epaisseur_mm) : "",
     date_devis: frDate(dates.devis),
     date_debut: frDate(dates.debut_travaux),
     date_fin: frDate(dates.fin_travaux),

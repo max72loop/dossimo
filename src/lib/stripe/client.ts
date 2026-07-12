@@ -22,5 +22,6 @@ export function getStripe(): Stripe {
   return cached;
 }
 
-// La tarification (par palier selon la taille du dossier) vit dans
-// src/lib/stripe/pricing.ts.
+// La tarification vit dans src/lib/pricing.ts : paliers indexés sur l'aide estimée,
+// lus dans la table `pricing_tiers` (jamais en dur). Source unique du checkout, de
+// l'espace artisan, de la landing et des CGV.

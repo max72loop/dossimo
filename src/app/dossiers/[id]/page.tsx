@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { getDossier } from "@/lib/dossier/get-dossier";
-import { getDossierPieces } from "@/lib/piece/get";
+import { rapportComplet } from "@/lib/dossier/rapport";
 import { nbEcarts } from "@/lib/piece/compare";
 import { resolveCerfaTemplate } from "@/lib/cerfa/registry";
 import { storedVigilance } from "@/lib/llm/vigilance";
@@ -42,7 +42,6 @@ import {
   mentionsObligatoires,
   piecesCeeIsolation,
 } from "@/lib/pack/pieces-cee-isolation";
-import { controlerDossier } from "@/lib/rules/controle-dossier";
 import { SEVERITE_LABEL, type Finding, type Severite } from "@/lib/rules/types";
 
 export const metadata = { title: "Dossier · Dossimo" };
@@ -133,7 +132,10 @@ export default async function DossierPage({
   const mentionsDevis = mentionsObligatoires(data).filter(
     (m) => m.document === "Devis",
   );
-  const rapport = controlerDossier(data);
+  // Rapport de contrôle = saisie + pièces réelles (écarts, mentions obligatoires
+  // manquantes, concordance devis/facture). Même source que le rapport.pdf et le
+  // pack : l'écran et le livrable ne peuvent pas se contredire.
+  const { rapport, pieces: piecesReelles } = await rapportComplet(data);
   const findingsTries = [...rapport.findings].sort(
     (a, b) => SEVERITE_ORDER[a.severite] - SEVERITE_ORDER[b.severite],
   );
@@ -144,9 +146,6 @@ export default async function DossierPage({
     c.fiche,
     dates.devis || dossier.created_at,
   );
-
-  // Pièces réelles uploadées + écarts avec la saisie.
-  const piecesReelles = await getDossierPieces(data);
 
   // Points de vigilance déjà générés (persistés) : affichage instantané.
   const vigilance = storedVigilance(data);
@@ -176,10 +175,14 @@ export default async function DossierPage({
   // Dérivée du rapport déterministe et des pièces réelles — aucune règle ici.
   const synthese = syntheseDossier({
     rapport,
-    pieces: piecesReelles.map(({ piece, comparaisons }) => ({
+    pieces: piecesReelles.map(({ piece, comparaisons, mentions }) => ({
       type: piece.type,
       lue: piece.extraction_statut === "ok",
       nbEcarts: nbEcarts(comparaisons),
+      mentionsPresentes:
+        mentions === null
+          ? null
+          : mentions.filter((m) => m.statut === "presente").length,
     })),
     statut: dossier.statut,
     mentionsTotal: mentionsDevis.length,

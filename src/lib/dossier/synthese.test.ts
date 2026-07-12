@@ -39,8 +39,19 @@ function synthese(opts: {
   });
 }
 
-const devisOk: PieceSynthese = { type: "devis", lue: true, nbEcarts: 0 };
-const factureOk: PieceSynthese = { type: "facture", lue: true, nbEcarts: 0 };
+/** Devis lu, cohérent, portant les 6 mentions obligatoires exigées. */
+const devisOk: PieceSynthese = {
+  type: "devis",
+  lue: true,
+  nbEcarts: 0,
+  mentionsPresentes: 6,
+};
+const factureOk: PieceSynthese = {
+  type: "facture",
+  lue: true,
+  nbEcarts: 0,
+  mentionsPresentes: 6,
+};
 
 describe("complétude", () => {
   it("un dossier conforme sans pièce ni dépôt vaut le poids des contrôles", () => {
@@ -82,14 +93,14 @@ describe("complétude", () => {
   });
 
   it("une pièce avec écart ne valide pas son critère", () => {
-    const s = synthese({ pieces: [{ type: "devis", lue: true, nbEcarts: 2 }] });
+    const s = synthese({ pieces: [{ type: "devis", lue: true, nbEcarts: 2, mentionsPresentes: 6 }] });
     expect(s.pourcentage).toBe(40);
     expect(s.piecesCompletes).toBe(false);
     expect(s.actions.find((a) => a.id === "devis")?.label).toContain("2 écarts");
   });
 
   it("une pièce illisible ne valide pas son critère", () => {
-    const s = synthese({ pieces: [{ type: "facture", lue: false, nbEcarts: 0 }] });
+    const s = synthese({ pieces: [{ type: "facture", lue: false, nbEcarts: 0, mentionsPresentes: 6 }] });
     expect(s.pourcentage).toBe(40);
     expect(s.actions.find((a) => a.id === "facture")?.label).toContain("lisible");
   });
@@ -112,14 +123,14 @@ describe("niveau de risque", () => {
 
   it("moyen quand une pièce présente un écart avec la saisie", () => {
     expect(
-      synthese({ pieces: [{ type: "devis", lue: true, nbEcarts: 1 }] }).risque,
+      synthese({ pieces: [{ type: "devis", lue: true, nbEcarts: 1, mentionsPresentes: 6 }] }).risque,
     ).toBe("moyen");
   });
 
   it("un bloquant prime sur un écart", () => {
     const s = synthese({
       rapport: rapport([finding("bloquant", "x"), finding("avertissement", "y")]),
-      pieces: [{ type: "devis", lue: true, nbEcarts: 3 }],
+      pieces: [{ type: "devis", lue: true, nbEcarts: 3, mentionsPresentes: 6 }],
     });
     expect(s.risque).toBe("eleve");
   });
@@ -131,19 +142,29 @@ describe("mentions vérifiées", () => {
     expect(synthese({ pieces: [factureOk] }).mentionsVerifiees).toBe(0);
   });
 
-  it("toutes les mentions quand le devis est lu sans écart", () => {
+  it("compte les mentions RELEVÉES sur le devis, pas une estimation", () => {
     const s = synthese({ pieces: [devisOk], mentionsTotal: 6 });
     expect(s.mentionsVerifiees).toBe(6);
     expect(s.mentionsTotal).toBe(6);
   });
 
-  it("retire une mention par écart, sans passer sous zéro", () => {
-    expect(
-      synthese({ pieces: [{ type: "devis", lue: true, nbEcarts: 2 }] }).mentionsVerifiees,
-    ).toBe(4);
-    expect(
-      synthese({ pieces: [{ type: "devis", lue: true, nbEcarts: 9 }] }).mentionsVerifiees,
-    ).toBe(0);
+  it("n'annonce vérifiées que les mentions effectivement trouvées", () => {
+    // 4 mentions sur 6 relevées : deux manquent au document. On n'en affiche pas 6.
+    const s = synthese({
+      pieces: [{ type: "devis", lue: true, nbEcarts: 0, mentionsPresentes: 4 }],
+      mentionsTotal: 6,
+    });
+    expect(s.mentionsVerifiees).toBe(4);
+  });
+
+  it("aucune mention vérifiée si le contrôle des mentions n'a pas tourné", () => {
+    // Pièce lue mais mentions non contrôlées (pièce antérieure au contrôle) : on
+    // n'invente pas un chiffre rassurant.
+    const s = synthese({
+      pieces: [{ type: "devis", lue: true, nbEcarts: 0, mentionsPresentes: null }],
+      mentionsTotal: 6,
+    });
+    expect(s.mentionsVerifiees).toBe(0);
   });
 });
 
