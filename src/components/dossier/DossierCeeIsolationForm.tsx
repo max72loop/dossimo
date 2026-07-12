@@ -19,6 +19,8 @@ import {
   type CeeIsolationInput,
 } from "@/lib/dossier/cee-isolation";
 import { Section, SelectField, TextField } from "@/components/dossier/fields";
+import { OverlayProgression, type EtatEtape } from "@/components/ui/overlay-progression";
+import { Spinner } from "@/components/ui/spinner";
 
 const isolationOptions = Object.fromEntries(
   Object.entries(TYPES_ISOLATION).map(([k, v]) => [k, `${v.label} · ${v.fiche}`]),
@@ -138,6 +140,31 @@ function VerifPanel({ v }: { v: VerificationEntreprise }) {
   );
 }
 
+/**
+ * Progression de la création, du clic jusqu'à l'affichage du dossier.
+ *
+ * `controle` couvre la navigation vers `/dossiers/[id]` : le rendu serveur de
+ * cette page (moteur de règles, assemblage du pack) prend plusieurs secondes.
+ * C'est précisément la fenêtre où `isSubmitting` de react-hook-form est déjà
+ * retombé à false alors que rien n'a encore bougé à l'écran. Cet état ne
+ * revient jamais à `repos` après un succès : il tient jusqu'au démontage du
+ * formulaire par la navigation.
+ */
+type Phase = "repos" | "enregistrement" | "controle";
+
+function etapesDe(phase: Phase): { label: string; etat: EtatEtape }[] {
+  return [
+    {
+      label: "Vérification RGE et enregistrement de la saisie",
+      etat: phase === "enregistrement" ? "en_cours" : "fait",
+    },
+    {
+      label: "Contrôle anti-refus et préparation du pack",
+      etat: phase === "controle" ? "en_cours" : "attente",
+    },
+  ];
+}
+
 export function DossierCeeIsolationForm({
   initialValues,
 }: {
@@ -147,6 +174,8 @@ export function DossierCeeIsolationForm({
   const [serverError, setServerError] = useState<string | null>(null);
   const [etape, setEtape] = useState(0);
   const [maxEtape, setMaxEtape] = useState(0);
+  const [phase, setPhase] = useState<Phase>("repos");
+  const enCours = phase !== "repos";
 
   const {
     register,
@@ -156,7 +185,7 @@ export function DossierCeeIsolationForm({
     setError,
     setValue,
     getValues,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<CeeIsolationInput>({
     resolver: zodResolver(ceeIsolationSchema),
     defaultValues: { ...ceeIsolationDefaults, ...initialValues },
@@ -221,7 +250,9 @@ export function DossierCeeIsolationForm({
   }
 
   async function onSubmit(values: CeeIsolationInput) {
+    if (enCours) return; // Un envoi déjà en vol : ne jamais en créer un second.
     setServerError(null);
+    setPhase("enregistrement");
     const result = await createDossierCeeIsolation(values);
     if (result.ok) {
       const parrain =
@@ -230,9 +261,13 @@ export function DossierCeeIsolationForm({
           : result.referral === "failed"
             ? "?parrain=ko"
             : "";
+      // Pas de retour à `repos` : la navigation qui suit est lente, le voile
+      // doit rester jusqu'à ce que la page dossier prenne la main.
+      setPhase("controle");
       router.push(`/dossiers/${result.dossierId}${parrain}`);
       return;
     }
+    setPhase("repos");
     setServerError(result.error);
     if (result.fieldErrors) {
       for (const [name, messages] of Object.entries(result.fieldErrors)) {
@@ -244,6 +279,11 @@ export function DossierCeeIsolationForm({
   }
 
   function onKeyDown(e: React.KeyboardEvent<HTMLFormElement>) {
+    if (enCours) {
+      // « Entrée » pendant la création rejouerait la soumission.
+      if (e.key === "Enter") e.preventDefault();
+      return;
+    }
     // Sur les étapes intermédiaires, « Entrée » passe à la suivante (pas de submit).
     const cible = e.target as HTMLElement;
     if (e.key === "Enter" && !dernier && cible.tagName !== "TEXTAREA") {
@@ -253,7 +293,19 @@ export function DossierCeeIsolationForm({
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} onKeyDown={onKeyDown} className="pb-16" noValidate>
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      onKeyDown={onKeyDown}
+      className="pb-16"
+      aria-busy={enCours}
+      noValidate
+    >
+      <OverlayProgression
+        ouvert={enCours}
+        titre="Création du dossier"
+        description="Quelques secondes : les pièces sont générées depuis votre saisie unique."
+        etapes={etapesDe(phase)}
+      />
       {/* Progression */}
       <div className="mb-8">
         <div className="mb-3 grid grid-cols-3 gap-1.5 sm:grid-cols-6">
@@ -266,7 +318,7 @@ export function DossierCeeIsolationForm({
                 key={s.titre}
                 type="button"
                 onClick={() => aller(i)}
-                disabled={!accessible}
+                disabled={!accessible || enCours}
                 title={s.titre}
                 className={`flex w-full min-w-0 items-center justify-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-medium transition-colors disabled:cursor-not-allowed ${
                   actif
@@ -520,7 +572,7 @@ export function DossierCeeIsolationForm({
         <button
           type="button"
           onClick={() => setEtape((e) => Math.max(0, e - 1))}
-          disabled={etape === 0}
+          disabled={etape === 0 || enCours}
           className="inline-flex h-11 items-center rounded border border-filigrane bg-blanc-casse px-4 text-sm font-medium text-encre transition-colors hover:bg-papier disabled:cursor-not-allowed disabled:opacity-40"
         >
           ← Précédent
@@ -529,10 +581,11 @@ export function DossierCeeIsolationForm({
         {dernier ? (
           <button
             type="submit"
-            disabled={isSubmitting}
-            className="inline-flex h-11 items-center rounded bg-terre-cuite px-6 text-sm font-medium text-blanc-casse transition-colors hover:bg-terre-cuite-hover disabled:cursor-not-allowed disabled:opacity-60"
+            disabled={enCours}
+            className="inline-flex h-11 items-center gap-2 rounded bg-terre-cuite px-6 text-sm font-medium text-blanc-casse transition-colors hover:bg-terre-cuite-hover disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {isSubmitting ? "Création…" : "Créer le dossier"}
+            {enCours && <Spinner />}
+            {enCours ? "Création en cours…" : "Créer le dossier"}
           </button>
         ) : (
           <button

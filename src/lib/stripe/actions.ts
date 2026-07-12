@@ -6,6 +6,7 @@ import { estimerPrime } from "@/lib/dossier/prime";
 import { getStripe, isStripeConfigured } from "@/lib/stripe/client";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { emettreFacture } from "@/lib/factures/emettre";
 import {
   priceDossier,
   claimRefereeDiscount,
@@ -15,7 +16,8 @@ import {
 
 export type PaiementResult =
   | { ok: true; url: string }
-  | { ok: false; error: string };
+  /** `code` permet au client de réagir (ex. afficher le formulaire d'adresse). */
+  | { ok: false; error: string; code?: "adresse_manquante" };
 
 function siteUrl(): string {
   return (
@@ -68,6 +70,23 @@ export async function creerSessionPaiementDossier(
 
   const supabase = await createClient();
 
+  // Adresse de facturation : mention obligatoire sur la facture (art. 242
+  // nonies A du CGI). On la réclame AVANT d'encaisser — après le paiement, il
+  // serait trop tard pour émettre une facture conforme.
+  const { data: fiche } = await supabase
+    .from("artisans")
+    .select("adresse, code_postal, ville")
+    .eq("id", data.dossier.artisan_id ?? "")
+    .maybeSingle();
+  if (!fiche?.adresse || !fiche.code_postal || !fiche.ville) {
+    return {
+      ok: false,
+      code: "adresse_manquante",
+      error:
+        "Complétez votre adresse de facturation pour recevoir une facture conforme.",
+    };
+  }
+
   let finalCents: number;
   try {
     // Pose le palier + estimated_aid_cents, réclame la remise filleul (−30 € si
@@ -87,14 +106,22 @@ export async function creerSessionPaiementDossier(
   if (finalCents <= 0) {
     try {
       const admin = createAdminClient();
-      await admin.from("paiements").insert({
-        dossier_id: data.dossier.id,
-        artisan_id: data.dossier.artisan_id,
-        montant: 0,
-        statut: "paye",
-        type: "ponctuel",
-      });
+      const { data: paiement, error } = await admin
+        .from("paiements")
+        .insert({
+          dossier_id: data.dossier.id,
+          artisan_id: data.dossier.artisan_id,
+          montant: 0,
+          statut: "paye",
+          type: "ponctuel",
+        })
+        .select("id")
+        .single();
+      if (error) throw error;
       await confirmDossierPayment(admin, data.dossier.id);
+      // Une vente à 0 € reste une vente : elle donne lieu à facture, au même
+      // titre qu'un encaissement Stripe. La remise apparaît par le montant nul.
+      await emettreFacture(admin, paiement.id);
     } catch (err) {
       console.error("[stripe] règlement par crédits:", err);
       return { ok: false, error: "Erreur lors du règlement par crédits." };

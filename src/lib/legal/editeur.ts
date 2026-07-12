@@ -2,9 +2,12 @@
  * Identité de l'éditeur et informations légales de référence.
  *
  * Source unique de vérité pour les mentions légales, les CGV, la politique de
- * confidentialité et le pied de page. À compléter une fois l'entité juridique
- * constituée : les champs marqués `À COMPLÉTER` doivent être renseignés avant
- * mise en ligne (obligation légale — art. 6 III LCEN pour les mentions légales).
+ * confidentialité, le pied de page et les factures (art. 6 III LCEN, art. 242
+ * nonies A du CGI).
+ *
+ * Les champs à `null` sont des mentions qui ne s'appliquent PAS à l'entité
+ * actuelle. Ne pas les remplir « pour faire propre » : un numéro inventé sur
+ * une facture n'est pas un placeholder, c'est un faux.
  */
 
 const TODO = "[À COMPLÉTER]";
@@ -15,19 +18,46 @@ export const editeur = {
   domaine: "dossimo.fr",
   siteUrl: "https://dossimo.fr",
 
-  // --- Entité juridique (à renseigner) ---
-  raisonSociale: TODO, // ex. « Dossimo SAS »
-  formeJuridique: TODO, // ex. « SAS au capital de 1 000 € »
-  siren: TODO, // 9 chiffres
-  siret: TODO, // 14 chiffres (siège)
-  rcs: TODO, // ex. « RCS Paris 000 000 000 »
-  tvaIntracom: TODO, // ex. « FR00 000000000 »
-  adresse: TODO, // siège social
-  directeurPublication: TODO, // nom du représentant légal
+  // --- Entité juridique ---
+  // Entreprise individuelle : la dénomination est le nom de l'entrepreneur,
+  // obligatoirement accompagné de « EI » ou « entrepreneur individuel »
+  // (art. R123-237 du code de commerce, en vigueur depuis le 15 mai 2022).
+  raisonSociale: "Max Landry (EI)",
+  formeJuridique: "Entrepreneur individuel",
+  siren: "952242428",
+  siret: "95224242800011", // établissement siège (NIC 00011)
+  // RCS : réservé aux commerçants et aux sociétés. Une EI de prestation de
+  // services intellectuels n'y est pas immatriculée. `null` => mention omise.
+  rcs: null as string | null,
+  // TVA intracommunautaire : sans objet sous la franchise en base (voir `tva`).
+  // À demander au SIE et renseigner ici en cas de sortie de la franchise.
+  tvaIntracom: null as string | null,
+  adresse: "80 rue Robespierre, 93170 Bagnolet",
+  directeurPublication: "Max Landry",
 
   // --- Contact ---
   emailContact: "contact@dossimo.fr",
   emailRgpd: "contact@dossimo.fr", // adresse dédiée aux demandes RGPD
+
+  // --- Régime de TVA ---
+  // Franchise en base : aucune TVA facturée, mention obligatoire sur la facture.
+  // Les prix affichés sont donc à la fois HT et TTC. En cas de sortie de la
+  // franchise (dépassement des seuils), passer `taux` à 20 et remplacer la
+  // mention : les factures DÉJÀ émises gardent la leur, figée en base.
+  tva: {
+    taux: 0,
+    mention: "TVA non applicable, art. 293 B du CGI",
+  },
+
+  // --- Conditions de règlement (mentions obligatoires B2B, art. L441-9 C. com.) ---
+  reglement: {
+    conditions: "Paiement comptant à la commande, par carte bancaire.",
+    penalites:
+      "Pénalités de retard : trois fois le taux d'intérêt légal en vigueur.",
+    indemnite:
+      "Indemnité forfaitaire pour frais de recouvrement : 40 € (art. L441-10 du code de commerce).",
+    escompte: "Pas d'escompte pour paiement anticipé.",
+  },
 
   // --- Sous-traitants / hébergement ---
   hebergeur: {
@@ -48,14 +78,22 @@ export const editeur = {
 } as const;
 
 /** Date de dernière mise à jour des documents légaux (affichée en tête). */
-export const derniereMajLegale = "9 juillet 2026";
+export const derniereMajLegale = "10 juillet 2026";
 
-/** Vrai tant qu'un champ obligatoire n'est pas renseigné (bandeau d'alerte). */
+/**
+ * Vrai tant qu'un champ obligatoire n'est pas renseigné. Sert de garde au
+ * bandeau des mentions légales ET au rendu des factures : un document fiscal
+ * portant « [À COMPLÉTER] » ne doit jamais sortir.
+ *
+ * Ne couvre que les champs qui s'appliquent à TOUTE entité (`rcs` et
+ * `tvaIntracom` peuvent légitimement valoir `null`).
+ */
 export function mentionsIncompletes(): boolean {
-  return [
+  const requis: (string | null)[] = [
     editeur.raisonSociale,
     editeur.siret,
     editeur.adresse,
     editeur.directeurPublication,
-  ].some((v) => v === TODO);
+  ];
+  return requis.some((v) => !v || v.includes(TODO));
 }

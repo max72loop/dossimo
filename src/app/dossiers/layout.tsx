@@ -27,6 +27,12 @@ export default async function DossiersLayout({
               <Plus className="h-4 w-4" strokeWidth={2} />
               Nouveau dossier
             </Link>
+            <Link
+              href="/dossiers/factures"
+              className="hidden text-sm text-ardoise transition-colors hover:text-encre sm:inline"
+            >
+              Factures
+            </Link>
             <span className="hidden text-sm text-ardoise sm:inline">
               {artisan.entreprise}
             </span>

@@ -54,6 +54,8 @@ export interface Database {
           prenom: string;
           email: string;
           telephone: string | null;
+          adresse: string | null;
+          code_postal: string | null;
           ville: string | null;
           siret: string | null;
           qualification_rge: string | null;
@@ -70,6 +72,8 @@ export interface Database {
           prenom: string;
           email: string;
           telephone?: string | null;
+          adresse?: string | null;
+          code_postal?: string | null;
           ville?: string | null;
           siret?: string | null;
           qualification_rge?: string | null;
@@ -209,6 +213,36 @@ export interface Database {
             foreignKeyName: "paiements_artisan_id_fkey";
             columns: ["artisan_id"];
             referencedRelation: "artisans";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      factures: {
+        Row: {
+          id: string;
+          numero: string;
+          annee: number;
+          rang: number;
+          paiement_id: string;
+          artisan_id: string | null;
+          dossier_id: string | null;
+          emise_le: string;
+          acheteur_json: Json;
+          lignes_json: Json;
+          total_ht_cents: number;
+          tva_taux: number;
+          total_tva_cents: number;
+          total_ttc_cents: number;
+          mention_tva: string;
+        };
+        // Écriture réservée à `emettre_facture` (SQL). Aucun insert direct.
+        Insert: never;
+        Update: never;
+        Relationships: [
+          {
+            foreignKeyName: "factures_paiement_id_fkey";
+            columns: ["paiement_id"];
+            referencedRelation: "paiements";
             referencedColumns: ["id"];
           },
         ];
@@ -443,6 +477,14 @@ export interface Database {
         Args: { p_artisan_id: string };
         Returns: undefined;
       };
+      emettre_facture: {
+        Args: {
+          p_paiement_id: string;
+          p_tva_taux: number;
+          p_mention_tva: string;
+        };
+        Returns: Database["public"]["Tables"]["factures"]["Row"];
+      };
     };
     Enums: {
       statut_dossier: StatutDossier;
@@ -465,6 +507,7 @@ export type Artisan = Database["public"]["Tables"]["artisans"]["Row"];
 export type Dossier = Database["public"]["Tables"]["dossiers"]["Row"];
 export type RegleMetier = Database["public"]["Tables"]["regles_metier"]["Row"];
 export type Paiement = Database["public"]["Tables"]["paiements"]["Row"];
+export type Facture = Database["public"]["Tables"]["factures"]["Row"];
 export type Lead = Database["public"]["Tables"]["leads"]["Row"];
 export type PieceJustificative =
   Database["public"]["Tables"]["pieces_justificatives"]["Row"];

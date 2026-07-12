@@ -64,6 +64,24 @@ html {
   animation: stepIn 0.25s ease-out;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .animate-step {
+    animation: none;
+  }
+}
+
+/* La jauge de complétude est rendue à `scaleX(0)` et remplie par Motion à
+   l'hydratation. Sans JavaScript, personne ne la remplit : on la pose pleine,
+   sinon la barre contredirait le pourcentage annoncé juste au-dessus. */
+@media (scripting: none) {
+  [data-barre-completude] {
+    transform: scaleX(1) !important;
+  }
+}
+
 body {
   background: var(--color-papier);
   color: var(--color-encre);
