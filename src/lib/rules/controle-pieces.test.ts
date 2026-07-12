@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 
 import {
-  controlerPieces,
+  controlerPieces as controlerPiecesFamille,
   fusionnerRapport,
   type PieceControlee,
 } from "@/lib/rules/controle-pieces";
@@ -11,6 +11,10 @@ import type { ExtractedPiece } from "@/lib/piece/extract";
 import type { Finding, RapportControle } from "@/lib/rules/types";
 
 const codes = (fs: Finding[]) => fs.map((f) => `${f.code}:${f.severite}`);
+
+/** Sauf mention contraire, les cas portent sur un dossier d'isolation. */
+const controlerPieces = (pieces: PieceControlee[]) =>
+  controlerPiecesFamille(pieces, "isolation");
 
 const ok = (champ: string): Comparaison => ({
   champ,
@@ -180,6 +184,104 @@ describe("concordance devis ↔ facture", () => {
       piece({ type: "facture", extraction: extrait({ montant_ttc: 4431.5 }) }),
     ]);
     expect(codes(fs)).toContain("piece_devis_facture:ok");
+  });
+});
+
+describe("devis ↔ facture, hors isolation", () => {
+  /** Devis de PAC : aucun champ d'isolation, les caractéristiques sont dans `pac_*`. */
+  const exPac = (over: Partial<ExtractedPiece> = {}): ExtractedPiece =>
+    extrait({
+      surface_isolee_m2: null,
+      resistance_thermique_r: null,
+      isolant_marque: null,
+      isolant_reference: null,
+      fiche: "BAR-TH-171",
+      pac_etas: 145,
+      pac_puissance_kw: 8,
+      pac_marque: "Atlantic",
+      pac_reference: "Alfea Excellia",
+      ...over,
+    });
+
+  it("confronte les caractéristiques de la PAC, pas celles de l'isolation", () => {
+    const fs = controlerPiecesFamille(
+      [
+        piece({ extraction: exPac() }),
+        piece({ type: "facture", extraction: exPac({ pac_etas: 126 }) }),
+      ],
+      "pac_air_eau",
+    );
+    const f = fs.find((x) => x.code === "piece_devis_facture")!;
+    expect(f.severite).toBe("bloquant");
+    expect(f.detail).toContain("ETAS");
+  });
+
+  it("un devis de PAC conforme ne déclenche rien : les champs d'isolation sont ignorés", () => {
+    // Le piège : avant le multi-geste, `surface_isolee_m2: null` des deux côtés
+    // passait, mais toute confrontation utile était muette. Ici l'ETAS et la
+    // puissance concordent, et c'est CELA qui doit être constaté.
+    const fs = controlerPiecesFamille(
+      [piece({ extraction: exPac() }), piece({ type: "facture", extraction: exPac() })],
+      "pac_air_eau",
+    );
+    expect(codes(fs)).toContain("piece_devis_facture:ok");
+  });
+
+  it("un écart de COP entre devis et facture est bloquant (CET)", () => {
+    const exCet = (cop: number): ExtractedPiece =>
+      extrait({
+        surface_isolee_m2: null,
+        resistance_thermique_r: null,
+        cet_cop: cop,
+        cet_volume_l: 200,
+      });
+    const fs = controlerPiecesFamille(
+      [
+        piece({ extraction: exCet(3.2) }),
+        piece({ type: "facture", extraction: exCet(2.4) }),
+      ],
+      "cet",
+    );
+    const f = fs.find((x) => x.code === "piece_devis_facture")!;
+    expect(f.severite).toBe("bloquant");
+    expect(f.detail).toContain("COP");
+  });
+
+  it("un écart de rendement entre devis et facture est bloquant (bois)", () => {
+    const exBois = (rendement: number): ExtractedPiece =>
+      extrait({
+        surface_isolee_m2: null,
+        resistance_thermique_r: null,
+        bois_rendement: rendement,
+      });
+    const fs = controlerPiecesFamille(
+      [
+        piece({ extraction: exBois(87) }),
+        piece({ type: "facture", extraction: exBois(72) }),
+      ],
+      "bois",
+    );
+    const f = fs.find((x) => x.code === "piece_devis_facture")!;
+    expect(f.severite).toBe("bloquant");
+    expect(f.detail).toContain("Rendement");
+  });
+});
+
+describe("sévérité des écarts techniques hors isolation", () => {
+  it("un écart d'ETAS avec la saisie vaut refus, pas simple avertissement", () => {
+    const fs = controlerPiecesFamille(
+      [piece({ comparaisons: [ecart("ETAS")] })],
+      "pac_air_eau",
+    );
+    expect(codes(fs)).toContain("piece_ecart:bloquant");
+  });
+
+  it("un écart de marque reste un avertissement", () => {
+    const fs = controlerPiecesFamille(
+      [piece({ comparaisons: [ecart("Marque PAC")] })],
+      "pac_air_eau",
+    );
+    expect(codes(fs)).toContain("piece_ecart:avertissement");
   });
 });
 

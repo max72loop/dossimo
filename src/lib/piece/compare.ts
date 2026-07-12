@@ -83,45 +83,71 @@ export function comparerPiece(
     ex.code_postal ? norm(c.beneficiaire.code_postal) === norm(ex.code_postal) : null,
   );
 
-  // Travaux — bloc propre à l'isolation. Les dossiers PAC / CET / bois portent
-  // `pac` / `cet` / `bois` à la place et n'ont PAS de bloc `travaux` : on ne
-  // compare alors que les champs communs ci-dessus et ci-dessous. Leurs champs
-  // techniques (ETAS, COP, rendement) ne sont pas encore extraits des pièces —
-  // les omettre vaut mieux que les afficher « non lus » à tort.
+  // Bloc technique — propre à la famille du geste. Un dossier ne porte QUE le bloc
+  // de sa famille (`travaux` OU `pac` OU `cet` OU `bois`) : on ne lit jamais un bloc
+  // absent, et on ne compare que ce que le dossier déclare. Ajouter un geste =
+  // ajouter un cas ici (miroir de `BLOC` dans extract.ts).
+  const nombre = (
+    champ: string,
+    saisie: number,
+    lu: number | null | undefined,
+    unite: string,
+    tol: number,
+  ) =>
+    push(
+      champ,
+      `${saisie}${unite}`,
+      lu != null ? `${lu}${unite}` : "—",
+      lu != null ? numEq(saisie, lu, tol) : null,
+    );
+
+  /** Marque et référence : comparées seulement si la saisie les porte. */
+  const texte = (
+    champ: string,
+    saisie: string | null,
+    lu: string | null | undefined,
+  ) => {
+    if (!saisie) return;
+    push(champ, saisie, lu ?? "—", lu ? strMatch(saisie, lu) : null);
+  };
+
   const t = c.travaux;
-  if (t) {
-    push(
-      "Surface isolée",
-      `${t.surface_isolee_m2} m²`,
-      ex.surface_isolee_m2 != null ? `${ex.surface_isolee_m2} m²` : "—",
-      ex.surface_isolee_m2 != null
-        ? numEq(t.surface_isolee_m2, ex.surface_isolee_m2, 0.5)
-        : null,
-    );
-    push(
+  const { pac, cet, bois } = c;
+
+  if (pac) {
+    nombre("ETAS", pac.etas, ex.pac_etas, " %", 0.5);
+    nombre("Puissance", pac.puissance_kw, ex.pac_puissance_kw, " kW", 0.1);
+    texte("Marque PAC", pac.marque, ex.pac_marque);
+    texte("Référence PAC", pac.reference, ex.pac_reference);
+  } else if (cet) {
+    nombre("COP", cet.cop, ex.cet_cop, "", 0.05);
+    nombre("Volume du ballon", cet.volume_l, ex.cet_volume_l, " L", 1);
+    texte("Marque du chauffe-eau", cet.marque, ex.cet_marque);
+    texte("Référence du chauffe-eau", cet.reference, ex.cet_reference);
+  } else if (bois) {
+    nombre("Rendement", bois.rendement, ex.bois_rendement, " %", 0.5);
+    if (bois.emissions_co != null) {
+      nombre(
+        "Émissions de CO",
+        bois.emissions_co,
+        ex.bois_emissions_co,
+        " mg/Nm³",
+        1,
+      );
+    }
+    texte("Marque de l'appareil", bois.marque, ex.bois_marque);
+    texte("Référence de l'appareil", bois.reference, ex.bois_reference);
+  } else if (t) {
+    nombre("Surface isolée", t.surface_isolee_m2, ex.surface_isolee_m2, " m²", 0.5);
+    nombre(
       "Résistance R",
-      `${t.resistance_thermique_r}`,
-      ex.resistance_thermique_r != null ? `${ex.resistance_thermique_r}` : "—",
-      ex.resistance_thermique_r != null
-        ? numEq(t.resistance_thermique_r, ex.resistance_thermique_r, 0.05)
-        : null,
+      t.resistance_thermique_r,
+      ex.resistance_thermique_r,
+      "",
+      0.05,
     );
-    if (t.isolant_marque) {
-      push(
-        "Marque isolant",
-        t.isolant_marque,
-        ex.isolant_marque ?? "—",
-        ex.isolant_marque ? strMatch(t.isolant_marque, ex.isolant_marque) : null,
-      );
-    }
-    if (t.isolant_reference) {
-      push(
-        "Référence isolant",
-        t.isolant_reference,
-        ex.isolant_reference ?? "—",
-        ex.isolant_reference ? strMatch(t.isolant_reference, ex.isolant_reference) : null,
-      );
-    }
+    texte("Marque isolant", t.isolant_marque, ex.isolant_marque);
+    texte("Référence isolant", t.isolant_reference, ex.isolant_reference);
   }
 
   // Montants

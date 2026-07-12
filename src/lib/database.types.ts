@@ -16,7 +16,31 @@ export type Dispositif = "maprimerenov" | "cee";
 export type StatutAbonnement = "aucun" | "actif" | "expire";
 export type TypePaiement = "abonnement" | "ponctuel";
 export type StatutPaiement = "en_attente" | "paye" | "echoue" | "rembourse";
-export type TypePiece = "devis" | "facture" | "autre";
+/**
+ * Pièces d'un dossier. Les identifiants reprennent ceux de la checklist
+ * (`PieceRequise.id`) : c'est la clé commune qui relie « pièce exigée » et « pièce
+ * réellement déposée ». Migration 0016.
+ */
+export type TypePiece =
+  // Déposées par l'artisan
+  | "devis"
+  | "facture"
+  | "qualification_rge"
+  | "fiche_technique"
+  | "cadre_contribution"
+  | "attestation_honneur"
+  | "photo_avant"
+  | "photo_apres"
+  | "autre"
+  // Déposées par le bénéficiaire, via un lien de dépôt
+  | "avis_imposition"
+  | "piece_identite"
+  | "titre_propriete"
+  | "rib"
+  | "attestation_bailleur";
+
+/** Qui a déposé la pièce (migration 0017). */
+export type Deposant = "artisan" | "beneficiaire";
 export type StatutExtraction = "en_attente" | "ok" | "echec";
 
 // Pricing + parrainage (migrations 0012 / 0013).
@@ -104,6 +128,8 @@ export interface Database {
           delivered_at: string | null;
           vigilance_json: Json | null;
           vigilance_at: string | null;
+          /** Dernier passage de l'artisan (migration 0018). null = jamais ouvert. */
+          pieces_vues_at: string | null;
           estimated_aid_cents: number | null;
           tier_id: string | null;
           base_price_cents: number | null;
@@ -132,6 +158,7 @@ export interface Database {
           delivered_at?: string | null;
           vigilance_json?: Json | null;
           vigilance_at?: string | null;
+          pieces_vues_at?: string | null;
           estimated_aid_cents?: number | null;
           tier_id?: string | null;
           base_price_cents?: number | null;
@@ -285,6 +312,7 @@ export interface Database {
           extraction_erreur: string | null;
           /** Mentions obligatoires relevées sur la pièce. null = non vérifié. */
           mentions_json: Json | null;
+          deposant: Deposant;
           created_at: string;
           extracted_at: string | null;
         };
@@ -300,6 +328,7 @@ export interface Database {
           extraction_statut?: StatutExtraction;
           extraction_erreur?: string | null;
           mentions_json?: Json | null;
+          deposant?: Deposant;
           created_at?: string;
           extracted_at?: string | null;
         };
@@ -314,6 +343,52 @@ export interface Database {
             referencedColumns: ["id"];
           },
         ];
+      };
+      liens_depot: {
+        Row: {
+          id: string;
+          dossier_id: string;
+          /** SHA-256 du token. Le token en clair n'est jamais stocké. */
+          token_hash: string;
+          expire_at: string;
+          revoque_at: string | null;
+          derniere_visite_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          dossier_id: string;
+          token_hash: string;
+          expire_at: string;
+          revoque_at?: string | null;
+          derniere_visite_at?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["liens_depot"]["Insert"]>;
+        Relationships: [
+          {
+            foreignKeyName: "liens_depot_dossier_id_fkey";
+            columns: ["dossier_id"];
+            referencedRelation: "dossiers";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      plafonds_ressources: {
+        Row: {
+          id: string;
+          annee: number;
+          zone: "idf" | "hors_idf";
+          /** 0 = incrément par personne supplémentaire au-delà de 5. */
+          personnes: number;
+          plafond_grande_precarite: number;
+          plafond_precaire: number;
+          actif: boolean;
+          created_at: string;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
       };
       pricing_tiers: {
         Row: {
@@ -511,6 +586,9 @@ export type Facture = Database["public"]["Tables"]["factures"]["Row"];
 export type Lead = Database["public"]["Tables"]["leads"]["Row"];
 export type PieceJustificative =
   Database["public"]["Tables"]["pieces_justificatives"]["Row"];
+export type LienDepot = Database["public"]["Tables"]["liens_depot"]["Row"];
+export type PlafondRessources =
+  Database["public"]["Tables"]["plafonds_ressources"]["Row"];
 export type PricingTier = Database["public"]["Tables"]["pricing_tiers"]["Row"];
 export type Referral = Database["public"]["Tables"]["referrals"]["Row"];
 export type ReferralCredit =

@@ -3,6 +3,7 @@ import "server-only";
 import { z } from "zod";
 
 import { isLlmConfigured, openRouterVision } from "@/lib/llm/openrouter";
+import type { Famille } from "@/lib/dossier/cee-isolation";
 import type { TypePiece } from "@/lib/database.types";
 
 /**
@@ -28,19 +29,49 @@ const str = z.preprocess(
   z.string().nullable(),
 );
 
+/**
+ * Un seul schéma pour toutes les familles : tous les champs sont nullables, et le
+ * modèle ne se voit demander que ceux de la famille du dossier (les autres
+ * reviennent absents, donc null). Cela garde `ExtractedPiece` sérialisable tel quel
+ * dans `extraction_json`, et laisse les pièces extraites AVANT l'ajout d'un champ se
+ * relire sans migration : une clé manquante vaut null.
+ */
 const extractedSchema = z.object({
+  // Communs à toutes les familles
   beneficiaire_nom: str,
   adresse: str,
   code_postal: str,
-  surface_isolee_m2: frNum,
-  resistance_thermique_r: frNum,
-  isolant_marque: str,
-  isolant_reference: str,
   montant_ht: frNum,
   montant_ttc: frNum,
   date: str, // date du devis / de la facture, telle qu'écrite
   rge_numero: str,
   fiche: str, // ex. BAR-EN-101 si présent
+
+  // Isolation
+  surface_isolee_m2: frNum,
+  resistance_thermique_r: frNum,
+  isolant_marque: str,
+  isolant_reference: str,
+
+  // Pompe à chaleur air/eau
+  pac_etas: frNum,
+  pac_puissance_kw: frNum,
+  pac_marque: str,
+  pac_reference: str,
+  pac_regulateur_classe: str,
+
+  // Chauffe-eau thermodynamique
+  cet_cop: frNum,
+  cet_volume_l: frNum,
+  cet_profil_soutirage: str,
+  cet_marque: str,
+  cet_reference: str,
+
+  // Appareil de chauffage au bois
+  bois_rendement: frNum,
+  bois_emissions_co: frNum,
+  bois_marque: str,
+  bois_reference: str,
 });
 
 export type ExtractedPiece = z.infer<typeof extractedSchema>;
@@ -49,25 +80,66 @@ export type ExtractResult =
   | { ok: true; data: ExtractedPiece }
   | { ok: false; reason: "non-configure" | "erreur"; message?: string };
 
-const SYSTEM = `Tu es un moteur d'extraction de documents pour la conformité CEE / MaPrimeRénov'.
-On te fournit un DEVIS ou une FACTURE de travaux d'isolation. Tu extrais uniquement ce qui est écrit, sans rien deviner.
-
-Renvoie STRICTEMENT un JSON conforme à ce schéma (mets null si l'information n'est pas présente) :
-{
-  "beneficiaire_nom": "nom du client bénéficiaire",
+/** Champs communs, demandés quelle que soit la famille. */
+const CHAMPS_COMMUNS = `  "beneficiaire_nom": "nom du client bénéficiaire",
   "adresse": "adresse du chantier",
   "code_postal": "code postal du chantier",
-  "surface_isolee_m2": nombre (m² isolés),
-  "resistance_thermique_r": nombre (résistance thermique R, m²·K/W),
-  "isolant_marque": "marque de l'isolant",
-  "isolant_reference": "référence produit de l'isolant",
   "montant_ht": nombre (total HT en euros),
   "montant_ttc": nombre (total TTC en euros),
   "date": "date du document (JJ/MM/AAAA)",
   "rge_numero": "numéro de qualification RGE de l'entreprise",
-  "fiche": "fiche CEE si mentionnée (ex. BAR-EN-101)"
+  "fiche": "fiche CEE si mentionnée (ex. BAR-EN-101, BAR-TH-171)"`;
+
+/**
+ * Ce que le modèle doit chercher sur la pièce, PAR FAMILLE. Ne demander que les
+ * champs du geste évite au modèle d'halluciner une surface isolée sur un devis de
+ * pompe à chaleur pour satisfaire le schéma. Ajouter un geste = ajouter un cas ici.
+ */
+const BLOC: Record<Famille, { objet: string; champs: string }> = {
+  isolation: {
+    objet: "travaux d'isolation",
+    champs: `  "surface_isolee_m2": nombre (m² isolés),
+  "resistance_thermique_r": nombre (résistance thermique R, en m²·K/W),
+  "isolant_marque": "marque de l'isolant",
+  "isolant_reference": "référence produit de l'isolant"`,
+  },
+  pac_air_eau: {
+    objet: "installation d'une pompe à chaleur air/eau",
+    champs: `  "pac_etas": nombre (efficacité énergétique saisonnière ETAS, en %),
+  "pac_puissance_kw": nombre (puissance thermique, en kW),
+  "pac_marque": "marque de la pompe à chaleur",
+  "pac_reference": "référence / modèle de la pompe à chaleur",
+  "pac_regulateur_classe": "classe du régulateur (ex. IV, V, VI)"`,
+  },
+  cet: {
+    objet: "installation d'un chauffe-eau thermodynamique",
+    champs: `  "cet_cop": nombre (coefficient de performance COP, norme EN 16147),
+  "cet_volume_l": nombre (volume du ballon, en litres),
+  "cet_profil_soutirage": "profil de soutirage (M, L ou XL)",
+  "cet_marque": "marque du chauffe-eau",
+  "cet_reference": "référence / modèle du chauffe-eau"`,
+  },
+  bois: {
+    objet: "installation d'un appareil de chauffage au bois",
+    champs: `  "bois_rendement": nombre (rendement énergétique, en %),
+  "bois_emissions_co": nombre (émissions de monoxyde de carbone, en mg/Nm³),
+  "bois_marque": "marque de l'appareil",
+  "bois_reference": "référence / modèle de l'appareil"`,
+  },
+};
+
+function systemPrompt(famille: Famille): string {
+  const { objet, champs } = BLOC[famille];
+  return `Tu es un moteur d'extraction de documents pour la conformité CEE / MaPrimeRénov'.
+On te fournit un DEVIS ou une FACTURE portant sur : ${objet}. Tu extrais uniquement ce qui est écrit, sans rien deviner.
+
+Renvoie STRICTEMENT un JSON conforme à ce schéma (mets null si l'information n'est pas présente sur le document) :
+{
+${CHAMPS_COMMUNS},
+${champs}
 }
 Les nombres sont des nombres (pas de symbole, séparateur décimal au choix). Aucune phrase autour du JSON.`;
+}
 
 function extractJson(raw: string): unknown {
   let s = raw.trim();
@@ -84,6 +156,8 @@ export async function extractPiece(params: {
   mime: string;
   filename: string;
   type: TypePiece;
+  /** Famille du geste du dossier : détermine les champs techniques à chercher. */
+  famille: Famille;
 }): Promise<ExtractResult> {
   if (!isLlmConfigured()) return { ok: false, reason: "non-configure" };
 
@@ -92,8 +166,8 @@ export async function extractPiece(params: {
 
   try {
     const raw = await openRouterVision({
-      system: SYSTEM,
-      userText: `Voici ${label} de travaux d'isolation. Extrais les champs demandés en JSON.`,
+      system: systemPrompt(params.famille),
+      userText: `Voici ${label} portant sur : ${BLOC[params.famille].objet}. Extrais les champs demandés en JSON.`,
       file: { mime: params.mime, dataUrl, filename: params.filename },
       jsonMode: true,
       maxTokens: 1200,
