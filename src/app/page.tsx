@@ -87,15 +87,15 @@ function Hero() {
           </p>
 
           <h1 className="mt-7 max-w-3xl font-serif text-[3rem] font-semibold leading-[1.02] tracking-tight text-encre sm:text-[4.35rem]">
-            Vos primes ne doivent pas se jouer{" "}
+            Une mention oubliée ne devrait pas coûter{" "}
             <span className="relative whitespace-nowrap text-tampon">
-              sur un oubli.
+              votre prime.
               <span className="absolute -bottom-2 left-0 h-1 w-full bg-terre-cuite" />
             </span>
           </h1>
 
           <p className="mt-8 max-w-xl text-lg leading-relaxed text-ardoise">
-            Dossimo contrôle vos dossiers <span className="font-medium text-encre">MaPrimeRénov&rsquo; et CEE</span>, relit vos devis et vos factures, puis prépare les pièces utiles au dépôt. Vous gardez la main, votre client et la prime.
+            Un numéro RGE absent, une résistance thermique non indiquée, une date incohérente : Dossimo contrôle vos dossiers <span className="font-medium text-encre">MaPrimeRénov&rsquo; et CEE</span> avant le dépôt. Vous gardez la main, votre client et la prime.
           </p>
 
           <div className="mt-8 flex flex-wrap items-center gap-3">
@@ -103,7 +103,7 @@ function Hero() {
               href="/dossiers/nouveau"
               className={`group inline-flex h-12 items-center gap-2 rounded-lg bg-terre-cuite px-6 text-sm font-semibold text-blanc-casse transition-colors hover:bg-terre-cuite-hover ${FOCUS}`}
             >
-              Créer mon dossier gratuit
+              Contrôler mon dossier gratuitement
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </Link>
             <a
@@ -116,11 +116,11 @@ function Hero() {
 
           <p className="mt-5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-ardoise">
             <CheckCircle2 className="h-4 w-4 text-succes" strokeWidth={1.5} />
-            Premier dossier offert
+            Premier contrôle offert
             <span className="text-filigrane">·</span>
             sans carte bancaire
             <span className="text-filigrane">·</span>
-            prêt en quelques minutes
+            sans engagement
           </p>
         </div>
 
@@ -451,7 +451,7 @@ function PourQui() {
                 href="/dossiers/nouveau"
                 className={`group inline-flex h-12 items-center gap-2 rounded-lg bg-terre-cuite px-6 text-sm font-semibold text-blanc-casse transition-colors hover:bg-terre-cuite-hover ${FOCUS}`}
               >
-                Essayer, c&rsquo;est gratuit
+                Contrôler mon dossier gratuitement
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </Link>
             </div>
@@ -742,14 +742,27 @@ function CasConcrets() {
     <section className="py-20 sm:py-24">
       <Shell>
         <div className="max-w-2xl">
-          <SectionLabel>Cas concrets</SectionLabel>
+          <SectionLabel>Un contrôle vérifiable</SectionLabel>
           <h2 className="mt-5 font-serif text-3xl font-semibold tracking-tight text-encre sm:text-[2.25rem] sm:leading-tight">
-            Ce que le contrôle anti-refus repère, concrètement
+            Pas de score opaque : vous voyez chaque point contrôlé
           </h2>
           <p className="mt-4 text-lg leading-relaxed text-ardoise">
-            Exemples représentatifs des points bloquants les plus courants,
-            détectés avant le dépôt.
+            Dossimo ne vous demande pas de lui faire confiance sur parole. Pour chaque point signalé, le rapport indique la pièce concernée et ce qui doit être vérifié.
           </p>
+        </div>
+
+        <div className="mt-10 grid border border-encre bg-encre text-encre md:grid-cols-3">
+          {[
+            ["Le document concerné", "Devis, facture ou récapitulatif : vous savez immédiatement où regarder."],
+            ["La donnée contrôlée", "Dates, montants, RGE, performance ou mention réglementaire."],
+            ["Le point à trancher", "Dossimo signale l’écart ; vous décidez de la correction à demander."],
+          ].map(([titre, texte], index) => (
+            <div key={titre} className="bg-papier px-6 py-6 md:border-r md:border-encre last:border-r-0">
+              <p className="font-mono text-xs text-tampon">0{index + 1}</p>
+              <h3 className="mt-4 font-serif text-lg font-semibold">{titre}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-ardoise">{texte}</p>
+            </div>
+          ))}
         </div>
 
         <div className="mt-12 grid gap-5 md:grid-cols-3">
@@ -834,19 +847,19 @@ function Pricing({ grille }: { grille: GrilleAffichee | null }) {
                 href="/dossiers/nouveau"
                 className={`group inline-flex h-12 items-center gap-2 rounded-lg bg-papier px-6 text-sm font-semibold text-encre transition-colors hover:bg-blanc-casse ${FOCUS_SOMBRE}`}
               >
-                Créer mon premier dossier
+                Contrôler mon dossier gratuitement
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </Link>
               <a
                 href="#contact"
                 className={`inline-flex h-12 items-center gap-2 rounded-lg border border-papier/30 px-6 text-sm font-medium text-papier transition-colors hover:bg-papier/10 ${FOCUS_SOMBRE}`}
               >
-                Être recontacté
+                J’ai une question
               </a>
             </div>
             <p className="mt-5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-papier/70">
               <CheckCircle2 className="h-4 w-4 text-succes" strokeWidth={1.5} />
-              Aucune carte requise pour commencer
+              Premier contrôle offert
               <span className="text-papier/30">·</span>
               vous voyez le contrôle avant de payer
             </p>
@@ -865,12 +878,12 @@ function Contact() {
         <div>
           <SectionLabel>Rester en contact</SectionLabel>
           <h2 className="mt-5 font-serif text-3xl font-semibold tracking-tight text-encre sm:text-[2.25rem] sm:leading-tight">
-            Sécurisez votre prochain dossier
+            Pas encore de dossier à contrôler ?
           </h2>
           <p className="mt-4 text-lg leading-relaxed text-ardoise">
-            Laissez-nous vos coordonnées : on prépare avec vous votre premier
-            dossier, offert, et on vous montre le contrôle anti-refus en
-            conditions réelles.
+            Laissez vos coordonnées et nous vous expliquons comment préparer votre
+            prochain dossier. Le contrôle gratuit reste le moyen le plus simple de
+            découvrir Dossimo si votre chantier est déjà prêt.
           </p>
         </div>
         <div className="rounded border border-filigrane bg-blanc-casse p-6 shadow-sm sm:p-7">

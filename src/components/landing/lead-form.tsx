@@ -102,7 +102,7 @@ export function LeadForm() {
         className="mt-1 inline-flex h-11 items-center justify-center gap-2 rounded bg-terre-cuite px-5 text-sm font-medium text-blanc-casse transition-colors hover:bg-terre-cuite-hover disabled:opacity-60 sm:col-span-2"
       >
         {status === "loading" && <Loader2 className="h-4 w-4 animate-spin" />}
-        Être recontacté · premier dossier offert
+        Être recontacté
       </button>
       <p className="text-center text-xs text-encre-claire sm:col-span-2">
         Sans engagement. Vos données ne sont jamais partagées.

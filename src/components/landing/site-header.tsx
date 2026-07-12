@@ -66,7 +66,7 @@ export async function SiteHeader() {
             href={user ? "/dossiers/nouveau" : "/inscription"}
             className={`hidden h-10 items-center rounded bg-terre-cuite px-5 text-sm font-medium text-blanc-casse transition-colors hover:bg-terre-cuite-hover md:inline-flex ${FOCUS}`}
           >
-            Créer un dossier
+            Contrôler un dossier
           </Link>
           <MobileMenu nav={NAV} connecte={!!user} />
         </div>
