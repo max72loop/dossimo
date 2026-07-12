@@ -1,5 +1,6 @@
 import "server-only";
 
+import { familleDeGeste } from "@/lib/dossier/cee-isolation";
 import type { DossierComplet } from "@/lib/dossier/get-dossier";
 import { getDossierPieces, versControle, type PieceAvecEcarts } from "@/lib/piece/get";
 import { controlerDossier } from "@/lib/rules/controle-dossier";
@@ -21,9 +22,10 @@ export async function rapportComplet(data: DossierComplet): Promise<{
   pieces: PieceAvecEcarts[];
 }> {
   const pieces = await getDossierPieces(data);
+  const famille = familleDeGeste(data.caracteristiques.geste ?? "isolation");
   const rapport = fusionnerRapport(
     controlerDossier(data),
-    controlerPieces(versControle(pieces)),
+    controlerPieces(versControle(pieces), famille),
   );
   return { rapport, pieces };
 }

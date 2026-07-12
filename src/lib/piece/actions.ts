@@ -1,5 +1,6 @@
 "use server";
 
+import { familleDeGeste } from "@/lib/dossier/cee-isolation";
 import { getDossier } from "@/lib/dossier/get-dossier";
 import { createClient } from "@/lib/supabase/server";
 import { extractPiece } from "@/lib/piece/extract";
@@ -66,8 +67,9 @@ export async function uploadPiece(
   //  1. les VALEURS, que le code compare ensuite à la saisie (écarts) ;
   //  2. les MENTIONS OBLIGATOIRES exigées par la fiche, que le document doit porter.
   // La seconde est celle qui attrape les refus « chiffres justes, mention manquante ».
+  const famille = familleDeGeste(data.caracteristiques.geste ?? "isolation");
   const [ex, mn] = await Promise.all([
-    extractPiece({ bytes, mime: file.type, filename: file.name, type }),
+    extractPiece({ bytes, mime: file.type, filename: file.name, type, famille }),
     verifierMentions({
       bytes,
       mime: file.type,

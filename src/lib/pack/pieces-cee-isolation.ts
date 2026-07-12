@@ -1,4 +1,13 @@
-import type { DossierComplet } from "@/lib/dossier/get-dossier";
+import {
+  BOIS_COMBUSTIBLES,
+  PAC_TEMPERATURES,
+  familleDeGeste,
+  type Famille,
+} from "@/lib/dossier/cee-isolation";
+import type {
+  CeeIsolationCaracteristiques,
+  DossierComplet,
+} from "@/lib/dossier/get-dossier";
 
 /**
  * Bordereau des pièces d'un dossier CEE isolation.
@@ -19,25 +28,107 @@ export interface MentionObligatoire {
   mention: string;
 }
 
-/** Templates de mentions par défaut — repli si aucune règle métier active. */
-const MENTIONS_DEFAUT: string[] = [
-  "Fiche CEE : {fiche}",
-  "Marque et référence de l'isolant posé",
-  "Surface isolée : {surface} m²",
-  "Résistance thermique R = {r} m²·K/W",
-  "Certification de l'isolant (ACERMI ou équivalent)",
-  "Mention de la qualification RGE (n° et domaine)",
-];
+/**
+ * Templates de mentions par défaut, PAR FAMILLE DE GESTE — repli si aucune règle
+ * métier active.
+ *
+ * Une mention exigée qui ne figure pas sur un document lisible vaut refus
+ * (`controle-pieces.ts`). Servir les mentions de l'isolation à un dossier PAC
+ * reviendrait donc à exiger une certification ACERMI sur un devis de pompe à
+ * chaleur, et à bloquer un dossier parfaitement conforme : les mentions se lisent
+ * toujours dans la famille du geste.
+ */
+const MENTIONS_DEFAUT: Record<Famille, string[]> = {
+  isolation: [
+    "Fiche CEE : {fiche}",
+    "Marque et référence de l'isolant posé",
+    "Surface isolée : {surface} m²",
+    "Résistance thermique R = {r} m²·K/W",
+    "Certification de l'isolant (ACERMI ou équivalent)",
+    "Mention de la qualification RGE (n° et domaine)",
+  ],
+  pac_air_eau: [
+    "Fiche CEE : {fiche}",
+    "Marque et référence de la pompe à chaleur",
+    "Efficacité énergétique saisonnière (ETAS) : {etas} %",
+    "Puissance thermique : {puissance} kW",
+    "Régime de température : {temperature}",
+    "Mention de la qualification RGE (n° et domaine)",
+  ],
+  cet: [
+    "Fiche CEE : {fiche}",
+    "Marque et référence du chauffe-eau thermodynamique",
+    "COP (norme EN 16147) : {cop}",
+    "Profil de soutirage : {soutirage}",
+    "Volume du ballon : {volume} L",
+    "Mention de la qualification RGE (n° et domaine)",
+  ],
+  bois: [
+    "Fiche CEE : {fiche}",
+    "Marque et référence de l'appareil",
+    "Rendement énergétique : {rendement} %",
+    "Combustible : {combustible}",
+    "Émissions de monoxyde de carbone : {co} mg/Nm³",
+    "Mention de la qualification RGE (n° et domaine)",
+  ],
+};
 
-/** Interpole {fiche} / {surface} / {r} dans un template de mention. */
+/** Valeurs interpolables du dossier, lues dans le bloc technique de sa famille. */
+function valeursMention(c: CeeIsolationCaracteristiques): Record<string, string> {
+  const famille = familleDeGeste(c.geste ?? "isolation");
+
+  if (famille === "pac_air_eau" && c.pac) {
+    return {
+      fiche: c.pac.fiche || c.fiche,
+      etas: String(c.pac.etas),
+      puissance: String(c.pac.puissance_kw),
+      temperature: PAC_TEMPERATURES[c.pac.temperature],
+    };
+  }
+  if (famille === "cet" && c.cet) {
+    return {
+      fiche: c.cet.fiche || c.fiche,
+      cop: String(c.cet.cop),
+      soutirage: c.cet.profil_soutirage,
+      volume: String(c.cet.volume_l),
+    };
+  }
+  if (famille === "bois" && c.bois) {
+    return {
+      fiche: c.bois.fiche || c.fiche,
+      rendement: String(c.bois.rendement),
+      combustible: BOIS_COMBUSTIBLES[c.bois.combustible],
+      co: c.bois.emissions_co != null ? String(c.bois.emissions_co) : "",
+    };
+  }
+  return {
+    fiche: c.travaux?.fiche ?? c.fiche,
+    surface: c.travaux ? String(c.travaux.surface_isolee_m2) : "",
+    r: c.travaux ? String(c.travaux.resistance_thermique_r) : "",
+  };
+}
+
+/**
+ * Interpole un template. Renvoie null si l'une des valeurs citées manque au
+ * dossier : mieux vaut ne pas exiger une mention que d'en exiger une amputée
+ * (« Émissions de CO :  mg/Nm³ »), qu'aucun document ne pourra jamais porter et
+ * qui se solderait par un refus fabriqué. Protège aussi des règles métier en base
+ * dont les placeholders ne correspondraient pas au geste du dossier.
+ */
 function interpolerMention(
   tpl: string,
-  v: { fiche: string; surface: string; r: string },
-): string {
-  return tpl
-    .replace(/\{fiche\}/g, v.fiche)
-    .replace(/\{surface\}/g, v.surface)
-    .replace(/\{r\}/g, v.r);
+  vals: Record<string, string>,
+): string | null {
+  let manquante = false;
+  const out = tpl.replace(/\{(\w+)\}/g, (_, cle: string) => {
+    const v = vals[cle];
+    if (!v) {
+      manquante = true;
+      return "";
+    }
+    return v;
+  });
+  return manquante ? null : out;
 }
 
 /**
@@ -46,18 +137,14 @@ function interpolerMention(
  * au document réel : chaque entrée est le texte qui doit figurer noir sur blanc.
  */
 export function mentionsTemplates(data: DossierComplet): string[] {
-  const { travaux, fiche } = data.caracteristiques;
-  // La PAC n'a pas de bloc `travaux` : on retombe sur la fiche du dossier et on
-  // laisse les placeholders {surface}/{r} vides (les mentions PAC n'en ont pas).
-  const vals = {
-    fiche: travaux?.fiche ?? fiche,
-    surface: travaux ? String(travaux.surface_isolee_m2) : "",
-    r: travaux ? String(travaux.resistance_thermique_r) : "",
-  };
+  const c = data.caracteristiques;
+  const vals = valeursMention(c);
   const templates = data.regle?.mentions?.length
     ? data.regle.mentions
-    : MENTIONS_DEFAUT;
-  return templates.map((tpl) => interpolerMention(tpl, vals));
+    : MENTIONS_DEFAUT[familleDeGeste(c.geste ?? "isolation")];
+  return templates
+    .map((tpl) => interpolerMention(tpl, vals))
+    .filter((m): m is string => m !== null);
 }
 
 /**

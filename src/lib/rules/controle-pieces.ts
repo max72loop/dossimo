@@ -1,3 +1,4 @@
+import type { Famille } from "@/lib/dossier/cee-isolation";
 import type { Comparaison } from "@/lib/piece/compare";
 import type { ExtractedPiece } from "@/lib/piece/extract";
 import type { MentionVerifiee } from "@/lib/piece/mentions";
@@ -24,20 +25,35 @@ import type { Finding, RapportControle } from "@/lib/rules/types";
 const CONFIANCE_MIN = 0.6;
 
 /**
- * Champs dont l'écart avec la saisie vaut refus. Les autres (marque, référence)
- * sont comparés par rapprochement de texte : un écart y signale un doute à lever,
- * pas une contradiction établie.
+ * Champs dont l'écart avec la saisie vaut refus : identité, montants, dates, et les
+ * critères techniques qui conditionnent l'éligibilité du geste (R, ETAS, COP,
+ * rendement). Les autres (marque, référence, émissions) sont comparés par
+ * rapprochement de texte ou portent une donnée facultative : un écart y signale un
+ * doute à lever, pas une contradiction établie.
+ *
+ * Les libellés sont ceux produits par `comparerPiece` — les deux listes se lisent
+ * ensemble.
  */
 const CHAMPS_CRITIQUES = new Set([
+  // Communs
   "Bénéficiaire",
   "Code postal",
-  "Surface isolée",
-  "Résistance R",
   "Montant HT",
   "Montant TTC",
   "Date devis",
   "Date facture",
   "N° RGE",
+  // Isolation
+  "Surface isolée",
+  "Résistance R",
+  // Pompe à chaleur air/eau
+  "ETAS",
+  "Puissance",
+  // Chauffe-eau thermodynamique
+  "COP",
+  "Volume du ballon",
+  // Appareil de chauffage au bois
+  "Rendement",
 ]);
 
 const NOM: Record<TypePiece, string> = {
@@ -174,19 +190,45 @@ function findingsEcarts(p: PieceControlee): Finding[] {
 
 /* --------------------------------------------------------- Devis ↔ facture */
 
-/** Champs qui doivent être repris à l'identique de l'un à l'autre. */
-const CROISES: {
+interface ChampCroise {
   cle: keyof ExtractedPiece;
   label: string;
   tolerance?: number;
-}[] = [
-  { cle: "surface_isolee_m2", label: "Surface isolée", tolerance: 0.5 },
-  { cle: "resistance_thermique_r", label: "Résistance R", tolerance: 0.05 },
+}
+
+/** Repris à l'identique quel que soit le geste. */
+const CROISES_COMMUNS: ChampCroise[] = [
   { cle: "montant_ht", label: "Montant HT", tolerance: 1 },
   { cle: "montant_ttc", label: "Montant TTC", tolerance: 1 },
-  { cle: "isolant_marque", label: "Marque de l'isolant" },
-  { cle: "isolant_reference", label: "Référence de l'isolant" },
 ];
+
+/** Caractéristiques techniques à reprendre à l'identique, par famille de geste. */
+const CROISES: Record<Famille, ChampCroise[]> = {
+  isolation: [
+    { cle: "surface_isolee_m2", label: "Surface isolée", tolerance: 0.5 },
+    { cle: "resistance_thermique_r", label: "Résistance R", tolerance: 0.05 },
+    { cle: "isolant_marque", label: "Marque de l'isolant" },
+    { cle: "isolant_reference", label: "Référence de l'isolant" },
+  ],
+  pac_air_eau: [
+    { cle: "pac_etas", label: "ETAS", tolerance: 0.5 },
+    { cle: "pac_puissance_kw", label: "Puissance", tolerance: 0.1 },
+    { cle: "pac_marque", label: "Marque de la pompe à chaleur" },
+    { cle: "pac_reference", label: "Référence de la pompe à chaleur" },
+  ],
+  cet: [
+    { cle: "cet_cop", label: "COP", tolerance: 0.05 },
+    { cle: "cet_volume_l", label: "Volume du ballon", tolerance: 1 },
+    { cle: "cet_marque", label: "Marque du chauffe-eau" },
+    { cle: "cet_reference", label: "Référence du chauffe-eau" },
+  ],
+  bois: [
+    { cle: "bois_rendement", label: "Rendement", tolerance: 0.5 },
+    { cle: "bois_emissions_co", label: "Émissions de CO", tolerance: 1 },
+    { cle: "bois_marque", label: "Marque de l'appareil" },
+    { cle: "bois_reference", label: "Référence de l'appareil" },
+  ],
+};
 
 const normTexte = (s: string) =>
   s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/\s+/g, "");
@@ -197,7 +239,7 @@ const normTexte = (s: string) =>
  * sont déjà comparées à la saisie, mais deux documents peuvent diverger l'un de
  * l'autre sur un champ que la saisie ne porte pas.
  */
-function findingsCroises(pieces: PieceControlee[]): Finding[] {
+function findingsCroises(pieces: PieceControlee[], famille: Famille): Finding[] {
   const devis = pieces.find((p) => p.type === "devis" && p.extraction);
   const facture = pieces.find((p) => p.type === "facture" && p.extraction);
   if (!devis?.extraction || !facture?.extraction) return [];
@@ -206,7 +248,10 @@ function findingsCroises(pieces: PieceControlee[]): Finding[] {
   const f = facture.extraction;
   const divergents: string[] = [];
 
-  for (const { cle, label, tolerance } of CROISES) {
+  for (const { cle, label, tolerance } of [
+    ...CROISES_COMMUNS,
+    ...CROISES[famille],
+  ]) {
     const vd = d[cle];
     const vf = f[cle];
     if (vd == null || vf == null) continue; // non lu d'un côté : rien à conclure.
@@ -245,13 +290,20 @@ function findingsCroises(pieces: PieceControlee[]): Finding[] {
 
 /* ------------------------------------------------------------------ Assemblage */
 
-/** Findings issus des pièces réelles. Vide si aucune pièce n'a été déposée. */
-export function controlerPieces(pieces: readonly PieceControlee[]): Finding[] {
+/**
+ * Findings issus des pièces réelles. Vide si aucune pièce n'a été déposée.
+ * `famille` détermine les caractéristiques techniques confrontées entre le devis et
+ * la facture : celles du geste du dossier, jamais celles d'un autre.
+ */
+export function controlerPieces(
+  pieces: readonly PieceControlee[],
+  famille: Famille,
+): Finding[] {
   const liste = pieces.filter((p) => p.type !== "autre");
   return [
     ...liste.flatMap(findingsEcarts),
     ...liste.flatMap(findingsMentions),
-    ...findingsCroises([...liste]),
+    ...findingsCroises([...liste], famille),
   ];
 }
 

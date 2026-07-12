@@ -77,27 +77,98 @@ describe("comparerPiece", () => {
 });
 
 describe("comparerPiece — gestes sans bloc « travaux » (PAC, CET, bois)", () => {
+  /** Extraction d'un devis de PAC bien lu : les caractéristiques sont dans `pac_*`. */
+  const exPacLu = {
+    ...exPac,
+    pac_etas: 145,
+    pac_puissance_kw: 8,
+    pac_marque: "Atlantic",
+    pac_reference: "Alfea",
+  } as ExtractedPiece;
+
   it("ne lève pas sur un dossier PAC", () => {
     expect(() => comparerPiece(dataPac, exPac, "devis")).not.toThrow();
   });
 
-  it("compare les champs communs à tous les gestes", () => {
-    const rs = comparerPiece(dataPac, exPac, "devis");
+  it("compare les caractéristiques de la PAC, pas celles de l'isolation", () => {
+    const rs = comparerPiece(dataPac, exPacLu, "devis");
     expect(rs.map((r) => r.champ)).toEqual([
-      "Bénéficiaire", "Code postal", "Montant HT", "Montant TTC", "Date devis", "N° RGE",
+      "Bénéficiaire", "Code postal",
+      "ETAS", "Puissance", "Marque PAC", "Référence PAC",
+      "Montant HT", "Montant TTC", "Date devis", "N° RGE",
     ]);
     expect(nbEcarts(rs)).toBe(0);
   });
 
   it("omet les champs d'isolation, sans les compter « non lus »", () => {
-    const rs = comparerPiece(dataPac, exPac, "devis");
+    const rs = comparerPiece(dataPac, exPacLu, "devis");
     expect(champ(rs, "Surface")).toBeUndefined();
     expect(champ(rs, "Résistance")).toBeUndefined();
   });
 
+  it("relève un ETAS de la pièce qui contredit la saisie", () => {
+    // Le cœur du geste PAC : un ETAS de 126 % au lieu de 145 % fait basculer
+    // l'éligibilité. C'est exactement ce qu'un contrôle isolation-only laissait passer.
+    const rs = comparerPiece(dataPac, { ...exPacLu, pac_etas: 126 }, "devis");
+    expect(champ(rs, "ETAS")?.statut).toBe("ecart");
+    expect(nbEcarts(rs)).toBe(1);
+  });
+
+  it("caractéristique PAC non lue : absent, pas écart", () => {
+    const rs = comparerPiece(dataPac, { ...exPacLu, pac_etas: null }, "devis");
+    expect(champ(rs, "ETAS")?.statut).toBe("absent");
+    expect(nbEcarts(rs)).toBe(0);
+  });
+
   it("relève un écart de montant sur un dossier PAC", () => {
-    const rs = comparerPiece(dataPac, { ...exPac, montant_ttc: 5200 }, "devis");
+    const rs = comparerPiece(dataPac, { ...exPacLu, montant_ttc: 5200 }, "devis");
     expect(champ(rs, "Montant TTC")?.statut).toBe("ecart");
     expect(nbEcarts(rs)).toBe(1);
+  });
+
+  it("compare le COP et le volume d'un chauffe-eau thermodynamique", () => {
+    const dataCet = {
+      caracteristiques: {
+        geste: "cet",
+        fiche: "BAR-TH-148",
+        beneficiaire: { nom: "Martin", prenom: "Claire", code_postal: "93100" },
+        cet: { type_cet: "accumulation", cop: 3.2, profil_soutirage: "L", volume_l: 200, marque: "Thermor", reference: null },
+        montants: { ht: 4200, ttc: 4620 },
+        rge: { numero: "QB/12345" },
+      },
+      dates: { devis: "2025-03-10", facture: "2025-04-10" },
+    } as unknown as DossierComplet;
+
+    const rs = comparerPiece(
+      dataCet,
+      { ...exPac, cet_cop: 2.4, cet_volume_l: 200, cet_marque: "Thermor" } as ExtractedPiece,
+      "devis",
+    );
+    expect(champ(rs, "COP")?.statut).toBe("ecart");
+    expect(champ(rs, "Volume")?.statut).toBe("ok");
+    expect(champ(rs, "Marque du chauffe-eau")?.statut).toBe("ok");
+  });
+
+  it("compare le rendement d'un appareil de chauffage au bois", () => {
+    const dataBois = {
+      caracteristiques: {
+        geste: "bois",
+        fiche: "BAR-TH-112",
+        beneficiaire: { nom: "Martin", prenom: "Claire", code_postal: "93100" },
+        bois: { type_bois: "appareil", combustible: "granules", rendement: 87, emissions_co: null, marque: "Invicta", reference: null },
+        montants: { ht: 4200, ttc: 4620 },
+        rge: { numero: "QB/12345" },
+      },
+      dates: { devis: "2025-03-10", facture: "2025-04-10" },
+    } as unknown as DossierComplet;
+
+    const rs = comparerPiece(
+      dataBois,
+      { ...exPac, bois_rendement: 72, bois_marque: "Invicta" } as ExtractedPiece,
+      "devis",
+    );
+    expect(champ(rs, "Rendement")?.statut).toBe("ecart");
+    // Émissions de CO non saisies : rien à confronter, pas de ligne « non lue ».
+    expect(champ(rs, "Émissions")).toBeUndefined();
   });
 });
