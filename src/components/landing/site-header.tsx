@@ -5,10 +5,10 @@ import { MobileMenu } from "@/components/landing/mobile-menu";
 import { FOCUS } from "@/components/ui/boutons";
 
 const NAV = [
-  { href: "#probleme", label: "Le problème" },
-  { href: "#difference", label: "Vs mandataire" },
-  { href: "#etapes", label: "Méthode" },
-  { href: "#relecture", label: "Relecture" },
+  { href: "#probleme", label: "Les refus" },
+  { href: "#difference", label: "Votre indépendance" },
+  { href: "#etapes", label: "Le contrôle" },
+  { href: "#relecture", label: "Vos documents" },
   { href: "#faq", label: "FAQ" },
 ];
 
@@ -38,7 +38,7 @@ export async function SiteHeader() {
   const user = await getCurrentUser();
 
   return (
-    <header className="sticky top-0 z-40 border-b border-filigrane bg-papier/90 backdrop-blur-md">
+    <header className="sticky top-0 z-40 border-b-2 border-encre bg-papier/95 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-[1280px] items-center justify-between px-8">
         <Logo />
         <nav className="hidden items-center gap-8 md:flex">

@@ -77,26 +77,25 @@ function Shell({ children }: { children: React.ReactNode }) {
 /* ------------------------------------------------------------------ Hero */
 function Hero() {
   return (
-    <section className="relative overflow-hidden border-b border-filigrane">
-      {/* Halo bleu doux, signature de marque */}
-      <div className="pointer-events-none absolute -right-32 -top-32 -z-10 h-96 w-96 rounded-full bg-tampon/10 blur-3xl" />
-      <div className="mx-auto grid max-w-[1280px] items-center gap-16 px-8 py-20 lg:grid-cols-[1.05fr_0.95fr] lg:py-24">
+    <section className="relative overflow-hidden border-b border-filigrane bg-blanc-casse">
+      <div className="pointer-events-none absolute inset-0 opacity-[0.55] [background-image:linear-gradient(to_right,rgba(226,221,209,0.9)_1px,transparent_1px),linear-gradient(to_bottom,rgba(226,221,209,0.9)_1px,transparent_1px)] [background-size:48px_48px]" />
+      <div className="relative mx-auto grid max-w-[1280px] items-center gap-12 px-8 py-14 lg:grid-cols-[1fr_0.9fr] lg:py-20">
         <div>
-          <SectionLabel>Pour les artisans RGE indépendants</SectionLabel>
+          <p className="inline-flex items-center gap-2 border-y border-encre py-2 font-mono text-[11px] uppercase tracking-[0.16em] text-encre">
+            <span className="h-2 w-2 rounded-full bg-terre-cuite" />
+            Bureau de contrôle pour artisans RGE
+          </p>
 
-          <h1 className="mt-6 font-serif text-[2.75rem] font-semibold leading-[1.08] tracking-tight text-encre sm:text-[3.25rem]">
-            Des dossiers de prime qui passent.{" "}
-            <span className="text-tampon">Du premier coup.</span>
+          <h1 className="mt-7 max-w-3xl font-serif text-[3rem] font-semibold leading-[1.02] tracking-tight text-encre sm:text-[4.35rem]">
+            Vos primes ne doivent pas se jouer{" "}
+            <span className="relative whitespace-nowrap text-tampon">
+              sur un oubli.
+              <span className="absolute -bottom-2 left-0 h-1 w-full bg-terre-cuite" />
+            </span>
           </h1>
 
-          <p className="mt-6 max-w-xl text-lg leading-relaxed text-ardoise">
-            Dossimo prépare vos dossiers MaPrimeRénov&rsquo; et CEE,{" "}
-            <span className="text-encre">relit vos devis et vos factures</span>, et
-            signale ce qui ferait refuser le dossier — avant le dépôt. Sans
-            mandataire :{" "}
-            <span className="text-encre">
-              vous gardez votre client et l&rsquo;intégralité de votre prime.
-            </span>
+          <p className="mt-8 max-w-xl text-lg leading-relaxed text-ardoise">
+            Dossimo contrôle vos dossiers <span className="font-medium text-encre">MaPrimeRénov&rsquo; et CEE</span>, relit vos devis et vos factures, puis prépare les pièces utiles au dépôt. Vous gardez la main, votre client et la prime.
           </p>
 
           <div className="mt-8 flex flex-wrap items-center gap-3">
@@ -133,25 +132,17 @@ function Hero() {
 
 function HeroVisual() {
   return (
-    <div className="relative lg:pr-8">
-      <div className="pointer-events-none absolute -inset-6 -z-10 rounded-[2.5rem] bg-tampon/5 blur-2xl" />
-      <ReportCard />
-      <div className="mt-4 lg:absolute lg:-bottom-8 lg:-right-2 lg:mt-0 lg:w-56">
-        <PrimeCard />
+    <div className="relative border border-encre bg-encre p-3 shadow-[10px_10px_0_#35507f] lg:mr-3">
+      <div className="border border-papier/25 p-5 sm:p-7">
+        <div className="mb-6 flex items-center justify-between border-b border-papier/25 pb-4 font-mono text-[11px] uppercase tracking-[0.13em] text-papier/65">
+          <span>Contrôle avant dépôt</span><span>DOS-2026-0148</span>
+        </div>
+        <ReportCard />
       </div>
-    </div>
-  );
-}
-
-/* Petite carte « prime estimée », encre, en signature du produit. */
-function PrimeCard() {
-  return (
-    <div className="rounded-xl border border-encre bg-encre p-4 text-papier shadow-md">
-      <p className="text-xs text-papier/70">Prime estimée</p>
-      <p className="mt-1 font-serif text-2xl font-semibold">≈ 1 900 €</p>
-      <p className="mt-0.5 text-[11px] text-papier/60">
-        MaPrimeRénov&rsquo; · ménage modeste
-      </p>
+      <div className="absolute -bottom-7 -left-4 hidden border border-encre bg-terre-cuite px-5 py-3 text-blanc-casse shadow-sm sm:block">
+        <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-blanc-casse/70">Statut du dossier</p>
+        <p className="mt-1 font-serif text-lg font-semibold">Prêt à déposer</p>
+      </div>
     </div>
   );
 }
@@ -164,7 +155,7 @@ function ReportCard() {
     "Cohérence devis / facture garantie",
   ];
   return (
-    <div className="rounded border border-filigrane bg-blanc-casse p-5 shadow-md">
+    <div className="border border-papier/40 bg-blanc-casse p-5 shadow-md">
       <div className="flex items-center justify-between border-b border-filigrane pb-3">
         <div>
           <p className="font-serif text-base font-semibold text-encre">
@@ -292,11 +283,11 @@ function TrustStrip({ grille }: { grille: GrilleAffichee | null }) {
     "Vous gardez votre prime",
   ];
   return (
-    <div className="border-b border-filigrane bg-papier-fonce">
+    <div className="border-b border-encre bg-papier-fonce">
       <Shell>
-        <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 py-5 text-sm font-medium text-encre">
+        <div className="grid divide-y divide-encre/15 py-1 text-sm font-medium text-encre sm:grid-cols-2 sm:divide-x sm:divide-y-0 lg:grid-cols-4">
           {items.map((i) => (
-            <span key={i} className="flex items-center gap-2">
+            <span key={i} className="flex items-center gap-2 px-4 py-4 lg:px-5">
               <CheckCircle2 className="h-4 w-4 text-succes" strokeWidth={1.5} />
               {i}
             </span>
@@ -528,16 +519,14 @@ function Etapes() {
           </p>
         </div>
 
-        <div className="mt-12 grid gap-8 sm:grid-cols-2 md:grid-cols-4">
+        <div className="mt-12 grid border-y border-encre sm:grid-cols-2 lg:grid-cols-4">
           {steps.map((s, i) => (
-            <div key={s.title} className="border-t border-encre pt-5">
+            <div key={s.title} className="relative border-encre px-0 py-7 sm:px-6 sm:[&:nth-child(odd)]:border-r lg:border-r lg:last:border-r-0">
               <div className="flex items-center justify-between">
-                <span className="font-mono text-sm text-ardoise">
-                  0{i + 1}
-                </span>
-                <s.icon className="h-5 w-5 text-tampon" strokeWidth={1.5} />
+                <span className="font-mono text-sm text-tampon">ÉTAPE 0{i + 1}</span>
+                <s.icon className="h-5 w-5 text-encre" strokeWidth={1.5} />
               </div>
-              <h3 className="mt-5 font-serif text-xl font-semibold text-encre">
+              <h3 className="mt-8 font-serif text-xl font-semibold text-encre">
                 {s.title}
               </h3>
               <p className="mt-2.5 text-sm leading-relaxed text-ardoise">
@@ -701,10 +690,10 @@ function Features() {
             La conformité, sans y penser
           </h2>
         </div>
-        <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-12 grid gap-px border border-encre bg-encre sm:grid-cols-2 lg:grid-cols-3">
           {feats.map((f) => (
-            <div key={f.title} className="rounded border border-filigrane bg-blanc-casse p-6 shadow-sm">
-              <div className="flex h-10 w-10 items-center justify-center rounded-sm bg-info-bg text-tampon">
+            <div key={f.title} className="bg-blanc-casse p-6">
+              <div className="flex h-10 w-10 items-center justify-center border border-encre bg-papier text-tampon">
                 <f.icon className="h-5 w-5" strokeWidth={1.5} />
               </div>
               <h3 className="mt-4 font-serif text-lg font-semibold text-encre">
