@@ -46,7 +46,6 @@ import {
 } from "@/lib/dossier/geste-technique";
 import {
   mentionsObligatoires,
-  piecesCeeIsolation,
 } from "@/lib/pack/pieces-cee-isolation";
 import { SEVERITE_LABEL, type Finding, type Severite } from "@/lib/rules/types";
 
@@ -134,7 +133,6 @@ export default async function DossierPage({
 
   const { dossier, artisan, caracteristiques: c, dates } = data;
   const poste = posteLabel(c);
-  const pieces = piecesCeeIsolation(data);
   const mentionsDevis = mentionsObligatoires(data).filter(
     (m) => m.document === "Devis",
   );
