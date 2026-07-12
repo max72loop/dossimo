@@ -14,6 +14,10 @@ import type { TypePiece } from "@/lib/database.types";
 const TYPE_LABEL: Record<TypePiece, string> = {
   devis: "Devis",
   facture: "Facture",
+  qualification_rge: "Certificat RGE",
+  fiche_technique: "Fiche technique",
+  cadre_contribution: "Cadre de contribution",
+  attestation_honneur: "Attestation sur l'honneur",
   photo_avant: "Photo avant",
   photo_apres: "Photo après",
   autre: "Autre",

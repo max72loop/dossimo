@@ -10,6 +10,8 @@ import { PointsVigilanceIA } from "@/components/dossier/points-vigilance-ia";
 import { PiecesJustificatives } from "@/components/dossier/pieces-justificatives";
 import { LienDepot } from "@/components/dossier/lien-depot";
 import { MarquerVues } from "@/components/dossier/marquer-vues";
+import { ChecklistPieces } from "@/components/dossier/checklist-pieces";
+import { checklistDossier, completude } from "@/lib/piece/checklist";
 import { piecesAttendues } from "@/lib/depot/pieces-attendues";
 import { suivrePieces } from "@/lib/depot/suivi";
 import { EcartPrime } from "@/components/dossier/ecart-prime";
@@ -143,6 +145,14 @@ export default async function DossierPage({
   const findingsTries = [...rapport.findings].sort(
     (a, b) => SEVERITE_ORDER[a.severite] - SEVERITE_ORDER[b.severite],
   );
+
+  // La checklist, reliée aux pièces réellement déposées : chaque case sait si sa
+  // pièce est là, et par qui elle doit être fournie.
+  const checklist = checklistDossier(
+    data,
+    piecesReelles.map((p) => p.piece),
+  );
+  const { reunies, total: totalObligatoires } = completude(checklist);
 
   // Pièces que seul le bénéficiaire peut fournir, et ce qu'il a déjà déposé.
   const attenduesClient = piecesAttendues(data);
@@ -661,36 +671,15 @@ export default async function DossierPage({
 
       <SectionRepliable
         titre="Checklist · pièces à réunir"
-        resume={`${pieces.length} pièces · ${mentionsDevis.length} mentions obligatoires sur le devis et la facture`}
+        resume={`${reunies}/${totalObligatoires} pièces obligatoires réunies · ${mentionsDevis.length} mentions exigées sur le devis et la facture`}
+        ouvertParDefaut={reunies < totalObligatoires}
       >
-        <ul className="space-y-3">
-          {pieces.map((p) => (
-            <li key={p.id} className="flex gap-3">
-              <span className="mt-0.5 inline-block h-4 w-4 shrink-0 rounded-sm border border-filigrane" />
-              <span>
-                <span className="text-sm font-medium text-encre">{p.label}</span>
-                {p.obligatoire && (
-                  <span className="ml-2 text-[10px] font-semibold uppercase text-terre-cuite">
-                    obligatoire
-                  </span>
-                )}
-                <span className="block text-xs text-ardoise">{p.description}</span>
-              </span>
-            </li>
-          ))}
-        </ul>
-
-        <h3 className="mt-6 mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-ardoise">
-          Mentions obligatoires · devis ET facture
-        </h3>
-        <ul className="space-y-2">
-          {mentionsDevis.map((m, i) => (
-            <li key={i} className="flex gap-3 text-sm text-encre">
-              <span className="mt-0.5 inline-block h-4 w-4 shrink-0 rounded-sm border border-filigrane" />
-              {m.mention}
-            </li>
-          ))}
-        </ul>
+        <ChecklistPieces
+          dossierId={id}
+          entrees={checklist}
+          mentions={mentionsDevis.map((m) => m.mention)}
+          debloque={acces.debloque}
+        />
       </SectionRepliable>
 
       {acces.debloque && (

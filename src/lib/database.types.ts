@@ -25,6 +25,10 @@ export type TypePiece =
   // Déposées par l'artisan
   | "devis"
   | "facture"
+  | "qualification_rge"
+  | "fiche_technique"
+  | "cadre_contribution"
+  | "attestation_honneur"
   | "photo_avant"
   | "photo_apres"
   | "autre"
