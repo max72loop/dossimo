@@ -10,6 +10,11 @@ import { estimerPrime } from "@/lib/dossier/prime";
 import { getAdminEmail } from "@/lib/auth/is-admin";
 import { ETAPE_PAR_STATUT, PARCOURS } from "@/lib/dossier/parcours";
 import { controlerDossier } from "@/lib/rules/controle-dossier";
+import { fusionnerRapport } from "@/lib/rules/controle-pieces";
+import { chargerPlafonds, findingsDesPieces } from "@/lib/dossier/rapport";
+import { versEcarts } from "@/lib/piece/get";
+import type { DossierComplet } from "@/lib/dossier/get-dossier";
+import type { PieceJustificative } from "@/lib/database.types";
 import { TableauDeBord, type StatsTableau } from "@/components/dossier/tableau-de-bord";
 
 export const metadata = { title: "Mes dossiers · Dossimo" };
@@ -65,6 +70,28 @@ export default async function DossiersPage() {
     ]),
   );
 
+  // Pièces réelles de TOUS les dossiers affichés, en une seule requête, puis
+  // réparties. Sans elles, la liste jugerait sur la seule saisie et annoncerait
+  // « conforme » un dossier que la page dossier déclare bloquant, écarts et mentions
+  // manquantes à l'appui : deux verdicts pour un même dossier.
+  const idsDossiers = rows.map((d) => d.id);
+  const [{ data: toutesPieces }, plafonds] = await Promise.all([
+    idsDossiers.length
+      ? supabase
+          .from("pieces_justificatives")
+          .select("*")
+          .in("dossier_id", idsDossiers)
+          .order("created_at", { ascending: true })
+      : Promise.resolve({ data: [] as PieceJustificative[] }),
+    chargerPlafonds(supabase),
+  ]);
+  const piecesParDossier = new Map<string, PieceJustificative[]>();
+  for (const p of toutesPieces ?? []) {
+    const liste = piecesParDossier.get(p.dossier_id) ?? [];
+    liste.push(p);
+    piecesParDossier.set(p.dossier_id, liste);
+  }
+
   // Statistiques du tableau de bord.
   const parEtat = Object.fromEntries(
     PARCOURS.map((e) => [e.statut, 0]),
@@ -84,14 +111,22 @@ export default async function DossiersPage() {
     parEtat[d.statut] = (parEtat[d.statut] ?? 0) + 1;
     try {
       const data = {
-        dossier: { dispositif: d.dispositif },
+        dossier: { id: d.id, dispositif: d.dispositif },
         artisan: null,
         caracteristiques: d.caracteristiques_techniques_json,
         dates: d.dates_json,
         regle: reglesMap.get(`${d.dispositif}:${d.type_travaux}`) ?? null,
-      } as unknown as Parameters<typeof controlerDossier>[0];
+      } as unknown as DossierComplet;
       baseConformite += 1;
-      const rapport = controlerDossier(data);
+      // Même moteur que la page dossier : saisie + pièces réelles.
+      const rapport = fusionnerRapport(
+        controlerDossier(data),
+        findingsDesPieces(
+          data,
+          versEcarts(data, piecesParDossier.get(d.id) ?? []),
+          plafonds,
+        ),
+      );
       if (rapport.conforme) conformes += 1;
       controleParDossier.set(d.id, {
         nbBloquants: rapport.nbBloquants,

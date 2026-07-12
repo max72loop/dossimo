@@ -175,10 +175,11 @@ export function DepotClient({
         <h1 className="mt-8 font-display text-2xl font-bold leading-tight text-encre sm:text-3xl">
           Bonjour {prenom}, il manque {total === 1 ? "un document" : `${total} documents`} à votre dossier.
         </h1>
+        {/* Phrases construites en JS, pas en texte JSX : le transform avale l'espace
+            qui suit une interpolation, et « Isolation Durandprépare » est la première
+            chose que lit le client. */}
         <p className="mt-3 max-w-prose text-base leading-relaxed text-ardoise">
-          {entreprise} prépare votre dossier d&apos;aide à la rénovation. Ces pièces
-          ne peuvent venir que de vous. Photographiez-les ou déposez-les ici : c&apos;est
-          tout ce qu&apos;on vous demande.
+          {`${entreprise} prépare votre dossier d'aide à la rénovation. Ces pièces ne peuvent venir que de vous. Photographiez-les ou déposez-les ici : c'est tout ce qu'on vous demande.`}
         </p>
       </header>
 
@@ -226,8 +227,7 @@ export function DepotClient({
               C&apos;est complet. Merci {prenom}.
             </p>
             <p className="mt-1 text-sm text-encre">
-              {entreprise} a reçu vos documents et poursuit le montage de votre
-              dossier. Vous pouvez fermer cette page.
+              {`${entreprise} a reçu vos documents et poursuit le montage de votre dossier. Vous pouvez fermer cette page.`}
             </p>
           </motion.div>
         ) : null}
@@ -235,10 +235,7 @@ export function DepotClient({
 
       <footer className="mt-12 border-t border-encre/10 pt-6">
         <p className="text-xs leading-relaxed text-encre-claire">
-          Vos documents sont transmis à {entreprise} pour le montage de votre dossier,
-          et ne servent à rien d&apos;autre. Ce lien vous est personnel : ne le
-          partagez pas. Dossimo est un service indépendant d&apos;aide à la préparation
-          de dossier, non affilié à l&apos;Anah ni à France Rénov&apos;.
+          {`Vos documents sont transmis à ${entreprise} pour le montage de votre dossier, et ne servent à rien d'autre. Ce lien vous est personnel : ne le partagez pas. Dossimo est un service indépendant d'aide à la préparation de dossier, non affilié à l'Anah ni à France Rénov'.`}
         </p>
       </footer>
     </main>

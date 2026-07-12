@@ -36,7 +36,20 @@ export async function getDossierPieces(
     .eq("dossier_id", data.dossier.id)
     .order("created_at", { ascending: true });
 
-  return (pieces ?? []).map((piece) => ({
+  return versEcarts(data, pieces ?? []);
+}
+
+/**
+ * Lignes de la base → pièces comparées à la saisie. Pur : aucune requête.
+ *
+ * Séparé de `getDossierPieces` pour que la LISTE des dossiers puisse charger toutes
+ * les pièces en UNE requête puis les répartir, au lieu d'un aller-retour par ligne.
+ */
+export function versEcarts(
+  data: DossierComplet,
+  pieces: readonly PieceJustificative[],
+): PieceAvecEcarts[] {
+  return pieces.map((piece) => ({
     piece,
     // Seuls le devis et la facture portent les caractéristiques du chantier : ce sont
     // les seuls à confronter à la saisie. Un avis d'imposition ou un RIB n'a rien à

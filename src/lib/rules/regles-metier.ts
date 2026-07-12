@@ -64,7 +64,7 @@ export interface RegleMetierResolue {
   mentions: string[];
 }
 
-type DbClient = SupabaseClient<Database>;
+export type DbClient = SupabaseClient<Database>;
 
 /**
  * Règle active pour un couple (dispositif, type_travaux) : version `actif` la
