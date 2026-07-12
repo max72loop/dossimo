@@ -9,7 +9,9 @@ import { storedVigilance } from "@/lib/llm/vigilance";
 import { PointsVigilanceIA } from "@/components/dossier/points-vigilance-ia";
 import { PiecesJustificatives } from "@/components/dossier/pieces-justificatives";
 import { LienDepot } from "@/components/dossier/lien-depot";
+import { MarquerVues } from "@/components/dossier/marquer-vues";
 import { piecesAttendues } from "@/lib/depot/pieces-attendues";
+import { suivrePieces } from "@/lib/depot/suivi";
 import { EcartPrime } from "@/components/dossier/ecart-prime";
 import { AhObligeFill } from "@/components/dossier/ah-oblige-fill";
 import { PaywallCta } from "@/components/dossier/paywall-cta";
@@ -144,9 +146,11 @@ export default async function DossierPage({
 
   // Pièces que seul le bénéficiaire peut fournir, et ce qu'il a déjà déposé.
   const attenduesClient = piecesAttendues(data);
-  const nbPiecesClient = attenduesClient.filter((a) =>
-    piecesReelles.some((p) => p.piece.type === a.type),
-  ).length;
+  const suivi = suivrePieces(
+    data,
+    piecesReelles.map((p) => p.piece),
+    dossier.pieces_vues_at,
+  );
 
   // Modèle officiel en vigueur pour ce dossier à la date pertinente (§8).
   const cerfa = resolveCerfaTemplate(
@@ -366,14 +370,16 @@ export default async function DossierPage({
             initial={piecesReelles}
             nbMentions={mentionsDevis.length}
           />
-          {/* 6 bis. Les pièces qui ne peuvent venir que du client. */}
+          {/* 6 bis. Les pièces qui ne peuvent venir que du client. En les affichant,
+              on les déclare vues : le signal « nouveau » de la liste s'éteint. */}
           <div className="mb-6">
             <LienDepot
               dossierId={id}
               attendues={attenduesClient}
-              nbRecues={nbPiecesClient}
-              prenomClient={data.caracteristiques.beneficiaire.prenom}
+              nbRecues={suivi.recues}
+              prenomClient={c.beneficiaire.prenom}
             />
+            {suivi.nouvelles > 0 ? <MarquerVues dossierId={id} /> : null}
           </div>
         </>
       ) : (

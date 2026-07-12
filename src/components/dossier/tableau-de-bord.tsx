@@ -8,6 +8,12 @@ export interface StatsTableau {
   revenu: number;
   conformes: number;
   tauxConformite: number | null;
+  /** Pièces déposées par les clients depuis le dernier passage de l'artisan. */
+  nouvellesPieces: number;
+  /** Dossiers concernés par ces nouvelles pièces. */
+  dossiersAvecNouveautes: number;
+  /** Dossiers qui attendent encore une pièce de leur bénéficiaire. */
+  dossiersEnAttenteClient: number;
 }
 
 const euro = (n: number) =>
@@ -37,7 +43,26 @@ export function TableauDeBord({ stats }: { stats: StatsTableau }) {
 
   return (
     <section className="mb-8">
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      {/* Le seul endroit du produit où l'artisan apprend que son client a déposé
+          quelque chose. Faute d'e-mail, c'est l'espace qui sonne — et il ne sonne
+          que quand il y a du neuf. */}
+      {stats.nouvellesPieces > 0 && (
+        <div className="mb-3 flex flex-wrap items-center gap-x-2 gap-y-1 rounded border border-info/25 bg-info-bg px-4 py-3">
+          <span className="h-2 w-2 shrink-0 rounded-full bg-info" aria-hidden="true" />
+          <p className="text-sm font-medium text-info">
+            {stats.nouvellesPieces === 1
+              ? "Un client a déposé une pièce"
+              : `Vos clients ont déposé ${stats.nouvellesPieces} pièces`}
+          </p>
+          <p className="text-sm text-encre">
+            {stats.dossiersAvecNouveautes === 1
+              ? "sur 1 dossier, depuis votre dernier passage."
+              : `sur ${stats.dossiersAvecNouveautes} dossiers, depuis votre dernier passage.`}
+          </p>
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         <Tuile label="Dossiers" valeur={String(stats.total)} />
         <Tuile
           label="Débloqués (payés)"
@@ -57,6 +82,15 @@ export function TableauDeBord({ stats }: { stats: StatsTableau }) {
           label="Prêts à déposer"
           valeur={String(stats.parEtat.pret_depot ?? 0)}
           sous={`${stats.parEtat.depose ?? 0} déposé(s) · ${stats.parEtat.livre ?? 0} soldé(s)`}
+        />
+        <Tuile
+          label="En attente du client"
+          valeur={String(stats.dossiersEnAttenteClient)}
+          sous={
+            stats.dossiersEnAttenteClient === 0
+              ? "aucune pièce à réclamer"
+              : "dossiers dont le client n'a pas tout déposé"
+          }
         />
       </div>
 

@@ -124,6 +124,8 @@ export interface Database {
           delivered_at: string | null;
           vigilance_json: Json | null;
           vigilance_at: string | null;
+          /** Dernier passage de l'artisan (migration 0018). null = jamais ouvert. */
+          pieces_vues_at: string | null;
           estimated_aid_cents: number | null;
           tier_id: string | null;
           base_price_cents: number | null;
@@ -152,6 +154,7 @@ export interface Database {
           delivered_at?: string | null;
           vigilance_json?: Json | null;
           vigilance_at?: string | null;
+          pieces_vues_at?: string | null;
           estimated_aid_cents?: number | null;
           tier_id?: string | null;
           base_price_cents?: number | null;

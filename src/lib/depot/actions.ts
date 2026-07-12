@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 import { getDossier } from "@/lib/dossier/get-dossier";
 import { emettreLien, resoudreLien, revoquerLiens } from "@/lib/depot/lien";
 import { piecesAttendues, PIECES_BENEFICIAIRE } from "@/lib/depot/pieces-attendues";
@@ -45,6 +46,33 @@ export async function creerLienDepot(
     console.error("[depot] emission:", err);
     return { ok: false, error: "Impossible de générer le lien." };
   }
+}
+
+/**
+ * Marque les pièces du bénéficiaire comme vues : l'artisan vient d'ouvrir le dossier.
+ *
+ * C'est ce qui éteint le signal « nouveau » dans la liste. On revalide la liste, pas
+ * le dossier : revalider la page depuis laquelle l'appel part la ferait se recharger
+ * en boucle.
+ */
+export async function marquerPiecesVues(
+  dossierId: string,
+): Promise<{ ok: boolean }> {
+  const data = await getDossier(dossierId);
+  if (!data) return { ok: false };
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("dossiers")
+    .update({ pieces_vues_at: new Date().toISOString() })
+    .eq("id", dossierId);
+
+  if (error) {
+    console.error("[depot] vues:", error.message);
+    return { ok: false };
+  }
+  revalidatePath("/dossiers");
+  return { ok: true };
 }
 
 /** Coupe l'accès de tous les liens émis pour ce dossier. */

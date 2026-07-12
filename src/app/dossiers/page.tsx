@@ -13,6 +13,7 @@ import { controlerDossier } from "@/lib/rules/controle-dossier";
 import { fusionnerRapport } from "@/lib/rules/controle-pieces";
 import { chargerPlafonds, findingsDesPieces } from "@/lib/dossier/rapport";
 import { versEcarts } from "@/lib/piece/get";
+import { suivrePieces, type SuiviPieces } from "@/lib/depot/suivi";
 import type { DossierComplet } from "@/lib/dossier/get-dossier";
 import type { PieceJustificative } from "@/lib/database.types";
 import { TableauDeBord, type StatsTableau } from "@/components/dossier/tableau-de-bord";
@@ -38,7 +39,7 @@ export default async function DossiersPage() {
   const { data: dossiers } = await supabase
     .from("dossiers")
     .select(
-      "id, statut, dispositif, type_travaux, commune, code_postal, montant_estime, created_at, caracteristiques_techniques_json, dates_json",
+      "id, statut, dispositif, type_travaux, commune, code_postal, montant_estime, created_at, caracteristiques_techniques_json, dates_json, pieces_vues_at",
     )
     .order("created_at", { ascending: false });
 
@@ -107,6 +108,9 @@ export default async function DossiersPage() {
     string,
     { nbBloquants: number; conforme: boolean }
   >();
+  // Où en sont les pièces que seul le client peut fournir, et ce qui est arrivé
+  // depuis le dernier passage de l'artisan sur le dossier.
+  const suiviParDossier = new Map<string, SuiviPieces>();
   for (const d of rows) {
     parEtat[d.statut] = (parEtat[d.statut] ?? 0) + 1;
     try {
@@ -118,16 +122,17 @@ export default async function DossiersPage() {
         regle: reglesMap.get(`${d.dispositif}:${d.type_travaux}`) ?? null,
       } as unknown as DossierComplet;
       baseConformite += 1;
+      const piecesDuDossier = piecesParDossier.get(d.id) ?? [];
       // Même moteur que la page dossier : saisie + pièces réelles.
       const rapport = fusionnerRapport(
         controlerDossier(data),
-        findingsDesPieces(
-          data,
-          versEcarts(data, piecesParDossier.get(d.id) ?? []),
-          plafonds,
-        ),
+        findingsDesPieces(data, versEcarts(data, piecesDuDossier), plafonds),
       );
       if (rapport.conforme) conformes += 1;
+      suiviParDossier.set(
+        d.id,
+        suivrePieces(data, piecesDuDossier, d.pieces_vues_at),
+      );
       controleParDossier.set(d.id, {
         nbBloquants: rapport.nbBloquants,
         conforme: rapport.conforme,
@@ -141,6 +146,7 @@ export default async function DossiersPage() {
       // dossier incomplet : exclu du calcul de conformité.
     }
   }
+  const suivis = [...suiviParDossier.values()];
   const stats: StatsTableau = {
     total: rows.length,
     parEtat,
@@ -148,6 +154,9 @@ export default async function DossiersPage() {
     revenu,
     conformes,
     tauxConformite: baseConformite ? Math.round((conformes / baseConformite) * 100) : null,
+    nouvellesPieces: suivis.reduce((n, s) => n + s.nouvelles, 0),
+    dossiersAvecNouveautes: suivis.filter((s) => s.nouvelles > 0).length,
+    dossiersEnAttenteClient: suivis.filter((s) => s.attendues > 0 && !s.complet).length,
   };
 
   return (
@@ -207,6 +216,7 @@ export default async function DossiersPage() {
                   <th className="px-5 py-3 font-medium">Prime estimée</th>
                   <th className="px-5 py-3 font-medium">Créé le</th>
                   <th className="px-5 py-3 font-medium">Statut</th>
+                  <th className="px-5 py-3 font-medium">Pièces client</th>
                   <th className="px-5 py-3 font-medium">Accès / paiement</th>
                 </tr>
               </thead>
@@ -257,6 +267,34 @@ export default async function DossiersPage() {
                           <span className={`h-1.5 w-1.5 rounded-full ${st.dot}`} />
                           {st.label}
                         </span>
+                      </td>
+                      {/* Ce que le client a déposé, et ce qui vient d'arriver. Sans
+                          ce signal, une pièce qui bascule le dossier en refus attend
+                          que l'artisan rouvre le dossier par hasard. */}
+                      <td className="px-5 py-3">
+                        {(() => {
+                          const s = suiviParDossier.get(d.id);
+                          if (!s || s.attendues === 0) {
+                            return <span className="text-xs text-encre-claire">—</span>;
+                          }
+                          return (
+                            <span className="inline-flex items-center gap-2">
+                              <span
+                                className={`font-mono text-xs ${
+                                  s.complet ? "text-succes" : "text-ardoise"
+                                }`}
+                              >
+                                {s.recues}/{s.attendues}
+                              </span>
+                              {s.nouvelles > 0 ? (
+                                <span className="relative z-10 inline-flex items-center gap-1 rounded-full bg-info-bg px-2 py-0.5 text-[10px] font-semibold text-info">
+                                  <span className="h-1.5 w-1.5 rounded-full bg-info" />
+                                  {s.nouvelles} nouvelle{s.nouvelles > 1 ? "s" : ""}
+                                </span>
+                              ) : null}
+                            </span>
+                          );
+                        })()}
                       </td>
                       <td className="px-5 py-3">
                         {acces(d.id) === "gratuit" ? (
