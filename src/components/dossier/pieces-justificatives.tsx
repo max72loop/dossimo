@@ -14,7 +14,15 @@ import type { TypePiece } from "@/lib/database.types";
 const TYPE_LABEL: Record<TypePiece, string> = {
   devis: "Devis",
   facture: "Facture",
+  photo_avant: "Photo avant",
+  photo_apres: "Photo après",
   autre: "Autre",
+  // Déposées par le bénéficiaire via son lien de dépôt.
+  avis_imposition: "Avis d'imposition",
+  piece_identite: "Pièce d'identité",
+  titre_propriete: "Titre de propriété",
+  rib: "RIB",
+  attestation_bailleur: "Engagement de bailleur",
 };
 
 function EcartsTable({ comps }: { comps: Comparaison[] }) {

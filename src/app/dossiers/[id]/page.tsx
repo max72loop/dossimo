@@ -8,6 +8,8 @@ import { resolveCerfaTemplate } from "@/lib/cerfa/registry";
 import { storedVigilance } from "@/lib/llm/vigilance";
 import { PointsVigilanceIA } from "@/components/dossier/points-vigilance-ia";
 import { PiecesJustificatives } from "@/components/dossier/pieces-justificatives";
+import { LienDepot } from "@/components/dossier/lien-depot";
+import { piecesAttendues } from "@/lib/depot/pieces-attendues";
 import { EcartPrime } from "@/components/dossier/ecart-prime";
 import { AhObligeFill } from "@/components/dossier/ah-oblige-fill";
 import { PaywallCta } from "@/components/dossier/paywall-cta";
@@ -139,6 +141,12 @@ export default async function DossierPage({
   const findingsTries = [...rapport.findings].sort(
     (a, b) => SEVERITE_ORDER[a.severite] - SEVERITE_ORDER[b.severite],
   );
+
+  // Pièces que seul le bénéficiaire peut fournir, et ce qu'il a déjà déposé.
+  const attenduesClient = piecesAttendues(data);
+  const nbPiecesClient = attenduesClient.filter((a) =>
+    piecesReelles.some((p) => p.piece.type === a.type),
+  ).length;
 
   // Modèle officiel en vigueur pour ce dossier à la date pertinente (§8).
   const cerfa = resolveCerfaTemplate(
@@ -352,11 +360,22 @@ export default async function DossierPage({
 
       {/* 6. Pièces réelles : étape active */}
       {acces.debloque ? (
-        <PiecesJustificatives
-          dossierId={id}
-          initial={piecesReelles}
-          nbMentions={mentionsDevis.length}
-        />
+        <>
+          <PiecesJustificatives
+            dossierId={id}
+            initial={piecesReelles}
+            nbMentions={mentionsDevis.length}
+          />
+          {/* 6 bis. Les pièces qui ne peuvent venir que du client. */}
+          <div className="mb-6">
+            <LienDepot
+              dossierId={id}
+              attendues={attenduesClient}
+              nbRecues={nbPiecesClient}
+              prenomClient={data.caracteristiques.beneficiaire.prenom}
+            />
+          </div>
+        </>
       ) : (
         <section className="mb-6 rounded border border-filigrane bg-blanc-casse p-5 shadow-sm">
           <h2 className="font-serif text-base font-semibold text-encre">

@@ -56,16 +56,21 @@ const CHAMPS_CRITIQUES = new Set([
   "Rendement",
 ]);
 
-const NOM: Record<TypePiece, string> = {
+/**
+ * Les seules pièces que ce moteur juge : celles qui portent les caractéristiques du
+ * chantier, et que l'artisan écrit lui-même. Les pièces du bénéficiaire relèvent de
+ * `controle-avis.ts`.
+ */
+type TypeChantier = Extract<TypePiece, "devis" | "facture">;
+
+const NOM: Record<TypeChantier, string> = {
   devis: "le devis",
   facture: "la facture",
-  autre: "la pièce",
 };
 
-const TITRE: Record<TypePiece, string> = {
+const TITRE: Record<TypeChantier, string> = {
   devis: "Devis",
   facture: "Facture",
-  autre: "Pièce",
 };
 
 /** Vue d'une pièce réelle, suffisante pour la juger. Découplée de la base. */
@@ -80,9 +85,15 @@ export interface PieceControlee {
   extraction: ExtractedPiece | null;
 }
 
+/** Une pièce du chantier, une fois écartées celles du bénéficiaire. */
+type PieceChantier = PieceControlee & { type: TypeChantier };
+
+const estChantier = (p: PieceControlee): p is PieceChantier =>
+  p.type === "devis" || p.type === "facture";
+
 /* ------------------------------------------------------------------ Mentions */
 
-function findingsMentions(p: PieceControlee): Finding[] {
+function findingsMentions(p: PieceChantier): Finding[] {
   if (!p.mentions || p.mentions.length === 0) return [];
   const out: Finding[] = [];
   const nom = NOM[p.type];
@@ -150,7 +161,7 @@ function findingsMentions(p: PieceControlee): Finding[] {
 
 /* -------------------------------------------------------------------- Écarts */
 
-function findingsEcarts(p: PieceControlee): Finding[] {
+function findingsEcarts(p: PieceChantier): Finding[] {
   if (!p.lue) {
     return [
       {
@@ -239,7 +250,7 @@ const normTexte = (s: string) =>
  * sont déjà comparées à la saisie, mais deux documents peuvent diverger l'un de
  * l'autre sur un champ que la saisie ne porte pas.
  */
-function findingsCroises(pieces: PieceControlee[], famille: Famille): Finding[] {
+function findingsCroises(pieces: PieceChantier[], famille: Famille): Finding[] {
   const devis = pieces.find((p) => p.type === "devis" && p.extraction);
   const facture = pieces.find((p) => p.type === "facture" && p.extraction);
   if (!devis?.extraction || !facture?.extraction) return [];
@@ -299,7 +310,11 @@ export function controlerPieces(
   pieces: readonly PieceControlee[],
   famille: Famille,
 ): Finding[] {
-  const liste = pieces.filter((p) => p.type !== "autre");
+  // Ce moteur ne juge QUE les pièces de l'artisan qui portent les caractéristiques
+  // du chantier. Les pièces du bénéficiaire (avis d'imposition, RIB, identité) n'ont
+  // ni mentions de fiche ni caractéristiques à confronter : elles relèvent de
+  // `controle-avis.ts` et de la seule complétude.
+  const liste = pieces.filter(estChantier);
   return [
     ...liste.flatMap(findingsEcarts),
     ...liste.flatMap(findingsMentions),

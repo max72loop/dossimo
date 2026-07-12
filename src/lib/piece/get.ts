@@ -38,8 +38,13 @@ export async function getDossierPieces(
 
   return (pieces ?? []).map((piece) => ({
     piece,
+    // Seuls le devis et la facture portent les caractéristiques du chantier : ce sont
+    // les seuls à confronter à la saisie. Un avis d'imposition ou un RIB n'a rien à
+    // comparer ici (l'avis est jugé par `controle-avis.ts`, sur d'autres critères).
     comparaisons:
-      piece.extraction_statut === "ok" && piece.extraction_json
+      (piece.type === "devis" || piece.type === "facture") &&
+      piece.extraction_statut === "ok" &&
+      piece.extraction_json
         ? comparerPiece(
             data,
             piece.extraction_json as unknown as ExtractedPiece,
