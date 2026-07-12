@@ -89,7 +89,9 @@ export function TableauDeBord({ stats }: { stats: StatsTableau }) {
           sous={
             stats.dossiersEnAttenteClient === 0
               ? "aucune pièce à réclamer"
-              : "dossiers dont le client n'a pas tout déposé"
+              : stats.dossiersEnAttenteClient === 1
+                ? "dossier dont le client n'a pas tout déposé"
+                : "dossiers dont le client n'a pas tout déposé"
           }
         />
       </div>

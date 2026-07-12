@@ -166,9 +166,10 @@ export default async function DossiersPage() {
           <h1 className="font-serif text-3xl font-semibold tracking-tight text-encre">
             Mes dossiers
           </h1>
+          {/* Construite en JS : le transform JSX avale l'espace qui suit une
+              interpolation, et l'accueil affichait « Bonjour Marc· vos dossiers ». */}
           <p className="mt-2 text-ardoise">
-            Bonjour {artisan.prenom} · vos dossiers MaPrimeRénov&rsquo; et CEE,
-            au même endroit.
+            {`Bonjour ${artisan.prenom} · vos dossiers MaPrimeRénov' et CEE, au même endroit.`}
           </p>
         </div>
         {adminEmail && (
