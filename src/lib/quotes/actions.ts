@@ -6,10 +6,12 @@ export async function generateAndSaveQuote(gestureId: string, values: Record<str
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { ok: false as const, error: "Connexion requise." };
+  // Une version future ne doit jamais être choisie avant sa date d'effet.
+  const today = new Date().toISOString().slice(0, 10);
   const [{ data: gesture }, { data: fields }, { data: template }, { data: artisan }] = await Promise.all([
     supabase.from("quote_gestures").select("label, cee_fiche_reference").eq("id", gestureId).eq("active", true).maybeSingle(),
     supabase.from("quote_gesture_fields").select("key,label,type,unit,required,min_value,max_value").eq("gesture_id", gestureId).order("position"),
-    supabase.from("quote_templates").select("version,lines,mandatory_mentions,placeholder").eq("gesture_id", gestureId).eq("active", true).order("version", { ascending: false }).limit(1).maybeSingle(),
+    supabase.from("quote_templates").select("version,lines,mandatory_mentions,placeholder").eq("gesture_id", gestureId).eq("active", true).lte("valid_from", today).or(`valid_until.is.null,valid_until.gte.${today}`).order("version", { ascending: false }).limit(1).maybeSingle(),
     supabase.from("artisans").select("id").eq("user_id", user.id).maybeSingle(),
   ]);
   if (!gesture || !template || !artisan) return { ok: false as const, error: "Modèle indisponible." };
