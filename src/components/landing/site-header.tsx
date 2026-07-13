@@ -6,9 +6,9 @@ import { FOCUS } from "@/components/ui/boutons";
 
 const NAV = [
   { href: "/demo", label: "Tester mon devis" },
-  { href: "#etapes", label: "Comment ça marche" },
-  { href: "#tarifs", label: "Tarifs" },
-  { href: "#faq", label: "FAQ" },
+  { href: "/#etapes", label: "Comment ça marche" },
+  { href: "/#tarifs", label: "Tarifs" },
+  { href: "/#faq", label: "FAQ" },
 ];
 
 /* Logo Dossimo : mot-signe « dossimo » (Unbounded), deux « o » en gris.

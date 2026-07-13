@@ -8,12 +8,17 @@ export const metadata = {
   title: "Nouveau dossier CEE isolation · Dossimo",
 };
 
-export default async function NouveauDossierPage() {
+export default async function NouveauDossierPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ mode?: string; dispositif?: string; geste?: string }>;
+}) {
+  const { mode, dispositif, geste } = await searchParams;
   const artisan = await getCurrentArtisan();
 
   // Préremplissage depuis le profil connecté : l'artisan ne resaisit pas son
   // entreprise ni sa qualification RGE à chaque dossier.
-  const initialValues: Partial<CeeIsolationInput> = artisan
+  const profileValues: Partial<CeeIsolationInput> = artisan
     ? {
         entreprise: artisan.entreprise,
         siret: artisan.siret ?? "",
@@ -24,6 +29,16 @@ export default async function NouveauDossierPage() {
         telephone: artisan.telephone ?? "",
       }
     : {};
+  const initialValues: Partial<CeeIsolationInput> =
+    mode === "manuel"
+      ? {
+          ...profileValues,
+          dispositif: dispositif === "maprimerenov" ? "maprimerenov" : "cee",
+          geste: ["isolation", "pac_air_eau", "cet", "bois"].includes(geste ?? "")
+            ? (geste as CeeIsolationInput["geste"])
+            : "isolation",
+        }
+      : profileValues;
 
   return (
     <main className="mx-auto max-w-3xl px-8 py-12">
@@ -42,7 +57,7 @@ export default async function NouveauDossierPage() {
         </p>
       </div>
 
-      <DemarrageAssiste initialValues={initialValues} />
+      <DemarrageAssiste initialValues={initialValues} manual={mode === "manuel"} />
 
       <p className="mt-6 text-center text-xs text-encre-claire">
         Dossimo est un service indépendant d&apos;aide à la préparation de

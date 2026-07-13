@@ -13,19 +13,26 @@ const inputClass =
 
 export function DemarrageAssiste({
   initialValues,
+  manual = false,
 }: {
   initialValues: Partial<CeeIsolationInput>;
+  manual?: boolean;
 }) {
   const fileRef = useRef<HTMLInputElement>(null);
-  const [geste, setGeste] = useState<Famille>("isolation");
-  const [dispositif, setDispositif] = useState<"cee" | "maprimerenov">("cee");
+  const [geste, setGeste] = useState<Famille>((initialValues.geste as Famille) ?? "isolation");
+  const [dispositif, setDispositif] = useState<"cee" | "maprimerenov">(
+    initialValues.dispositif ?? "cee",
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [draft, setDraft] = useState<Partial<CeeIsolationInput> | null>(null);
+  const [draft, setDraft] = useState<Partial<CeeIsolationInput> | null>(() =>
+    manual ? { ...initialValues, dispositif, geste } : null,
+  );
   const [sourceFile, setSourceFile] = useState<File | undefined>();
   const [found, setFound] = useState(0);
 
   useEffect(() => {
+    if (manual) return;
     let actif = true;
     loadGuestDraft().then((guest) => {
       if (!actif || !guest) return;
@@ -34,7 +41,7 @@ export function DemarrageAssiste({
       setDraft({ ...initialValues, ...guest.valeurs });
     });
     return () => { actif = false; };
-  }, [initialValues]);
+  }, [initialValues, manual]);
 
   async function analyser() {
     const file = fileRef.current?.files?.[0];
@@ -154,17 +161,13 @@ export function DemarrageAssiste({
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
           {loading ? "Lecture du devis…" : "Lire mon devis et préremplir"}
         </button>
-        <button
-          type="button"
-          disabled={loading}
-          onClick={() => {
-            setSourceFile(undefined);
-            setDraft({ ...initialValues, dispositif, geste });
-          }}
-          className="text-sm font-medium text-ardoise underline underline-offset-4 hover:text-encre"
+        <a
+          href={`/dossiers/nouveau?mode=manuel&dispositif=${dispositif}&geste=${geste}`}
+          aria-disabled={loading}
+          className={`text-sm font-medium text-ardoise underline underline-offset-4 hover:text-encre ${loading ? "pointer-events-none opacity-60" : ""}`}
         >
           Je n’ai pas le devis · commencer manuellement
-        </button>
+        </a>
       </div>
       <p className="mt-4 text-xs leading-relaxed text-encre-claire">
         Lecture assistée par IA via OpenRouter. Le document sert uniquement à préremplir ce dossier ; chaque information reste à confirmer.

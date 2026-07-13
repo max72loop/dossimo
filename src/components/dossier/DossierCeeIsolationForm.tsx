@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useForm, useWatch, type Path } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { createDossierCeeIsolation } from "@/lib/dossier/actions";
@@ -23,52 +23,11 @@ import { AssistedFieldsProvider, Section, SelectField, TextField } from "@/compo
 import { OverlayProgression, type EtatEtape } from "@/components/ui/overlay-progression";
 import { Spinner } from "@/components/ui/spinner";
 import { clearGuestDraft } from "@/lib/dossier/guest-draft";
+import { etapesPourSaisie } from "@/lib/dossier/form-steps";
 
 const isolationOptions = Object.fromEntries(
   Object.entries(TYPES_ISOLATION).map(([k, v]) => [k, `${v.label} · ${v.fiche}`]),
 ) as Record<string, string>;
-
-type Champ = Path<CeeIsolationInput>;
-
-const ETAPES: { titre: string; champs: Champ[] }[] = [
-  { titre: "Dispositif", champs: ["dispositif", "geste"] },
-  {
-    titre: "Entreprise",
-    champs: [
-      "entreprise", "siret", "rge_numero", "rge_domaine", "rge_date_debut",
-      "rge_date_fin", "signataire_nom", "signataire_prenom", "email", "telephone",
-    ],
-  },
-  {
-    titre: "Bénéficiaire",
-    champs: [
-      "client_nom", "client_prenom", "client_adresse", "client_code_postal",
-      "client_commune", "client_email", "client_telephone", "occupation", "precarite",
-    ],
-  },
-  {
-    titre: "Logement",
-    champs: ["logement_type", "logement_annee_construction", "logement_residence", "logement_surface_habitable"],
-  },
-  {
-    titre: "Travaux",
-    champs: [
-      "type_isolation", "surface_isolee_m2", "isolant_type", "resistance_thermique_r",
-      "isolant_marque", "isolant_reference", "epaisseur_mm",
-      "pac_etas", "pac_puissance_kw", "pac_temperature", "pac_marque",
-      "pac_reference", "pac_regulateur_classe",
-      "cet_cop", "cet_profil_soutirage", "cet_volume_l", "cet_marque", "cet_reference",
-      "bois_combustible", "bois_rendement", "bois_emissions_co", "bois_marque", "bois_reference",
-    ],
-  },
-  {
-    titre: "Dates & montants",
-    champs: [
-      "date_visite_technique", "date_devis", "date_debut_travaux", "date_fin_travaux",
-      "date_facture", "montant_ht", "montant_ttc", "montant_prime_estime", "montant_aides_publiques",
-    ],
-  },
-];
 
 type Ton = "ok" | "erreur" | "avert" | "neutre";
 
@@ -190,15 +149,14 @@ export function DossierCeeIsolationForm({
       .filter(([, value]) => value !== undefined && value !== null && value !== "")
       .map(([key, value]) => [key, String(value)]),
   );
-  const etapesActives = assisted
-    ? ETAPES.filter((section) => section.champs.some((champ) => !assistedValues[champ]))
-    : ETAPES;
+  const etapesActives = etapesPourSaisie(assisted, assistedValues);
 
   const {
     register,
     handleSubmit,
     control,
     trigger,
+    setFocus,
     setError,
     setValue,
     getValues,
@@ -255,8 +213,19 @@ export function DossierCeeIsolationForm({
   }
 
   async function suivant() {
-    const ok = await trigger(etapeCourante.champs);
-    if (!ok) return;
+    const ok = await trigger(etapeCourante.champs, { shouldFocus: true });
+    if (!ok) {
+      // Une valeur préremplie peut elle aussi être invalide. Dans ce cas elle ne
+      // doit jamais rester cachée : le champ concerné est révélé, rougi et focalisé.
+      setVoirInformationsLues(true);
+      window.setTimeout(() => {
+        const premierInvalide = etapeCourante.champs.find((champ) =>
+          document.querySelector(`[name="${champ}"][aria-invalid="true"]`),
+        );
+        if (premierInvalide) setFocus(premierInvalide);
+      }, 0);
+      return;
+    }
     const n = Math.min(etape + 1, etapesActives.length - 1);
     setEtape(n);
     setMaxEtape((m) => Math.max(m, n));
@@ -349,12 +318,12 @@ export function DossierCeeIsolationForm({
           {etapesActives.map((s, i) => {
             const fait = i < etape;
             const actif = i === etape;
-            const accessible = i <= maxEtape;
+            const accessible = i <= maxEtape || i === etape + 1;
             return (
               <button
                 key={s.titre}
                 type="button"
-                onClick={() => aller(i)}
+                onClick={() => i === etape + 1 ? void suivant() : aller(i)}
                 disabled={!accessible || enCours}
                 title={s.titre}
                 className={`flex w-full min-w-0 items-center justify-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-medium transition-colors disabled:cursor-not-allowed ${
@@ -390,7 +359,7 @@ export function DossierCeeIsolationForm({
 
       {/* Contenu de l'étape (une partie à la fois) */}
       <div key={etape} className="animate-step">
-        {etape === 0 && (
+        {etapeCourante.id === "dispositif" && (
           <Section
             title="Dispositif visé"
             description={
@@ -417,7 +386,7 @@ export function DossierCeeIsolationForm({
           </Section>
         )}
 
-        {etape === 1 && (
+        {etapeCourante.id === "entreprise" && (
           <Section
             title="Entreprise (artisan RGE)"
             description="Ces informations alimentent le pack et le contrôle de qualification RGE."
@@ -462,7 +431,7 @@ export function DossierCeeIsolationForm({
           </Section>
         )}
 
-        {etape === 2 && (
+        {etapeCourante.id === "beneficiaire" && (
           <Section
             title="Bénéficiaire (client)"
             description="Le ménage bénéficiaire des travaux et de la prime."
@@ -479,7 +448,7 @@ export function DossierCeeIsolationForm({
           </Section>
         )}
 
-        {etape === 3 && (
+        {etapeCourante.id === "logement" && (
           <Section title="Logement">
             <SelectField label="Type de logement" required options={LOGEMENT_TYPES} error={errors.logement_type} register={register("logement_type")} />
             <TextField label="Année de construction" required type="number" inputMode="numeric" hint={dispositif === "maprimerenov" ? "MaPrimeRénov' : achevé depuis plus de 15 ans." : "CEE : achevé depuis plus de 2 ans."} error={errors.logement_annee_construction} register={register("logement_annee_construction")} />
@@ -488,7 +457,7 @@ export function DossierCeeIsolationForm({
           </Section>
         )}
 
-        {etape === 4 && estPac && (
+        {etapeCourante.id === "travaux" && estPac && (
           <Section
             title="Pompe à chaleur air/eau"
             description="Caractéristiques techniques de la PAC (fiche BAR-TH-171)."
@@ -509,7 +478,7 @@ export function DossierCeeIsolationForm({
           </Section>
         )}
 
-        {etape === 4 && estCet && (
+        {etapeCourante.id === "travaux" && estCet && (
           <Section
             title="Chauffe-eau thermodynamique"
             description="Caractéristiques techniques du CET (fiche BAR-TH-148)."
@@ -529,7 +498,7 @@ export function DossierCeeIsolationForm({
           </Section>
         )}
 
-        {etape === 4 && estBois && (
+        {etapeCourante.id === "travaux" && estBois && (
           <Section
             title="Appareil de chauffage au bois"
             description="Caractéristiques techniques de l'appareil (fiche BAR-TH-112)."
@@ -549,7 +518,7 @@ export function DossierCeeIsolationForm({
           </Section>
         )}
 
-        {etape === 4 && !estPac && !estCet && !estBois && (
+        {etapeCourante.id === "travaux" && !estPac && !estCet && !estBois && (
           <Section
             title="Travaux d'isolation"
             description="Caractéristiques techniques du poste isolé."
@@ -573,7 +542,7 @@ export function DossierCeeIsolationForm({
           </Section>
         )}
 
-        {etape === 5 && (
+        {etapeCourante.id === "dates" && (
           <>
             <Section
               title="Chronologie"

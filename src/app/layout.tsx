@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Inter, Source_Serif_4, Geist_Mono, Unbounded } from "next/font/google";
-import { MotionProvider } from "@/components/ui/motion-provider";
 import "./globals.css";
 
 const inter = Inter({
@@ -91,7 +90,7 @@ export default function RootLayout({
       className={`${inter.variable} ${sourceSerif.variable} ${geistMono.variable} ${unbounded.variable} h-full`}
     >
       <body className="min-h-full flex flex-col">
-        <MotionProvider>{children}</MotionProvider>
+        {children}
       </body>
     </html>
   );

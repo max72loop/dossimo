@@ -70,11 +70,11 @@ export function TextField({
   const assistedValue = assistedValues?.values[register.name];
   const [editing, setEditing] = useState(false);
 
-  if (assistedValue && assistedValues?.hideConfirmed && !editing) {
+  if (assistedValue && assistedValues?.hideConfirmed && !editing && !error) {
     return <input type="hidden" {...register} />;
   }
 
-  if (assistedValue && !editing) {
+  if (assistedValue && !editing && !error) {
     return (
       <div className="rounded border border-succes/25 bg-succes-bg/60 px-3.5 py-3">
         <input type="hidden" {...register} />
@@ -127,11 +127,11 @@ export function SelectField({
   const assistedValue = assistedValues?.values[register.name];
   const [editing, setEditing] = useState(false);
 
-  if (assistedValue && assistedValues?.hideConfirmed && !editing) {
+  if (assistedValue && assistedValues?.hideConfirmed && !editing && !error) {
     return <input type="hidden" {...register} />;
   }
 
-  if (assistedValue && !editing) {
+  if (assistedValue && !editing && !error) {
     return (
       <div className="rounded border border-succes/25 bg-succes-bg/60 px-3.5 py-3">
         <input type="hidden" {...register} />

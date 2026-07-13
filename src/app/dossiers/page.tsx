@@ -7,7 +7,6 @@ import { TYPES_ISOLATION, type TypeIsolation } from "@/lib/dossier/cee-isolation
 import { PaywallCta } from "@/components/dossier/paywall-cta";
 import { prixPack, getActiveTiers } from "@/lib/pricing";
 import { estimerPrime } from "@/lib/dossier/prime";
-import { getAdminEmail } from "@/lib/auth/is-admin";
 import { ETAPE_PAR_STATUT, PARCOURS } from "@/lib/dossier/parcours";
 import { controlerDossier } from "@/lib/rules/controle-dossier";
 import { fusionnerRapport } from "@/lib/rules/controle-pieces";
@@ -45,7 +44,6 @@ export default async function DossiersPage() {
     .order("created_at", { ascending: false });
 
   const rows = dossiers ?? [];
-  const adminEmail = await getAdminEmail();
 
   // Accès (paiement) calculé pour toute la liste. Le dossier le plus ancien est
   // offert (§10) ; les autres nécessitent un paiement encaissé.
@@ -182,14 +180,6 @@ export default async function DossiersPage() {
             Vos prochaines actions d’abord. Les chiffres et l’historique restent disponibles plus bas.
           </p>
         </div>
-        {adminEmail && (
-          <Link
-            href="/admin/regles"
-            className="shrink-0 rounded border border-filigrane bg-blanc-casse px-3 py-1.5 text-xs font-medium text-ardoise transition hover:bg-papier"
-          >
-            ⚙ Règles métier
-          </Link>
-        )}
       </div>
 
       {rows.length > 0 && (

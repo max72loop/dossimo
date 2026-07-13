@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useActionState, useRef, useState } from "react";
 
-import { creerSessionPaiementDossier } from "@/lib/stripe/actions";
+import { ouvrirPaiementDossier, type PaiementFormState } from "@/lib/stripe/actions";
 import { updateAdresseFacturation } from "@/lib/artisan/facturation-actions";
 import { Spinner } from "@/components/ui/spinner";
 
@@ -93,32 +93,12 @@ export function PaywallCta({
   /** Variante réduite pour la liste des dossiers. */
   compact?: boolean;
 }) {
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [adresseRequise, setAdresseRequise] = useState(false);
-
-  async function payer() {
-    setBusy(true);
-    setError(null);
-    try {
-      const res = await creerSessionPaiementDossier(dossierId);
-      if (res.ok) {
-        // Pas de setBusy(false) : la redirection est en cours, le bouton doit
-        // rester inerte jusqu'au départ de la page.
-        window.location.href = res.url;
-        return;
-      }
-      if (res.code === "adresse_manquante") {
-        setAdresseRequise(true);
-      } else {
-        setError(res.error);
-      }
-      setBusy(false);
-    } catch {
-      setError("Une erreur est survenue. Réessayez.");
-      setBusy(false);
-    }
-  }
+  const formRef = useRef<HTMLFormElement>(null);
+  const initialState: PaiementFormState = { error: null, code: null };
+  const [state, action, busy] = useActionState(
+    ouvrirPaiementDossier.bind(null, dossierId),
+    initialState,
+  );
 
   const cls = compact
     ? "inline-flex h-8 items-center gap-1.5 rounded bg-terre-cuite px-3 text-xs font-semibold text-blanc-casse transition-colors hover:bg-terre-cuite-hover disabled:cursor-not-allowed disabled:opacity-60"
@@ -126,25 +106,28 @@ export function PaywallCta({
 
   return (
     <div>
-      <button onClick={payer} disabled={busy} className={cls}>
-        {busy && <Spinner className={compact ? "h-3 w-3" : "h-4 w-4"} />}
-        {busy
-          ? "Ouverture…"
-          : compact
-            ? `Débloquer · ${prix}`
-            : `Débloquer le pack · ${prix}`}
-      </button>
+      <form ref={formRef} action={action}>
+        <button type="submit" disabled={busy} className={cls}>
+          {busy && <Spinner className={compact ? "h-3 w-3" : "h-4 w-4"} />}
+          {busy
+            ? "Ouverture…"
+            : compact
+              ? `Débloquer · ${prix}`
+              : `Débloquer le pack · ${prix}`}
+        </button>
+      </form>
 
-      {adresseRequise && (
+      {state.code === "adresse_manquante" && (
         <AdresseFacturation
           onEnregistre={() => {
-            setAdresseRequise(false);
-            void payer(); // Reprend l'achat là où il s'était arrêté.
+            formRef.current?.requestSubmit();
           }}
         />
       )}
 
-      {error && <p className="mt-1.5 text-xs text-erreur">{error}</p>}
+      {state.error && state.code !== "adresse_manquante" && (
+        <p className="mt-1.5 text-xs text-erreur">{state.error}</p>
+      )}
     </div>
   );
 }

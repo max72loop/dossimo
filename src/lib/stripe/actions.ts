@@ -13,11 +13,16 @@ import {
   confirmDossierPayment,
   labelEuros,
 } from "@/lib/pricing";
+import { redirect } from "next/navigation";
 
 export type PaiementResult =
   | { ok: true; url: string }
   /** `code` permet au client de réagir (ex. afficher le formulaire d'adresse). */
   | { ok: false; error: string; code?: "adresse_manquante" };
+
+export type PaiementFormState =
+  | { error: null; code: null }
+  | { error: string; code: "adresse_manquante" | null };
 
 function siteUrl(): string {
   return (
@@ -164,4 +169,18 @@ export async function creerSessionPaiementDossier(
     console.error("[stripe] session:", err);
     return { ok: false, error: "Erreur lors de l'ouverture du paiement." };
   }
+}
+
+/**
+ * Action de formulaire progressive : le clic de paiement est mis en file par
+ * React même si l'hydratation n'est pas terminée, puis redirige côté serveur.
+ */
+export async function ouvrirPaiementDossier(
+  dossierId: string,
+  _previous: PaiementFormState,
+): Promise<PaiementFormState> {
+  void _previous;
+  const result = await creerSessionPaiementDossier(dossierId);
+  if (result.ok) redirect(result.url);
+  return { error: result.error, code: result.code ?? null };
 }
