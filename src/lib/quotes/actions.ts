@@ -21,3 +21,23 @@ export async function generateAndSaveQuote(gestureId: string, values: Record<str
   if (error) return { ok: false as const, error: "Enregistrement impossible." };
   return { ok: true as const, lines: result.lines, mentions: template.mandatory_mentions as unknown as string[], placeholder: template.placeholder };
 }
+
+export async function savePersonalQuoteTemplate(gestureId: string, name: string, fieldValues: Record<string, string>) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user || !name.trim()) return { ok: false as const, error: "Nom du modèle requis." };
+  const { data: artisan } = await supabase.from("artisans").select("id").eq("user_id", user.id).maybeSingle();
+  if (!artisan) return { ok: false as const, error: "Profil artisan introuvable." };
+  const { error } = await supabase.from("user_quote_templates").upsert({ artisan_id: artisan.id, gesture_id: gestureId, name: name.trim(), field_values: fieldValues }, { onConflict: "artisan_id,gesture_id,name" });
+  return error ? { ok: false as const, error: "Enregistrement impossible." } : { ok: true as const };
+}
+
+export async function savePersonalQuoteTemplate(gestureId: string, name: string, fieldValues: Record<string, string>) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user || !name.trim()) return { ok: false as const, error: "Nom du modèle requis." };
+  const { data: artisan } = await supabase.from("artisans").select("id").eq("user_id", user.id).maybeSingle();
+  if (!artisan) return { ok: false as const, error: "Profil artisan introuvable." };
+  const { error } = await supabase.from("user_quote_templates").upsert({ artisan_id: artisan.id, gesture_id: gestureId, name: name.trim(), field_values: fieldValues }, { onConflict: "artisan_id,gesture_id,name" });
+  return error ? { ok: false as const, error: "Enregistrement impossible." } : { ok: true as const };
+}

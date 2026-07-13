@@ -433,6 +433,12 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["reminder_logs"]["Insert"]>;
         Relationships: [{ foreignKeyName: "reminder_logs_dossier_id_fkey"; columns: ["dossier_id"]; referencedRelation: "dossiers"; referencedColumns: ["id"] }];
       };
+      user_quote_templates: {
+        Row: { id: string; artisan_id: string; gesture_id: string; name: string; field_values: Json; created_at: string };
+        Insert: { id?: string; artisan_id: string; gesture_id: string; name: string; field_values?: Json; created_at?: string };
+        Update: Partial<Database["public"]["Tables"]["user_quote_templates"]["Insert"]>;
+        Relationships: [];
+      };
       plafonds_ressources: {
         Row: {
           id: string;
