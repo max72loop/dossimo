@@ -9,7 +9,8 @@ script, sans SMTP, mot de passe d'application ou fournisseur d'e-mail externe.
 3. Dans **Paramètres du projet > Propriétés du script**, ajoutez
    `DOSSIMO_WEBHOOK_SECRET` avec une valeur aléatoire longue.
 4. Cliquez **Déployer > Nouveau déploiement > Application Web**. Choisissez
-   **Exécuter en tant que : moi** et autorisez l'accès à l'application Web.
+   **Exécuter en tant que : moi**, **Qui a accès : Tout le monde**, puis
+   autorisez l'accès à l'application Web. Le secret protège les appels reçus.
 5. Copiez l'URL terminant par `/exec` dans la variable Vercel
    `GOOGLE_APPS_SCRIPT_WEBHOOK_URL`.
 6. Ajoutez la même valeur secrète dans Vercel sous
