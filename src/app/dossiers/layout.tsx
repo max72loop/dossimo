@@ -33,6 +33,12 @@ export default async function DossiersLayout({
             >
               Factures
             </Link>
+            <Link
+              href="/devis"
+              className="hidden text-sm text-ardoise transition-colors hover:text-encre sm:inline"
+            >
+              Devis
+            </Link>
             <span className="hidden text-sm text-ardoise sm:inline">
               {artisan.entreprise}
             </span>

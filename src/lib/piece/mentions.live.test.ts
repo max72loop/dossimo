@@ -31,7 +31,9 @@ if (!process.env.OPENROUTER_API_KEY && existsSync(".env.local")) {
   }
 }
 
-const CLE = !!process.env.OPENROUTER_API_KEY;
+// Une clé locale ne doit pas rendre `npm test` non déterministe ni consommer du
+// crédit API. Le test réel est opt-in : RUN_LIVE_LLM_TESTS=1 npm run test.
+const CLE = process.env.RUN_LIVE_LLM_TESTS === "1" && !!process.env.OPENROUTER_API_KEY;
 
 /** Les 6 mentions exigées par la fiche BAR-EN-101, interpolées pour ce dossier. */
 const MENTIONS_EXIGEES = [

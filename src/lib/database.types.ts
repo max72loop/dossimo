@@ -199,6 +199,26 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["retours_depot"]["Insert"]>;
         Relationships: [{ foreignKeyName: "retours_depot_dossier_id_fkey"; columns: ["dossier_id"]; referencedRelation: "dossiers"; referencedColumns: ["id"] }];
       };
+      quote_gestures: {
+        Row: { id: string; slug: string; label: string; category: string; mpr_eligible: boolean; cee_eligible: boolean; cee_fiche_reference: string | null; active: boolean; valid_from: string; valid_until: string | null; created_at: string; updated_at: string };
+        Insert: { id?: string; slug: string; label: string; category: string; mpr_eligible?: boolean; cee_eligible?: boolean; cee_fiche_reference?: string | null; active?: boolean; valid_from?: string; valid_until?: string | null; created_at?: string; updated_at?: string };
+        Update: Partial<Database["public"]["Tables"]["quote_gestures"]["Insert"]>; Relationships: [];
+      };
+      quote_gesture_fields: {
+        Row: { id: string; gesture_id: string; key: string; label: string; type: "text" | "number" | "boolean"; unit: string | null; required: boolean; min_value: number | null; max_value: number | null; help_text: string | null; position: number; created_at: string };
+        Insert: { id?: string; gesture_id: string; key: string; label: string; type: "text" | "number" | "boolean"; unit?: string | null; required?: boolean; min_value?: number | null; max_value?: number | null; help_text?: string | null; position?: number; created_at?: string };
+        Update: Partial<Database["public"]["Tables"]["quote_gesture_fields"]["Insert"]>; Relationships: [];
+      };
+      quote_templates: {
+        Row: { id: string; gesture_id: string; version: number; lines: Json; mandatory_mentions: Json; valid_from: string; valid_until: string | null; active: boolean; placeholder: boolean; created_at: string };
+        Insert: { id?: string; gesture_id: string; version: number; lines: Json; mandatory_mentions?: Json; valid_from?: string; valid_until?: string | null; active?: boolean; placeholder?: boolean; created_at?: string };
+        Update: Partial<Database["public"]["Tables"]["quote_templates"]["Insert"]>; Relationships: [];
+      };
+      generated_quotes: {
+        Row: { id: string; artisan_id: string; gesture_id: string; dossier_id: string | null; template_version: number; field_values: Json; rendered_lines: Json; created_at: string };
+        Insert: { id?: string; artisan_id: string; gesture_id: string; dossier_id?: string | null; template_version: number; field_values: Json; rendered_lines: Json; created_at?: string };
+        Update: Partial<Database["public"]["Tables"]["generated_quotes"]["Insert"]>; Relationships: [];
+      };
       regles_metier: {
         Row: {
           id: string;
