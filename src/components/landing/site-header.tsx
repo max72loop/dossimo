@@ -39,7 +39,7 @@ export async function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40 border-b-2 border-encre bg-papier/95 backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-[1280px] items-center justify-between px-8">
+      <div className="mx-auto flex h-16 max-w-[1280px] items-center justify-between px-5 sm:px-8">
         <Logo />
         <nav className="hidden items-center gap-8 md:flex">
           {NAV.map((item) => (

@@ -38,9 +38,10 @@ export default async function Home() {
   return (
     <div className="flex min-h-full flex-col bg-papier">
       <JsonLd grille={grille} />
+      <a href="#contenu" className="skip-link">Aller au contenu principal</a>
       <SiteHeader />
 
-      <main className="flex-1">
+      <main id="contenu" className="flex-1" tabIndex={-1}>
         <Hero />
         <TrustStrip grille={grille} />
         <Probleme />
@@ -50,7 +51,9 @@ export default async function Home() {
         <Relecture />
         <Features />
         <CasConcrets />
+        <Reassurance />
         <Pricing grille={grille} />
+        <FinalCta />
         <Contact />
         <Faq />
       </main>
@@ -63,15 +66,15 @@ export default async function Home() {
 /* ------------------------------------------------------------- Primitives */
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className="label flex items-center gap-2.5 text-tampon">
-      <span className="h-px w-6 bg-tampon" />
+    <p className="label flex items-center gap-2.5 font-mono text-[11px] uppercase tracking-[0.14em] text-tampon">
+      <span className="h-2 w-2 border border-tampon bg-papier" />
       {children}
     </p>
   );
 }
 
 function Shell({ children }: { children: React.ReactNode }) {
-  return <div className="mx-auto max-w-[1280px] px-8">{children}</div>;
+  return <div className="mx-auto max-w-[1280px] px-5 sm:px-8">{children}</div>;
 }
 
 /* ------------------------------------------------------------------ Hero */
@@ -79,7 +82,7 @@ function Hero() {
   return (
     <section className="relative overflow-hidden border-b border-filigrane bg-blanc-casse">
       <div className="pointer-events-none absolute inset-0 opacity-[0.55] [background-image:linear-gradient(to_right,rgba(226,221,209,0.9)_1px,transparent_1px),linear-gradient(to_bottom,rgba(226,221,209,0.9)_1px,transparent_1px)] [background-size:48px_48px]" />
-      <div className="relative mx-auto grid max-w-[1280px] items-center gap-12 px-8 py-14 lg:grid-cols-[1fr_0.9fr] lg:py-20">
+      <div className="relative mx-auto grid max-w-[1280px] items-center gap-12 px-5 py-14 sm:px-8 lg:grid-cols-[1fr_0.9fr] lg:py-20">
         <div>
           <p className="inline-flex items-center gap-2 border-y border-encre py-2 font-mono text-[11px] uppercase tracking-[0.16em] text-encre">
             <span className="h-2 w-2 rounded-full bg-terre-cuite" />
@@ -97,6 +100,10 @@ function Hero() {
           <p className="mt-8 max-w-xl text-lg leading-relaxed text-ardoise">
             Un numéro RGE absent, une résistance thermique non indiquée, une date incohérente : Dossimo contrôle vos dossiers <span className="font-medium text-encre">MaPrimeRénov&rsquo; et CEE</span> avant le dépôt. Vous gardez la main, votre client et la prime.
           </p>
+          <div className="mt-6 flex max-w-xl items-start gap-3 border-l-2 border-terre-cuite bg-papier/80 px-4 py-3 text-sm leading-relaxed text-encre">
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-terre-cuite" strokeWidth={1.5} />
+            <p><span className="font-medium">Exemple :</span> une résistance thermique absente du devis suffit à faire reprendre un dossier. Le contrôle vous l’indique avant envoi.</p>
+          </div>
 
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <Link
@@ -122,6 +129,15 @@ function Hero() {
             <span className="text-filigrane">·</span>
             sans engagement
           </p>
+
+          <ul className="mt-7 grid max-w-xl gap-3 sm:grid-cols-3" aria-label="Les garanties Dossimo">
+            {["Vous gardez votre client", "Vous gardez la prime", "Vous décidez de la correction"].map((garantie) => (
+              <li key={garantie} className="flex items-center gap-2 text-sm font-medium text-encre">
+                <ShieldCheck className="h-4 w-4 shrink-0 text-tampon" strokeWidth={1.5} />
+                {garantie}
+              </li>
+            ))}
+          </ul>
         </div>
 
         <HeroVisual />
@@ -142,6 +158,10 @@ function HeroVisual() {
       <div className="absolute -bottom-7 -left-4 hidden border border-encre bg-terre-cuite px-5 py-3 text-blanc-casse shadow-sm sm:block">
         <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-blanc-casse/70">Statut du dossier</p>
         <p className="mt-1 font-serif text-lg font-semibold">Prêt à déposer</p>
+      </div>
+      <div className="absolute -right-3 top-8 hidden border border-filigrane bg-blanc-casse px-3 py-2 shadow-sm xl:block">
+        <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-ardoise">Avant envoi</p>
+        <p className="mt-0.5 text-xs font-medium text-succes">Contrôles visibles</p>
       </div>
     </div>
   );
@@ -335,7 +355,7 @@ function Probleme() {
           {pains.map((p) => (
             <div
               key={p.title}
-              className="rounded border border-filigrane bg-blanc-casse p-6 shadow-sm"
+              className="border border-filigrane border-t-2 border-t-encre bg-blanc-casse p-6 shadow-sm"
             >
               <div className="flex h-10 w-10 items-center justify-center rounded-sm bg-papier-fonce text-encre">
                 <p.icon className="h-5 w-5" strokeWidth={1.5} />
@@ -351,7 +371,7 @@ function Probleme() {
         </div>
 
         {/* Point de vigilance illustré · bandeau à bordure gauche épaisse. */}
-        <div className="mt-6 flex items-start gap-3 rounded border-l-4 border-avertissement bg-avertissement-bg px-5 py-4">
+        <div className="mt-6 flex items-start gap-3 border-l-4 border-avertissement bg-avertissement-bg px-5 py-4">
           <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-avertissement" strokeWidth={1.5} />
           <p className="text-sm text-encre">
             <span className="font-medium">Point de vigilance :</span> la mention
@@ -393,7 +413,7 @@ function Difference() {
         </div>
 
         <div className="mt-12 grid gap-5 md:grid-cols-2">
-          <div className="rounded border border-filigrane bg-blanc-casse p-7">
+          <div className="border border-filigrane bg-blanc-casse p-7">
             <h3 className="label text-ardoise">Avec un mandataire</h3>
             <ul className="mt-5 space-y-3">
               {mandataire.map((m) => (
@@ -404,7 +424,7 @@ function Difference() {
               ))}
             </ul>
           </div>
-          <div className="rounded border border-filigrane border-l-4 border-l-terre-cuite bg-blanc-casse p-7 shadow-sm">
+          <div className="border border-filigrane border-l-4 border-l-terre-cuite bg-blanc-casse p-7 shadow-sm">
             <h3 className="label flex items-center gap-2 text-terre-cuite">
               <Stamp className="h-4 w-4" strokeWidth={1.5} />
               Avec Dossimo
@@ -457,10 +477,10 @@ function PourQui() {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-filigrane bg-blanc-casse p-8 shadow-sm">
+          <div className="border border-filigrane border-t-4 border-t-encre bg-blanc-casse p-8 shadow-sm">
             <div className="flex items-center gap-3">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/dossimo-icon.png" alt="Dossimo" className="h-10 w-10 rounded-lg" />
+              <img src="/dossimo-icon.png" alt="Dossimo" className="h-10 w-10 rounded-sm" />
               <p className="font-serif text-lg font-semibold text-encre">
                 Ce que ça change pour vous
               </p>
@@ -519,7 +539,7 @@ function Etapes() {
           </p>
         </div>
 
-        <div className="mt-12 grid border-y border-encre sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-12 grid divide-y divide-encre border-y border-encre sm:grid-cols-2 sm:divide-y-0 lg:grid-cols-4">
           {steps.map((s, i) => (
             <div key={s.title} className="relative border-encre px-0 py-7 sm:px-6 sm:[&:nth-child(odd)]:border-r lg:border-r lg:last:border-r-0">
               <div className="flex items-center justify-between">
@@ -534,6 +554,14 @@ function Etapes() {
               </p>
             </div>
           ))}
+        </div>
+        <div className="mt-8 flex flex-col items-start justify-between gap-4 border-l-4 border-l-tampon bg-info-bg px-5 py-4 sm:flex-row sm:items-center">
+          <p className="text-sm leading-relaxed text-encre">
+            <span className="font-semibold">Votre rôle reste simple :</span> vous relisez le rapport, puis vous déposez vous-même le dossier.
+          </p>
+          <Link href="/dossiers/nouveau" className={`shrink-0 text-sm font-semibold text-tampon underline underline-offset-4 ${FOCUS}`}>
+            Essayer sur un dossier <span aria-hidden="true">→</span>
+          </Link>
         </div>
       </Shell>
     </section>
@@ -552,7 +580,7 @@ function Etapes() {
 function Relecture() {
   return (
     <section id="relecture" className="border-y border-filigrane bg-papier-fonce/60 py-20 sm:py-24">
-      <div className="mx-auto grid max-w-[1280px] items-center gap-14 px-8 lg:grid-cols-[1fr_0.9fr]">
+      <div className="mx-auto grid max-w-[1280px] items-center gap-14 px-5 sm:px-8 lg:grid-cols-[1fr_0.9fr]">
         <div>
           <SectionLabel>La relecture</SectionLabel>
           <h2 className="mt-5 font-serif text-3xl font-semibold tracking-tight text-encre sm:text-[2.25rem] sm:leading-tight">
@@ -612,7 +640,7 @@ function RelectureCard() {
 
   return (
     <div>
-      <div className="rounded border border-filigrane bg-blanc-casse p-5 shadow-md">
+      <div className="border border-encre bg-blanc-casse p-5 shadow-md">
         <div className="flex items-center justify-between border-b border-filigrane pb-3">
           <div>
             <p className="font-serif text-base font-semibold text-encre">
@@ -769,7 +797,7 @@ function CasConcrets() {
           {cas.map((c) => (
             <div
               key={c.chantier}
-              className="flex flex-col rounded border border-filigrane bg-blanc-casse p-6 shadow-sm"
+              className="flex flex-col border border-filigrane border-t-2 border-t-tampon bg-blanc-casse p-6 shadow-sm"
             >
               <p className="font-mono text-xs text-tampon">{c.dispositif}</p>
               <h3 className="mt-2 font-serif text-lg font-semibold text-encre">
@@ -799,12 +827,43 @@ function CasConcrets() {
   );
 }
 
+/* --------------------------------------------------------- Réassurance */
+function Reassurance() {
+  const garanties = [
+    { icon: Lock, title: "Aucune mainmise", body: "Dossimo ne dépose pas à votre place et ne s'intercale pas dans votre relation client." },
+    { icon: FileCheck2, title: "Un contrôle lisible", body: "Chaque alerte indique la pièce à vérifier : pas de note opaque à interpréter." },
+    { icon: CheckCircle2, title: "Sans engagement", body: "Le premier contrôle est offert, sans carte bancaire ni abonnement imposé." },
+  ];
+
+  return (
+    <section className="border-y border-filigrane bg-info-bg/45 py-12 sm:py-16">
+      <Shell>
+        <div className="grid gap-8 lg:grid-cols-[0.8fr_2fr] lg:items-center">
+          <div>
+            <SectionLabel>Vos garanties</SectionLabel>
+            <h2 className="mt-4 font-serif text-2xl font-semibold tracking-tight text-encre sm:text-3xl">Clair avant de commencer</h2>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-3">
+            {garanties.map((garantie) => (
+              <div key={garantie.title} className="border border-filigrane bg-blanc-casse p-5">
+                <garantie.icon className="h-5 w-5 text-tampon" strokeWidth={1.5} />
+                <h3 className="mt-3 font-serif text-lg font-semibold text-encre">{garantie.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-ardoise">{garantie.body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </Shell>
+    </section>
+  );
+}
+
 /* --------------------------------------------------------------- Pricing */
 function Pricing({ grille }: { grille: GrilleAffichee | null }) {
   return (
     <section className="py-20 sm:py-24">
       <Shell>
-        <div className="rounded border border-encre bg-encre px-8 py-14 sm:px-14">
+        <div className="border border-encre bg-encre px-6 py-12 sm:px-14 sm:py-14">
           <div className="max-w-2xl">
             <p className="label text-papier/70">Tarification</p>
             <h2 className="mt-5 font-serif text-3xl font-semibold tracking-tight text-papier sm:text-[2.25rem] sm:leading-tight">
@@ -829,6 +888,15 @@ function Pricing({ grille }: { grille: GrilleAffichee | null }) {
               un petit chantier paie moins. Jamais un pourcentage de votre prime,
               qui reste entièrement à vous. Sans abonnement imposé.
             </p>
+
+            <ul className="mt-6 grid gap-2 text-sm text-papier/85 sm:grid-cols-2">
+              {["Contrôle des informations du dossier", "Relecture devis et facture", "Rapport de contrôle téléchargeable", "Aucun abonnement mensuel"].map((item) => (
+                <li key={item} className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 shrink-0 text-succes" strokeWidth={1.5} />
+                  {item}
+                </li>
+              ))}
+            </ul>
 
             {grille && grille.paliers.length > 1 && (
               <ul className="mt-8 flex flex-wrap gap-2">
@@ -870,11 +938,35 @@ function Pricing({ grille }: { grille: GrilleAffichee | null }) {
   );
 }
 
+/* ------------------------------------------------------------ CTA final */
+function FinalCta() {
+  return (
+    <section className="pb-20 sm:pb-24">
+      <Shell>
+        <div className="relative overflow-hidden border border-tampon bg-blanc-casse px-6 py-10 sm:px-10 sm:py-12">
+          <div className="pointer-events-none absolute -right-10 -top-16 h-44 w-44 rounded-full border-[24px] border-info-bg" />
+          <div className="relative flex flex-col items-start justify-between gap-7 md:flex-row md:items-center">
+            <div className="max-w-2xl">
+              <p className="label text-tampon">Votre prochain chantier</p>
+              <h2 className="mt-3 font-serif text-2xl font-semibold tracking-tight text-encre sm:text-3xl">Contrôlez-le avant qu&rsquo;un détail ne bloque la prime.</h2>
+              <p className="mt-3 text-base leading-relaxed text-ardoise">Premier contrôle offert, sans carte bancaire.</p>
+            </div>
+            <Link href="/dossiers/nouveau" className={`group inline-flex h-12 shrink-0 items-center gap-2 rounded-lg bg-terre-cuite px-6 text-sm font-semibold text-blanc-casse transition-colors hover:bg-terre-cuite-hover ${FOCUS}`}>
+              Commencer mon contrôle
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+            </Link>
+          </div>
+        </div>
+      </Shell>
+    </section>
+  );
+}
+
 /* --------------------------------------------------------------- Contact */
 function Contact() {
   return (
     <section id="contact" className="border-t border-filigrane bg-papier-fonce/60 py-20 sm:py-24">
-      <div className="mx-auto grid max-w-[1080px] items-start gap-14 px-8 lg:grid-cols-2">
+      <div className="mx-auto grid max-w-[1080px] items-start gap-14 px-5 sm:px-8 lg:grid-cols-2">
         <div>
           <SectionLabel>Rester en contact</SectionLabel>
           <h2 className="mt-5 font-serif text-3xl font-semibold tracking-tight text-encre sm:text-[2.25rem] sm:leading-tight">
@@ -886,7 +978,7 @@ function Contact() {
             découvrir Dossimo si votre chantier est déjà prêt.
           </p>
         </div>
-        <div className="rounded border border-filigrane bg-blanc-casse p-6 shadow-sm sm:p-7">
+        <div className="border border-filigrane border-t-2 border-t-encre bg-blanc-casse p-6 shadow-sm sm:p-7">
           <LeadForm />
         </div>
       </div>
@@ -932,7 +1024,7 @@ function Faq() {
   const items = FAQ_ITEMS;
   return (
     <section id="faq" className="py-20 sm:py-24">
-      <div className="mx-auto max-w-[760px] px-8">
+      <div className="mx-auto max-w-[760px] px-5 sm:px-8">
         <SectionLabel>Questions fréquentes</SectionLabel>
         <h2 className="mt-5 font-serif text-3xl font-semibold tracking-tight text-encre sm:text-[2.25rem] sm:leading-tight">
           Les questions qu&rsquo;on nous pose

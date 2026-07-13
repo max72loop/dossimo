@@ -47,6 +47,28 @@
 
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: 5.5rem;
+}
+
+.skip-link {
+  position: fixed;
+  z-index: 60;
+  top: 0.75rem;
+  left: 0.75rem;
+  transform: translateY(-160%);
+  border-radius: 0.375rem;
+  background: var(--color-encre);
+  padding: 0.75rem 1rem;
+  color: var(--color-blanc-casse);
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: transform 0.15s ease-out;
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+  outline: 2px solid var(--color-tampon);
+  outline-offset: 2px;
 }
 
 /* Apparition d'une étape d'assistant : léger fondu montant. */
