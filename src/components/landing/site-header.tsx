@@ -5,10 +5,8 @@ import { MobileMenu } from "@/components/landing/mobile-menu";
 import { FOCUS } from "@/components/ui/boutons";
 
 const NAV = [
-  { href: "#probleme", label: "Les refus" },
-  { href: "#difference", label: "Votre indépendance" },
-  { href: "#etapes", label: "Le contrôle" },
-  { href: "#relecture", label: "Vos documents" },
+  { href: "#relecture", label: "Exemple" },
+  { href: "#etapes", label: "Comment ça marche" },
   { href: "#tarifs", label: "Tarifs" },
   { href: "#faq", label: "FAQ" },
 ];
@@ -64,10 +62,10 @@ export async function SiteHeader() {
             {user ? "Mon espace" : "Connexion"}
           </Link>
           <Link
-            href={user ? "/dossiers/nouveau" : "/inscription"}
+            href="/dossiers/nouveau"
             className={`hidden h-10 items-center rounded bg-terre-cuite px-5 text-sm font-medium text-blanc-casse transition-colors hover:bg-terre-cuite-hover md:inline-flex ${FOCUS}`}
           >
-            Contrôler un dossier
+            Essayer gratuitement
           </Link>
           <MobileMenu nav={NAV} connecte={!!user} />
         </div>

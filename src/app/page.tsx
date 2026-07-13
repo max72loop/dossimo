@@ -8,7 +8,6 @@ import {
   FileText,
   FolderCheck,
   Lock,
-  RefreshCw,
   ScanSearch,
   ShieldCheck,
   Stamp,
@@ -36,7 +35,7 @@ export default async function Home() {
   const grille = await grillePublique();
 
   return (
-    <div className="flex min-h-full flex-col bg-papier">
+    <div className="flex min-h-full flex-col bg-papier pb-20 md:pb-0">
       <JsonLd grille={grille} />
       <a href="#contenu" className="skip-link">Aller au contenu principal</a>
       <SiteHeader />
@@ -45,20 +44,16 @@ export default async function Home() {
         <Hero />
         <TrustStrip grille={grille} />
         <Preparation />
-        <Probleme />
-        <Difference />
-        <PourQui />
-        <Etapes />
         <Relecture />
-        <Features />
-        <CasConcrets />
-        <Reassurance />
+        <Etapes />
+        <Difference />
         <Pricing grille={grille} />
-        <FinalCta />
+        <Reassurance />
         <Contact />
         <Faq />
       </main>
 
+      <MobileConversionBar />
       <SiteFooter />
     </div>
   );
@@ -87,58 +82,57 @@ function Hero() {
         <div>
           <p className="inline-flex items-center gap-2 border-y border-encre py-2 font-mono text-[11px] uppercase tracking-[0.16em] text-encre">
             <span className="h-2 w-2 rounded-full bg-terre-cuite" />
-            Bureau de contrôle pour artisans RGE
+            Le contrôle avant dépôt des artisans RGE
           </p>
 
           <h1 className="mt-7 max-w-3xl font-serif text-[3rem] font-semibold leading-[1.02] tracking-tight text-encre sm:text-[4.35rem]">
-            Une mention oubliée ne devrait pas coûter{" "}
-            <span className="relative whitespace-nowrap text-tampon">
-              votre prime.
+            Trouvez les erreurs qui peuvent{" "}
+            <span className="relative text-tampon">
+              bloquer votre prime
               <span className="absolute -bottom-2 left-0 h-1 w-full bg-terre-cuite" />
             </span>
+            {" "}avant le dépôt.
           </h1>
 
           <p className="mt-8 max-w-xl text-lg leading-relaxed text-ardoise">
-            Un numéro RGE absent, une résistance thermique non indiquée, une date incohérente : Dossimo contrôle vos dossiers <span className="font-medium text-encre">MaPrimeRénov&rsquo; et CEE</span> avant le dépôt. Vous gardez la main, votre client et la prime.
+            Importez le devis et la facture de votre dossier MaPrimeRénov&rsquo; ou CEE.
+            Dossimo contrôle les mentions, les dates, le RGE et les écarts entre les pièces, puis vous montre
+            <span className="font-medium text-encre"> précisément quoi corriger</span>.
           </p>
-          <div className="mt-6 flex max-w-xl items-start gap-3 border-l-2 border-terre-cuite bg-papier/80 px-4 py-3 text-sm leading-relaxed text-encre">
-            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-terre-cuite" strokeWidth={1.5} />
-            <p><span className="font-medium">Exemple :</span> une résistance thermique absente du devis suffit à faire reprendre un dossier. Le contrôle vous l’indique avant envoi.</p>
-          </div>
+
+          <ul className="mt-6 grid max-w-xl gap-2 sm:grid-cols-2" aria-label="Ce que Dossimo contrôle">
+            {["Mentions obligatoires", "Chronologie du chantier", "Qualification RGE", "Cohérence devis / facture"].map((point) => (
+              <li key={point} className="flex items-center gap-2 text-sm font-medium text-encre">
+                <CheckCircle2 className="h-4 w-4 shrink-0 text-succes" strokeWidth={1.5} />
+                {point}
+              </li>
+            ))}
+          </ul>
 
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <Link
               href="/dossiers/nouveau"
-              className={`group inline-flex h-12 items-center gap-2 rounded-lg bg-terre-cuite px-6 text-sm font-semibold text-blanc-casse transition-colors hover:bg-terre-cuite-hover ${FOCUS}`}
+              className={`group inline-flex min-h-12 items-center gap-2 rounded-lg bg-terre-cuite px-6 py-3 text-sm font-semibold text-blanc-casse shadow-md transition-colors hover:bg-terre-cuite-hover ${FOCUS}`}
             >
-              Contrôler mon dossier gratuitement
+              Vérifier mon premier dossier — offert
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </Link>
             <a
-              href="#etapes"
+              href="#relecture"
               className={`inline-flex h-12 items-center gap-2 rounded-lg border border-encre px-6 text-sm font-medium text-encre transition-colors hover:bg-papier-fonce ${FOCUS}`}
             >
-              Comment ça marche
+              Voir un exemple de contrôle
             </a>
           </div>
 
           <p className="mt-5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-ardoise">
             <CheckCircle2 className="h-4 w-4 text-succes" strokeWidth={1.5} />
-            Premier contrôle offert
+            Aucun paiement aujourd&rsquo;hui
             <span className="text-filigrane">·</span>
             sans carte bancaire
             <span className="text-filigrane">·</span>
             sans engagement
           </p>
-
-          <ul className="mt-7 grid max-w-xl gap-3 sm:grid-cols-3" aria-label="Les garanties Dossimo">
-            {["Vous gardez votre client", "Vous gardez la prime", "Vous décidez de la correction"].map((garantie) => (
-              <li key={garantie} className="flex items-center gap-2 text-sm font-medium text-encre">
-                <ShieldCheck className="h-4 w-4 shrink-0 text-tampon" strokeWidth={1.5} />
-                {garantie}
-              </li>
-            ))}
-          </ul>
         </div>
 
         <HeroVisual />
@@ -158,11 +152,11 @@ function HeroVisual() {
       </div>
       <div className="absolute -bottom-7 -left-4 hidden border border-encre bg-terre-cuite px-5 py-3 text-blanc-casse shadow-sm sm:block">
         <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-blanc-casse/70">Statut du dossier</p>
-        <p className="mt-1 font-serif text-lg font-semibold">Prêt à déposer</p>
+        <p className="mt-1 font-serif text-lg font-semibold">Corrections ciblées</p>
       </div>
       <div className="absolute -right-3 top-8 hidden border border-filigrane bg-blanc-casse px-3 py-2 shadow-sm xl:block">
         <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-ardoise">Avant envoi</p>
-        <p className="mt-0.5 text-xs font-medium text-succes">Contrôles visibles</p>
+        <p className="mt-0.5 text-xs font-medium text-erreur">2 alertes lisibles</p>
       </div>
     </div>
   );
@@ -170,10 +164,10 @@ function HeroVisual() {
 
 function ReportCard() {
   const checks = [
-    "Chronologie : devis avant travaux",
-    "Qualification RGE valide à la date du devis",
-    "Résistance thermique conforme au poste",
-    "Cohérence devis / facture garantie",
+    { label: "Chronologie : devis avant travaux", ok: true },
+    { label: "Qualification RGE valide à la date du devis", ok: true },
+    { label: "Résistance thermique absente du devis", ok: false },
+    { label: "Montant différent entre devis et facture", ok: false },
   ];
   return (
     <div className="border border-papier/40 bg-blanc-casse p-5 shadow-md">
@@ -186,18 +180,22 @@ function ReportCard() {
             DOS-2026-0148
           </p>
         </div>
-        <StatusBadge tone="succes">Conforme</StatusBadge>
+        <StatusBadge tone="erreur">2 points trouvés</StatusBadge>
       </div>
       <ul className="mt-4 space-y-2.5">
         {checks.map((c) => (
-          <li key={c} className="flex items-start gap-2.5 text-[0.813rem] leading-snug text-encre">
-            <CheckCircle2 className="mt-px h-4 w-4 shrink-0 text-succes" strokeWidth={1.5} />
-            {c}
+          <li key={c.label} className={`flex items-start gap-2.5 rounded-sm px-2 py-1.5 text-[0.813rem] leading-snug ${c.ok ? "text-encre" : "bg-erreur-bg text-erreur"}`}>
+            {c.ok ? (
+              <CheckCircle2 className="mt-px h-4 w-4 shrink-0 text-succes" strokeWidth={1.5} />
+            ) : (
+              <AlertTriangle className="mt-px h-4 w-4 shrink-0 text-erreur" strokeWidth={1.5} />
+            )}
+            {c.label}
           </li>
         ))}
       </ul>
-      <div className="mt-4 rounded-sm bg-succes-bg px-3 py-2 text-xs text-succes">
-        Aucun point bloquant · Pack prêt à déposer
+      <div className="mt-4 rounded-sm bg-info-bg px-3 py-2 text-xs font-medium text-tampon">
+        Chaque alerte indique la pièce et le point à corriger
       </div>
     </div>
   );
@@ -296,12 +294,12 @@ function JsonLd({ grille }: { grille: GrilleAffichee | null }) {
 /* ------------------------------------------------------------ TrustStrip */
 function TrustStrip({ grille }: { grille: GrilleAffichee | null }) {
   const items = [
-    "Premier dossier offert",
+    "0 € pour le premier contrôle",
     // Prix dérivé de la grille en base, jamais écrit en dur : sans elle, on annonce
     // la gratuité du premier dossier sans avancer de chiffre.
     grille ? `À partir de ${grille.minLabel} par dossier` : "Forfait fixe par dossier",
-    "MaPrimeRénov' + CEE",
-    "Vous gardez votre prime",
+    "Sans carte bancaire",
+    "Vous gardez client et prime",
   ];
   return (
     <div className="border-b border-encre bg-papier-fonce">
@@ -316,72 +314,6 @@ function TrustStrip({ grille }: { grille: GrilleAffichee | null }) {
         </div>
       </Shell>
     </div>
-  );
-}
-
-/* -------------------------------------------------------------- Probleme */
-function Probleme() {
-  const pains = [
-    {
-      icon: RefreshCw,
-      title: "Incohérence devis / facture",
-      body: "Un montant, une surface ou une référence qui diffère entre les pièces : premier motif de refus, et le plus évitable.",
-    },
-    {
-      icon: AlertTriangle,
-      title: "Chronologie invalide",
-      body: "Travaux commencés avant le devis, offre CEE proposée trop tard, RGE expiré : des dates dans le mauvais ordre et tout tombe.",
-    },
-    {
-      icon: FileText,
-      title: "Mentions manquantes",
-      body: "Marque, référence, résistance thermique, certification : une seule mention obligatoire oubliée suffit à bloquer le dossier.",
-    },
-  ];
-  return (
-    <section id="probleme" className="py-20 sm:py-24">
-      <Shell>
-        <div className="max-w-2xl">
-          <SectionLabel>Le problème</SectionLabel>
-          <h2 className="mt-5 font-serif text-3xl font-semibold tracking-tight text-encre sm:text-[2.25rem] sm:leading-tight">
-            Un dossier refusé, c&rsquo;est du temps perdu et un client déçu
-          </h2>
-          <p className="mt-4 text-lg leading-relaxed text-ardoise">
-            Les refus MaPrimeRénov&rsquo; et CEE viennent presque toujours des
-            mêmes erreurs, des erreurs qu&rsquo;on peut détecter avant le dépôt.
-          </p>
-        </div>
-
-        <div className="mt-12 grid gap-5 md:grid-cols-3">
-          {pains.map((p) => (
-            <div
-              key={p.title}
-              className="border border-filigrane border-t-2 border-t-encre bg-blanc-casse p-6 shadow-sm"
-            >
-              <div className="flex h-10 w-10 items-center justify-center rounded-sm bg-papier-fonce text-encre">
-                <p.icon className="h-5 w-5" strokeWidth={1.5} />
-              </div>
-              <h3 className="mt-4 font-serif text-lg font-semibold text-encre">
-                {p.title}
-              </h3>
-              <p className="mt-2 text-sm leading-relaxed text-ardoise">
-                {p.body}
-              </p>
-            </div>
-          ))}
-        </div>
-
-        {/* Point de vigilance illustré · bandeau à bordure gauche épaisse. */}
-        <div className="mt-6 flex items-start gap-3 border-l-4 border-avertissement bg-avertissement-bg px-5 py-4">
-          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-avertissement" strokeWidth={1.5} />
-          <p className="text-sm text-encre">
-            <span className="font-medium">Point de vigilance :</span> la mention
-            de résistance thermique <span className="font-mono text-avertissement">R ≥ 3,7 m²·K/W</span>{" "}
-            manque sur le devis. Dossimo la signale avant le dépôt.
-          </p>
-        </div>
-      </Shell>
-    </section>
   );
 }
 
@@ -435,62 +367,6 @@ function Difference() {
                 <li key={d} className="flex items-start gap-3 text-sm font-medium text-encre">
                   <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-succes" strokeWidth={1.5} />
                   {d}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </Shell>
-    </section>
-  );
-}
-
-/* --------------------------------------------------------------- Pour qui */
-function PourQui() {
-  const points = [
-    "Vous restez maître de votre client et de votre prime, toujours.",
-    "Pas de jargon : une saisie, un pack prêt à déposer.",
-    "Vous voyez le contrôle anti-refus avant même de payer.",
-    "Le premier dossier est offert, sans engagement ni carte bancaire.",
-  ];
-  return (
-    <section className="py-20 sm:py-24">
-      <Shell>
-        <div className="grid items-center gap-12 lg:grid-cols-[0.9fr_1.1fr]">
-          <div>
-            <SectionLabel>Pensé pour vous</SectionLabel>
-            <h2 className="mt-5 font-serif text-3xl font-semibold tracking-tight text-encre sm:text-[2.25rem] sm:leading-tight">
-              Fait pour l&rsquo;artisan indépendant, pas pour les intermédiaires
-            </h2>
-            <p className="mt-4 text-lg leading-relaxed text-ardoise">
-              Vous connaissez votre métier. Dossimo s&rsquo;occupe de la paperasse
-              et de la conformité, sans jamais s&rsquo;intercaler entre vous et
-              votre client.
-            </p>
-            <div className="mt-8">
-              <Link
-                href="/dossiers/nouveau"
-                className={`group inline-flex h-12 items-center gap-2 rounded-lg bg-terre-cuite px-6 text-sm font-semibold text-blanc-casse transition-colors hover:bg-terre-cuite-hover ${FOCUS}`}
-              >
-                Contrôler mon dossier gratuitement
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-              </Link>
-            </div>
-          </div>
-
-          <div className="border border-filigrane border-t-4 border-t-encre bg-blanc-casse p-8 shadow-sm">
-            <div className="flex items-center gap-3">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/dossimo-icon.png" alt="Dossimo" className="h-10 w-10 rounded-sm" />
-              <p className="font-serif text-lg font-semibold text-encre">
-                Ce que ça change pour vous
-              </p>
-            </div>
-            <ul className="mt-6 space-y-4">
-              {points.map((p) => (
-                <li key={p} className="flex items-start gap-3 text-[0.95rem] text-encre">
-                  <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-succes" strokeWidth={1.5} />
-                  {p}
                 </li>
               ))}
             </ul>
@@ -699,135 +575,6 @@ function RelectureCard() {
   );
 }
 
-/* -------------------------------------------------------------- Features */
-function Features() {
-  const feats = [
-    { icon: RefreshCw, title: "Cohérence garantie", body: "Une saisie unique alimente toutes les pièces : plus d'écart entre devis et facture." },
-    { icon: ShieldCheck, title: "Contrôle anti-refus", body: "Chronologie, RGE, seuils de performance, montants : les motifs de refus détectés avant dépôt." },
-    { icon: ScanSearch, title: "Pièces relues", body: "Devis et facture relus, comparés à votre dossier et entre eux : mentions manquantes et écarts signalés." },
-    { icon: FolderCheck, title: "Pack complet", body: "Récapitulatif, checklist des pièces et rapport de contrôle, prêts à télécharger." },
-    { icon: FileText, title: "MaPrimeRénov' + CEE", body: "Les deux dispositifs, dont les fiches BAR et leurs mentions obligatoires." },
-    { icon: Lock, title: "Vous gardez la prime", body: "Dossimo ne s'intercale jamais : la prime revient à votre client, la relation reste la vôtre." },
-    { icon: FileCheck2, title: "Cerfa à jour", body: "Les modèles suivent les versions officielles : jamais de dossier sur un formulaire périmé." },
-  ];
-  return (
-    <section className="border-y border-filigrane bg-papier-fonce/60 py-20 sm:py-24">
-      <Shell>
-        <div className="max-w-2xl">
-          <SectionLabel>Ce que fait Dossimo</SectionLabel>
-          <h2 className="mt-5 font-serif text-3xl font-semibold tracking-tight text-encre sm:text-[2.25rem] sm:leading-tight">
-            La conformité, sans y penser
-          </h2>
-        </div>
-        <div className="mt-12 grid gap-px border border-encre bg-encre sm:grid-cols-2 lg:grid-cols-3">
-          {feats.map((f) => (
-            <div key={f.title} className="bg-blanc-casse p-6">
-              <div className="flex h-10 w-10 items-center justify-center border border-encre bg-papier text-tampon">
-                <f.icon className="h-5 w-5" strokeWidth={1.5} />
-              </div>
-              <h3 className="mt-4 font-serif text-lg font-semibold text-encre">
-                {f.title}
-              </h3>
-              <p className="mt-2 text-sm leading-relaxed text-ardoise">
-                {f.body}
-              </p>
-            </div>
-          ))}
-        </div>
-      </Shell>
-    </section>
-  );
-}
-
-/* ----------------------------------------------------------- Cas concrets */
-/* Exemples illustratifs, explicitement présentés comme représentatifs et non
-   comme des témoignages nominatifs (pas de fausse preuve sociale). À remplacer
-   par de vrais retours d'artisans dès qu'ils seront disponibles. */
-function CasConcrets() {
-  const cas = [
-    {
-      chantier: "Isolation des combles perdus",
-      dispositif: "CEE · BAR-EN-101",
-      detecte:
-        "La résistance thermique n'était pas mentionnée sur le devis. Signalée avant dépôt, ajoutée en une ligne.",
-      issue: "Dossier déposé sans point bloquant.",
-    },
-    {
-      chantier: "Chauffe-eau thermodynamique",
-      dispositif: "CEE · BAR-TH-148",
-      detecte:
-        "Le devis était daté après le début des travaux déclaré. Incohérence de chronologie remontée immédiatement.",
-      issue: "Dates corrigées, motif de refus évité.",
-    },
-    {
-      chantier: "Appareil de chauffage au bois",
-      dispositif: "CEE · BAR-TH-112",
-      detecte:
-        "Un montant différait entre devis et facture. La saisie unique a rendu l'écart impossible à reproduire.",
-      issue: "Cohérence des pièces garantie.",
-    },
-  ];
-  return (
-    <section className="py-20 sm:py-24">
-      <Shell>
-        <div className="max-w-2xl">
-          <SectionLabel>Un contrôle vérifiable</SectionLabel>
-          <h2 className="mt-5 font-serif text-3xl font-semibold tracking-tight text-encre sm:text-[2.25rem] sm:leading-tight">
-            Pas de score opaque : vous voyez chaque point contrôlé
-          </h2>
-          <p className="mt-4 text-lg leading-relaxed text-ardoise">
-            Dossimo ne vous demande pas de lui faire confiance sur parole. Pour chaque point signalé, le rapport indique la pièce concernée et ce qui doit être vérifié.
-          </p>
-        </div>
-
-        <div className="mt-10 grid border border-encre bg-encre text-encre md:grid-cols-3">
-          {[
-            ["Le document concerné", "Devis, facture ou récapitulatif : vous savez immédiatement où regarder."],
-            ["La donnée contrôlée", "Dates, montants, RGE, performance ou mention réglementaire."],
-            ["Le point à trancher", "Dossimo signale l’écart ; vous décidez de la correction à demander."],
-          ].map(([titre, texte], index) => (
-            <div key={titre} className="bg-papier px-6 py-6 md:border-r md:border-encre last:border-r-0">
-              <p className="font-mono text-xs text-tampon">0{index + 1}</p>
-              <h3 className="mt-4 font-serif text-lg font-semibold">{titre}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-ardoise">{texte}</p>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-12 grid gap-5 md:grid-cols-3">
-          {cas.map((c) => (
-            <div
-              key={c.chantier}
-              className="flex flex-col border border-filigrane border-t-2 border-t-tampon bg-blanc-casse p-6 shadow-sm"
-            >
-              <p className="font-mono text-xs text-tampon">{c.dispositif}</p>
-              <h3 className="mt-2 font-serif text-lg font-semibold text-encre">
-                {c.chantier}
-              </h3>
-              <p className="mt-3 flex-1 text-sm leading-relaxed text-ardoise">
-                {c.detecte}
-              </p>
-              <p className="mt-4 flex items-start gap-2 border-t border-filigrane pt-4 text-sm font-medium text-encre">
-                <CheckCircle2
-                  className="mt-0.5 h-4 w-4 shrink-0 text-succes"
-                  strokeWidth={1.5}
-                />
-                {c.issue}
-              </p>
-            </div>
-          ))}
-        </div>
-
-        <p className="mt-6 text-xs leading-relaxed text-encre-claire">
-          Exemples illustratifs des contrôles effectués, à des fins de
-          démonstration. Ils ne constituent pas des témoignages de clients
-          identifiés.
-        </p>
-      </Shell>
-    </section>
-  );
-}
-
 /* --------------------------------------------------------- Réassurance */
 function Reassurance() {
   const garanties = [
@@ -872,8 +619,8 @@ function Preparation() {
       <Shell>
         <div className="grid gap-6 lg:grid-cols-[0.72fr_2fr] lg:items-center">
           <div>
-            <p className="label text-tampon">À préparer</p>
-            <h2 id="preparation-title" className="mt-2 font-serif text-xl font-semibold text-encre">Les pièces utiles au contrôle</h2>
+            <p className="label text-tampon">Pour commencer</p>
+            <h2 id="preparation-title" className="mt-2 font-serif text-xl font-semibold text-encre">Vous avez déjà tout ce qu&rsquo;il faut</h2>
           </div>
           <ul className="grid gap-4 sm:grid-cols-3">
             {pieces.map((piece) => (
@@ -903,7 +650,7 @@ function Pricing({ grille }: { grille: GrilleAffichee | null }) {
             <h2 className="mt-5 font-serif text-3xl font-semibold tracking-tight text-papier sm:text-[2.25rem] sm:leading-tight">
               {grille ? (
                 <>
-                  Le premier dossier est offert. Ensuite,{" "}
+                  Essayez gratuitement. Ensuite,{" "}
                   <span className="font-mono text-blanc-casse">
                     de {grille.minLabel} à {grille.maxLabel}
                   </span>{" "}
@@ -911,7 +658,7 @@ function Pricing({ grille }: { grille: GrilleAffichee | null }) {
                 </>
               ) : (
                 <>
-                  Le premier dossier est offert. Ensuite, un{" "}
+                  Essayez gratuitement. Ensuite, un{" "}
                   <span className="font-mono text-blanc-casse">forfait fixe</span>{" "}
                   selon le montant de l&apos;aide.
                 </>
@@ -949,7 +696,7 @@ function Pricing({ grille }: { grille: GrilleAffichee | null }) {
                 href="/dossiers/nouveau"
                 className={`group inline-flex h-12 items-center gap-2 rounded-lg bg-papier px-6 text-sm font-semibold text-encre transition-colors hover:bg-blanc-casse ${FOCUS_SOMBRE}`}
               >
-                Contrôler mon dossier gratuitement
+                Vérifier mon premier dossier — offert
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </Link>
               <a
@@ -972,27 +719,18 @@ function Pricing({ grille }: { grille: GrilleAffichee | null }) {
   );
 }
 
-/* ------------------------------------------------------------ CTA final */
-function FinalCta() {
+/* CTA persistant sur mobile : l'action reste accessible après la lecture d'une preuve. */
+function MobileConversionBar() {
   return (
-    <section className="pb-20 sm:pb-24">
-      <Shell>
-        <div className="relative overflow-hidden border border-tampon bg-blanc-casse px-6 py-10 sm:px-10 sm:py-12">
-          <div className="pointer-events-none absolute -right-10 -top-16 h-44 w-44 rounded-full border-[24px] border-info-bg" />
-          <div className="relative flex flex-col items-start justify-between gap-7 md:flex-row md:items-center">
-            <div className="max-w-2xl">
-              <p className="label text-tampon">Votre prochain chantier</p>
-              <h2 className="mt-3 font-serif text-2xl font-semibold tracking-tight text-encre sm:text-3xl">Contrôlez-le avant qu&rsquo;un détail ne bloque la prime.</h2>
-              <p className="mt-3 text-base leading-relaxed text-ardoise">Premier contrôle offert, sans carte bancaire.</p>
-            </div>
-            <Link href="/dossiers/nouveau" className={`group inline-flex h-12 shrink-0 items-center gap-2 rounded-lg bg-terre-cuite px-6 text-sm font-semibold text-blanc-casse transition-colors hover:bg-terre-cuite-hover ${FOCUS}`}>
-              Commencer mon contrôle
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-            </Link>
-          </div>
-        </div>
-      </Shell>
-    </section>
+    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-encre/15 bg-blanc-casse/95 p-3 shadow-[0_-8px_24px_rgba(22,32,43,0.12)] backdrop-blur md:hidden">
+      <Link
+        href="/dossiers/nouveau"
+        className={`flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-terre-cuite px-5 py-3 text-center text-sm font-semibold text-blanc-casse ${FOCUS}`}
+      >
+        Vérifier mon dossier — offert
+        <ArrowRight className="h-4 w-4" />
+      </Link>
+    </div>
   );
 }
 
