@@ -26,6 +26,7 @@ export const editeur = {
   formeJuridique: "Entrepreneur individuel",
   siren: "952242428",
   siret: "95224242800011", // établissement siège (NIC 00011)
+  rne: "952242428",
   // RCS : réservé aux commerçants et aux sociétés. Une EI de prestation de
   // services intellectuels n'y est pas immatriculée. `null` => mention omise.
   rcs: null as string | null,
@@ -38,6 +39,9 @@ export const editeur = {
   // --- Contact ---
   emailContact: "contact@dossimo.fr",
   emailRgpd: "contact@dossimo.fr", // adresse dédiée aux demandes RGPD
+  // Mention attendue sur un site professionnel. Renseigner uniquement avec un
+  // numéro réellement joignable ; ne jamais publier un numéro de démonstration.
+  telephone: null as string | null,
 
   // --- Régime de TVA ---
   // Franchise en base : aucune TVA facturée, mention obligatoire sur la facture.
@@ -62,8 +66,13 @@ export const editeur = {
   // --- Sous-traitants / hébergement ---
   hebergeur: {
     nom: "Vercel Inc.",
-    adresse: "340 S Lemon Ave #4133, Walnut, CA 91789, États-Unis",
+    // Adresse publiée par Vercel dans sa notice de confidentialité depuis le
+    // 1er juin 2026.
+    adresse: "440 N Barranca Avenue #4133, Covina, CA 91723, États-Unis",
     site: "https://vercel.com",
+    contact: "privacy@vercel.com",
+    // Vercel ne publie pas de numéro dans ses documents légaux officiels.
+    telephone: null as string | null,
   },
   baseDeDonnees: {
     nom: "Supabase (Supabase Inc.)",
