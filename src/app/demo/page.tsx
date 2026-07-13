@@ -3,7 +3,7 @@ import Link from "next/link";
 import { DemoGuide } from "@/components/landing/demo-guide";
 import { Logo } from "@/components/landing/site-header";
 
-export const metadata = { title: "Analyser mon devis gratuitement · Dossimo" };
+export const metadata = { title: "Analyser mon devis gratuitement" };
 
 export default function DemoPage() {
   return (
