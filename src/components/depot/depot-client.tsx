@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 
 import { deposerPiece, retirerPiece, type PieceDeposee } from "@/lib/depot/actions";
+import { desinscrireDesRelances } from "@/lib/reminders/actions";
 import type { PieceAttendue, PieceBeneficiaire } from "@/lib/depot/pieces-attendues";
 
 /**
@@ -158,6 +159,8 @@ export function DepotClient({
   initiales: PieceDeposee[];
 }) {
   const [deposees, setDeposees] = useState<PieceDeposee[]>(initiales);
+  const [unsubscribed, setUnsubscribed] = useState(false);
+  const [unsubscribeError, setUnsubscribeError] = useState<string | null>(null);
 
   const parType = new Map<PieceBeneficiaire, PieceDeposee>();
   for (const p of deposees) parType.set(p.type as PieceBeneficiaire, p);
@@ -237,6 +240,8 @@ export function DepotClient({
         <p className="text-xs leading-relaxed text-encre-claire">
           {`Vos documents sont transmis à ${entreprise} pour le montage de votre dossier, et ne servent à rien d'autre. Ce lien vous est personnel : ne le partagez pas. Dossimo est un service indépendant d'aide à la préparation de dossier, non affilié à l'Anah ni à France Rénov'.`}
         </p>
+        {unsubscribed ? <p className="mt-3 text-xs text-succes">Les relances automatiques sont désactivées pour ce dossier.</p> : <button type="button" onClick={async () => { setUnsubscribeError(null); const result = await desinscrireDesRelances(token); if (!result.ok) setUnsubscribeError(result.error); else setUnsubscribed(true); }} className="mt-3 text-xs text-ardoise underline underline-offset-2 hover:text-encre">Ne plus recevoir de relances</button>}
+        {unsubscribeError && <p className="mt-2 text-xs text-erreur">{unsubscribeError}</p>}
       </footer>
     </main>
   );

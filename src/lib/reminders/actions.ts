@@ -4,7 +4,9 @@ import { revalidatePath } from "next/cache";
 import { getDossier } from "@/lib/dossier/get-dossier";
 import { piecesAttendues } from "@/lib/depot/pieces-attendues";
 import { emettreLien } from "@/lib/depot/lien";
+import { resoudreLien } from "@/lib/depot/lien";
 import { formatReminderMessage } from "@/lib/reminders/message";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 export async function configurerRelances(dossierId: string, enabled: boolean) {
@@ -52,4 +54,17 @@ export async function preparerRelanceManuelle(dossierId: string) {
   const base = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ?? "";
   const message = formatReminderMessage({ prenom: data.caracteristiques.beneficiaire.prenom, entreprise: data.artisan?.entreprise ?? "Votre artisan", documents, url: `${base}/depot/${token}` });
   return { ok: true as const, ...message };
+}
+
+/** Désinscription publique, autorisée uniquement par un token de dépôt encore valide. */
+export async function desinscrireDesRelances(token: string) {
+  const lien = await resoudreLien(token);
+  if (!lien) return { ok: false as const, error: "Ce lien n'est plus valide." };
+  const { error } = await createAdminClient().from("reminder_schedules").upsert({
+    dossier_id: lien.dossierId,
+    enabled: false,
+    opt_out_at: new Date().toISOString(),
+  }, { onConflict: "dossier_id" });
+  if (error) return { ok: false as const, error: "La désinscription est indisponible. Réessayez plus tard." };
+  return { ok: true as const };
 }
