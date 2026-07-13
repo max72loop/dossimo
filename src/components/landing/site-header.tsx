@@ -9,6 +9,7 @@ const NAV = [
   { href: "#difference", label: "Votre indépendance" },
   { href: "#etapes", label: "Le contrôle" },
   { href: "#relecture", label: "Vos documents" },
+  { href: "#tarifs", label: "Tarifs" },
   { href: "#faq", label: "FAQ" },
 ];
 

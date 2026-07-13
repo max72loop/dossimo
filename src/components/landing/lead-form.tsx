@@ -49,7 +49,7 @@ export function LeadForm() {
     "mt-1.5 h-11 w-full rounded border border-filigrane bg-blanc-casse px-3.5 text-sm text-encre placeholder:text-encre-claire outline-none transition focus:border-tampon focus:ring-2 focus:ring-tampon/15";
 
   return (
-    <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4 sm:grid-cols-2" aria-busy={status === "loading"}>
       <div className="sm:col-span-2">
         <label htmlFor="lead-email" className={labelClass}>
           Email professionnel
@@ -58,6 +58,7 @@ export function LeadForm() {
           id="lead-email"
           type="email"
           required
+          autoComplete="email"
           placeholder="vous@entreprise.fr"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
@@ -71,6 +72,7 @@ export function LeadForm() {
         <input
           id="lead-entreprise"
           type="text"
+          autoComplete="organization"
           placeholder="Nom de l'entreprise"
           value={entreprise}
           onChange={(e) => setEntreprise(e.target.value)}
@@ -84,6 +86,7 @@ export function LeadForm() {
         <input
           id="lead-tel"
           type="tel"
+          autoComplete="tel"
           placeholder="06 12 34 56 78"
           value={telephone}
           onChange={(e) => setTelephone(e.target.value)}
@@ -91,7 +94,7 @@ export function LeadForm() {
         />
       </div>
       {error && (
-        <p className="flex items-start gap-2 text-[0.813rem] text-erreur sm:col-span-2">
+        <p role="alert" className="flex items-start gap-2 text-[0.813rem] text-erreur sm:col-span-2">
           <AlertCircle className="mt-px h-4 w-4 shrink-0" strokeWidth={1.5} />
           {error}
         </p>

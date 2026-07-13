@@ -44,6 +44,7 @@ export default async function Home() {
       <main id="contenu" className="flex-1" tabIndex={-1}>
         <Hero />
         <TrustStrip grille={grille} />
+        <Preparation />
         <Probleme />
         <Difference />
         <PourQui />
@@ -858,10 +859,43 @@ function Reassurance() {
   );
 }
 
+/* ---------------------------------------------------------- Préparation */
+function Preparation() {
+  const pieces = [
+    { icon: FileText, title: "Le devis", body: "Pour vérifier les mentions et la chronologie." },
+    { icon: FileCheck2, title: "La facture", body: "Quand les travaux sont terminés, pour comparer les données." },
+    { icon: ShieldCheck, title: "Votre qualification RGE", body: "Pour contrôler sa validité à la date du dossier." },
+  ];
+
+  return (
+    <aside className="border-b border-filigrane bg-blanc-casse py-8" aria-labelledby="preparation-title">
+      <Shell>
+        <div className="grid gap-6 lg:grid-cols-[0.72fr_2fr] lg:items-center">
+          <div>
+            <p className="label text-tampon">À préparer</p>
+            <h2 id="preparation-title" className="mt-2 font-serif text-xl font-semibold text-encre">Les pièces utiles au contrôle</h2>
+          </div>
+          <ul className="grid gap-4 sm:grid-cols-3">
+            {pieces.map((piece) => (
+              <li key={piece.title} className="flex items-start gap-3">
+                <piece.icon className="mt-0.5 h-5 w-5 shrink-0 text-tampon" strokeWidth={1.5} />
+                <div>
+                  <p className="text-sm font-semibold text-encre">{piece.title}</p>
+                  <p className="mt-0.5 text-xs leading-relaxed text-ardoise">{piece.body}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </Shell>
+    </aside>
+  );
+}
+
 /* --------------------------------------------------------------- Pricing */
 function Pricing({ grille }: { grille: GrilleAffichee | null }) {
   return (
-    <section className="py-20 sm:py-24">
+    <section id="tarifs" className="py-20 sm:py-24">
       <Shell>
         <div className="border border-encre bg-encre px-6 py-12 sm:px-14 sm:py-14">
           <div className="max-w-2xl">
@@ -1044,6 +1078,9 @@ function Faq() {
               </p>
             </details>
           ))}
+        </div>
+        <div className="mt-8 border-l-4 border-l-tampon bg-info-bg px-5 py-4 text-sm text-encre">
+          Une question qui n&rsquo;est pas dans cette liste ? <a href="#contact" className={`font-semibold text-tampon underline underline-offset-4 ${FOCUS}`}>Écrivez-nous</a> : nous vous répondons avant votre premier dossier.
         </div>
       </div>
     </section>
