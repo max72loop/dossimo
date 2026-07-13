@@ -108,20 +108,56 @@ export interface GrilleAffichee {
   maxLabel: string;
   /** Prix de chaque palier, du plus bas au plus haut ("49 €", "149 €", "249 €"). */
   paliers: string[];
+  /** Détail public de chaque palier, dans l'ordre du montant d'aide. */
+  lignes: Array<{
+    name: string;
+    aidLabel: string;
+    priceLabel: string;
+  }>;
+}
+
+/**
+ * Intervalle lisible, dérivé des bornes inclusives stockées en base.
+ * Les frontières à un centime autour d'un euro rond sont reformulées en
+ * « moins de » / « plus de » sans perdre de précision.
+ */
+function labelIntervalleAide(
+  tier: Pick<PricingTier, "aid_min_cents" | "aid_max_cents">,
+): string {
+  if (tier.aid_min_cents === 0 && tier.aid_max_cents != null) {
+    if (tier.aid_max_cents % 100 === 99) {
+      return `Moins de ${labelEuros(tier.aid_max_cents + 1)} d’aide`;
+    }
+    return `Jusqu’à ${labelEuros(tier.aid_max_cents)} d’aide`;
+  }
+
+  if (tier.aid_max_cents == null) {
+    if (tier.aid_min_cents % 100 === 1) {
+      return `Plus de ${labelEuros(tier.aid_min_cents - 1)} d’aide`;
+    }
+    return `À partir de ${labelEuros(tier.aid_min_cents)} d’aide`;
+  }
+
+  return `De ${labelEuros(tier.aid_min_cents)} à ${labelEuros(tier.aid_max_cents)} d’aide`;
 }
 
 export function grilleAffichee(
   tiers: readonly PricingTier[],
 ): GrilleAffichee | null {
-  const cents = tiers
+  const actifs = tiers
     .filter((t) => t.active)
-    .map((t) => t.price_cents)
-    .sort((a, b) => a - b);
+    .sort((a, b) => a.aid_min_cents - b.aid_min_cents);
+  const cents = actifs.map((t) => t.price_cents).sort((a, b) => a - b);
   if (cents.length === 0) return null;
   return {
     minLabel: labelEuros(cents[0]),
     maxLabel: labelEuros(cents[cents.length - 1]),
     paliers: cents.map(labelEuros),
+    lignes: actifs.map((tier) => ({
+      name: tier.name,
+      aidLabel: labelIntervalleAide(tier),
+      priceLabel: labelEuros(tier.price_cents),
+    })),
   };
 }
 

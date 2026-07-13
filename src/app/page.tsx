@@ -641,52 +641,72 @@ function Pricing({ grille }: { grille: GrilleAffichee | null }) {
     <section id="tarifs" className="py-20 sm:py-24">
       <Shell>
         <div className="border border-encre bg-encre px-6 py-12 sm:px-14 sm:py-14">
-          <div className="max-w-2xl">
-            <p className="label text-papier/70">Tarification</p>
-            <h2 className="mt-5 font-serif text-3xl font-semibold tracking-tight text-papier sm:text-[2.25rem] sm:leading-tight">
-              {grille ? (
-                <>
-                  Essayez gratuitement. Ensuite,{" "}
-                  <span className="font-mono text-blanc-casse">
-                    de {grille.minLabel} à {grille.maxLabel}
-                  </span>{" "}
-                  selon le montant de l&apos;aide.
-                </>
-              ) : (
-                <>
-                  Essayez gratuitement. Ensuite, un{" "}
-                  <span className="font-mono text-blanc-casse">forfait fixe</span>{" "}
-                  selon le montant de l&apos;aide.
-                </>
-              )}
-            </h2>
-            <p className="mt-4 max-w-xl text-lg leading-relaxed text-papier/75">
-              Un forfait fixe, indexé sur l&apos;aide que le dossier va chercher :
-              un petit chantier paie moins. Jamais un pourcentage de votre prime,
-              qui reste entièrement à vous. Sans abonnement imposé.
-            </p>
+          <div>
+            <div className="max-w-3xl">
+              <p className="label text-papier/70">Tarification transparente</p>
+              <h2 className="mt-5 font-serif text-3xl font-semibold tracking-tight text-papier sm:text-[2.25rem] sm:leading-tight">
+                {grille ? (
+                  <>
+                    Votre premier dossier est offert. Ensuite, le prix est{" "}
+                    <span className="text-blanc-casse">fixé à l&rsquo;avance</span>.
+                  </>
+                ) : (
+                  <>
+                    Essayez gratuitement. Ensuite, un{" "}
+                    <span className="font-mono text-blanc-casse">forfait fixe</span>{" "}
+                    selon le montant de l&apos;aide.
+                  </>
+                )}
+              </h2>
+              <p className="mt-4 max-w-2xl text-lg leading-relaxed text-papier/75">
+                Un paiement unique par dossier, selon le montant d&apos;aide estimé.
+                Aucun pourcentage sur la prime, aucun abonnement et aucun frais caché.
+              </p>
+            </div>
 
-            <ul className="mt-6 grid gap-2 text-sm text-papier/85 sm:grid-cols-2">
-              {["Contrôle des informations du dossier", "Relecture devis et facture", "Rapport de contrôle téléchargeable", "Aucun abonnement mensuel"].map((item) => (
-                <li key={item} className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 shrink-0 text-succes" strokeWidth={1.5} />
-                  {item}
-                </li>
-              ))}
-            </ul>
+            {grille && grille.lignes.length > 0 && (
+              <div className="mt-9">
+                <p className="font-mono text-xs uppercase tracking-[0.12em] text-papier/65">
+                  Grille appliquée au paiement
+                </p>
+                <ul className="mt-3 grid gap-3 lg:grid-cols-3">
+                  {grille.lignes.map((ligne) => (
+                    <li
+                      key={`${ligne.name}-${ligne.priceLabel}`}
+                      className="border border-papier/25 bg-papier/[0.06] p-5"
+                    >
+                      <p className="text-sm font-medium text-papier/70">{ligne.name}</p>
+                      <p className="mt-3 font-mono text-3xl font-semibold text-blanc-casse">
+                        {ligne.priceLabel}
+                      </p>
+                      <p className="mt-1 text-xs text-papier/60">
+                        par dossier · paiement unique
+                      </p>
+                      <p className="mt-5 border-t border-papier/20 pt-4 text-sm font-medium text-papier">
+                        {ligne.aidLabel}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+                <p className="mt-3 text-xs leading-relaxed text-papier/60">
+                  Le montant d&rsquo;aide est estimé par Dossimo à partir des informations
+                  du dossier. Le palier et le prix exact sont affichés avant tout paiement.
+                </p>
+              </div>
+            )}
 
-            {grille && grille.paliers.length > 1 && (
-              <ul className="mt-8 flex flex-wrap gap-2">
-                {grille.paliers.map((prix) => (
-                  <li
-                    key={prix}
-                    className="rounded border border-papier/25 px-3 py-1.5 font-mono text-sm text-blanc-casse"
-                  >
-                    {prix}
+            <div className="mt-9 border-t border-papier/20 pt-7">
+              <p className="text-sm font-semibold text-papier">Inclus dans chaque tarif</p>
+              <ul className="mt-4 grid gap-2 text-sm text-papier/85 sm:grid-cols-2 lg:max-w-3xl">
+                {["Contrôle des informations du dossier", "Relecture devis et facture", "Rapport de contrôle téléchargeable", "Aucun abonnement mensuel"].map((item) => (
+                  <li key={item} className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 shrink-0 text-succes" strokeWidth={1.5} />
+                    {item}
                   </li>
                 ))}
               </ul>
-            )}
+            </div>
+
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <Link
                 href="/demo"

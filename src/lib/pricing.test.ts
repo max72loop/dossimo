@@ -124,6 +124,23 @@ describe("grilleAffichee — ce que la vitrine annonce", () => {
     expect(g.minLabel).toBe("49 €");
     expect(g.maxLabel).toBe("249 €");
     expect(g.paliers).toEqual(["49 €", "149 €", "249 €"]);
+    expect(g.lignes).toEqual([
+      {
+        name: "Essentiel",
+        aidLabel: "Moins de 1\u202f000 € d’aide",
+        priceLabel: "49 €",
+      },
+      {
+        name: "Pivot",
+        aidLabel: "De 1\u202f000 € à 5\u202f000 € d’aide",
+        priceLabel: "149 €",
+      },
+      {
+        name: "Premium",
+        aidLabel: "Plus de 5\u202f000 € d’aide",
+        priceLabel: "249 €",
+      },
+    ]);
   });
 
   it("ignore les paliers désactivés", () => {
@@ -132,6 +149,7 @@ describe("grilleAffichee — ce que la vitrine annonce", () => {
     )!;
     expect(g.maxLabel).toBe("149 €");
     expect(g.paliers).toEqual(["49 €", "149 €"]);
+    expect(g.lignes).toHaveLength(2);
   });
 
   it("null si aucun palier : l'appelant tait le prix plutôt que d'en inventer un", () => {
