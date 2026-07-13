@@ -1,6 +1,6 @@
 import "server-only";
 
-import { createHash, randomBytes } from "node:crypto";
+import { createHash, createHmac } from "node:crypto";
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { DossierComplet } from "@/lib/dossier/get-dossier";
@@ -15,9 +15,9 @@ import {
  *
  * Cette URL collecte un avis d'imposition, un RIB et une pièce d'identité. Elle est
  * donc traitée comme un secret :
- *  - token de 32 octets aléatoires (256 bits) — non devinable ;
+ *  - token HMAC-SHA-256 stable par dossier — non devinable ;
  *  - seul son SHA-256 est stocké : une fuite de la base n'ouvre aucune porte, et
- *    Dossimo lui-même est incapable de réafficher un lien déjà émis ;
+ *    le serveur peut le recalculer, mais une fuite de la base ne suffit pas ;
  *  - il expire, et l'artisan peut révoquer d'un coup tous les liens d'un dossier ;
  *  - il n'ouvre AUCUNE policy anonyme : le serveur résout le token puis agit en
  *    service-role, pour ce dossier-là et rien d'autre.
@@ -26,8 +26,11 @@ import {
 /** Durée de vie d'un lien. Au-delà, le client redemande un lien à son artisan. */
 const VALIDITE_JOURS = 60;
 
-export function genererToken(): string {
-  return randomBytes(32).toString("base64url");
+export function genererTokenDossier(dossierId: string, secret: string): string {
+  if (!secret) throw new Error("Secret de lien de dépôt absent.");
+  return createHmac("sha256", secret)
+    .update(`dossimo:depot:v1:${dossierId}`)
+    .digest("base64url");
 }
 
 export function hacherToken(token: string): string {
@@ -35,25 +38,50 @@ export function hacherToken(token: string): string {
 }
 
 /**
- * Émet un lien pour un dossier. Le token en clair n'est renvoyé QU'ICI, une fois :
- * il n'est stocké nulle part et ne pourra pas être réaffiché.
- *
- * Les liens déjà émis restent valides. C'est délibéré : révoquer l'ancien à chaque
- * clic couperait l'accès au client qui est peut-être déjà en train de déposer ses
- * pièces. La révocation existe, mais elle est un geste explicite.
+ * Émet ou prolonge l'unique lien d'un dossier. Le jeton stable est recalculable
+ * uniquement avec le secret serveur ; les anciens liens aléatoires sont révoqués.
  */
 export async function emettreLien(dossierId: string): Promise<string> {
-  const token = genererToken();
+  const secret = process.env.DEPOT_LINK_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+  const token = genererTokenDossier(dossierId, secret);
+  const tokenHash = hacherToken(token);
   const expire = new Date(Date.now() + VALIDITE_JOURS * 24 * 60 * 60 * 1000);
 
   const admin = createAdminClient();
-  const { error } = await admin.from("liens_depot").insert({
+  const { error: revokeError } = await admin
+    .from("liens_depot")
+    .update({ revoque_at: new Date().toISOString() })
+    .eq("dossier_id", dossierId)
+    .is("revoque_at", null)
+    .neq("token_hash", tokenHash);
+  if (revokeError) {
+    throw new Error(`Révocation des anciens liens impossible : ${revokeError.message}`);
+  }
+
+  const { error } = await admin.from("liens_depot").upsert({
     dossier_id: dossierId,
-    token_hash: hacherToken(token),
+    token_hash: tokenHash,
     expire_at: expire.toISOString(),
-  });
+    revoque_at: null,
+  }, { onConflict: "token_hash" });
   if (error) throw new Error(`Émission du lien impossible : ${error.message}`);
 
+  return token;
+}
+
+/** Retrouve le jeton stable s'il a déjà été émis et reste actif. */
+export async function retrouverLienActif(dossierId: string): Promise<string | null> {
+  const secret = process.env.DEPOT_LINK_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+  if (!secret) return null;
+  const token = genererTokenDossier(dossierId, secret);
+  const admin = createAdminClient();
+  const { data } = await admin
+    .from("liens_depot")
+    .select("expire_at,revoque_at")
+    .eq("dossier_id", dossierId)
+    .eq("token_hash", hacherToken(token))
+    .maybeSingle();
+  if (!data || data.revoque_at || new Date(data.expire_at) < new Date()) return null;
   return token;
 }
 

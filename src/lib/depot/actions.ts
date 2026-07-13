@@ -20,9 +20,9 @@ const TAILLE_MAX = 15 * 1024 * 1024; // 15 Mo
  * `getDossier` passe par la RLS, un artisan ne peut ouvrir un lien que sur ses
  * dossiers.
  *
- * L'URL n'est renvoyée qu'ici, une seule fois : le token n'est stocké que haché, et
- * Dossimo est structurellement incapable de le réafficher. L'artisan la copie et
- * l'envoie à son client par le canal qu'il utilise déjà.
+ * Le jeton stable est dérivé d'un secret serveur et seul son hash est stocké.
+ * Ainsi la même URL peut être réutilisée dans l'écran et les relances sans exposer
+ * de secret en base.
  */
 export async function creerLienDepot(
   dossierId: string,

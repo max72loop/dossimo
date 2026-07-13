@@ -29,14 +29,15 @@ export function DemarrageAssiste({
     manual ? { ...initialValues, dispositif, geste } : null,
   );
   const [sourceFile, setSourceFile] = useState<File | undefined>();
-  const [found, setFound] = useState(0);
+  const [champsLus, setChampsLus] = useState<string[]>([]);
+  const found = champsLus.length;
 
   useEffect(() => {
     if (manual) return;
     let actif = true;
     loadGuestDraft().then((guest) => {
       if (!actif || !guest) return;
-      setFound(guest.champsTrouves.length);
+      setChampsLus(guest.champsTrouves);
       setSourceFile(guest.file);
       setDraft({ ...initialValues, ...guest.valeurs });
     });
@@ -61,7 +62,7 @@ export function DemarrageAssiste({
         setError(result.error);
         return;
       }
-      setFound(result.champsTrouves.length);
+      setChampsLus(result.champsTrouves);
       setSourceFile(file);
       setDraft({ ...initialValues, ...result.valeurs });
     } catch {
@@ -74,7 +75,7 @@ export function DemarrageAssiste({
   if (draft) {
     return (
       <div>
-        <div className="mb-7 rounded-md border border-succes/30 bg-succes-bg p-5">
+        {found > 0 && <div className="mb-7 rounded-md border border-succes/30 bg-succes-bg p-5">
           <div className="flex items-start gap-3">
             <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-succes" />
             <div>
@@ -93,8 +94,14 @@ export function DemarrageAssiste({
               </button>
             </div>
           </div>
-        </div>
-        <DossierCeeIsolationForm initialValues={draft} initialStep={0} assisted initialDocument={sourceFile} />
+        </div>}
+        <DossierCeeIsolationForm
+          initialValues={draft}
+          initialStep={0}
+          assisted={found > 0}
+          assistedFields={champsLus}
+          initialDocument={sourceFile}
+        />
       </div>
     );
   }

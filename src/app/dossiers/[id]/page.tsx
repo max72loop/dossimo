@@ -51,6 +51,7 @@ import {
 import { SEVERITE_LABEL, type Finding, type Severite } from "@/lib/rules/types";
 import { ObligeSuivi } from "@/components/dossier/oblige-suivi";
 import { RelancesBeneficiaire } from "@/components/dossier/relances-beneficiaire";
+import { retrouverLienActif } from "@/lib/depot/lien";
 
 export const metadata = { title: "Dossier · Dossimo" };
 
@@ -184,12 +185,15 @@ export default async function DossierPage({
   // source de vérité que le checkout : l'affiché correspond au facturé.
   const supabase = await createClient();
   const tiers = await getActiveTiers(supabase);
-  const [{ data: obliges }, { data: retourDepot }, { data: reminderSchedule }, { data: beneficiaryUploads }] = await Promise.all([
+  const [{ data: obliges }, { data: retourDepot }, { data: reminderSchedule }, { data: beneficiaryUploads }, tokenDepotActif] = await Promise.all([
     supabase.from("obliges").select("id, nom").eq("actif", true).order("nom"),
     supabase.from("retours_depot").select("statut, motif, detail").eq("dossier_id", dossier.id).maybeSingle(),
     supabase.from("reminder_schedules").select("enabled").eq("dossier_id", dossier.id).maybeSingle(),
     supabase.from("pieces_justificatives").select("id,type,nom_fichier,validation_status,rejection_reason").eq("dossier_id", dossier.id).eq("deposant", "beneficiaire").order("created_at", { ascending: false }),
+    retrouverLienActif(dossier.id),
   ]);
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ?? "";
+  const urlDepotActif = tokenDepotActif ? `${baseUrl}/depot/${tokenDepotActif}` : null;
   const prix = prixPack(prime ? Math.round(prime.montant * 100) : null, tiers);
 
   // Net à payer : final_price_cents (net de remise filleul + crédits déjà
@@ -358,6 +362,7 @@ export default async function DossierPage({
               attendues={attenduesClient}
               nbRecues={suivi.recues}
               prenomClient={c.beneficiaire.prenom}
+              initialUrl={urlDepotActif}
             />
             <RelancesBeneficiaire
               dossierId={id}

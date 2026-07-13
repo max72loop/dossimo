@@ -74,13 +74,13 @@ export function ActionsRestantes({ synthese }: { synthese: SyntheseDossier }) {
       </ul>
       </details>
 
-      {nbControlesPasses > 0 && (
+      {nbControlesPasses > 0 && nbBloquants === 0 && (
         <p className="mt-4 rounded border-l-4 border-succes bg-succes-bg px-3 py-2 text-xs text-succes">
           Les contrôles automatiques (chronologie, qualification RGE, performance
           technique, cohérence des montants) sont déjà validés :{" "}
           {nbControlesPasses} point{nbControlesPasses > 1 ? "s" : ""} conforme
-          {nbControlesPasses > 1 ? "s" : ""}. Il ne vous reste que les pièces à
-          joindre.
+          {nbControlesPasses > 1 ? "s" : ""}. Continuez avec les pièces et les
+          étapes indiquées ci-dessus.
         </p>
       )}
     </section>

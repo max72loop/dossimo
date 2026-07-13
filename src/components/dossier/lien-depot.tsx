@@ -20,13 +20,15 @@ export function LienDepot({
   attendues,
   nbRecues,
   prenomClient,
+  initialUrl,
 }: {
   dossierId: string;
   attendues: PieceAttendue[];
   nbRecues: number;
   prenomClient: string;
+  initialUrl: string | null;
 }) {
-  const [url, setUrl] = useState<string | null>(null);
+  const [url, setUrl] = useState<string | null>(initialUrl);
   const [copie, setCopie] = useState(false);
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
@@ -35,6 +37,9 @@ export function LienDepot({
 
   const total = attendues.length;
   const complet = nbRecues >= total;
+  const partage = url
+    ? `Bonjour ${prenomClient}, vous pouvez déposer ici les pièces de votre dossier : ${url}`
+    : "";
 
   async function generer() {
     setEnvoi(true);
@@ -103,7 +108,7 @@ export function LienDepot({
             className="mt-5 rounded border border-info/25 bg-info-bg p-4"
           >
             <p className="text-xs font-medium text-info">
-              Copiez ce lien maintenant : il ne sera plus affiché.
+              Lien unique de ce dossier, réutilisé dans toutes les relances.
             </p>
             <div className="mt-2 flex flex-wrap items-center gap-2">
               <code className="min-w-0 flex-1 truncate rounded border border-encre/12 bg-blanc-casse px-3 py-2 font-mono text-xs text-encre">
@@ -114,8 +119,12 @@ export function LienDepot({
               </button>
             </div>
             <p className="mt-3 text-xs text-ardoise">
-              Valable 60 jours. Envoyez-le à {prenomClient} par SMS ou WhatsApp.
+              Un seul lien reste actif. Vous pouvez le retrouver ici jusqu&apos;à sa révocation ou son expiration.
             </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <a href={`https://wa.me/?text=${encodeURIComponent(partage)}`} target="_blank" rel="noreferrer" className={BTN_SECONDAIRE_SM}>Envoyer par WhatsApp</a>
+              <a href={`sms:?&body=${encodeURIComponent(partage)}`} className={BTN_SECONDAIRE_SM}>Envoyer par SMS</a>
+            </div>
           </motion.div>
         ) : null}
       </AnimatePresence>
@@ -125,25 +134,16 @@ export function LienDepot({
       ) : null}
 
       <div className="mt-5 flex flex-wrap items-center gap-3">
-        <button
-          type="button"
-          onClick={generer}
-          disabled={envoi}
-          className={BTN_PRINCIPAL}
-        >
-          {envoi
-            ? "Génération…"
-            : url
-              ? "Générer un autre lien"
-              : "Générer le lien de dépôt"}
-        </button>
-        <button
-          type="button"
-          onClick={revoquer}
-          className="text-xs text-ardoise underline underline-offset-2 hover:text-encre"
-        >
-          Révoquer les liens émis
-        </button>
+        {!url && (
+          <button type="button" onClick={generer} disabled={envoi} className={BTN_PRINCIPAL}>
+            {envoi ? "Création…" : "Créer le lien unique de dépôt"}
+          </button>
+        )}
+        {url && (
+          <button type="button" onClick={revoquer} className="text-xs text-ardoise underline underline-offset-2 hover:text-encre">
+            Révoquer ce lien
+          </button>
+        )}
       </div>
     </section>
   );

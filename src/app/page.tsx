@@ -294,10 +294,12 @@ function JsonLd({ grille }: { grille: GrilleAffichee | null }) {
 /* ------------------------------------------------------------ TrustStrip */
 function TrustStrip({ grille }: { grille: GrilleAffichee | null }) {
   const items = [
-    "0 € pour le premier contrôle",
+    "Premier dossier offert",
     // Prix dérivé de la grille en base, jamais écrit en dur : sans elle, on annonce
     // la gratuité du premier dossier sans avancer de chiffre.
-    grille ? `À partir de ${grille.minLabel} par dossier` : "Forfait fixe par dossier",
+    grille
+      ? `Puis de ${grille.minLabel} à ${grille.maxLabel} selon l’aide`
+      : "Puis un forfait fixe selon l’aide",
     "Sans carte bancaire",
     "Vous gardez client et prime",
   ];

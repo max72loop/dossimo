@@ -353,12 +353,12 @@ export default async function DossiersPage() {
                               const ctrl = controleParDossier.get(d.id);
                               if (!ctrl) return null;
                               return ctrl.nbBloquants > 0 ? (
-                                <span className="inline-flex items-center gap-1 rounded-full bg-erreur-bg px-2 py-0.5 text-[10px] font-medium text-erreur">
-                                  {ctrl.nbBloquants} bloquant{ctrl.nbBloquants > 1 ? "s" : ""}
+                                <span className="mt-1 block border-t border-filigrane pt-1.5 text-[10px] font-medium text-erreur">
+                                  Contrôle : {ctrl.nbBloquants} point{ctrl.nbBloquants > 1 ? "s" : ""} à corriger
                                 </span>
                               ) : (
-                                <span className="inline-flex items-center gap-1 rounded-full bg-succes-bg px-2 py-0.5 text-[10px] font-medium text-succes">
-                                  Aucun bloquant
+                                <span className="mt-1 block border-t border-filigrane pt-1.5 text-[10px] font-medium text-succes">
+                                  Contrôle : aucun point à corriger
                                 </span>
                               );
                             })()}

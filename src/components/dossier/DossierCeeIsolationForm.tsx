@@ -130,11 +130,14 @@ export function DossierCeeIsolationForm({
   initialValues,
   initialStep = 0,
   assisted = false,
+  assistedFields = [],
   initialDocument,
 }: {
   initialValues?: Partial<CeeIsolationInput>;
   initialStep?: number;
   assisted?: boolean;
+  /** Noms des champs réellement lus sur le document, hors profil artisan. */
+  assistedFields?: string[];
   initialDocument?: File;
 }) {
   const router = useRouter();
@@ -144,12 +147,15 @@ export function DossierCeeIsolationForm({
   const [phase, setPhase] = useState<Phase>("repos");
   const [voirInformationsLues, setVoirInformationsLues] = useState(false);
   const enCours = phase !== "repos";
-  const assistedValues = Object.fromEntries(
+  const availableValues = Object.fromEntries(
     Object.entries(initialValues ?? {})
       .filter(([, value]) => value !== undefined && value !== null && value !== "")
       .map(([key, value]) => [key, String(value)]),
   );
-  const etapesActives = etapesPourSaisie(assisted, assistedValues);
+  const documentValues = Object.fromEntries(
+    Object.entries(availableValues).filter(([key]) => assistedFields.includes(key)),
+  );
+  const etapesActives = etapesPourSaisie(assisted, availableValues);
 
   const {
     register,
@@ -168,6 +174,9 @@ export function DossierCeeIsolationForm({
   });
 
   const etapeCourante = etapesActives[etape] ?? etapesActives[0];
+  const nbInformationsDisponiblesEtape = etapeCourante.champs.filter((champ) => availableValues[champ]).length;
+  const nbInformationsLuesEtape = etapeCourante.champs.filter((champ) => documentValues[champ]).length;
+  const nbInformationsProfilEtape = nbInformationsDisponiblesEtape - nbInformationsLuesEtape;
   const dernier = etape === etapesActives.length - 1;
   const typeIsolation = useWatch({ control, name: "type_isolation" });
   const rMin = typeIsolation ? TYPES_ISOLATION[typeIsolation]?.r_min : undefined;
@@ -288,7 +297,7 @@ export function DossierCeeIsolationForm({
   }
 
   return (
-    <AssistedFieldsProvider values={assisted ? assistedValues : {}} hideConfirmed={assisted && !voirInformationsLues}>
+    <AssistedFieldsProvider values={assisted ? availableValues : {}} hideConfirmed={assisted && !voirInformationsLues}>
     <form
       onSubmit={handleSubmit(onSubmit)}
       onKeyDown={onKeyDown}
@@ -309,9 +318,11 @@ export function DossierCeeIsolationForm({
             <strong>Dossimo vous montre seulement ce qui manque.</strong> Les informations lues sur votre devis ou votre profil sont conservées et masquées pour alléger la saisie.
           </p>
         )}
-        {assisted && (
+        {assisted && nbInformationsDisponiblesEtape > 0 && (
           <button type="button" onClick={() => setVoirInformationsLues((visible) => !visible)} className="mb-4 text-sm font-semibold text-tampon underline underline-offset-2">
-            {voirInformationsLues ? "Masquer les informations déjà lues" : `Voir ou corriger les ${Object.keys(assistedValues).length} informations déjà lues`}
+            {voirInformationsLues
+              ? "Masquer les informations déjà disponibles à cette étape"
+              : `Voir ou corriger ${nbInformationsDisponiblesEtape === 1 ? "l’information" : `les ${nbInformationsDisponiblesEtape} informations`} disponible${nbInformationsDisponiblesEtape > 1 ? "s" : ""} à cette étape (${nbInformationsLuesEtape} lue${nbInformationsLuesEtape === 1 ? "" : "s"} sur le devis${nbInformationsProfilEtape > 0 ? `, ${nbInformationsProfilEtape} reprise${nbInformationsProfilEtape > 1 ? "s" : ""} du profil` : ""})`}
           </button>
         )}
         <div className="mb-3 grid grid-cols-3 gap-1.5 sm:grid-cols-6">
