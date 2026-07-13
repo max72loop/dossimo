@@ -18,6 +18,7 @@ import { SiteHeader } from "@/components/landing/site-header";
 import { SiteFooter } from "@/components/landing/site-footer";
 import { LeadForm } from "@/components/landing/lead-form";
 import { FOCUS } from "@/components/ui/boutons";
+import { CTA_DEMO } from "@/lib/landing/copy";
 import { grillePublique } from "@/lib/landing/grille-publique";
 import type { GrilleAffichee } from "@/lib/pricing";
 
@@ -78,26 +79,26 @@ function Hero() {
   return (
     <section className="relative overflow-hidden border-b border-filigrane bg-blanc-casse">
       <div className="pointer-events-none absolute inset-0 opacity-[0.55] [background-image:linear-gradient(to_right,rgba(226,221,209,0.9)_1px,transparent_1px),linear-gradient(to_bottom,rgba(226,221,209,0.9)_1px,transparent_1px)] [background-size:48px_48px]" />
-      <div className="relative mx-auto grid max-w-[1280px] items-center gap-12 px-5 py-14 sm:px-8 lg:grid-cols-[1fr_0.9fr] lg:py-20">
+      <div className="relative mx-auto grid max-w-[1280px] items-center gap-9 px-5 py-10 sm:px-8 sm:py-12 lg:grid-cols-[1fr_0.9fr] lg:py-14">
         <div>
           <p className="inline-flex items-center gap-2 border-y border-encre py-2 font-mono text-[11px] uppercase tracking-[0.16em] text-encre">
             <span className="h-2 w-2 rounded-full bg-terre-cuite" />
             Le contrôle avant dépôt des artisans RGE
           </p>
 
-          <h1 className="mt-7 max-w-3xl font-serif text-[3rem] font-semibold leading-[1.02] tracking-tight text-encre sm:text-[4.35rem]">
-            Déposez votre devis. Dossimo vous dit{" "}
+          <h1 className="mt-6 max-w-3xl font-serif text-[2.65rem] font-semibold leading-[1.02] tracking-tight text-encre sm:text-[3.65rem] lg:text-[4.1rem]">
+            Repérez{" "}
             <span className="relative text-tampon">
-              quoi faire ensuite
+              ce qui bloque
               <span className="absolute -bottom-2 left-0 h-1 w-full bg-terre-cuite" />
             </span>
-            {" "}jusqu’au dépôt.
+            {" "}votre dossier avant le dépôt.
           </h1>
 
-          <p className="mt-8 max-w-xl text-lg leading-relaxed text-ardoise">
-            Prenez votre devis en photo ou ajoutez le PDF. Dossimo préremplit le dossier,
-            contrôle les mentions, les dates et le RGE, puis vous donne
-            <span className="font-medium text-encre"> une seule prochaine action claire</span>.
+          <p className="mt-6 max-w-xl text-lg leading-relaxed text-ardoise">
+            Ajoutez le PDF ou prenez le devis en photo. Dossimo contrôle les mentions,
+            les dates et le RGE, puis vous montre
+            <span className="font-medium text-encre"> le premier point à corriger</span>.
           </p>
 
           <ul className="mt-6 grid max-w-xl gap-2 sm:grid-cols-2" aria-label="Ce que Dossimo contrôle">
@@ -109,23 +110,17 @@ function Hero() {
             ))}
           </ul>
 
-          <div className="mt-8 flex flex-wrap items-center gap-3">
+          <div className="mt-7">
             <Link
               href="/demo"
-              className={`group inline-flex min-h-12 items-center gap-2 rounded-lg bg-terre-cuite px-6 py-3 text-sm font-semibold text-blanc-casse shadow-md transition-colors hover:bg-terre-cuite-hover ${FOCUS}`}
+              className={`group inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-terre-cuite px-6 py-3 text-sm font-semibold text-blanc-casse shadow-md transition-colors hover:bg-terre-cuite-hover sm:w-auto ${FOCUS}`}
             >
-              Tester avec mon devis gratuitement
+              {CTA_DEMO}
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-            </Link>
-            <Link
-              href="#etapes"
-              className={`inline-flex h-12 items-center gap-2 rounded-lg border border-encre px-6 text-sm font-medium text-encre transition-colors hover:bg-papier-fonce ${FOCUS}`}
-            >
-              Voir comment ça marche
             </Link>
           </div>
 
-          <p className="mt-5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-ardoise">
+          <p className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-ardoise">
             <CheckCircle2 className="h-4 w-4 text-succes" strokeWidth={1.5} />
             Aucun paiement aujourd&rsquo;hui
             <span className="text-filigrane">·</span>
@@ -697,7 +692,7 @@ function Pricing({ grille }: { grille: GrilleAffichee | null }) {
                 href="/demo"
                 className={`group inline-flex h-12 items-center gap-2 rounded-lg bg-papier px-6 text-sm font-semibold text-encre transition-colors hover:bg-blanc-casse ${FOCUS_SOMBRE}`}
               >
-                Tester avec mon devis gratuitement
+                {CTA_DEMO}
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </Link>
               <a
@@ -728,7 +723,7 @@ function MobileConversionBar() {
         href="/demo"
         className={`flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-terre-cuite px-5 py-3 text-center text-sm font-semibold text-blanc-casse ${FOCUS}`}
       >
-        Tester mon devis — offert
+        {CTA_DEMO}
         <ArrowRight className="h-4 w-4" />
       </Link>
     </div>

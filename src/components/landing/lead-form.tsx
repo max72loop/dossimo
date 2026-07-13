@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 
+import { FOCUS } from "@/components/ui/boutons";
 import { submitLead } from "@/lib/landing/actions";
 
 export function LeadForm() {
@@ -50,10 +51,10 @@ export function LeadForm() {
     "mt-1.5 h-11 w-full rounded border border-filigrane bg-blanc-casse px-3.5 text-sm text-encre placeholder:text-encre-claire outline-none transition focus:border-tampon focus:ring-2 focus:ring-tampon/15";
 
   return (
-    <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4 sm:grid-cols-2" aria-busy={status === "loading"}>
-      <div className="sm:col-span-2">
+    <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4" aria-busy={status === "loading"}>
+      <div>
         <label htmlFor="lead-email" className={labelClass}>
-          Email professionnel
+          Email professionnel <span className="text-ardoise">(requis)</span>
         </label>
         <input
           id="lead-email"
@@ -66,20 +67,41 @@ export function LeadForm() {
           className={inputClass}
         />
       </div>
-      <div>
-        <label htmlFor="lead-entreprise" className={labelClass}>
-          Entreprise
-        </label>
-        <input
-          id="lead-entreprise"
-          type="text"
-          autoComplete="organization"
-          placeholder="Nom de l'entreprise"
-          value={entreprise}
-          onChange={(e) => setEntreprise(e.target.value)}
-          className={inputClass}
-        />
-      </div>
+      <details className="group rounded border border-filigrane bg-papier/35 px-4 py-3">
+        <summary className={`cursor-pointer text-sm font-medium text-tampon ${FOCUS}`}>
+          Ajouter mon entreprise ou mon téléphone <span className="text-ardoise">(facultatif)</span>
+        </summary>
+        <div className="mt-4 grid gap-4">
+          <div>
+            <label htmlFor="lead-entreprise" className={labelClass}>
+              Entreprise <span className="text-ardoise">(facultatif)</span>
+            </label>
+            <input
+              id="lead-entreprise"
+              type="text"
+              autoComplete="organization"
+              placeholder="Nom de l'entreprise"
+              value={entreprise}
+              onChange={(e) => setEntreprise(e.target.value)}
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label htmlFor="lead-tel" className={labelClass}>
+              Téléphone <span className="text-ardoise">(facultatif)</span>
+            </label>
+            <input
+              id="lead-tel"
+              type="tel"
+              autoComplete="tel"
+              placeholder="06 12 34 56 78"
+              value={telephone}
+              onChange={(e) => setTelephone(e.target.value)}
+              className={inputClass}
+            />
+          </div>
+        </div>
+      </details>
       <div className="hidden" aria-hidden="true">
         <label htmlFor="lead-website">Site web</label>
         <input
@@ -91,22 +113,8 @@ export function LeadForm() {
           onChange={(e) => setWebsite(e.target.value)}
         />
       </div>
-      <div>
-        <label htmlFor="lead-tel" className={labelClass}>
-          Téléphone
-        </label>
-        <input
-          id="lead-tel"
-          type="tel"
-          autoComplete="tel"
-          placeholder="06 12 34 56 78"
-          value={telephone}
-          onChange={(e) => setTelephone(e.target.value)}
-          className={inputClass}
-        />
-      </div>
       {error && (
-        <p role="alert" className="flex items-start gap-2 text-[0.813rem] text-erreur sm:col-span-2">
+        <p role="alert" className="flex items-start gap-2 text-[0.813rem] text-erreur">
           <AlertCircle className="mt-px h-4 w-4 shrink-0" strokeWidth={1.5} />
           {error}
         </p>
@@ -114,12 +122,12 @@ export function LeadForm() {
       <button
         type="submit"
         disabled={status === "loading"}
-        className="mt-1 inline-flex h-11 items-center justify-center gap-2 rounded bg-terre-cuite px-5 text-sm font-medium text-blanc-casse transition-colors hover:bg-terre-cuite-hover disabled:opacity-60 sm:col-span-2"
+        className={`mt-1 inline-flex h-11 items-center justify-center gap-2 rounded bg-terre-cuite px-5 text-sm font-medium text-blanc-casse transition-colors hover:bg-terre-cuite-hover disabled:opacity-60 ${FOCUS}`}
       >
         {status === "loading" && <Loader2 className="h-4 w-4 animate-spin" />}
         Être recontacté
       </button>
-      <p className="text-center text-xs text-encre-claire sm:col-span-2">
+      <p className="text-center text-xs text-ardoise">
         Sans engagement. Vos données ne sont jamais vendues ni louées.
       </p>
     </form>

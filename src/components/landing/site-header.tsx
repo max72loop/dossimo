@@ -1,15 +1,8 @@
 import Link from "next/link";
 
 import { getCurrentUser } from "@/lib/auth/get-artisan";
-import { MobileMenu } from "@/components/landing/mobile-menu";
 import { FOCUS } from "@/components/ui/boutons";
-
-const NAV = [
-  { href: "/demo", label: "Tester mon devis" },
-  { href: "/#etapes", label: "Comment ça marche" },
-  { href: "/#tarifs", label: "Tarifs" },
-  { href: "/#faq", label: "FAQ" },
-];
+import { CTA_DEMO } from "@/lib/landing/copy";
 
 /* Logo Dossimo : mot-signe « dossimo » (Unbounded), deux « o » en gris.
    Rendu typographique (net et responsive), fidèle au kit de marque. */
@@ -40,24 +33,10 @@ export async function SiteHeader() {
     <header className="sticky top-0 z-40 border-b-2 border-encre bg-papier/95 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-[1280px] items-center justify-between px-5 sm:px-8">
         <Logo />
-        <nav className="hidden items-center gap-8 md:flex">
-          {NAV.map((item) => (
-            <a
-              key={item.href}
-              href={item.href}
-              className="text-sm text-ardoise transition-colors hover:text-encre"
-            >
-              {item.label}
-            </a>
-          ))}
-        </nav>
         <div className="flex items-center gap-3 sm:gap-5">
-          {/* Sur téléphone, ces deux liens cèdent la place au menu : le CTA seul
-              tiendrait, mais « Connexion » disparaissait sous 640 px — un artisan
-              déjà inscrit n'avait aucun accès à son espace depuis l'accueil. */}
           <Link
             href={user ? "/dossiers" : "/connexion"}
-            className={`hidden text-sm text-tampon underline-offset-4 transition hover:underline md:block ${FOCUS}`}
+            className={`text-sm text-tampon underline-offset-4 transition hover:underline ${FOCUS}`}
           >
             {user ? "Mon espace" : "Connexion"}
           </Link>
@@ -65,9 +44,8 @@ export async function SiteHeader() {
             href={user ? "/dossiers/nouveau" : "/demo"}
             className={`hidden h-10 items-center rounded bg-terre-cuite px-5 text-sm font-medium text-blanc-casse transition-colors hover:bg-terre-cuite-hover md:inline-flex ${FOCUS}`}
           >
-            {user ? "Nouveau dossier" : "Tester mon devis"}
+            {user ? "Nouveau dossier" : CTA_DEMO}
           </Link>
-          <MobileMenu nav={NAV} connecte={!!user} />
         </div>
       </div>
     </header>
