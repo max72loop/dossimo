@@ -57,7 +57,7 @@ export function renderAhCeePdf(
   return renderToBuffer(
     createElement(AttestationHonneurDocument, {
       data,
-      ref,
+      template: ref,
     }) as unknown as DocElement,
   );
 }

@@ -99,6 +99,11 @@ export default function ConfidentialitePage() {
             <strong>{editeur.paiement.nom}</strong> —{" "}
             {editeur.paiement.role.toLowerCase()}.
           </li>
+          <li>
+            <strong>OpenRouter et le fournisseur du modèle d&apos;analyse sélectionné</strong>
+            {" "}— lecture ponctuelle des devis, factures et avis d&apos;imposition,
+            uniquement pour en extraire les informations nécessaires au contrôle.
+          </li>
         </ul>
         <p>
           Certains sous-traitants peuvent héberger des données hors Union
@@ -148,6 +153,15 @@ export default function ConfidentialitePage() {
           Dossimo met en œuvre des mesures techniques et organisationnelles
           appropriées pour protéger les données&nbsp;: chiffrement des échanges,
           contrôle d&rsquo;accès, hébergement sur des infrastructures sécurisées.
+        </p>
+      </LegalSection>
+      <LegalSection titre="Analyse documentaire assistée">
+        <p>
+          Lorsqu&apos;elle est activée, l&apos;analyse assistée transmet une copie du document
+          concerné à notre prestataire d&apos;IA afin d&apos;en relever les seules informations
+          utiles au contrôle. Le résultat est toujours confronté à des règles
+          déterministes et reste à vérifier par l&apos;artisan avant dépôt. Les pièces
+          d&apos;identité et RIB ne sont pas soumis à cette analyse.
         </p>
       </LegalSection>
     </LegalDoc>

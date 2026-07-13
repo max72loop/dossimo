@@ -123,11 +123,12 @@ export interface AhRef {
 
 export function AttestationHonneurDocument({
   data,
-  ref,
+  template,
 }: {
   data: DossierComplet;
-  ref: AhRef;
+  template: AhRef;
 }) {
+  const templateRef = template;
   const c = data.caracteristiques;
   const b = c.beneficiaire;
   const geste = c.geste ?? "isolation";
@@ -150,20 +151,22 @@ export function AttestationHonneurDocument({
       <Page size="A4" style={styles.page}>
         <View style={styles.headerBand}>
           <View style={{ flex: 1, paddingRight: 12 }}>
+            {/* @react-pdf/renderer n'expose pas d'équivalent typé de `alt`. */}
+            {/* eslint-disable-next-line jsx-a11y/alt-text */}
             <Image src={logoNuit()} style={styles.logo} />
             <Text style={styles.eyebrow}>Reproduction du modèle réglementaire</Text>
             <Text style={styles.bandTitle}>Attestation sur l&apos;honneur</Text>
-            <Text style={styles.bandSubtitle}>CEE · {ref.ficheRef ?? c.fiche}</Text>
+            <Text style={styles.bandSubtitle}>CEE · {templateRef.ficheRef ?? c.fiche}</Text>
           </View>
           <View style={styles.bandRight}>
             <Text style={styles.bandRef}>À imprimer et signer</Text>
-            <Text style={styles.bandRefSub}>modèle {ref.version}</Text>
+            <Text style={styles.bandRefSub}>modèle {templateRef.version}</Text>
           </View>
         </View>
         <View style={styles.accentLine} />
 
         <Text style={s.intro}>
-          Reproduction fidèle du modèle réglementaire en vigueur ({ref.arrete}). Les
+          Reproduction fidèle du modèle réglementaire en vigueur ({templateRef.arrete}). Les
           valeurs sont reprises de la saisie unique du dossier — cohérentes avec le devis,
           la facture et le reste du pack. À imprimer, puis <Text style={{ fontFamily: "Helvetica-Bold" }}>dater
           et signer de façon manuscrite</Text> par le bénéficiaire ET le professionnel.
@@ -199,7 +202,7 @@ export function AttestationHonneurDocument({
           <Field label="RGE valable jusqu'au" value={dateFr(c.rge.date_fin)} />
         </Cadre>
 
-        {ref.variant === "p6" && (
+        {templateRef.variant === "p6" && (
           <Cadre title="Cadre — Coût de l'opération et aides (6e période)">
             <Field label="Coût de l'opération (TTC, pose incluse)" value={euro(c.montants.ttc)} />
             {c.montants.aides_publiques_hors_cee == null ? (
@@ -238,7 +241,7 @@ export function AttestationHonneurDocument({
             "Le professionnel disposait, à la date d'engagement de l'opération (acceptation du devis), d'une qualification RGE en cours de validité couvrant le domaine des travaux réalisés.",
             "Les matériaux éligibles ont été fournis, installés et facturés par l'entreprise mentionnée au cadre C, ou par son sous-traitant déclaré.",
             "Aucune autre demande de certificats d'économies d'énergie n'a été sollicitée pour cette même opération.",
-            ...(ref.variant === "p6"
+            ...(templateRef.variant === "p6"
               ? [
                   "Les travaux ont été effectivement réalisés et l'installation mise en service ; le bénéficiaire et le professionnel attestent de cette mise en service.",
                 ]

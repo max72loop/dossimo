@@ -54,7 +54,8 @@ export function FactureDocument({ data }: { data: FactureComplete }) {
       <Page size="A4" style={styles.page}>
         <View style={styles.headerBand}>
           <View style={{ flex: 1, paddingRight: 12 }}>
-            <Image src={logoNuit()} style={styles.logo} />
+          {/* eslint-disable-next-line jsx-a11y/alt-text -- React-PDF ne supporte pas `alt`. */}
+          <Image src={logoNuit()} style={styles.logo} />
             <Text style={styles.eyebrow}>Facture</Text>
             <Text style={styles.bandTitle}>{facture.numero}</Text>
             <Text style={styles.bandSubtitle}>

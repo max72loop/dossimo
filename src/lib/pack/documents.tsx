@@ -66,6 +66,7 @@ function Header({
     <>
       <View style={styles.headerBand}>
         <View style={{ flex: 1, paddingRight: 12 }}>
+          {/* eslint-disable-next-line jsx-a11y/alt-text -- React-PDF ne supporte pas `alt`. */}
           <Image src={logoNuit()} style={styles.logo} />
           <Text style={styles.eyebrow}>{eyebrow}</Text>
           <Text style={styles.bandTitle}>{title}</Text>

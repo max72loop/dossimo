@@ -10,6 +10,7 @@ export function LeadForm() {
   const [email, setEmail] = useState("");
   const [entreprise, setEntreprise] = useState("");
   const [telephone, setTelephone] = useState("");
+  const [website, setWebsite] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -18,7 +19,7 @@ export function LeadForm() {
     setError(null);
 
     try {
-      const result = await submitLead({ email, entreprise, telephone });
+      const result = await submitLead({ email, entreprise, telephone, website });
       if (result.ok) {
         setStatus("done");
       } else {
@@ -79,6 +80,17 @@ export function LeadForm() {
           className={inputClass}
         />
       </div>
+      <div className="hidden" aria-hidden="true">
+        <label htmlFor="lead-website">Site web</label>
+        <input
+          id="lead-website"
+          type="text"
+          tabIndex={-1}
+          autoComplete="off"
+          value={website}
+          onChange={(e) => setWebsite(e.target.value)}
+        />
+      </div>
       <div>
         <label htmlFor="lead-tel" className={labelClass}>
           Téléphone
@@ -108,7 +120,7 @@ export function LeadForm() {
         Être recontacté
       </button>
       <p className="text-center text-xs text-encre-claire sm:col-span-2">
-        Sans engagement. Vos données ne sont jamais partagées.
+        Sans engagement. Vos données ne sont jamais vendues ni louées.
       </p>
     </form>
   );

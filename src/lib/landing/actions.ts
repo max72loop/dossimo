@@ -29,6 +29,12 @@ const leadSchema = z.object({
     (v) => (typeof v === "string" ? v.trim() : v),
     z.string().max(2000).optional().or(z.literal("")),
   ),
+  // Champ invisible : il ne constitue pas une protection suffisante à lui seul,
+  // mais écarte les robots opportunistes avant toute écriture ou envoi d'e-mail.
+  website: z.preprocess(
+    (v) => (typeof v === "string" ? v.trim() : v),
+    z.string().max(0).optional().or(z.literal("")),
+  ),
 });
 
 export type SubmitLeadResult =

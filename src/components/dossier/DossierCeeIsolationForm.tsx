@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useForm, type Path } from "react-hook-form";
+import { useForm, useWatch, type Path } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { createDossierCeeIsolation } from "@/lib/dossier/actions";
@@ -180,7 +180,7 @@ export function DossierCeeIsolationForm({
   const {
     register,
     handleSubmit,
-    watch,
+    control,
     trigger,
     setError,
     setValue,
@@ -193,10 +193,10 @@ export function DossierCeeIsolationForm({
   });
 
   const dernier = etape === ETAPES.length - 1;
-  const typeIsolation = watch("type_isolation");
+  const typeIsolation = useWatch({ control, name: "type_isolation" });
   const rMin = typeIsolation ? TYPES_ISOLATION[typeIsolation]?.r_min : undefined;
-  const dispositif = watch("dispositif");
-  const geste = watch("geste");
+  const dispositif = useWatch({ control, name: "dispositif" });
+  const geste = useWatch({ control, name: "geste" });
   const estPac = geste === "pac_air_eau";
   const estCet = geste === "cet";
   const estBois = geste === "bois";

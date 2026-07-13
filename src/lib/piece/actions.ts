@@ -7,9 +7,9 @@ import { extractPiece } from "@/lib/piece/extract";
 import { comparerPiece, type Comparaison } from "@/lib/piece/compare";
 import { verifierMentions, type MentionVerifiee } from "@/lib/piece/mentions";
 import { mentionsTemplates } from "@/lib/pack/pieces-cee-isolation";
+import { ACCEPTED_DOCUMENT_MIMES, isAcceptedDocument } from "@/lib/piece/file-validation";
 import type { Json, TypePiece } from "@/lib/database.types";
 
-const MIMES_OK = new Set(["image/jpeg", "image/png", "image/webp", "application/pdf"]);
 const TAILLE_MAX = 15 * 1024 * 1024; // 15 Mo
 
 export type UploadResult =
@@ -63,7 +63,7 @@ export async function uploadPiece(
   if (!(file instanceof File) || file.size === 0) {
     return { ok: false, error: "Aucun fichier reçu." };
   }
-  if (!MIMES_OK.has(file.type)) {
+  if (!ACCEPTED_DOCUMENT_MIMES.has(file.type)) {
     return { ok: false, error: "Format non supporté (JPG, PNG, WEBP ou PDF)." };
   }
   if (file.size > TAILLE_MAX) {
@@ -71,6 +71,9 @@ export async function uploadPiece(
   }
 
   const bytes = new Uint8Array(await file.arrayBuffer());
+  if (!isAcceptedDocument(bytes, file.type)) {
+    return { ok: false, error: "Le contenu du fichier ne correspond pas au format annoncé." };
+  }
   const supabase = await createClient();
 
   // Chemin : {dossierId}/{uuid}.<ext> — le premier segment porte la RLS.
