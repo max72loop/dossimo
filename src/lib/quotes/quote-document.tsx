@@ -1,0 +1,6 @@
+import { Document, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
+
+const styles = StyleSheet.create({ page: { padding: 42, fontSize: 10, color: "#1f2937" }, title: { fontSize: 20, marginBottom: 6 }, meta: { color: "#64748b", marginBottom: 18 }, section: { marginTop: 14 }, heading: { fontSize: 12, marginBottom: 7 }, line: { marginBottom: 5, lineHeight: 1.35 }, note: { marginTop: 20, fontSize: 8, color: "#64748b" } });
+export function QuoteDocument({ label, lines, mentions }: { label: string; lines: string[]; mentions: string[] }) {
+  return <Document><Page size="A4" style={styles.page}><Text style={styles.title}>Lignes de devis - {label}</Text><Text style={styles.meta}>Généré par Dossimo</Text><View style={styles.section}><Text style={styles.heading}>Lignes à intégrer au devis</Text>{lines.map((line, index) => <Text key={index} style={styles.line}>• {line}</Text>)}</View><View style={styles.section}><Text style={styles.heading}>Checklist de conformité</Text>{mentions.map((mention, index) => <Text key={index} style={styles.line}>✓ {mention}</Text>)}</View><Text style={styles.note}>Aide à la rédaction : l'artisan reste responsable de la conformité finale de son devis.</Text></Page></Document>;
+}

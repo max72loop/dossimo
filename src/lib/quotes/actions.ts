@@ -17,9 +17,9 @@ export async function generateAndSaveQuote(gestureId: string, values: Record<str
   if (!gesture || !template || !artisan) return { ok: false as const, error: "Modèle indisponible." };
   const result = generateQuote({ fields: (fields ?? []) as QuoteField[], lines: template.lines as unknown as QuoteLine[], values, context: { label: gesture.label, cee_fiche_reference: gesture.cee_fiche_reference ?? "À VALIDER", performance_unit: (fields ?? []).find((f) => f.key === "performance")?.unit ?? "" } });
   if (!result.ok) return { ok: false as const, error: "Certains champs doivent être corrigés.", fieldErrors: result.errors };
-  const { error } = await supabase.from("generated_quotes").insert({ artisan_id: artisan.id, gesture_id: gestureId, template_version: template.version, field_values: values, rendered_lines: result.lines });
+  const { data: saved, error } = await supabase.from("generated_quotes").insert({ artisan_id: artisan.id, gesture_id: gestureId, template_version: template.version, field_values: values, rendered_lines: result.lines }).select("id").single();
   if (error) return { ok: false as const, error: "Enregistrement impossible." };
-  return { ok: true as const, lines: result.lines, mentions: template.mandatory_mentions as unknown as string[], placeholder: template.placeholder };
+  return { ok: true as const, quoteId: saved.id, lines: result.lines, mentions: template.mandatory_mentions as unknown as string[], placeholder: template.placeholder };
 }
 
 
