@@ -40,22 +40,19 @@ insert into public.quote_gestures (slug,label,category,mpr_eligible,cee_eligible
 ('murs-exterieur','Isolation des murs par l''extérieur','isolation',false,true,'BAR-EN-102'),
 ('poele-granules','Poêle à granulés','chauffage',true,true,'BAR-TH-112'),
 ('chauffe-eau-thermodynamique','Chauffe-eau thermodynamique','chauffage',true,true,'BAR-TH-148'),
-('vmc-double-flux','VMC double flux','ventilation',true,true,'À VALIDER')
-on conflict (slug) do nothing;
-
+('vmc-double-flux','VMC double flux','ventilation',true,true,'À VALIDER') on conflict (slug) do nothing;
 insert into public.quote_gesture_fields (gesture_id,key,label,type,unit,required,min_value,help_text,position)
 select id, 'marque', 'Marque', 'text', null, true, null, 'À relever sur la fiche fabricant.', 1 from public.quote_gestures on conflict do nothing;
 insert into public.quote_gesture_fields (gesture_id,key,label,type,unit,required,min_value,help_text,position)
 select id, 'reference', 'Référence produit', 'text', null, true, null, 'Référence exacte du produit posé.', 2 from public.quote_gestures on conflict do nothing;
 insert into public.quote_gesture_fields (gesture_id,key,label,type,unit,required,min_value,help_text,position)
 select id, 'performance', 'Performance déclarée', 'number', '%', true, null, 'Seuil à valider avant publication réglementaire.', 3 from public.quote_gestures on conflict do nothing;
-
 insert into public.quote_templates (gesture_id,version,lines,mandatory_mentions)
 select id, 1,
 jsonb_build_array(
  jsonb_build_object('type','designation','template','[À VALIDER] Fourniture et pose : {{label}} {{marque}} référence {{reference}}.'),
  jsonb_build_object('type','performance','template','Performance déclarée : {{performance}} {{performance_unit}}.'),
- jsonb_build_object('cee','template','Référence CEE : {{cee_fiche_reference}}. Conditions et formulation à valider avec l''obligé retenu.'),
- jsonb_build_object('mention','template','Entreprise RGE : mentionner le numéro de qualification, son domaine et sa validité sur le devis.')
+ jsonb_build_object('type','cee','template','Référence CEE : {{cee_fiche_reference}}. Conditions et formulation à valider avec l''obligé retenu.'),
+ jsonb_build_object('type','mention','template','Entreprise RGE : mentionner le numéro de qualification, son domaine et sa validité sur le devis.')
 ), jsonb_build_array('Désignation complète', 'Marque et référence', 'Performance technique', 'Qualification RGE', 'Référence de fiche CEE')
 from public.quote_gestures where not exists (select 1 from public.quote_templates t where t.gesture_id = quote_gestures.id and t.version = 1);

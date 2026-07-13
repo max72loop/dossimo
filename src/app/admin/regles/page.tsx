@@ -50,6 +50,7 @@ export default async function AdminReglesPage() {
       >
         ← Mes dossiers
       </Link>
+      <Link href="/admin/devis" className="ml-4 text-sm text-tampon underline-offset-4 transition hover:underline">Modèles de devis →</Link>
       <Link
         href="/admin/pilotage"
         className="ml-4 text-sm text-tampon underline-offset-4 transition hover:underline"

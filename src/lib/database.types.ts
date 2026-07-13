@@ -210,8 +210,8 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["quote_gesture_fields"]["Insert"]>; Relationships: [];
       };
       quote_templates: {
-        Row: { id: string; gesture_id: string; version: number; lines: Json; mandatory_mentions: Json; valid_from: string; valid_until: string | null; active: boolean; placeholder: boolean; created_at: string };
-        Insert: { id?: string; gesture_id: string; version: number; lines: Json; mandatory_mentions?: Json; valid_from?: string; valid_until?: string | null; active?: boolean; placeholder?: boolean; created_at?: string };
+        Row: { id: string; gesture_id: string; version: number; lines: Json; mandatory_mentions: Json; valid_from: string; valid_until: string | null; active: boolean; placeholder: boolean; source_url: string | null; reviewed_by: string | null; reviewed_at: string | null; notes: string | null; created_at: string };
+        Insert: { id?: string; gesture_id: string; version: number; lines: Json; mandatory_mentions?: Json; valid_from?: string; valid_until?: string | null; active?: boolean; placeholder?: boolean; source_url?: string | null; reviewed_by?: string | null; reviewed_at?: string | null; notes?: string | null; created_at?: string };
         Update: Partial<Database["public"]["Tables"]["quote_templates"]["Insert"]>; Relationships: [];
       };
       generated_quotes: {
