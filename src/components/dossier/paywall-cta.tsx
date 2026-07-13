@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useRef, useState } from "react";
+import Link from "next/link";
 
 import { ouvrirPaiementDossier, type PaiementFormState } from "@/lib/stripe/actions";
 import { updateAdresseFacturation } from "@/lib/artisan/facturation-actions";
@@ -115,6 +116,23 @@ export function PaywallCta({
               ? `Débloquer · ${prix}`
               : `Débloquer le pack · ${prix}`}
         </button>
+        <p
+          className={
+            compact
+              ? "mt-1 text-[0.65rem] text-encre-claire"
+              : "mt-2 text-xs text-encre-claire"
+          }
+        >
+          En poursuivant, vous acceptez les{" "}
+          <Link
+            href="/cgv"
+            target="_blank"
+            className="underline underline-offset-2 hover:text-encre"
+          >
+            CGV
+          </Link>
+          .
+        </p>
       </form>
 
       {state.code === "adresse_manquante" && (

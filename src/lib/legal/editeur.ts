@@ -78,7 +78,7 @@ export const editeur = {
 } as const;
 
 /** Date de dernière mise à jour des documents légaux (affichée en tête). */
-export const derniereMajLegale = "10 juillet 2026";
+export const derniereMajLegale = "13 juillet 2026";
 
 /**
  * Vrai tant qu'un champ obligatoire n'est pas renseigné. Sert de garde au
