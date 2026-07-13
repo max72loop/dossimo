@@ -1,5 +1,7 @@
 "use server";
 
+import { cookies } from "next/headers";
+
 import { familleDeGeste, type CeeIsolationInput, type Famille } from "@/lib/dossier/cee-isolation";
 import { getCurrentArtisan } from "@/lib/auth/get-artisan";
 import { ACCEPTED_DOCUMENT_MIMES, isAcceptedDocument } from "@/lib/piece/file-validation";
@@ -47,7 +49,13 @@ function profilSoutirage(value: string | null): "M" | "L" | "XL" | undefined {
  */
 export async function analyserDevisInitial(formData: FormData): Promise<AnalyseDevisResult> {
   const artisan = await getCurrentArtisan();
-  if (!artisan) return { ok: false, error: "Connectez-vous pour analyser votre devis." };
+  const cookieStore = await cookies();
+  if (!artisan && cookieStore.has("dossimo_essai_devis")) {
+    return {
+      ok: false,
+      error: "Votre essai gratuit a déjà été utilisé. Créez votre compte pour continuer avec ce devis.",
+    };
+  }
 
   const file = formData.get("file");
   const geste = formData.get("geste");
@@ -55,10 +63,10 @@ export async function analyserDevisInitial(formData: FormData): Promise<AnalyseD
   if (!(file instanceof File) || file.size === 0) {
     return { ok: false, error: "Ajoutez un devis en PDF ou en photo." };
   }
-  if (typeof geste !== "string" || !["isolation", "pac_air_eau", "cet", "bois"].includes(geste)) {
+  if (typeof geste !== "string" || !["auto", "isolation", "pac_air_eau", "cet", "bois"].includes(geste)) {
     return { ok: false, error: "Choisissez d'abord le type de travaux." };
   }
-  if (dispositif !== "cee" && dispositif !== "maprimerenov") {
+  if (dispositif !== "auto" && dispositif !== "cee" && dispositif !== "maprimerenov") {
     return { ok: false, error: "Choisissez le dispositif visé." };
   }
   if (!ACCEPTED_DOCUMENT_MIMES.has(file.type) || file.size > TAILLE_MAX) {
@@ -75,7 +83,7 @@ export async function analyserDevisInitial(formData: FormData): Promise<AnalyseD
     mime: file.type,
     filename: file.name,
     type: "devis",
-    famille: familleDeGeste(geste),
+    famille: geste === "auto" ? "auto" : familleDeGeste(geste),
   });
   if (!extraction.ok) {
     return {
@@ -89,9 +97,21 @@ export async function analyserDevisInitial(formData: FormData): Promise<AnalyseD
   }
 
   const d = extraction.data;
+  const gesteDetecte: Famille =
+    geste !== "auto"
+      ? (geste as Famille)
+      : d.famille ??
+        (d.fiche?.startsWith("BAR-TH-171")
+          ? "pac_air_eau"
+          : d.fiche?.startsWith("BAR-TH-148")
+            ? "cet"
+            : d.fiche?.startsWith("BAR-TH-112")
+              ? "bois"
+              : "isolation");
+  const dispositifDetecte = dispositif === "auto" ? d.dispositif ?? "cee" : dispositif;
   const valeurs: Partial<CeeIsolationInput> = {
-    dispositif,
-    geste: geste as Famille,
+    dispositif: dispositifDetecte,
+    geste: gesteDetecte,
     ...nomBeneficiaire(d.beneficiaire_nom),
     client_adresse: d.adresse ?? undefined,
     client_code_postal: d.code_postal ?? undefined,
@@ -122,6 +142,16 @@ export async function analyserDevisInitial(formData: FormData): Promise<AnalyseD
   const champsTrouves = Object.entries(valeurs)
     .filter(([cle, valeur]) => !["dispositif", "geste"].includes(cle) && valeur !== undefined && valeur !== "")
     .map(([cle]) => cle);
+
+  if (!artisan) {
+    cookieStore.set("dossimo_essai_devis", "1", {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 60 * 60 * 24,
+      path: "/",
+    });
+  }
 
   return {
     ok: true,

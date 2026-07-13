@@ -37,6 +37,8 @@ const str = z.preprocess(
  * relire sans migration : une clé manquante vaut null.
  */
 const extractedSchema = z.object({
+  famille: z.enum(["isolation", "pac_air_eau", "cet", "bois"]).nullable().optional(),
+  dispositif: z.enum(["cee", "maprimerenov"]).nullable().optional(),
   // Communs à toutes les familles
   beneficiaire_nom: str,
   adresse: str,
@@ -128,13 +130,20 @@ const BLOC: Record<Famille, { objet: string; champs: string }> = {
   },
 };
 
-function systemPrompt(famille: Famille): string {
-  const { objet, champs } = BLOC[famille];
+const BLOC_AUTO = {
+  objet: "travaux de renovation energetique",
+  champs: Object.values(BLOC).map((bloc) => bloc.champs).join(",\n"),
+};
+
+function systemPrompt(famille: Famille | "auto"): string {
+  const { objet, champs } = famille === "auto" ? BLOC_AUTO : BLOC[famille];
   return `Tu es un moteur d'extraction de documents pour la conformité CEE / MaPrimeRénov'.
 On te fournit un DEVIS ou une FACTURE portant sur : ${objet}. Tu extrais uniquement ce qui est écrit, sans rien deviner.
 
 Renvoie STRICTEMENT un JSON conforme à ce schéma (mets null si l'information n'est pas présente sur le document) :
 {
+  "famille": "isolation" | "pac_air_eau" | "cet" | "bois" | null,
+  "dispositif": "cee" | "maprimerenov" | null,
 ${CHAMPS_COMMUNS},
 ${champs}
 }
@@ -157,17 +166,18 @@ export async function extractPiece(params: {
   filename: string;
   type: TypePiece;
   /** Famille du geste du dossier : détermine les champs techniques à chercher. */
-  famille: Famille;
+  famille: Famille | "auto";
 }): Promise<ExtractResult> {
   if (!isLlmConfigured()) return { ok: false, reason: "non-configure" };
 
   const label = params.type === "facture" ? "une FACTURE" : "un DEVIS";
+  const bloc = params.famille === "auto" ? BLOC_AUTO : BLOC[params.famille];
   const dataUrl = `data:${params.mime};base64,${Buffer.from(params.bytes).toString("base64")}`;
 
   try {
     const raw = await openRouterVision({
       system: systemPrompt(params.famille),
-      userText: `Voici ${label} portant sur : ${BLOC[params.famille].objet}. Extrais les champs demandés en JSON.`,
+      userText: `Voici ${label} portant sur : ${bloc.objet}. Identifie le type de travaux et extrais les champs demandés en JSON.`,
       file: { mime: params.mime, dataUrl, filename: params.filename },
       jsonMode: true,
       maxTokens: 1200,

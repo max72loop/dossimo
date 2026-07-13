@@ -3,10 +3,10 @@
 import type { UseFormRegisterReturn } from "react-hook-form";
 import { createContext, useContext, useState, type ReactNode } from "react";
 
-const AssistedValuesContext = createContext<Record<string, string> | null>(null);
+const AssistedValuesContext = createContext<{ values: Record<string, string>; hideConfirmed: boolean } | null>(null);
 
-export function AssistedFieldsProvider({ values, children }: { values: Record<string, string>; children: ReactNode }) {
-  return <AssistedValuesContext.Provider value={values}>{children}</AssistedValuesContext.Provider>;
+export function AssistedFieldsProvider({ values, hideConfirmed = false, children }: { values: Record<string, string>; hideConfirmed?: boolean; children: ReactNode }) {
+  return <AssistedValuesContext.Provider value={{ values, hideConfirmed }}>{children}</AssistedValuesContext.Provider>;
 }
 
 /** Only the `message` is consumed, so accept any RHF error shape. */
@@ -67,8 +67,12 @@ export function TextField({
   inputMode?: "numeric" | "decimal" | "text";
 }) {
   const assistedValues = useContext(AssistedValuesContext);
-  const assistedValue = assistedValues?.[register.name];
+  const assistedValue = assistedValues?.values[register.name];
   const [editing, setEditing] = useState(false);
+
+  if (assistedValue && assistedValues?.hideConfirmed && !editing) {
+    return <input type="hidden" {...register} />;
+  }
 
   if (assistedValue && !editing) {
     return (
@@ -120,8 +124,12 @@ export function SelectField({
   placeholder?: string;
 }) {
   const assistedValues = useContext(AssistedValuesContext);
-  const assistedValue = assistedValues?.[register.name];
+  const assistedValue = assistedValues?.values[register.name];
   const [editing, setEditing] = useState(false);
+
+  if (assistedValue && assistedValues?.hideConfirmed && !editing) {
+    return <input type="hidden" {...register} />;
+  }
 
   if (assistedValue && !editing) {
     return (

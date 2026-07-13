@@ -22,6 +22,7 @@ import {
 import { AssistedFieldsProvider, Section, SelectField, TextField } from "@/components/dossier/fields";
 import { OverlayProgression, type EtatEtape } from "@/components/ui/overlay-progression";
 import { Spinner } from "@/components/ui/spinner";
+import { clearGuestDraft } from "@/lib/dossier/guest-draft";
 
 const isolationOptions = Object.fromEntries(
   Object.entries(TYPES_ISOLATION).map(([k, v]) => [k, `${v.label} · ${v.fiche}`]),
@@ -182,12 +183,16 @@ export function DossierCeeIsolationForm({
   const [etape, setEtape] = useState(initialStep);
   const [maxEtape, setMaxEtape] = useState(initialStep);
   const [phase, setPhase] = useState<Phase>("repos");
+  const [voirInformationsLues, setVoirInformationsLues] = useState(false);
   const enCours = phase !== "repos";
   const assistedValues = Object.fromEntries(
     Object.entries(initialValues ?? {})
       .filter(([, value]) => value !== undefined && value !== null && value !== "")
       .map(([key, value]) => [key, String(value)]),
   );
+  const etapesActives = assisted
+    ? ETAPES.filter((section) => section.champs.some((champ) => !assistedValues[champ]))
+    : ETAPES;
 
   const {
     register,
@@ -204,7 +209,8 @@ export function DossierCeeIsolationForm({
     mode: "onBlur",
   });
 
-  const dernier = etape === ETAPES.length - 1;
+  const etapeCourante = etapesActives[etape] ?? etapesActives[0];
+  const dernier = etape === etapesActives.length - 1;
   const typeIsolation = useWatch({ control, name: "type_isolation" });
   const rMin = typeIsolation ? TYPES_ISOLATION[typeIsolation]?.r_min : undefined;
   const dispositif = useWatch({ control, name: "dispositif" });
@@ -249,9 +255,9 @@ export function DossierCeeIsolationForm({
   }
 
   async function suivant() {
-    const ok = await trigger(ETAPES[etape].champs);
+    const ok = await trigger(etapeCourante.champs);
     if (!ok) return;
-    const n = Math.min(etape + 1, ETAPES.length - 1);
+    const n = Math.min(etape + 1, etapesActives.length - 1);
     setEtape(n);
     setMaxEtape((m) => Math.max(m, n));
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -283,6 +289,7 @@ export function DossierCeeIsolationForm({
         // La page résultat indiquera alors simplement que le devis reste à ajouter.
         await uploadPiece(result.dossierId, "devis", documentData).catch(() => null);
       }
+      await clearGuestDraft();
       router.push(`/dossiers/${result.dossierId}${parrain}`);
       return;
     }
@@ -312,7 +319,7 @@ export function DossierCeeIsolationForm({
   }
 
   return (
-    <AssistedFieldsProvider values={assisted ? assistedValues : {}}>
+    <AssistedFieldsProvider values={assisted ? assistedValues : {}} hideConfirmed={assisted && !voirInformationsLues}>
     <form
       onSubmit={handleSubmit(onSubmit)}
       onKeyDown={onKeyDown}
@@ -330,11 +337,16 @@ export function DossierCeeIsolationForm({
       <div className="mb-8">
         {assisted && (
           <p className="mb-4 rounded border-l-4 border-tampon bg-info-bg px-4 py-3 text-sm text-encre">
-            <strong>À vous de confirmer.</strong> Les champs déjà remplis viennent de votre devis ou de votre profil. Dossimo ne validera le dossier qu’après votre relecture.
+            <strong>Dossimo vous montre seulement ce qui manque.</strong> Les informations lues sur votre devis ou votre profil sont conservées et masquées pour alléger la saisie.
           </p>
         )}
+        {assisted && (
+          <button type="button" onClick={() => setVoirInformationsLues((visible) => !visible)} className="mb-4 text-sm font-semibold text-tampon underline underline-offset-2">
+            {voirInformationsLues ? "Masquer les informations déjà lues" : `Voir ou corriger les ${Object.keys(assistedValues).length} informations déjà lues`}
+          </button>
+        )}
         <div className="mb-3 grid grid-cols-3 gap-1.5 sm:grid-cols-6">
-          {ETAPES.map((s, i) => {
+          {etapesActives.map((s, i) => {
             const fait = i < etape;
             const actif = i === etape;
             const accessible = i <= maxEtape;
@@ -368,11 +380,11 @@ export function DossierCeeIsolationForm({
         <div className="h-1.5 overflow-hidden rounded-full bg-papier-fonce">
           <div
             className="h-full rounded-full bg-tampon transition-all duration-300"
-            style={{ width: `${((etape + 1) / ETAPES.length) * 100}%` }}
+            style={{ width: `${((etape + 1) / etapesActives.length) * 100}%` }}
           />
         </div>
         <p className="mt-2 text-xs text-encre-claire">
-          Étape {etape + 1} sur {ETAPES.length}
+          Étape {etape + 1} sur {etapesActives.length}
         </p>
       </div>
 

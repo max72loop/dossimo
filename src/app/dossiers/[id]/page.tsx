@@ -26,7 +26,7 @@ import { MetriquesValeur } from "@/components/dossier/metriques-valeur";
 import { ConversionOffert } from "@/components/dossier/conversion-offert";
 import { SectionRepliable } from "@/components/ui/section-repliable";
 import { FindingAssistance } from "@/components/dossier/finding-assistance";
-import { BTN_PRINCIPAL, BTN_SECONDAIRE, BTN_SECONDAIRE_SM } from "@/components/ui/boutons";
+import { BTN_SECONDAIRE_SM } from "@/components/ui/boutons";
 import { accesDossier } from "@/lib/dossier/acces";
 import { createClient } from "@/lib/supabase/server";
 import { prixPack, getActiveTiers, labelEuros } from "@/lib/pricing";
@@ -223,15 +223,6 @@ export default async function DossierPage({
   const primeRetenue = c.montants.prime_estime ?? prime?.montant ?? null;
   const guide = depotGuide(dossier.dispositif);
 
-  // Action principale unique et contextuelle : réunir les pièces tant qu'elles
-  // manquent, sinon récupérer le pack. Quand le dossier est verrouillé, le
-  // paiement EST l'action principale : on n'en affiche pas de seconde.
-  const ctaPrincipal = !acces.debloque
-    ? null
-    : synthese.piecesCompletes
-      ? { href: `/dossiers/${id}/pack.pdf`, label: "Télécharger le pack complet", externe: true }
-      : { href: "#pieces", label: "Ajouter devis + facture", externe: false };
-
   return (
     <main className="mx-auto max-w-4xl px-8 py-10">
       <Link
@@ -294,50 +285,22 @@ export default async function DossierPage({
         </div>
       )}
 
-      {/* 2. Verdict */}
-      <VerdictHero
-        synthese={synthese}
-        primeRetenue={primeRetenue}
-        primeLabel={prime ? `Prime ${prime.dispositif} retenue` : "Prime retenue"}
-      />
+      {/* Une seule décision visible avant les détails du dossier. */}
+      {acces.debloque && <ActionsRestantes synthese={synthese} />}
 
-      {/* 3. Action principale unique + actions secondaires */}
-      {ctaPrincipal && (
-        <div className="mb-6 flex flex-wrap items-center gap-3">
-          {ctaPrincipal.externe ? (
-            <a
-              href={ctaPrincipal.href}
-              target="_blank"
-              rel="noopener"
-              className={BTN_PRINCIPAL}
-            >
-              ↓ {ctaPrincipal.label}
-            </a>
-          ) : (
-            <a href={ctaPrincipal.href} className={BTN_PRINCIPAL}>
-              {ctaPrincipal.label}
-            </a>
-          )}
-          <a
-            href={`/dossiers/${id}/rapport.pdf`}
-            target="_blank"
-            rel="noopener"
-            className={BTN_SECONDAIRE}
-          >
-            Rapport de contrôle (PDF)
-          </a>
-          {cerfa.ok && (
-            <a
-              href={`/dossiers/${id}/cerfa.pdf`}
-              target="_blank"
-              rel="noopener"
-              className={BTN_SECONDAIRE}
-            >
-              Formulaire officiel
-            </a>
-          )}
+      <details className="mb-6 rounded border border-filigrane bg-blanc-casse">
+        <summary className="cursor-pointer px-5 py-4 text-sm font-semibold text-tampon">
+          Voir l'état général, la prime et les contrôles déjà passés
+        </summary>
+        <div className="border-t border-filigrane p-5">
+          <VerdictHero
+            synthese={synthese}
+            primeRetenue={primeRetenue}
+            primeLabel={prime ? `Prime ${prime.dispositif} retenue` : "Prime retenue"}
+          />
+          <MetriquesValeur synthese={synthese} />
         </div>
-      )}
+      </details>
 
       {/* Paywall : quand le dossier est verrouillé, le déblocage est l'action
           principale de l'écran (seul bouton plein). */}
@@ -378,12 +341,6 @@ export default async function DossierPage({
           </p>
         </section>
       )}
-
-      {/* 4. Actions restantes */}
-      <ActionsRestantes synthese={synthese} />
-
-      {/* 5. Métriques de valeur */}
-      <MetriquesValeur synthese={synthese} />
 
       {/* 6. Pièces réelles : étape active */}
       {acces.debloque ? (

@@ -111,17 +111,17 @@ function Hero() {
 
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <Link
-              href="/inscription?next=%2Fdossiers%2Fnouveau"
+              href="/demo"
               className={`group inline-flex min-h-12 items-center gap-2 rounded-lg bg-terre-cuite px-6 py-3 text-sm font-semibold text-blanc-casse shadow-md transition-colors hover:bg-terre-cuite-hover ${FOCUS}`}
             >
-              Déposer mon devis gratuitement
+              Tester avec mon devis gratuitement
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </Link>
             <Link
-              href="/demo"
+              href="#etapes"
               className={`inline-flex h-12 items-center gap-2 rounded-lg border border-encre px-6 text-sm font-medium text-encre transition-colors hover:bg-papier-fonce ${FOCUS}`}
             >
-              Tester sans créer de compte
+              Voir comment ça marche
             </Link>
           </div>
 
@@ -435,7 +435,7 @@ function Etapes() {
           <p className="text-sm leading-relaxed text-encre">
             <span className="font-semibold">Votre rôle reste simple :</span> vous relisez le rapport, puis vous déposez vous-même le dossier.
           </p>
-          <Link href="/inscription?next=%2Fdossiers%2Fnouveau" className={`shrink-0 text-sm font-semibold text-tampon underline underline-offset-4 ${FOCUS}`}>
+          <Link href="/demo" className={`shrink-0 text-sm font-semibold text-tampon underline underline-offset-4 ${FOCUS}`}>
             Essayer sur un dossier <span aria-hidden="true">→</span>
           </Link>
         </div>
@@ -692,10 +692,10 @@ function Pricing({ grille }: { grille: GrilleAffichee | null }) {
             )}
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <Link
-                href="/inscription?next=%2Fdossiers%2Fnouveau"
+                href="/demo"
                 className={`group inline-flex h-12 items-center gap-2 rounded-lg bg-papier px-6 text-sm font-semibold text-encre transition-colors hover:bg-blanc-casse ${FOCUS_SOMBRE}`}
               >
-                Déposer mon devis gratuitement
+                Tester avec mon devis gratuitement
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </Link>
               <a
@@ -723,10 +723,10 @@ function MobileConversionBar() {
   return (
     <div className="fixed inset-x-0 bottom-0 z-40 border-t border-encre/15 bg-blanc-casse/95 p-3 shadow-[0_-8px_24px_rgba(22,32,43,0.12)] backdrop-blur md:hidden">
       <Link
-        href="/inscription?next=%2Fdossiers%2Fnouveau"
+        href="/demo"
         className={`flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-terre-cuite px-5 py-3 text-center text-sm font-semibold text-blanc-casse ${FOCUS}`}
       >
-        Déposer mon devis — offert
+        Tester mon devis — offert
         <ArrowRight className="h-4 w-4" />
       </Link>
     </div>

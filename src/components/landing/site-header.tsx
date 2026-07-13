@@ -5,7 +5,7 @@ import { MobileMenu } from "@/components/landing/mobile-menu";
 import { FOCUS } from "@/components/ui/boutons";
 
 const NAV = [
-  { href: "/demo", label: "Démo sans compte" },
+  { href: "/demo", label: "Tester mon devis" },
   { href: "#etapes", label: "Comment ça marche" },
   { href: "#tarifs", label: "Tarifs" },
   { href: "#faq", label: "FAQ" },
@@ -62,10 +62,10 @@ export async function SiteHeader() {
             {user ? "Mon espace" : "Connexion"}
           </Link>
           <Link
-            href={user ? "/dossiers/nouveau" : "/inscription?next=%2Fdossiers%2Fnouveau"}
+            href={user ? "/dossiers/nouveau" : "/demo"}
             className={`hidden h-10 items-center rounded bg-terre-cuite px-5 text-sm font-medium text-blanc-casse transition-colors hover:bg-terre-cuite-hover md:inline-flex ${FOCUS}`}
           >
-            {user ? "Nouveau dossier" : "Déposer mon devis"}
+            {user ? "Nouveau dossier" : "Tester mon devis"}
           </Link>
           <MobileMenu nav={NAV} connecte={!!user} />
         </div>

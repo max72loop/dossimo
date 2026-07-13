@@ -1,10 +1,11 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Camera, CheckCircle2, FileText, Loader2, Sparkles } from "lucide-react";
 
 import { DossierCeeIsolationForm } from "@/components/dossier/DossierCeeIsolationForm";
 import { analyserDevisInitial } from "@/lib/dossier/document-first-actions";
+import { loadGuestDraft } from "@/lib/dossier/guest-draft";
 import type { CeeIsolationInput, Famille } from "@/lib/dossier/cee-isolation";
 
 const inputClass =
@@ -23,6 +24,17 @@ export function DemarrageAssiste({
   const [draft, setDraft] = useState<Partial<CeeIsolationInput> | null>(null);
   const [sourceFile, setSourceFile] = useState<File | undefined>();
   const [found, setFound] = useState(0);
+
+  useEffect(() => {
+    let actif = true;
+    loadGuestDraft().then((guest) => {
+      if (!actif || !guest) return;
+      setFound(guest.champsTrouves.length);
+      setSourceFile(guest.file);
+      setDraft({ ...initialValues, ...guest.valeurs });
+    });
+    return () => { actif = false; };
+  }, [initialValues]);
 
   async function analyser() {
     const file = fileRef.current?.files?.[0];
@@ -75,7 +87,7 @@ export function DemarrageAssiste({
             </div>
           </div>
         </div>
-        <DossierCeeIsolationForm initialValues={draft} initialStep={1} assisted initialDocument={sourceFile} />
+        <DossierCeeIsolationForm initialValues={draft} initialStep={0} assisted initialDocument={sourceFile} />
       </div>
     );
   }
