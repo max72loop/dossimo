@@ -42,6 +42,7 @@ export type TypePiece =
 /** Qui a déposé la pièce (migration 0017). */
 export type Deposant = "artisan" | "beneficiaire";
 export type StatutExtraction = "en_attente" | "ok" | "echec";
+export type StatutValidationPiece = "submitted" | "approved" | "rejected";
 
 // Pricing + parrainage (migrations 0012 / 0013).
 export type DossierBillingStatus =
@@ -353,6 +354,9 @@ export interface Database {
           /** Mentions obligatoires relevées sur la pièce. null = non vérifié. */
           mentions_json: Json | null;
           deposant: Deposant;
+          validation_status: StatutValidationPiece | null;
+          rejection_reason: string | null;
+          reviewed_at: string | null;
           created_at: string;
           extracted_at: string | null;
         };
@@ -369,6 +373,9 @@ export interface Database {
           extraction_erreur?: string | null;
           mentions_json?: Json | null;
           deposant?: Deposant;
+          validation_status?: StatutValidationPiece | null;
+          rejection_reason?: string | null;
+          reviewed_at?: string | null;
           created_at?: string;
           extracted_at?: string | null;
         };
@@ -413,6 +420,18 @@ export interface Database {
             referencedColumns: ["id"];
           },
         ];
+      };
+      reminder_schedules: {
+        Row: { id: string; dossier_id: string; enabled: boolean; enabled_at: string | null; channels: Json; cadence_days: Json; max_reminders: number; opt_out_at: string | null; created_at: string; updated_at: string };
+        Insert: { id?: string; dossier_id: string; enabled?: boolean; enabled_at?: string | null; channels?: Json; cadence_days?: Json; max_reminders?: number; opt_out_at?: string | null; created_at?: string; updated_at?: string };
+        Update: Partial<Database["public"]["Tables"]["reminder_schedules"]["Insert"]>;
+        Relationships: [{ foreignKeyName: "reminder_schedules_dossier_id_fkey"; columns: ["dossier_id"]; referencedRelation: "dossiers"; referencedColumns: ["id"] }];
+      };
+      reminder_logs: {
+        Row: { id: string; dossier_id: string; cadence_step: number; document_types: Json; channel: "email" | "sms"; status: "queued" | "sent" | "delivered" | "bounced" | "failed" | "skipped"; sent_at: string | null; opened_at: string | null; clicked_at: string | null; provider_message_id: string | null; error_detail: string | null; created_at: string };
+        Insert: { id?: string; dossier_id: string; cadence_step: number; document_types?: Json; channel: "email" | "sms"; status: "queued" | "sent" | "delivered" | "bounced" | "failed" | "skipped"; sent_at?: string | null; opened_at?: string | null; clicked_at?: string | null; provider_message_id?: string | null; error_detail?: string | null; created_at?: string };
+        Update: Partial<Database["public"]["Tables"]["reminder_logs"]["Insert"]>;
+        Relationships: [{ foreignKeyName: "reminder_logs_dossier_id_fkey"; columns: ["dossier_id"]; referencedRelation: "dossiers"; referencedColumns: ["id"] }];
       };
       plafonds_ressources: {
         Row: {
