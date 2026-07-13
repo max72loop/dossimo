@@ -16,5 +16,9 @@ script, sans SMTP, mot de passe d'application ou fournisseur d'e-mail externe.
 6. Ajoutez la même valeur secrète dans Vercel sous
    `GOOGLE_APPS_SCRIPT_WEBHOOK_SECRET`, puis redéployez Dossimo.
 
+Ne lancez pas `doPost` avec le bouton **Exécuter** de l'éditeur : ce bouton ne
+fournit pas de requête HTTP. Le test réel se fait en soumettant le formulaire
+Dossimo après avoir configuré l'URL `/exec` dans Vercel.
+
 Le script n'accepte qu'un payload `landing_lead` protégé par le secret. Il
 envoie une notification à `max@dossimo.pro` et une confirmation au prospect.

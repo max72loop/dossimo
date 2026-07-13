@@ -6,6 +6,12 @@ const NOTIFICATION_EMAIL = "max@dossimo.pro";
  */
 function doPost(event) {
   try {
+    // Le bouton « Exécuter » de l'éditeur n'envoie aucun événement HTTP.
+    // Le vrai test doit passer par l'URL /exec du déploiement Web App.
+    if (!event || !event.postData || !event.postData.contents) {
+      return jsonResponse({ ok: false, error: "missing_post_data" });
+    }
+
     const payload = JSON.parse(event.postData.contents || "{}");
     const expectedSecret = PropertiesService.getScriptProperties()
       .getProperty("DOSSIMO_WEBHOOK_SECRET");
