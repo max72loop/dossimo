@@ -17,6 +17,7 @@ import { suivrePieces, type SuiviPieces } from "@/lib/depot/suivi";
 import type { DossierComplet } from "@/lib/dossier/get-dossier";
 import type { PieceJustificative } from "@/lib/database.types";
 import { TableauDeBord, type StatsTableau } from "@/components/dossier/tableau-de-bord";
+import { ActionsPrioritaires, type ActionPrioritaire } from "@/components/dossier/actions-prioritaires";
 
 export const metadata = { title: "Mes dossiers · Dossimo" };
 
@@ -111,6 +112,7 @@ export default async function DossiersPage() {
   // Où en sont les pièces que seul le client peut fournir, et ce qui est arrivé
   // depuis le dernier passage de l'artisan sur le dossier.
   const suiviParDossier = new Map<string, SuiviPieces>();
+  const actionsPrioritaires: ActionPrioritaire[] = [];
   for (const d of rows) {
     parEtat[d.statut] = (parEtat[d.statut] ?? 0) + 1;
     try {
@@ -129,10 +131,19 @@ export default async function DossiersPage() {
         findingsDesPieces(data, versEcarts(data, piecesDuDossier), plafonds),
       );
       if (rapport.conforme) conformes += 1;
+      const suivi = suivrePieces(
+        data,
+        piecesDuDossier,
+        d.pieces_vues_at,
+      );
       suiviParDossier.set(
         d.id,
-        suivrePieces(data, piecesDuDossier, d.pieces_vues_at),
+        suivi,
       );
+      const beneficiaire = (d.caracteristiques_techniques_json as { beneficiaire?: Beneficiaire }).beneficiaire;
+      const nomClient = [beneficiaire?.prenom, beneficiaire?.nom].filter(Boolean).join(" ") || "Bénéficiaire";
+      if (suivi.nouvelles > 0) actionsPrioritaires.push({ dossierId: d.id, beneficiaire: nomClient, detail: `${suivi.nouvelles} nouvelle${suivi.nouvelles > 1 ? "s" : ""} pièce${suivi.nouvelles > 1 ? "s" : ""} à examiner`, tone: "urgent" });
+      else if (suivi.attendues > 0 && !suivi.complet) actionsPrioritaires.push({ dossierId: d.id, beneficiaire: nomClient, detail: `${suivi.attendues - suivi.recues} pièce${suivi.attendues - suivi.recues > 1 ? "s" : ""} client encore attendue${suivi.attendues - suivi.recues > 1 ? "s" : ""}`, tone: "normal" });
       controleParDossier.set(d.id, {
         nbBloquants: rapport.nbBloquants,
         conforme: rapport.conforme,
@@ -185,6 +196,7 @@ export default async function DossiersPage() {
       {rows.length > 0 && (
         <div className="mt-8">
           <TableauDeBord stats={stats} />
+          <ActionsPrioritaires actions={actionsPrioritaires} />
         </div>
       )}
 
