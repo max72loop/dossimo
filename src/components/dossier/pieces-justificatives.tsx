@@ -276,38 +276,27 @@ export function PiecesJustificatives({
       id="pieces"
       className="mb-6 scroll-mt-6 rounded-md border border-tampon/25 bg-blanc-casse p-5 shadow-sm"
     >
-      <h2 className="font-serif text-lg font-semibold text-encre">
-        Ajoutez votre devis, Dossimo vérifie {nbMentions} mentions obligatoires
-      </h2>
+      <h2 className="font-serif text-lg font-semibold text-encre">Ajoutez un document</h2>
       <p className="mt-1.5 text-sm text-ardoise">
-        Dossimo relit la pièce et compare surface, résistance R, montants, dates et
-        mentions RGE à votre saisie. Un écart devient visible avant le dépôt, pas
-        après le refus. Vous restez juge.
+        Choisissez simplement s’il s’agit du devis ou de la facture, puis prenez une photo ou ajoutez le PDF. Dossimo vérifie jusqu’à {nbMentions} mentions obligatoires.
       </p>
 
       <div className="mt-4 flex flex-wrap items-center gap-3">
-        <div className="inline-flex overflow-hidden rounded border border-filigrane">
-          {(["devis", "facture"] as TypePiece[]).map((t) => (
-            <button
-              key={t}
-              onClick={() => setType(t)}
-              className={`px-3 py-1.5 text-sm transition-colors ${
-                type === t
-                  ? "bg-tampon text-blanc-casse"
-                  : "bg-blanc-casse text-ardoise hover:bg-papier-fonce"
-              }`}
-            >
-              {TYPE_LABEL[t]}
-            </button>
-          ))}
-        </div>
+        <label className="text-xs font-medium text-ardoise">
+          Ce document est
+          <select value={type} onChange={(event) => setType(event.target.value as TypePiece)} className="ml-2 h-10 rounded border border-filigrane bg-blanc-casse px-3 text-sm text-encre">
+            <option value="devis">le devis</option>
+            <option value="facture">la facture</option>
+          </select>
+        </label>
         <label className={`cursor-pointer ${BTN_SECONDAIRE}`}>
-          {status === "loading" ? "Analyse…" : `Ajouter ${TYPE_LABEL[type].toLowerCase()}`}
+          {status === "loading" ? "Lecture du document…" : "Prendre une photo ou choisir le fichier"}
           <input
             ref={inputRef}
             type="file"
             accept="image/jpeg,image/png,image/webp,application/pdf"
             className="hidden"
+            capture="environment"
             disabled={status === "loading"}
             onChange={onFile}
           />

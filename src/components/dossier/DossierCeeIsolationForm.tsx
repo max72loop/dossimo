@@ -19,7 +19,7 @@ import {
   ceeIsolationSchema,
   type CeeIsolationInput,
 } from "@/lib/dossier/cee-isolation";
-import { Section, SelectField, TextField } from "@/components/dossier/fields";
+import { AssistedFieldsProvider, Section, SelectField, TextField } from "@/components/dossier/fields";
 import { OverlayProgression, type EtatEtape } from "@/components/ui/overlay-progression";
 import { Spinner } from "@/components/ui/spinner";
 
@@ -183,6 +183,11 @@ export function DossierCeeIsolationForm({
   const [maxEtape, setMaxEtape] = useState(initialStep);
   const [phase, setPhase] = useState<Phase>("repos");
   const enCours = phase !== "repos";
+  const assistedValues = Object.fromEntries(
+    Object.entries(initialValues ?? {})
+      .filter(([, value]) => value !== undefined && value !== null && value !== "")
+      .map(([key, value]) => [key, String(value)]),
+  );
 
   const {
     register,
@@ -307,6 +312,7 @@ export function DossierCeeIsolationForm({
   }
 
   return (
+    <AssistedFieldsProvider values={assisted ? assistedValues : {}}>
     <form
       onSubmit={handleSubmit(onSubmit)}
       onKeyDown={onKeyDown}
@@ -617,5 +623,6 @@ export function DossierCeeIsolationForm({
         )}
       </div>
     </form>
+    </AssistedFieldsProvider>
   );
 }

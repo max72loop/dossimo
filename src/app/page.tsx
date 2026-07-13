@@ -117,12 +117,12 @@ function Hero() {
               Déposer mon devis gratuitement
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </Link>
-            <a
-              href="#relecture"
+            <Link
+              href="/demo"
               className={`inline-flex h-12 items-center gap-2 rounded-lg border border-encre px-6 text-sm font-medium text-encre transition-colors hover:bg-papier-fonce ${FOCUS}`}
             >
-              Voir un exemple de contrôle
-            </a>
+              Tester sans créer de compte
+            </Link>
           </div>
 
           <p className="mt-5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-ardoise">

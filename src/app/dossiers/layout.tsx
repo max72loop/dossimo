@@ -5,6 +5,7 @@ import { LogOut, Plus } from "lucide-react";
 import { Logo } from "@/components/landing/site-header";
 import { getCurrentArtisan } from "@/lib/auth/get-artisan";
 import { signOut } from "@/lib/auth/actions";
+import { AideDossimo } from "@/components/dossier/aide-dossimo";
 
 export default async function DossiersLayout({
   children,
@@ -57,6 +58,7 @@ export default async function DossiersLayout({
       </header>
 
       <main className="flex-1">{children}</main>
+      <AideDossimo />
     </div>
   );
 }

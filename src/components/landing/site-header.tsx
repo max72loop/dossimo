@@ -5,7 +5,7 @@ import { MobileMenu } from "@/components/landing/mobile-menu";
 import { FOCUS } from "@/components/ui/boutons";
 
 const NAV = [
-  { href: "#relecture", label: "Exemple" },
+  { href: "/demo", label: "Démo sans compte" },
   { href: "#etapes", label: "Comment ça marche" },
   { href: "#tarifs", label: "Tarifs" },
   { href: "#faq", label: "FAQ" },

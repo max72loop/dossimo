@@ -1,5 +1,13 @@
+"use client";
+
 import type { UseFormRegisterReturn } from "react-hook-form";
-import type { ReactNode } from "react";
+import { createContext, useContext, useState, type ReactNode } from "react";
+
+const AssistedValuesContext = createContext<Record<string, string> | null>(null);
+
+export function AssistedFieldsProvider({ values, children }: { values: Record<string, string>; children: ReactNode }) {
+  return <AssistedValuesContext.Provider value={values}>{children}</AssistedValuesContext.Provider>;
+}
 
 /** Only the `message` is consumed, so accept any RHF error shape. */
 type FieldErrorLike = { message?: string };
@@ -58,6 +66,27 @@ export function TextField({
   step?: string;
   inputMode?: "numeric" | "decimal" | "text";
 }) {
+  const assistedValues = useContext(AssistedValuesContext);
+  const assistedValue = assistedValues?.[register.name];
+  const [editing, setEditing] = useState(false);
+
+  if (assistedValue && !editing) {
+    return (
+      <div className="rounded border border-succes/25 bg-succes-bg/60 px-3.5 py-3">
+        <input type="hidden" {...register} />
+        <div className="flex items-start justify-between gap-3">
+          <span>
+            <span className="block text-xs font-medium text-ardoise">{label}</span>
+            <span className="mt-0.5 block text-sm font-medium text-encre">{assistedValue}</span>
+          </span>
+          <button type="button" onClick={() => setEditing(true)} className="shrink-0 text-xs font-medium text-tampon underline underline-offset-2">
+            Modifier
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <FieldShell label={label} required={required} error={error} hint={hint}>
       <input
@@ -90,6 +119,25 @@ export function SelectField({
   options: Record<string, string>;
   placeholder?: string;
 }) {
+  const assistedValues = useContext(AssistedValuesContext);
+  const assistedValue = assistedValues?.[register.name];
+  const [editing, setEditing] = useState(false);
+
+  if (assistedValue && !editing) {
+    return (
+      <div className="rounded border border-succes/25 bg-succes-bg/60 px-3.5 py-3">
+        <input type="hidden" {...register} />
+        <div className="flex items-start justify-between gap-3">
+          <span>
+            <span className="block text-xs font-medium text-ardoise">{label}</span>
+            <span className="mt-0.5 block text-sm font-medium text-encre">{options[assistedValue] ?? assistedValue}</span>
+          </span>
+          <button type="button" onClick={() => setEditing(true)} className="shrink-0 text-xs font-medium text-tampon underline underline-offset-2">Modifier</button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <FieldShell label={label} required={required} error={error} hint={hint}>
       <select

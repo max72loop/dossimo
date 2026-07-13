@@ -25,6 +25,7 @@ import { ActionsRestantes } from "@/components/dossier/actions-restantes";
 import { MetriquesValeur } from "@/components/dossier/metriques-valeur";
 import { ConversionOffert } from "@/components/dossier/conversion-offert";
 import { SectionRepliable } from "@/components/ui/section-repliable";
+import { FindingAssistance } from "@/components/dossier/finding-assistance";
 import { BTN_PRINCIPAL, BTN_SECONDAIRE, BTN_SECONDAIRE_SM } from "@/components/ui/boutons";
 import { accesDossier } from "@/lib/dossier/acces";
 import { createClient } from "@/lib/supabase/server";
@@ -104,6 +105,7 @@ function FindingRow({ f }: { f: Finding }) {
       <span>
         <span className="text-sm font-medium text-encre">{f.titre}</span>
         <span className="block text-xs text-ardoise">{f.detail}</span>
+        <FindingAssistance finding={f} />
       </span>
     </li>
   );
