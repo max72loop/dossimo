@@ -461,18 +461,21 @@ export default async function DossierPage({
       )}
 
       {/* 7. Parcours du dossier */}
-      <ParcoursSelector dossierId={id} statut={dossier.statut} />
+      <div id="parcours" className="scroll-mt-24">
+        <ParcoursSelector dossierId={id} statut={dossier.statut} />
+      </div>
 
       {/* 8. Détails repliés */}
       <h2 className="mt-8 mb-3 text-xs font-semibold uppercase tracking-[0.12em] text-ardoise">
         Détails du dossier
       </h2>
 
-      <SectionRepliable
-        titre="Détail des contrôles anti-refus"
-        resume={`${rapport.findings.length} points de contrôle · ${synthese.nbControlesPasses} conformes${rapport.nbAvertissements > 0 ? ` · ${rapport.nbAvertissements} à vérifier` : ""}${rapport.nbBloquants > 0 ? ` · ${rapport.nbBloquants} bloquants` : ""}`}
-        ouvertParDefaut={rapport.nbBloquants > 0}
-      >
+      <div id="controle-detail" className="scroll-mt-24">
+        <SectionRepliable
+          titre="Détail des contrôles anti-refus"
+          resume={`${rapport.findings.length} points de contrôle · ${synthese.nbControlesPasses} conformes${rapport.nbAvertissements > 0 ? ` · ${rapport.nbAvertissements} à vérifier` : ""}${rapport.nbBloquants > 0 ? ` · ${rapport.nbBloquants} bloquants` : ""}`}
+          ouvertParDefaut={rapport.nbBloquants > 0}
+        >
         {acces.debloque ? (
           <>
             <ul className="divide-y divide-filigrane">
@@ -495,7 +498,8 @@ export default async function DossierPage({
             pour voir chaque point et sa correction.
           </p>
         )}
-      </SectionRepliable>
+        </SectionRepliable>
+      </div>
 
       <SectionRepliable
         titre="Récapitulatif complet"

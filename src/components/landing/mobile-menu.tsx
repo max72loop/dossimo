@@ -71,11 +71,11 @@ export function MobileMenu({
 
       <div className="mt-8 flex flex-col gap-3">
         <Link
-          href={connecte ? "/dossiers/nouveau" : "/inscription"}
+          href={connecte ? "/dossiers/nouveau" : "/inscription?next=%2Fdossiers%2Fnouveau"}
           onClick={() => setOuvert(false)}
           className={`inline-flex h-12 items-center justify-center rounded bg-terre-cuite px-5 text-sm font-semibold text-blanc-casse transition-colors hover:bg-terre-cuite-hover ${FOCUS}`}
         >
-          Créer un dossier
+          {connecte ? "Créer un dossier" : "Déposer mon devis"}
         </Link>
         <Link
           href={connecte ? "/dossiers" : "/connexion"}

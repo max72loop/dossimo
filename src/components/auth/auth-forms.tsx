@@ -35,7 +35,11 @@ function SubmitButton({ loading, children }: { loading: boolean; children: strin
 }
 
 /* --------------------------------------------------------------- Connexion */
-export function SignInForm() {
+function destinationSure(next?: string) {
+  return next?.startsWith("/dossiers") && !next.startsWith("//") ? next : "/dossiers";
+}
+
+export function SignInForm({ next }: { next?: string }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AuthResult | null>(null);
@@ -51,7 +55,7 @@ export function SignInForm() {
         password: fd.get("password"),
       });
       if (r.ok) {
-        router.push("/dossiers");
+        router.push(destinationSure(next));
         router.refresh();
         return;
       }
@@ -89,7 +93,7 @@ export function SignInForm() {
 
       <p className="text-center text-sm text-ardoise">
         Pas encore de compte ?{" "}
-        <Link href="/inscription" className="text-tampon underline-offset-4 hover:underline">
+        <Link href={next ? `/inscription?next=${encodeURIComponent(destinationSure(next))}` : "/inscription"} className="text-tampon underline-offset-4 hover:underline">
           Créer un compte
         </Link>
       </p>
@@ -98,7 +102,7 @@ export function SignInForm() {
 }
 
 /* -------------------------------------------------------------- Inscription */
-export function SignUpForm() {
+export function SignUpForm({ next }: { next?: string }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AuthResult | null>(null);
@@ -118,7 +122,7 @@ export function SignUpForm() {
         telephone: fd.get("telephone"),
       });
       if (r.ok) {
-        router.push("/dossiers");
+        router.push(destinationSure(next));
         router.refresh();
         return;
       }
@@ -178,7 +182,7 @@ export function SignUpForm() {
 
       <p className="text-center text-sm text-ardoise">
         Déjà un compte ?{" "}
-        <Link href="/connexion" className="text-tampon underline-offset-4 hover:underline">
+        <Link href={next ? `/connexion?next=${encodeURIComponent(destinationSure(next))}` : "/connexion"} className="text-tampon underline-offset-4 hover:underline">
           Se connecter
         </Link>
       </p>

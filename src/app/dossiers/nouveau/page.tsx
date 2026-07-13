@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { DossierCeeIsolationForm } from "@/components/dossier/DossierCeeIsolationForm";
+import { DemarrageAssiste } from "@/components/dossier/demarrage-assiste";
 import { getCurrentArtisan } from "@/lib/auth/get-artisan";
 import type { CeeIsolationInput } from "@/lib/dossier/cee-isolation";
 
@@ -35,15 +35,14 @@ export default async function NouveauDossierPage() {
           ← Mes dossiers
         </Link>
         <h1 className="mt-4 font-serif text-3xl font-semibold tracking-tight text-encre">
-          Nouveau dossier · CEE isolation
+          Nouveau dossier
         </h1>
         <p className="mt-3 text-ardoise">
-          Une seule saisie. Le pack documentaire et le contrôle anti-refus en
-          découlent : les incohérences entre pièces deviennent impossibles.
+          Déposez d’abord votre devis : Dossimo prépare la saisie et vous guide sur ce qui manque.
         </p>
       </div>
 
-      <DossierCeeIsolationForm initialValues={initialValues} />
+      <DemarrageAssiste initialValues={initialValues} />
 
       <p className="mt-6 text-center text-xs text-encre-claire">
         Dossimo est un service indépendant d&apos;aide à la préparation de

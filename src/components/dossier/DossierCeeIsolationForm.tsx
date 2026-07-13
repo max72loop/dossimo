@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 
 import { createDossierCeeIsolation } from "@/lib/dossier/actions";
 import { verifierSiretRge } from "@/lib/dossier/verification-actions";
+import { uploadPiece } from "@/lib/piece/actions";
 import type { VerificationEntreprise } from "@/lib/verification/types";
 import {
   LOGEMENT_TYPES,
@@ -167,13 +168,19 @@ function etapesDe(phase: Phase): { label: string; etat: EtatEtape }[] {
 
 export function DossierCeeIsolationForm({
   initialValues,
+  initialStep = 0,
+  assisted = false,
+  initialDocument,
 }: {
   initialValues?: Partial<CeeIsolationInput>;
+  initialStep?: number;
+  assisted?: boolean;
+  initialDocument?: File;
 }) {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
-  const [etape, setEtape] = useState(0);
-  const [maxEtape, setMaxEtape] = useState(0);
+  const [etape, setEtape] = useState(initialStep);
+  const [maxEtape, setMaxEtape] = useState(initialStep);
   const [phase, setPhase] = useState<Phase>("repos");
   const enCours = phase !== "repos";
 
@@ -264,6 +271,13 @@ export function DossierCeeIsolationForm({
       // Pas de retour à `repos` : la navigation qui suit est lente, le voile
       // doit rester jusqu'à ce que la page dossier prenne la main.
       setPhase("controle");
+      if (initialDocument) {
+        const documentData = new FormData();
+        documentData.append("file", initialDocument);
+        // Best-effort : le dossier existe même si le réseau coupe pendant l'envoi.
+        // La page résultat indiquera alors simplement que le devis reste à ajouter.
+        await uploadPiece(result.dossierId, "devis", documentData).catch(() => null);
+      }
       router.push(`/dossiers/${result.dossierId}${parrain}`);
       return;
     }
@@ -308,6 +322,11 @@ export function DossierCeeIsolationForm({
       />
       {/* Progression */}
       <div className="mb-8">
+        {assisted && (
+          <p className="mb-4 rounded border-l-4 border-tampon bg-info-bg px-4 py-3 text-sm text-encre">
+            <strong>À vous de confirmer.</strong> Les champs déjà remplis viennent de votre devis ou de votre profil. Dossimo ne validera le dossier qu’après votre relecture.
+          </p>
+        )}
         <div className="mb-3 grid grid-cols-3 gap-1.5 sm:grid-cols-6">
           {ETAPES.map((s, i) => {
             const fait = i < etape;

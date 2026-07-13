@@ -174,13 +174,12 @@ export default async function DossiersPage() {
     <div className="mx-auto max-w-[1280px] px-8 py-12">
       <div className="flex items-end justify-between gap-4">
         <div>
-          <h1 className="font-serif text-3xl font-semibold tracking-tight text-encre">
-            Mes dossiers
-          </h1>
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-tampon">Bonjour {artisan.prenom}</p>
+          <h1 className="mt-1 font-serif text-3xl font-semibold tracking-tight text-encre">Que faut-il faire aujourd’hui ?</h1>
           {/* Construite en JS : le transform JSX avale l'espace qui suit une
               interpolation, et l'accueil affichait « Bonjour Marc· vos dossiers ». */}
           <p className="mt-2 text-ardoise">
-            {`Bonjour ${artisan.prenom} · vos dossiers MaPrimeRénov' et CEE, au même endroit.`}
+            Vos prochaines actions d’abord. Les chiffres et l’historique restent disponibles plus bas.
           </p>
         </div>
         {adminEmail && (
@@ -195,8 +194,15 @@ export default async function DossiersPage() {
 
       {rows.length > 0 && (
         <div className="mt-8">
-          <TableauDeBord stats={stats} />
           <ActionsPrioritaires actions={actionsPrioritaires} />
+          <details className="mb-8 rounded border border-filigrane bg-blanc-casse">
+            <summary className="cursor-pointer px-5 py-4 text-sm font-medium text-encre">
+              Voir les chiffres et la répartition de mon activité
+            </summary>
+            <div className="border-t border-filigrane p-5">
+              <TableauDeBord stats={stats} />
+            </div>
+          </details>
         </div>
       )}
 
@@ -207,18 +213,46 @@ export default async function DossiersPage() {
             Aucun dossier pour l&rsquo;instant
           </p>
           <p className="mt-1 max-w-sm text-sm text-ardoise">
-            Créez votre premier dossier CEE isolation : le pack et le contrôle
-            anti-refus se génèrent depuis une saisie unique.
+            Ajoutez simplement votre devis. Dossimo préremplit le dossier et vous guide jusqu’au dépôt.
           </p>
           <Link
             href="/dossiers/nouveau"
             className="mt-6 inline-flex h-11 items-center rounded bg-terre-cuite px-5 text-sm font-medium text-blanc-casse transition-colors hover:bg-terre-cuite-hover"
           >
-            Créer un dossier
+            Déposer mon premier devis
           </Link>
         </div>
       ) : (
-        <div className="mt-8 overflow-hidden rounded border border-filigrane bg-blanc-casse shadow-sm">
+        <>
+        <div className="mt-6 space-y-3 md:hidden">
+          {rows.map((d) => {
+            const carac = d.caracteristiques_techniques_json as unknown as { beneficiaire?: Beneficiaire } | null;
+            const b = carac?.beneficiaire;
+            const st = STATUT[d.statut] ?? PARCOURS[0];
+            const ctrl = controleParDossier.get(d.id);
+            const suivi = suiviParDossier.get(d.id);
+            return (
+              <Link key={d.id} href={`/dossiers/${d.id}`} className="block rounded-lg border border-filigrane bg-blanc-casse p-4 shadow-sm transition active:bg-papier">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-serif text-lg font-semibold text-encre">{b ? `${b.prenom ?? ""} ${b.nom ?? ""}`.trim() || "Bénéficiaire" : "Bénéficiaire"}</p>
+                    <p className="mt-0.5 text-xs text-ardoise">{d.commune ?? "Commune à compléter"} · {date(d.created_at)}</p>
+                  </div>
+                  <span className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium ${st.cls}`}>
+                    <span className={`h-1.5 w-1.5 rounded-full ${st.dot}`} />{st.label}
+                  </span>
+                </div>
+                <div className="mt-4 flex flex-wrap gap-2 text-xs">
+                  {ctrl && ctrl.nbBloquants > 0 && <span className="rounded-full bg-erreur-bg px-2.5 py-1 font-medium text-erreur">{ctrl.nbBloquants} point{ctrl.nbBloquants > 1 ? "s" : ""} à corriger</span>}
+                  {suivi && suivi.nouvelles > 0 && <span className="rounded-full bg-info-bg px-2.5 py-1 font-medium text-info">{suivi.nouvelles} nouvelle{suivi.nouvelles > 1 ? "s" : ""} pièce{suivi.nouvelles > 1 ? "s" : ""}</span>}
+                  {ctrl?.conforme && <span className="rounded-full bg-succes-bg px-2.5 py-1 font-medium text-succes">Aucun blocage</span>}
+                </div>
+                <p className="mt-4 text-sm font-semibold text-tampon">Ouvrir et voir la prochaine action →</p>
+              </Link>
+            );
+          })}
+        </div>
+        <div className="mt-8 hidden overflow-hidden rounded border border-filigrane bg-blanc-casse shadow-sm md:block">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead className="border-b border-filigrane bg-papier-fonce text-xs text-ardoise">
@@ -348,6 +382,7 @@ export default async function DossiersPage() {
             </table>
           </div>
         </div>
+        </>
       )}
     </div>
   );

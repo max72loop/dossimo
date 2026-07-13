@@ -86,18 +86,18 @@ function Hero() {
           </p>
 
           <h1 className="mt-7 max-w-3xl font-serif text-[3rem] font-semibold leading-[1.02] tracking-tight text-encre sm:text-[4.35rem]">
-            Trouvez les erreurs qui peuvent{" "}
+            Déposez votre devis. Dossimo vous dit{" "}
             <span className="relative text-tampon">
-              bloquer votre prime
+              quoi faire ensuite
               <span className="absolute -bottom-2 left-0 h-1 w-full bg-terre-cuite" />
             </span>
-            {" "}avant le dépôt.
+            {" "}jusqu’au dépôt.
           </h1>
 
           <p className="mt-8 max-w-xl text-lg leading-relaxed text-ardoise">
-            Importez le devis et la facture de votre dossier MaPrimeRénov&rsquo; ou CEE.
-            Dossimo contrôle les mentions, les dates, le RGE et les écarts entre les pièces, puis vous montre
-            <span className="font-medium text-encre"> précisément quoi corriger</span>.
+            Prenez votre devis en photo ou ajoutez le PDF. Dossimo préremplit le dossier,
+            contrôle les mentions, les dates et le RGE, puis vous donne
+            <span className="font-medium text-encre"> une seule prochaine action claire</span>.
           </p>
 
           <ul className="mt-6 grid max-w-xl gap-2 sm:grid-cols-2" aria-label="Ce que Dossimo contrôle">
@@ -111,10 +111,10 @@ function Hero() {
 
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <Link
-              href="/dossiers/nouveau"
+              href="/inscription?next=%2Fdossiers%2Fnouveau"
               className={`group inline-flex min-h-12 items-center gap-2 rounded-lg bg-terre-cuite px-6 py-3 text-sm font-semibold text-blanc-casse shadow-md transition-colors hover:bg-terre-cuite-hover ${FOCUS}`}
             >
-              Vérifier mon premier dossier — offert
+              Déposer mon devis gratuitement
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </Link>
             <a
@@ -382,18 +382,18 @@ function Etapes() {
   const steps = [
     {
       icon: ClipboardCheck,
-      title: "Une seule saisie",
-      body: "Vous renseignez le chantier une fois : bénéficiaire, logement, travaux, dates, montants. C'est tout.",
+      title: "Votre devis d’abord",
+      body: "Ajoutez le PDF ou prenez-le en photo depuis le chantier. Aucun formulaire à préparer.",
     },
     {
       icon: ShieldCheck,
-      title: "Contrôle anti-refus",
-      body: "Dossimo vérifie la chronologie, la qualification RGE, l'éligibilité, la performance et la cohérence des montants.",
+      title: "Dossimo préremplit",
+      body: "L’assistant recopie le client, les montants et les données techniques. Vous confirmez ce qu’il a lu.",
     },
     {
       icon: ScanSearch,
-      title: "Vos pièces relues",
-      body: "Vous déposez le devis et la facture : Dossimo les relit et signale les mentions manquantes et les écarts.",
+      title: "Une action à la fois",
+      body: "Dossimo vérifie les règles et vous montre d’abord ce qui bloque, avec une explication concrète.",
     },
     {
       icon: FolderCheck,
@@ -407,12 +407,11 @@ function Etapes() {
         <div className="max-w-2xl">
           <SectionLabel>La méthode</SectionLabel>
           <h2 className="mt-5 font-serif text-3xl font-semibold tracking-tight text-encre sm:text-[2.25rem] sm:leading-tight">
-            De la saisie au dépôt, en quatre temps
+            Du devis au dépôt, sans vous perdre
           </h2>
           <p className="mt-4 text-lg leading-relaxed text-ardoise">
-            Comme toutes les pièces viennent de la même saisie,
-            l&rsquo;incohérence entre elles devient structurellement impossible.
-            Restent vos documents réels — Dossimo les relit aussi.
+            Vous fournissez les documents que vous avez déjà. Dossimo organise le reste,
+            vous indique ce qui manque et garde les contrôles réglementaires vérifiables.
           </p>
         </div>
 
@@ -436,7 +435,7 @@ function Etapes() {
           <p className="text-sm leading-relaxed text-encre">
             <span className="font-semibold">Votre rôle reste simple :</span> vous relisez le rapport, puis vous déposez vous-même le dossier.
           </p>
-          <Link href="/dossiers/nouveau" className={`shrink-0 text-sm font-semibold text-tampon underline underline-offset-4 ${FOCUS}`}>
+          <Link href="/inscription?next=%2Fdossiers%2Fnouveau" className={`shrink-0 text-sm font-semibold text-tampon underline underline-offset-4 ${FOCUS}`}>
             Essayer sur un dossier <span aria-hidden="true">→</span>
           </Link>
         </div>
@@ -693,10 +692,10 @@ function Pricing({ grille }: { grille: GrilleAffichee | null }) {
             )}
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <Link
-                href="/dossiers/nouveau"
+                href="/inscription?next=%2Fdossiers%2Fnouveau"
                 className={`group inline-flex h-12 items-center gap-2 rounded-lg bg-papier px-6 text-sm font-semibold text-encre transition-colors hover:bg-blanc-casse ${FOCUS_SOMBRE}`}
               >
-                Vérifier mon premier dossier — offert
+                Déposer mon devis gratuitement
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </Link>
               <a
@@ -724,10 +723,10 @@ function MobileConversionBar() {
   return (
     <div className="fixed inset-x-0 bottom-0 z-40 border-t border-encre/15 bg-blanc-casse/95 p-3 shadow-[0_-8px_24px_rgba(22,32,43,0.12)] backdrop-blur md:hidden">
       <Link
-        href="/dossiers/nouveau"
+        href="/inscription?next=%2Fdossiers%2Fnouveau"
         className={`flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-terre-cuite px-5 py-3 text-center text-sm font-semibold text-blanc-casse ${FOCUS}`}
       >
-        Vérifier mon dossier — offert
+        Déposer mon devis — offert
         <ArrowRight className="h-4 w-4" />
       </Link>
     </div>
