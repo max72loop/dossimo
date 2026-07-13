@@ -50,6 +50,12 @@ export default async function AdminReglesPage() {
       >
         ← Mes dossiers
       </Link>
+      <Link
+        href="/admin/pilotage"
+        className="ml-4 text-sm text-tampon underline-offset-4 transition hover:underline"
+      >
+        Pilotage terrain →
+      </Link>
 
       <div className="mt-4 mb-2">
         <h1 className="font-serif text-3xl font-semibold tracking-tight text-encre">

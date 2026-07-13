@@ -139,6 +139,7 @@ export interface Database {
           status: DossierBillingStatus;
           price_locked_at: string | null;
           price_warning: boolean;
+          oblige_id: string | null;
         };
         Insert: {
           id?: string;
@@ -168,6 +169,7 @@ export interface Database {
           status?: DossierBillingStatus;
           price_locked_at?: string | null;
           price_warning?: boolean;
+          oblige_id?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["dossiers"]["Insert"]>;
         Relationships: [
@@ -177,7 +179,25 @@ export interface Database {
             referencedRelation: "artisans";
             referencedColumns: ["id"];
           },
+          {
+            foreignKeyName: "dossiers_oblige_id_fkey";
+            columns: ["oblige_id"];
+            referencedRelation: "obliges";
+            referencedColumns: ["id"];
+          },
         ];
+      };
+      obliges: {
+        Row: { id: string; nom: string; actif: boolean; exigences_json: Json; source_url: string | null; revue_le: string | null; created_at: string };
+        Insert: { id?: string; nom: string; actif?: boolean; exigences_json?: Json; source_url?: string | null; revue_le?: string | null; created_at?: string };
+        Update: Partial<Database["public"]["Tables"]["obliges"]["Insert"]>;
+        Relationships: [];
+      };
+      retours_depot: {
+        Row: { id: string; dossier_id: string; statut: "en_cours" | "accepte" | "refuse" | "abandonne"; motif: string | null; detail: string | null; declared_at: string; updated_at: string };
+        Insert: { id?: string; dossier_id: string; statut: "en_cours" | "accepte" | "refuse" | "abandonne"; motif?: string | null; detail?: string | null; declared_at?: string; updated_at?: string };
+        Update: Partial<Database["public"]["Tables"]["retours_depot"]["Insert"]>;
+        Relationships: [{ foreignKeyName: "retours_depot_dossier_id_fkey"; columns: ["dossier_id"]; referencedRelation: "dossiers"; referencedColumns: ["id"] }];
       };
       regles_metier: {
         Row: {
@@ -580,6 +600,8 @@ export interface Database {
 /** Convenience row aliases. */
 export type Artisan = Database["public"]["Tables"]["artisans"]["Row"];
 export type Dossier = Database["public"]["Tables"]["dossiers"]["Row"];
+export type Oblige = Database["public"]["Tables"]["obliges"]["Row"];
+export type RetourDepot = Database["public"]["Tables"]["retours_depot"]["Row"];
 export type RegleMetier = Database["public"]["Tables"]["regles_metier"]["Row"];
 export type Paiement = Database["public"]["Tables"]["paiements"]["Row"];
 export type Facture = Database["public"]["Tables"]["factures"]["Row"];

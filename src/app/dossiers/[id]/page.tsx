@@ -48,6 +48,7 @@ import {
   mentionsObligatoires,
 } from "@/lib/pack/pieces-cee-isolation";
 import { SEVERITE_LABEL, type Finding, type Severite } from "@/lib/rules/types";
+import { ObligeSuivi } from "@/components/dossier/oblige-suivi";
 
 export const metadata = { title: "Dossier · Dossimo" };
 
@@ -180,6 +181,10 @@ export default async function DossierPage({
   // source de vérité que le checkout : l'affiché correspond au facturé.
   const supabase = await createClient();
   const tiers = await getActiveTiers(supabase);
+  const [{ data: obliges }, { data: retourDepot }] = await Promise.all([
+    supabase.from("obliges").select("id, nom").eq("actif", true).order("nom"),
+    supabase.from("retours_depot").select("statut, motif, detail").eq("dossier_id", dossier.id).maybeSingle(),
+  ]);
   const prix = prixPack(prime ? Math.round(prime.montant * 100) : null, tiers);
 
   // Net à payer : final_price_cents (net de remise filleul + crédits déjà
@@ -264,6 +269,11 @@ export default async function DossierPage({
         <div className="mb-6 rounded border-l-4 border-succes bg-succes-bg px-4 py-3 text-sm text-succes">
           Paiement confirmé · le pack est débloqué. Vous pouvez télécharger tous les
           documents ci-dessous.
+        </div>
+      )}
+      {dossier.dispositif === "cee" && (
+        <div className="mb-6">
+          <ObligeSuivi dossierId={dossier.id} obligeId={dossier.oblige_id} obliges={obliges ?? []} retour={retourDepot} />
         </div>
       )}
       {sp.parrain === "ok" && (
