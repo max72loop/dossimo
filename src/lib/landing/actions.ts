@@ -1,6 +1,5 @@
 "use server";
 
-import nodemailer from "nodemailer";
 import { z } from "zod";
 
 /**
@@ -8,10 +7,10 @@ import { z } from "zod";
  *
  * Flux : formulaire → Server Action → insert `leads` (client service-role, la
  * table `leads` n'a AUCUNE policy RLS : seul le service-role écrit) → e-mails
- * Google Workspace (notification interne + confirmation au prospect).
+ * Google Apps Script (notification interne + confirmation au prospect).
  *
  * La capture (insert) est le cœur : si elle réussit, on renvoie `ok` même si
- * l'envoi d'e-mail échoue — on ne perd jamais un lead à cause du SMTP.
+ * l'envoi d'e-mail échoue — on ne perd jamais un lead à cause du webhook.
  */
 
 const leadSchema = z.object({
@@ -71,10 +70,7 @@ export async function submitLead(input: unknown): Promise<SubmitLeadResult> {
   }
 
   // --- 2. Notifications e-mail (best-effort, jamais bloquant) ---
-  await Promise.allSettled([
-    notifyTeam({ email, entreprise, telephone, message }),
-    confirmToLead(email),
-  ]);
+  await notifyGoogleAppsScript({ email, entreprise, telephone, message });
 
   return { ok: true };
 }
@@ -116,97 +112,39 @@ async function captureLead(lead: {
 /* ------------------------------------------------------------------ Emails */
 
 /**
- * Envoi via le SMTP Google Workspace. Le mot de passe attendu est un mot de
- * passe d'application Google dédié, jamais le mot de passe principal du compte.
- * Renvoie false et journalise en cas d'échec — ne jette jamais.
+ * Le webhook Apps Script s'exécute sous le compte Google Workspace et envoie
+ * l'alerte interne ainsi que la confirmation prospect via MailApp. Il n'expose
+ * aucune fonction de relais générique : le script n'accepte que ce payload lead.
  */
-async function sendEmail(params: {
-  to: string;
-  subject: string;
-  text: string;
-  replyTo?: string;
-}): Promise<boolean> {
-  const user = process.env.GOOGLE_WORKSPACE_SMTP_USER;
-  const appPassword = process.env.GOOGLE_WORKSPACE_APP_PASSWORD;
-  if (!user || !appPassword) {
-    console.warn("[leads] SMTP Google Workspace non configuré — e-mail ignoré.");
-    return false;
-  }
-
-  try {
-    const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 465,
-      secure: true,
-      auth: { user, pass: appPassword },
-      connectionTimeout: 10_000,
-      greetingTimeout: 10_000,
-      socketTimeout: 15_000,
-    });
-
-    await transporter.sendMail({
-      from: `Dossimo <${user}>`,
-      to: params.to,
-      subject: params.subject,
-      text: params.text,
-      replyTo: params.replyTo,
-    });
-    return true;
-  } catch (err) {
-    console.error("[leads] Envoi SMTP Google Workspace échoué:", err);
-    return false;
-  }
-}
-
-async function notifyTeam(lead: {
+async function notifyGoogleAppsScript(lead: {
   email: string;
   entreprise?: string;
   telephone?: string;
   message?: string;
 }): Promise<void> {
-  const to = process.env.LEADS_NOTIFICATION_EMAIL;
-  if (!to) {
-    console.warn("[leads] LEADS_NOTIFICATION_EMAIL absent — notification ignorée.");
+  const webhookUrl = process.env.GOOGLE_APPS_SCRIPT_WEBHOOK_URL;
+  const webhookSecret = process.env.GOOGLE_APPS_SCRIPT_WEBHOOK_SECRET;
+  if (!webhookUrl || !webhookSecret) {
+    console.warn("[leads] Webhook Google Apps Script non configuré — e-mails ignorés.");
     return;
   }
-  await sendEmail({
-    to,
-    replyTo: lead.email,
-    subject: `Nouveau lead Dossimo — ${lead.entreprise || lead.email}`,
-    text: [
-      "Nouveau prospect depuis la landing.",
-      "",
-      `Email      : ${lead.email}`,
-      `Entreprise : ${lead.entreprise || "—"}`,
-      `Téléphone  : ${lead.telephone || "—"}`,
-      lead.message ? `Message    : ${lead.message}` : null,
-    ]
-      .filter(Boolean)
-      .join("\n"),
-  });
-}
 
-async function confirmToLead(email: string): Promise<void> {
-  await sendEmail({
-    to: email,
-    replyTo: process.env.LEADS_REPLY_TO_EMAIL || "max@dossimo.pro",
-    subject: "On prépare votre premier dossier — Dossimo",
-    text: [
-      "Bonjour,",
-      "",
-      "Merci de votre intérêt pour Dossimo. On revient vers vous très vite pour",
-      "préparer avec vous votre premier dossier MaPrimeRénov' ou CEE — offert —",
-      "et vous montrer le contrôle anti-refus en conditions réelles.",
-      "",
-      "Rappel : vous déposez vous-même, nous vérifions avant. Vous gardez votre",
-      "client et l'intégralité de votre prime.",
-      "",
-      "Une question ? Répondez directement à cet e-mail : max@dossimo.pro.",
-      "",
-      "— L'équipe Dossimo",
-      "",
-      "Dossimo est un service indépendant d'aide à la préparation de dossier,",
-      "non affilié à l'Anah ni à France Rénov'.",
-    ].join("\n"),
-  });
+  try {
+    const response = await fetch(webhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({
+        secret: webhookSecret,
+        type: "landing_lead",
+        ...lead,
+      }),
+      cache: "no-store",
+    });
+    const result = (await response.json()) as { ok?: boolean; error?: string };
+    if (!response.ok || !result.ok) {
+      console.error(`[leads] Webhook Apps Script refusé: ${result.error || response.status}`);
+    }
+  } catch (err) {
+    console.error("[leads] Webhook Google Apps Script échoué:", err);
+  }
 }
