@@ -2,6 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { getDossier } from "@/lib/dossier/get-dossier";
+import { piecesAttendues } from "@/lib/depot/pieces-attendues";
+import { emettreLien } from "@/lib/depot/lien";
+import { formatReminderMessage } from "@/lib/reminders/message";
 import { createClient } from "@/lib/supabase/server";
 
 export async function configurerRelances(dossierId: string, enabled: boolean) {
@@ -30,4 +33,23 @@ export async function revoirPieceBeneficiaire(input: { dossierId: string; pieceI
   if (error) return { ok: false as const, error: "Revue impossible." };
   revalidatePath(`/dossiers/${input.dossierId}`);
   return { ok: true as const };
+}
+
+/** Prépare une relance que l'artisan envoie lui-même tant qu'aucun provider n'est configuré. */
+export async function preparerRelanceManuelle(dossierId: string) {
+  const data = await getDossier(dossierId);
+  if (!data) return { ok: false as const, error: "Dossier introuvable." };
+  const supabase = await createClient();
+  const { data: uploads } = await supabase.from("pieces_justificatives")
+    .select("type,validation_status,rejection_reason")
+    .eq("dossier_id", dossierId).eq("deposant", "beneficiaire").order("created_at", { ascending: false });
+  const documents = piecesAttendues(data).flatMap((expected) => {
+    const upload = (uploads ?? []).find((item) => item.type === expected.type);
+    return upload?.validation_status === "approved" ? [] : [{ label: expected.titre, reason: upload?.validation_status === "rejected" ? upload.rejection_reason : null }];
+  });
+  if (!documents.length) return { ok: false as const, error: "Toutes les pièces attendues sont validées." };
+  const token = await emettreLien(dossierId);
+  const base = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ?? "";
+  const message = formatReminderMessage({ prenom: data.caracteristiques.beneficiaire.prenom, entreprise: data.artisan?.entreprise ?? "Votre artisan", documents, url: `${base}/depot/${token}` });
+  return { ok: true as const, ...message };
 }
