@@ -189,7 +189,7 @@ async function notifyTeam(lead: {
 async function confirmToLead(email: string): Promise<void> {
   await sendEmail({
     to: email,
-    replyTo: process.env.LEADS_REPLY_TO_EMAIL || "contact@dossimo.app",
+    replyTo: process.env.LEADS_REPLY_TO_EMAIL || "max@dossimo.pro",
     subject: "On prépare votre premier dossier — Dossimo",
     text: [
       "Bonjour,",
@@ -201,7 +201,7 @@ async function confirmToLead(email: string): Promise<void> {
       "Rappel : vous déposez vous-même, nous vérifions avant. Vous gardez votre",
       "client et l'intégralité de votre prime.",
       "",
-      "Une question ? Répondez directement à cet e-mail : contact@dossimo.app.",
+      "Une question ? Répondez directement à cet e-mail : max@dossimo.pro.",
       "",
       "— L'équipe Dossimo",
       "",
