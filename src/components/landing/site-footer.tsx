@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { Logo } from "@/components/landing/site-header";
+import { editeur } from "@/lib/legal/editeur";
 
 export function SiteFooter() {
   return (
@@ -37,6 +38,7 @@ export function SiteFooter() {
               <ul className="mt-4 space-y-2.5 text-sm text-ardoise">
                 <li><Link href="/#faq" className="transition-colors hover:text-encre">Questions fréquentes</Link></li>
                 <li><Link href="/#contact" className="transition-colors hover:text-encre">Contact</Link></li>
+                <li><a href={`mailto:${editeur.emailContact}`} className="transition-colors hover:text-encre">{editeur.emailContact}</a></li>
               </ul>
             </div>
             <div>

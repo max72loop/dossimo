@@ -1,5 +1,7 @@
 import { ChevronDown, HelpCircle, Mail, Phone, X } from "lucide-react";
 
+import { editeur } from "@/lib/legal/editeur";
+
 export function AideDossimo() {
   return (
     <details className="group fixed bottom-4 right-4 z-50">
@@ -24,10 +26,10 @@ export function AideDossimo() {
               </summary>
               <p className="mt-2 text-xs leading-relaxed text-ardoise">Rouge : à corriger avant le dépôt. Orange : à vérifier. Vert : contrôle réussi. Dossimo affiche toujours l’action à faire sous le problème.</p>
             </details>
-            <a href="mailto:contact@dossimo.fr?subject=Je%20suis%20bloqu%C3%A9%20sur%20mon%20dossier" className="flex items-center gap-3 rounded border border-filigrane px-3 py-3 text-sm font-medium text-encre transition hover:bg-papier">
+            <a href={`mailto:${editeur.emailContact}?subject=Je%20suis%20bloqu%C3%A9%20sur%20mon%20dossier`} className="flex items-center gap-3 rounded border border-filigrane px-3 py-3 text-sm font-medium text-encre transition hover:bg-papier">
               <Mail className="h-4 w-4 text-tampon" />Envoyer une photo du problème
             </a>
-            <a href="mailto:contact@dossimo.fr?subject=Demande%20de%20rappel%20Dossimo&body=Mon%20num%C3%A9ro%20de%20t%C3%A9l%C3%A9phone%20%3A%20" className="flex items-center gap-3 rounded border border-filigrane px-3 py-3 text-sm font-medium text-encre transition hover:bg-papier">
+            <a href={`mailto:${editeur.emailContact}?subject=Demande%20de%20rappel%20Dossimo&body=Mon%20num%C3%A9ro%20de%20t%C3%A9l%C3%A9phone%20%3A%20`} className="flex items-center gap-3 rounded border border-filigrane px-3 py-3 text-sm font-medium text-encre transition hover:bg-papier">
               <Phone className="h-4 w-4 text-tampon" />Demander à être rappelé
             </a>
           </div>

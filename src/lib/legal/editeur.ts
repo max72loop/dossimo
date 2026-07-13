@@ -37,8 +37,8 @@ export const editeur = {
   directeurPublication: "Max Landry",
 
   // --- Contact ---
-  emailContact: "contact@dossimo.fr",
-  emailRgpd: "contact@dossimo.fr", // adresse dédiée aux demandes RGPD
+  emailContact: "contact@dossimo.app",
+  emailRgpd: "contact@dossimo.app", // adresse dédiée aux demandes RGPD
   // Mention attendue sur un site professionnel. Renseigner uniquement avec un
   // numéro réellement joignable ; ne jamais publier un numéro de démonstration.
   telephone: null as string | null,

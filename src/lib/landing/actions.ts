@@ -1,18 +1,17 @@
 "use server";
 
+import nodemailer from "nodemailer";
 import { z } from "zod";
-
-import { createAdminClient } from "@/lib/supabase/admin";
 
 /**
  * Capture de lead depuis le formulaire de la landing (CLAUDE.md §11, tâche 6).
  *
  * Flux : formulaire → Server Action → insert `leads` (client service-role, la
  * table `leads` n'a AUCUNE policy RLS : seul le service-role écrit) → e-mails
- * Resend (notification interne + confirmation au prospect).
+ * Google Workspace (notification interne + confirmation au prospect).
  *
  * La capture (insert) est le cœur : si elle réussit, on renvoie `ok` même si
- * l'envoi d'e-mail échoue — on ne perd jamais un lead à cause de Resend.
+ * l'envoi d'e-mail échoue — on ne perd jamais un lead à cause du SMTP.
  */
 
 const leadSchema = z.object({
@@ -55,21 +54,13 @@ export async function submitLead(input: unknown): Promise<SubmitLeadResult> {
 
   // --- 1. Capture en base (cœur de la tâche) ---
   try {
-    const supabase = createAdminClient();
-    const { error } = await supabase.from("leads").insert({
+    await captureLead({
       email,
       entreprise: entreprise || null,
       telephone: telephone || null,
       message: message || null,
       source: "landing",
     });
-    if (error) {
-      console.error("[leads] insert:", error.message);
-      return {
-        ok: false,
-        error: "Impossible d'enregistrer votre demande pour le moment. Réessayez dans un instant.",
-      };
-    }
   } catch (err) {
     // Ex. configuration Supabase absente : on ne fige jamais le formulaire.
     console.error("[leads] capture échouée:", err);
@@ -88,11 +79,46 @@ export async function submitLead(input: unknown): Promise<SubmitLeadResult> {
   return { ok: true };
 }
 
+/**
+ * Insertion REST avec la clé service-role, exclusivement côté serveur.
+ * On évite ainsi l'initialisation inutile de Supabase Realtime sous Node 20.
+ */
+async function captureLead(lead: {
+  email: string;
+  entreprise: string | null;
+  telephone: string | null;
+  message: string | null;
+  source: string;
+}): Promise<void> {
+  const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!baseUrl || !serviceKey) {
+    throw new Error("Configuration Supabase absente");
+  }
+
+  const endpoint = new URL("/rest/v1/leads", baseUrl);
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      apikey: serviceKey,
+      Authorization: `Bearer ${serviceKey}`,
+      "Content-Type": "application/json",
+      Prefer: "return=minimal",
+    },
+    body: JSON.stringify(lead),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Insertion lead: ${response.status}`);
+  }
+}
+
 /* ------------------------------------------------------------------ Emails */
 
 /**
- * Envoi via l'API HTTP Resend (pas de dépendance). Renvoie false et journalise
- * en cas d'échec ou de configuration absente — ne jette jamais.
+ * Envoi via le SMTP Google Workspace. Le mot de passe attendu est un mot de
+ * passe d'application Google dédié, jamais le mot de passe principal du compte.
+ * Renvoie false et journalise en cas d'échec — ne jette jamais.
  */
 async function sendEmail(params: {
   to: string;
@@ -100,35 +126,34 @@ async function sendEmail(params: {
   text: string;
   replyTo?: string;
 }): Promise<boolean> {
-  const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.RESEND_FROM_EMAIL;
-  if (!apiKey || !from) {
-    console.warn("[leads] Resend non configuré — e-mail ignoré.");
+  const user = process.env.GOOGLE_WORKSPACE_SMTP_USER;
+  const appPassword = process.env.GOOGLE_WORKSPACE_APP_PASSWORD;
+  if (!user || !appPassword) {
+    console.warn("[leads] SMTP Google Workspace non configuré — e-mail ignoré.");
     return false;
   }
 
   try {
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from,
-        to: [params.to],
-        subject: params.subject,
-        text: params.text,
-        ...(params.replyTo ? { reply_to: params.replyTo } : {}),
-      }),
+    const transporter = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
+      auth: { user, pass: appPassword },
+      connectionTimeout: 10_000,
+      greetingTimeout: 10_000,
+      socketTimeout: 15_000,
     });
-    if (!res.ok) {
-      console.error(`[leads] Resend ${res.status}: ${await res.text()}`);
-      return false;
-    }
+
+    await transporter.sendMail({
+      from: `Dossimo <${user}>`,
+      to: params.to,
+      subject: params.subject,
+      text: params.text,
+      replyTo: params.replyTo,
+    });
     return true;
   } catch (err) {
-    console.error("[leads] Resend fetch échoué:", err);
+    console.error("[leads] Envoi SMTP Google Workspace échoué:", err);
     return false;
   }
 }
@@ -164,6 +189,7 @@ async function notifyTeam(lead: {
 async function confirmToLead(email: string): Promise<void> {
   await sendEmail({
     to: email,
+    replyTo: process.env.LEADS_REPLY_TO_EMAIL || "contact@dossimo.app",
     subject: "On prépare votre premier dossier — Dossimo",
     text: [
       "Bonjour,",
@@ -174,6 +200,8 @@ async function confirmToLead(email: string): Promise<void> {
       "",
       "Rappel : vous déposez vous-même, nous vérifions avant. Vous gardez votre",
       "client et l'intégralité de votre prime.",
+      "",
+      "Une question ? Répondez directement à cet e-mail : contact@dossimo.app.",
       "",
       "— L'équipe Dossimo",
       "",

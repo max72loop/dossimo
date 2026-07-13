@@ -20,6 +20,7 @@ import { LeadForm } from "@/components/landing/lead-form";
 import { FOCUS } from "@/components/ui/boutons";
 import { CTA_DEMO } from "@/lib/landing/copy";
 import { grillePublique } from "@/lib/landing/grille-publique";
+import { editeur } from "@/lib/legal/editeur";
 import type { GrilleAffichee } from "@/lib/pricing";
 
 /**
@@ -764,6 +765,15 @@ function Contact() {
             Laissez vos coordonnées et nous vous expliquons comment préparer votre
             prochain dossier. Le contrôle gratuit reste le moyen le plus simple de
             découvrir Dossimo si votre chantier est déjà prêt.
+          </p>
+          <p className="mt-5 text-sm text-ardoise">
+            Vous préférez écrire directement ?{" "}
+            <a
+              href={`mailto:${editeur.emailContact}?subject=Question%20avant%20mon%20premier%20dossier`}
+              className={`font-semibold text-tampon underline underline-offset-4 ${FOCUS}`}
+            >
+              {editeur.emailContact}
+            </a>
           </p>
         </div>
         <div className="border border-filigrane border-t-2 border-t-encre bg-blanc-casse p-6 shadow-sm sm:p-7">
