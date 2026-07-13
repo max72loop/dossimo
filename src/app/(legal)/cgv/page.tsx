@@ -6,7 +6,7 @@ import { editeur, derniereMajLegale } from "@/lib/legal/editeur";
 import { grillePublique } from "@/lib/landing/grille-publique";
 
 export const metadata: Metadata = {
-  title: "Conditions générales de vente · Dossimo",
+  title: "Conditions générales de vente",
   description:
     "Conditions générales de vente du service professionnel de préparation et de contrôle de dossiers Dossimo.",
 };
@@ -28,7 +28,8 @@ export default async function CgvPage() {
         <p>
           Les présentes conditions générales de vente (les «&nbsp;CGV&nbsp;»)
           sont proposées par {editeur.raisonSociale}, entrepreneur individuel,
-          SIREN {editeur.siren}, dont le siège est situé {editeur.adresse} (ci-après
+          SIREN {editeur.siren}, dont le siège est situé {editeur.adresse}{" "}
+          (ci-après
           «&nbsp;Dossimo&nbsp;»). Les informations complètes de l&rsquo;éditeur
           figurent dans les{" "}
           <Link href="/mentions-legales" className={lien}>
