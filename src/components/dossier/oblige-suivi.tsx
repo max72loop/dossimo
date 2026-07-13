@@ -1,5 +1,6 @@
 "use client";
 
+import { CircleHelp } from "lucide-react";
 import { useState } from "react";
 
 import { choisirOblige, enregistrerRetourDepot, type RetourStatut } from "@/lib/dossier/oblige-actions";
@@ -26,24 +27,43 @@ export function ObligeSuivi({
     setSaving(true);
     const res = await choisirOblige(dossierId, selected || null);
     setSaving(false);
-    setMessage(res.ok ? "Obligé enregistré." : res.error ?? "Erreur.");
+    setMessage(res.ok ? "Organisme enregistré." : res.error ?? "Erreur.");
   }
 
   async function saveRetour() {
     setSaving(true);
     const res = await enregistrerRetourDepot({ dossierId, statut, motif, detail });
     setSaving(false);
-    setMessage(res.ok ? "Retour terrain enregistré." : res.error ?? "Erreur.");
+    setMessage(res.ok ? "Résultat enregistré." : res.error ?? "Erreur.");
   }
 
   const input = "mt-1 w-full rounded border border-filigrane bg-blanc-casse px-3 py-2 text-sm text-encre";
   return (
     <section className="rounded border border-filigrane bg-papier/40 p-5">
-      <h2 className="font-serif text-lg font-semibold text-encre">Dépôt et retour terrain</h2>
-      <p className="mt-1 text-sm text-ardoise">Ces données servent à améliorer les contrôles, pas à modifier une règle sans validation.</p>
-      <label className="mt-4 block text-sm font-medium text-encre">Obligé CEE visé</label>
+      <h2 className="font-serif text-lg font-semibold text-encre">Après le dépôt du dossier</h2>
+      <p className="mt-1 text-sm text-ardoise">Notez l’organisme choisi et le résultat reçu après l’envoi du dossier.</p>
+      <div className="mt-4 flex items-center gap-1.5 text-sm font-medium text-encre">
+        Obligé CEE visé
+        <span className="group relative inline-flex">
+          <button
+            type="button"
+            aria-describedby="aide-oblige-cee"
+            className="rounded-full text-ardoise hover:text-encre focus:outline-none focus:ring-2 focus:ring-tampon/40"
+          >
+            <CircleHelp className="h-4 w-4" aria-hidden="true" />
+            <span className="sr-only">Qu’est-ce qu’un obligé CEE ?</span>
+          </button>
+          <span
+            id="aide-oblige-cee"
+            role="tooltip"
+            className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-2 hidden w-64 -translate-x-1/2 rounded bg-encre px-3 py-2 text-xs font-normal text-blanc-casse shadow-lg group-hover:block group-focus-within:block"
+          >
+            L’organisme (EDF, Engie…) qui verse la prime.
+          </span>
+        </span>
+      </div>
       <div className="flex gap-2">
-        <select className={input} value={selected} onChange={(e) => setSelected(e.target.value)}>
+        <select aria-label="Obligé CEE visé" className={input} value={selected} onChange={(e) => setSelected(e.target.value)}>
           <option value="">Non choisi</option>
           {obliges.map((o) => <option key={o.id} value={o.id}>{o.nom}</option>)}
         </select>
@@ -58,7 +78,7 @@ export function ObligeSuivi({
           <option value="abandonne">Abandonné</option>
         </select>
         {statut === "refuse" && <input className={input} value={motif} onChange={(e) => setMotif(e.target.value)} placeholder="Motif de refus (ex. mention manquante)" />}
-        <textarea className={input} rows={2} value={detail} onChange={(e) => setDetail(e.target.value)} placeholder="Commentaire facultatif ou retour de l’obligé" />
+        <textarea className={input} rows={2} value={detail} onChange={(e) => setDetail(e.target.value)} placeholder="Commentaire facultatif ou retour de l’organisme" />
         <button type="button" onClick={saveRetour} disabled={saving} className="mt-3 rounded bg-terre-cuite px-4 py-2 text-sm font-medium text-blanc-casse disabled:opacity-60">Enregistrer le résultat</button>
       </div>
       {message && <p className="mt-3 text-sm text-ardoise" role="status">{message}</p>}

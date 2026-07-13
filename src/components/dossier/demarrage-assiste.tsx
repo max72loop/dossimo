@@ -177,7 +177,7 @@ export function DemarrageAssiste({
         </a>
       </div>
       <p className="mt-4 text-xs leading-relaxed text-encre-claire">
-        Lecture assistée par IA via OpenRouter. Le document sert uniquement à préremplir ce dossier ; chaque information reste à confirmer.
+        Lecture automatique du devis, vous vérifiez ensuite.
       </p>
     </section>
   );

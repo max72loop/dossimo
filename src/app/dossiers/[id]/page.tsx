@@ -185,10 +185,9 @@ export default async function DossierPage({
   // source de vérité que le checkout : l'affiché correspond au facturé.
   const supabase = await createClient();
   const tiers = await getActiveTiers(supabase);
-  const [{ data: obliges }, { data: retourDepot }, { data: reminderSchedule }, { data: beneficiaryUploads }, tokenDepotActif] = await Promise.all([
+  const [{ data: obliges }, { data: retourDepot }, { data: beneficiaryUploads }, tokenDepotActif] = await Promise.all([
     supabase.from("obliges").select("id, nom").eq("actif", true).order("nom"),
     supabase.from("retours_depot").select("statut, motif, detail").eq("dossier_id", dossier.id).maybeSingle(),
-    supabase.from("reminder_schedules").select("enabled").eq("dossier_id", dossier.id).maybeSingle(),
     supabase.from("pieces_justificatives").select("id,type,nom_fichier,validation_status,rejection_reason").eq("dossier_id", dossier.id).eq("deposant", "beneficiaire").order("created_at", { ascending: false }),
     retrouverLienActif(dossier.id),
   ]);
@@ -269,11 +268,6 @@ export default async function DossierPage({
         <div className="mb-6 rounded border-l-4 border-succes bg-succes-bg px-4 py-3 text-sm text-succes">
           Paiement confirmé · le pack est débloqué. Vous pouvez télécharger tous les
           documents ci-dessous.
-        </div>
-      )}
-      {dossier.dispositif === "cee" && (
-        <div className="mb-6">
-          <ObligeSuivi dossierId={dossier.id} obligeId={dossier.oblige_id} obliges={obliges ?? []} retour={retourDepot} />
         </div>
       )}
       {sp.parrain === "ok" && (
@@ -368,7 +362,6 @@ export default async function DossierPage({
               dossierId={id}
               attendues={attenduesClient}
               uploads={beneficiaryUploads ?? []}
-              enabled={reminderSchedule?.enabled ?? false}
             />
             {suivi.nouvelles > 0 ? <MarquerVues dossierId={id} /> : null}
           </div>
@@ -418,8 +411,8 @@ export default async function DossierPage({
               />
             )}
           <p className="mt-3 text-[11px] text-encre-claire">
-            Estimation indicative, calculée depuis le barème de la règle métier
-            (éditable dans l&apos;admin). Ne vaut pas notification de la prime.
+            Estimation indicative, calculée depuis le barème. Elle ne vaut pas
+            notification de la prime.
           </p>
         </section>
       )}
@@ -428,6 +421,12 @@ export default async function DossierPage({
       <div id="parcours" className="scroll-mt-24">
         <ParcoursSelector dossierId={id} statut={dossier.statut} />
       </div>
+
+      {dossier.dispositif === "cee" && (
+        <div className="mt-6">
+          <ObligeSuivi dossierId={dossier.id} obligeId={dossier.oblige_id} obliges={obliges ?? []} retour={retourDepot} />
+        </div>
+      )}
 
       {/* 8. Détails repliés */}
       <h2 className="mt-8 mb-3 text-xs font-semibold uppercase tracking-[0.12em] text-ardoise">

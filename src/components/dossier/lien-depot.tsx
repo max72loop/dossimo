@@ -141,7 +141,7 @@ export function LienDepot({
         )}
         {url && (
           <button type="button" onClick={revoquer} className="text-xs text-ardoise underline underline-offset-2 hover:text-encre">
-            Révoquer ce lien
+            Annuler les anciens liens
           </button>
         )}
       </div>
