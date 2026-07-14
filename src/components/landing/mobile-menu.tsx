@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Menu, X } from "lucide-react";
 
 import { FOCUS } from "@/components/ui/boutons";
+import { CTA_DEMO } from "@/lib/landing/copy";
 
 /**
  * Navigation mobile de la vitrine.
@@ -75,7 +76,7 @@ export function MobileMenu({
           onClick={() => setOuvert(false)}
           className={`inline-flex h-12 items-center justify-center rounded bg-terre-cuite px-5 text-sm font-semibold text-blanc-casse transition-colors hover:bg-terre-cuite-hover ${FOCUS}`}
         >
-          {connecte ? "Créer un dossier" : "Tester mon devis"}
+          {connecte ? "Créer un dossier" : CTA_DEMO}
         </Link>
         <Link
           href={connecte ? "/dossiers" : "/connexion"}

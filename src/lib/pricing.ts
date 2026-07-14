@@ -106,6 +106,8 @@ export function labelEuros(cents: number): string {
 export interface GrilleAffichee {
   minLabel: string;
   maxLabel: string;
+  /** Prix du palier le plus bas, en cents : sert à dériver le prix remisé annoncé. */
+  minCents: number;
   /** Prix de chaque palier, du plus bas au plus haut ("49 €", "149 €", "249 €"). */
   paliers: string[];
   /** Détail public de chaque palier, dans l'ordre du montant d'aide. */
@@ -152,6 +154,7 @@ export function grilleAffichee(
   return {
     minLabel: labelEuros(cents[0]),
     maxLabel: labelEuros(cents[cents.length - 1]),
+    minCents: cents[0],
     paliers: cents.map(labelEuros),
     lignes: actifs.map((tier) => ({
       name: tier.name,

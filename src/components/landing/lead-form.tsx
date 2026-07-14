@@ -39,8 +39,7 @@ export function LeadForm() {
         <CheckCircle2 className="h-9 w-9 text-succes" strokeWidth={1.5} />
         <p className="font-serif text-lg font-semibold text-encre">Merci !</p>
         <p className="max-w-sm text-sm text-ardoise">
-          On vous recontacte très vite pour préparer votre premier dossier —
-          offert.
+          On vous recontacte très vite pour monter votre premier dossier avec vous.
         </p>
       </div>
     );

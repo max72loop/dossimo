@@ -8,7 +8,7 @@ import { publicMetadata } from "@/lib/seo/site";
 export const metadata: Metadata = publicMetadata({
   path: "/demo",
   title: "Analyser un devis MaPrimeRénov’ ou CEE gratuitement",
-  description: "Ajoutez une photo ou un PDF de votre devis : Dossimo relève les informations lisibles et vous montre le premier point à confirmer.",
+  description: "Envoyez une photo ou un PDF de votre devis : Dossimo recopie les informations à votre place et vous montre le premier point à confirmer. Deux minutes suffisent.",
 });
 
 export default function DemoPage() {
@@ -21,9 +21,9 @@ export default function DemoPage() {
         </div>
       </header>
       <main className="mx-auto max-w-3xl px-5 py-12 sm:px-8 sm:py-16">
-        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-tampon">Essai gratuit · sans compte</p>
-        <h1 className="mt-3 max-w-2xl font-serif text-4xl font-semibold tracking-tight text-encre sm:text-5xl">Vérifiez votre devis avant de demander l’aide.</h1>
-        <p className="mt-4 max-w-2xl text-lg leading-relaxed text-ardoise">Dossimo repère ce qui pourrait bloquer un dossier MaPrimeRénov’ ou CEE. Utilisez votre document, essayez avec l’exemple, ou commencez sans devis.</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-tampon">Essai gratuit · sans compte · deux minutes</p>
+        <h1 className="mt-3 max-w-2xl font-serif text-4xl font-semibold tracking-tight text-encre sm:text-5xl">Envoyez votre devis. Dossimo fait la paperasse.</h1>
+        <p className="mt-4 max-w-2xl text-lg leading-relaxed text-ardoise">Photo ou PDF : Dossimo recopie le client, les montants et les données techniques à votre place, puis vous montre le premier point à confirmer. Utilisez votre document, essayez avec l’exemple, ou commencez sans devis.</p>
         <DemoGuide />
         <p className="mt-6 text-xs leading-relaxed text-encre-claire">La lecture assistée sert au préremplissage. Le contrôle réglementaire complet est lancé après votre confirmation.</p>
       </main>

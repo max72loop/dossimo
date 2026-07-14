@@ -123,6 +123,9 @@ describe("grilleAffichee — ce que la vitrine annonce", () => {
     const g = grilleAffichee(TIERS)!;
     expect(g.minLabel).toBe("49 €");
     expect(g.maxLabel).toBe("249 €");
+    // La vitrine annonce un prix d'appel remisé (« dès 24,50 € au lieu de 49 € ») :
+    // il se dérive de ce montant, jamais d'un chiffre écrit en dur dans la page.
+    expect(g.minCents).toBe(4900);
     expect(g.paliers).toEqual(["49 €", "149 €", "249 €"]);
     expect(g.lignes).toEqual([
       {
