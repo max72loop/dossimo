@@ -37,8 +37,10 @@ const FIN_CODE_LANCEMENT = Math.floor(new Date("2026-07-26T21:59:59.000Z").getTi
 async function garantirCodeLancement(stripe: ReturnType<typeof getStripe>) {
   if (Math.floor(Date.now() / 1000) > FIN_CODE_LANCEMENT) return;
   const existants = await stripe.promotionCodes.list({ code: CODE_LANCEMENT, active: true, limit: 1 });
-  if (existants.data.length) return;
-  const couponId = "dossimo-lancement-2026-50";
+  const existant = existants.data[0];
+  if (existant?.expires_at === FIN_CODE_LANCEMENT) return;
+  if (existant) await stripe.promotionCodes.update(existant.id, { active: false });
+  const couponId = "dossimo-lancement-2026-50-26juillet";
   try {
     await stripe.coupons.retrieve(couponId);
   } catch {
