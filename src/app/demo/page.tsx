@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 
 import { DemoGuide } from "@/components/landing/demo-guide";
 import { Logo } from "@/components/landing/site-header";
+import { enregistrerClic } from "@/lib/prospection/file";
 import { publicMetadata } from "@/lib/seo/site";
 
 export const metadata: Metadata = publicMetadata({
@@ -11,7 +12,27 @@ export const metadata: Metadata = publicMetadata({
   description: "Envoyez une photo ou un PDF de votre devis : Dossimo recopie les informations à votre place et vous montre le premier point à confirmer. Deux minutes suffisent.",
 });
 
-export default function DemoPage() {
+/**
+ * `?p=<jeton>` : le lien d'un message de prospection. On journalise la visite
+ * côté serveur, sans pixel ni mouchard, et on n'en fait rien d'autre : la page
+ * s'affiche à l'identique pour tout le monde. Une visite non attribuable (jeton
+ * inconnu, lien recopié) est simplement ignorée.
+ */
+export default async function DemoPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ p?: string }>;
+}) {
+  const { p } = await searchParams;
+  if (p) {
+    try {
+      await enregistrerClic(p);
+    } catch (err) {
+      // Le suivi ne doit jamais empêcher un artisan d'accéder à l'essai.
+      console.error("[prospection] clic non journalisé:", err);
+    }
+  }
+
   return (
     <div className="min-h-screen bg-papier">
       <header className="border-b border-filigrane bg-blanc-casse">

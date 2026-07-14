@@ -59,6 +59,28 @@ export type ReferralStatus =
   | "self_blocked";
 export type ReferralCreditStatus = "active" | "expired" | "consumed";
 
+// Prospection B2B (migration 0032).
+export type StatutProspect =
+  | "nouveau"
+  | "en_file"
+  | "contacte"
+  | "repondu"
+  | "desinscrit"
+  | "bounce"
+  | "exclu";
+export type StatutMessageProspection =
+  | "en_attente"
+  | "valide"
+  | "envoye"
+  | "echec"
+  | "annule";
+export type TypeEvenementProspection =
+  | "envoi"
+  | "clic"
+  | "desinscription"
+  | "bounce"
+  | "reponse";
+
 export type Json =
   | string
   | number
@@ -586,9 +608,145 @@ export interface Database {
           },
         ];
       };
+      prospection_campagnes: {
+        Row: {
+          id: string;
+          nom: string;
+          from_email: string;
+          objet: string;
+          corps: string;
+          demarre_le: string;
+          termine_le: string;
+          daily_cap_max: number;
+          en_pause: boolean;
+          motif_pause: string | null;
+          actif: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          nom: string;
+          from_email: string;
+          objet: string;
+          corps: string;
+          demarre_le: string;
+          termine_le: string;
+          daily_cap_max?: number;
+          en_pause?: boolean;
+          motif_pause?: string | null;
+          actif?: boolean;
+          created_at?: string;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["prospection_campagnes"]["Insert"]
+        >;
+        Relationships: [];
+      };
+      prospects: {
+        Row: {
+          id: string;
+          email: string;
+          prenom: string | null;
+          nom: string | null;
+          entreprise: string | null;
+          ville: string | null;
+          code_postal: string | null;
+          /** D'où vient l'adresse. Repris dans le pied du message (RGPD art. 14). */
+          source: string;
+          statut: StatutProspect;
+          unsubscribe_token: string;
+          notes: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          email: string;
+          prenom?: string | null;
+          nom?: string | null;
+          entreprise?: string | null;
+          ville?: string | null;
+          code_postal?: string | null;
+          source: string;
+          statut?: StatutProspect;
+          unsubscribe_token?: string;
+          notes?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["prospects"]["Insert"]>;
+        Relationships: [];
+      };
+      prospection_messages: {
+        Row: {
+          id: string;
+          campagne_id: string;
+          prospect_id: string;
+          statut: StatutMessageProspection;
+          objet: string;
+          corps: string;
+          scheduled_on: string;
+          sent_at: string | null;
+          erreur: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          campagne_id: string;
+          prospect_id: string;
+          statut?: StatutMessageProspection;
+          objet: string;
+          corps: string;
+          scheduled_on: string;
+          sent_at?: string | null;
+          erreur?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["prospection_messages"]["Insert"]
+        >;
+        Relationships: [
+          {
+            foreignKeyName: "prospection_messages_prospect_id_fkey";
+            columns: ["prospect_id"];
+            referencedRelation: "prospects";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      prospection_evenements: {
+        Row: {
+          id: string;
+          prospect_id: string | null;
+          type: TypeEvenementProspection;
+          payload: Json;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          prospect_id?: string | null;
+          type: TypeEvenementProspection;
+          payload?: Json;
+          created_at?: string;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["prospection_evenements"]["Insert"]
+        >;
+        Relationships: [];
+      };
+      prospection_suppressions: {
+        Row: { email: string; motif: string; created_at: string };
+        Insert: { email: string; motif: string; created_at?: string };
+        Update: Partial<
+          Database["public"]["Tables"]["prospection_suppressions"]["Insert"]
+        >;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
+      prospection_desinscrire: {
+        Args: { p_email: string; p_motif: string };
+        Returns: undefined;
+      };
       consume_auth_rate_limit: {
         Args: {
           p_action: string;
@@ -671,3 +829,8 @@ export type ReferralCredit =
   Database["public"]["Tables"]["referral_credits"]["Row"];
 export type CreditApplication =
   Database["public"]["Tables"]["credit_applications"]["Row"];
+export type Prospect = Database["public"]["Tables"]["prospects"]["Row"];
+export type CampagneProspection =
+  Database["public"]["Tables"]["prospection_campagnes"]["Row"];
+export type MessageProspection =
+  Database["public"]["Tables"]["prospection_messages"]["Row"];
