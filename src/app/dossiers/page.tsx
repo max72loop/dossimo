@@ -140,8 +140,24 @@ export default async function DossiersPage() {
       );
       const beneficiaire = (d.caracteristiques_techniques_json as { beneficiaire?: Beneficiaire }).beneficiaire;
       const nomClient = [beneficiaire?.prenom, beneficiaire?.nom].filter(Boolean).join(" ") || "Bénéficiaire";
-      if (suivi.nouvelles > 0) actionsPrioritaires.push({ dossierId: d.id, beneficiaire: nomClient, detail: `${suivi.nouvelles} nouvelle${suivi.nouvelles > 1 ? "s" : ""} pièce${suivi.nouvelles > 1 ? "s" : ""} à examiner`, tone: "urgent" });
-      else if (suivi.attendues > 0 && !suivi.complet) actionsPrioritaires.push({ dossierId: d.id, beneficiaire: nomClient, detail: `${suivi.attendues - suivi.recues} pièce${suivi.attendues - suivi.recues > 1 ? "s" : ""} client encore attendue${suivi.attendues - suivi.recues > 1 ? "s" : ""}`, tone: "normal" });
+      if (d.statut === "pret_depot") {
+        actionsPrioritaires.push({ dossierId: d.id, beneficiaire: nomClient, detail: "déposer le dossier", categorie: "depot" });
+      } else if (d.statut !== "depose" && d.statut !== "livre") {
+        const manquantes = suivi.attendues - suivi.recues;
+        if (suivi.nouvelles > 0) {
+          actionsPrioritaires.push({ dossierId: d.id, beneficiaire: nomClient, detail: `examiner ${suivi.nouvelles} nouvelle${suivi.nouvelles > 1 ? "s" : ""} pièce${suivi.nouvelles > 1 ? "s" : ""}`, categorie: "aujourdhui" });
+        } else if (manquantes > 0) {
+          actionsPrioritaires.push({ dossierId: d.id, beneficiaire: nomClient, detail: `relancer pour ${manquantes} pièce${manquantes > 1 ? "s" : ""} manquante${manquantes > 1 ? "s" : ""}`, categorie: "client" });
+        } else {
+          const premierBlocage = rapport.findings.find((finding) => finding.severite === "bloquant");
+          actionsPrioritaires.push({
+            dossierId: d.id,
+            beneficiaire: nomClient,
+            detail: premierBlocage ? `corriger : ${premierBlocage.titre.toLocaleLowerCase("fr-FR")}` : "compléter le dossier",
+            categorie: "aujourdhui",
+          });
+        }
+      }
       controleParDossier.set(d.id, {
         nbBloquants: rapport.nbBloquants,
         conforme: rapport.conforme,
@@ -185,14 +201,6 @@ export default async function DossiersPage() {
       {rows.length > 0 && (
         <div className="mt-8">
           <ActionsPrioritaires actions={actionsPrioritaires} />
-          <details className="mb-8 rounded border border-filigrane bg-blanc-casse">
-            <summary className="cursor-pointer px-5 py-4 text-sm font-medium text-encre">
-              Voir les chiffres et la répartition de mon activité
-            </summary>
-            <div className="border-t border-filigrane p-5">
-              <TableauDeBord stats={stats} />
-            </div>
-          </details>
         </div>
       )}
 
@@ -213,7 +221,13 @@ export default async function DossiersPage() {
           </Link>
         </div>
       ) : (
-        <>
+        <details className="mt-10 rounded-md border border-filigrane bg-blanc-casse">
+          <summary className="cursor-pointer px-5 py-5 font-serif text-xl font-semibold text-encre transition hover:bg-papier-fonce/50 sm:px-6">
+            Toute mon activité
+            <span className="ml-3 font-sans text-sm font-normal text-ardoise">Statistiques, prix et historique des dossiers</span>
+          </summary>
+          <div className="border-t border-filigrane p-5 sm:p-6">
+            <TableauDeBord stats={stats} />
         <div className="mt-6 space-y-3 md:hidden">
           {rows.map((d) => {
             const carac = d.caracteristiques_techniques_json as unknown as { beneficiaire?: Beneficiaire } | null;
@@ -372,7 +386,8 @@ export default async function DossiersPage() {
             </table>
           </div>
         </div>
-        </>
+          </div>
+        </details>
       )}
     </div>
   );

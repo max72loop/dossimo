@@ -1,31 +1,76 @@
 import Link from "next/link";
+import { CheckCircle2, Clock3, ListTodo } from "lucide-react";
 
-export type ActionPrioritaire = { dossierId: string; beneficiaire: string; detail: string; tone: "urgent" | "normal" };
+export type ActionPrioritaire = {
+  dossierId: string;
+  beneficiaire: string;
+  detail: string;
+  categorie: "aujourdhui" | "client" | "depot";
+};
+
+const CATEGORIES = [
+  {
+    id: "aujourdhui" as const,
+    titre: "À faire aujourd’hui",
+    vide: "Rien à faire de votre côté pour le moment.",
+    icon: ListTodo,
+    accent: "bg-terre-cuite",
+  },
+  {
+    id: "client" as const,
+    titre: "En attente du client",
+    vide: "Aucun dossier n’attend de pièce client.",
+    icon: Clock3,
+    accent: "bg-avertissement",
+  },
+  {
+    id: "depot" as const,
+    titre: "Prêts à déposer",
+    vide: "Aucun dossier prêt à déposer.",
+    icon: CheckCircle2,
+    accent: "bg-succes",
+  },
+];
+
 export function ActionsPrioritaires({ actions }: { actions: ActionPrioritaire[] }) {
   return (
-    <section className={`mb-6 rounded-lg border p-5 ${actions.length ? "border-avertissement/30 bg-avertissement-bg" : "border-succes/25 bg-succes-bg"}`}>
-      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-ardoise">Votre prochaine action</p>
-      <h2 className="mt-1 font-serif text-xl font-semibold text-encre">
-        {actions.length ? "À traiter aujourd’hui" : "Rien d’urgent aujourd’hui"}
-      </h2>
-      {actions.length ? (
-        <ul className="mt-3 divide-y divide-avertissement/20">
-          {actions.slice(0, 5).map((action, index) => (
-            <li key={`${action.dossierId}:${action.detail}`} className="flex items-center justify-between gap-3 py-3 text-sm">
-              <p className="flex min-w-0 items-start gap-3">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-encre text-xs font-semibold text-papier">{index + 1}</span>
-                <span>
-                  <span className="font-medium text-encre">{action.beneficiaire}</span>
-                  <span className="block text-ardoise">{action.detail}</span>
-                </span>
-              </p>
-              <Link href={`/dossiers/${action.dossierId}`} className="shrink-0 rounded bg-terre-cuite px-3 py-2 text-xs font-medium text-blanc-casse transition hover:bg-terre-cuite-hover">Faire maintenant</Link>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="mt-2 text-sm text-ardoise">Vos dossiers n’attendent aucune pièce nouvelle. Vous pouvez en démarrer un nouveau quand vous êtes prêt.</p>
-      )}
+    <section aria-label="Mes tâches" className="grid gap-5 lg:grid-cols-3">
+      {CATEGORIES.map((categorie) => {
+        const taches = actions.filter((action) => action.categorie === categorie.id);
+        const Icon = categorie.icon;
+        return (
+          <div key={categorie.id} className="overflow-hidden rounded-md border border-filigrane bg-blanc-casse shadow-sm">
+            <div className="flex items-center gap-3 border-b border-filigrane px-5 py-4">
+              <span className={`flex h-8 w-8 items-center justify-center rounded-full text-white ${categorie.accent}`}>
+                <Icon className="h-4 w-4" strokeWidth={2} />
+              </span>
+              <h2 className="font-serif text-lg font-semibold text-encre">{categorie.titre}</h2>
+              <span className="ml-auto font-mono text-xs text-ardoise">{taches.length}</span>
+            </div>
+            {taches.length ? (
+              <ul className="divide-y divide-filigrane">
+                {taches.map((action) => (
+                  <li key={`${action.dossierId}:${action.detail}`} className="p-5">
+                    <p className="text-sm leading-6 text-encre">
+                      <span className="font-semibold">{action.beneficiaire}</span>
+                      <span className="text-encre-claire"> — </span>
+                      {action.detail}
+                    </p>
+                    <Link
+                      href={`/dossiers/${action.dossierId}`}
+                      className="mt-4 inline-flex h-9 items-center rounded bg-terre-cuite px-4 text-xs font-semibold text-blanc-casse transition hover:bg-terre-cuite-hover"
+                    >
+                      Continuer
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="px-5 py-6 text-sm leading-6 text-ardoise">{categorie.vide}</p>
+            )}
+          </div>
+        );
+      })}
     </section>
   );
 }
