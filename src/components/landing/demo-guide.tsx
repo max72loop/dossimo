@@ -100,6 +100,12 @@ export function DemoGuide() {
           {!loading && fileName && <p className="mt-3 text-center text-xs text-encre-claire">{fileName}</p>}
           {error && <p className="mt-3 rounded border-l-4 border-erreur bg-erreur-bg px-4 py-3 text-sm text-erreur">{error}</p>}
           <button type="button" onClick={() => void essayerExemple()} disabled={loading} className="mt-4 inline-flex h-11 w-full items-center justify-center gap-2 rounded border border-filigrane px-5 text-sm font-semibold text-tampon transition hover:bg-info-bg disabled:opacity-60"><PlayCircle className="h-4 w-4" />Essayer avec un exemple</button>
+          <Link
+            href="/dossiers/nouveau?mode=manuel"
+            className="mt-3 inline-flex h-11 w-full items-center justify-center text-sm font-semibold text-ardoise underline underline-offset-4 transition hover:text-encre"
+          >
+            Je n’ai pas de devis · commencer manuellement
+          </Link>
           <p className="mt-3 text-xs text-encre-claire">Aucun compte et aucune carte bancaire. Un essai gratuit par navigateur.</p>
         </>
       ) : (

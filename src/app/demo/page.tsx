@@ -23,7 +23,7 @@ export default function DemoPage() {
       <main className="mx-auto max-w-3xl px-5 py-12 sm:px-8 sm:py-16">
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-tampon">Essai gratuit · sans compte</p>
         <h1 className="mt-3 max-w-2xl font-serif text-4xl font-semibold tracking-tight text-encre sm:text-5xl">Prenez votre devis en photo. Dossimo vous montre ce qui manque.</h1>
-        <p className="mt-4 max-w-2xl text-lg leading-relaxed text-ardoise">Utilisez votre vrai document. Dossimo reconnaît les travaux, recopie les informations lisibles et vous montre uniquement ce qu'il faudra confirmer.</p>
+        <p className="mt-4 max-w-2xl text-lg leading-relaxed text-ardoise">Utilisez votre vrai document pour aller plus vite, essayez avec l’exemple, ou commencez sans devis. Dossimo vous guide dans les trois cas.</p>
         <DemoGuide />
         <p className="mt-6 text-xs leading-relaxed text-encre-claire">La lecture assistée sert au préremplissage. Le contrôle réglementaire complet est lancé après votre confirmation.</p>
       </main>

@@ -171,9 +171,9 @@ export function DemarrageAssiste({
         <a
           href={`/dossiers/nouveau?mode=manuel&dispositif=${dispositif}&geste=${geste}`}
           aria-disabled={loading}
-          className={`text-sm font-medium text-ardoise underline underline-offset-4 hover:text-encre ${loading ? "pointer-events-none opacity-60" : ""}`}
+          className={`inline-flex h-12 items-center justify-center rounded border border-filigrane px-5 text-sm font-semibold text-ardoise transition hover:border-tampon hover:text-encre ${loading ? "pointer-events-none opacity-60" : ""}`}
         >
-          Je n’ai pas le devis · commencer manuellement
+          Continuer sans devis
         </a>
       </div>
       <p className="mt-4 text-xs leading-relaxed text-encre-claire">
