@@ -308,13 +308,11 @@ function JsonLd({ grille }: { grille: GrilleAffichee | null }) {
 /* ------------------------------------------------------------ TrustStrip */
 function TrustStrip({ grille }: { grille: GrilleAffichee | null }) {
   const items = [
-    "Premier dossier offert",
-    // Prix dérivé de la grille en base, jamais écrit en dur : sans elle, on annonce
-    // la gratuité du premier dossier sans avancer de chiffre.
+    "Code DOSSIMO50 : −50 %",
     grille
-      ? `Puis de ${grille.minLabel} à ${grille.maxLabel} selon l’aide`
-      : "Puis un forfait fixe selon l’aide",
-    "Sans carte bancaire",
+      ? `De ${grille.minLabel} à ${grille.maxLabel} selon l’aide`
+      : "Un forfait fixe selon l’aide",
+    "Valable jusqu’au 26 juillet",
     "Vous gardez client et prime",
   ];
   return (
@@ -595,7 +593,7 @@ function Reassurance() {
   const garanties = [
     { icon: Lock, title: "Aucune mainmise", body: "Dossimo ne dépose pas à votre place et ne s'intercale pas dans votre relation client." },
     { icon: FileCheck2, title: "Un contrôle lisible", body: "Chaque alerte indique la pièce à vérifier : pas de note opaque à interpréter." },
-    { icon: CheckCircle2, title: "Sans engagement", body: "Le premier contrôle est offert, sans carte bancaire ni abonnement imposé." },
+    { icon: CheckCircle2, title: "Sans engagement", body: "Paiement unique par dossier, sans abonnement imposé." },
   ];
 
   return (
@@ -666,12 +664,12 @@ function Pricing({ grille }: { grille: GrilleAffichee | null }) {
               <h2 className="mt-5 font-serif text-3xl font-semibold tracking-tight text-papier sm:text-[2.25rem] sm:leading-tight">
                 {grille ? (
                   <>
-                    Votre premier dossier est offert. Ensuite, le prix est{" "}
+                    Le prix est{" "}
                     <span className="text-blanc-casse">fixé à l&rsquo;avance</span>.
                   </>
                 ) : (
                   <>
-                    Essayez gratuitement. Ensuite, un{" "}
+                    Un{" "}
                     <span className="font-mono text-blanc-casse">forfait fixe</span>{" "}
                     selon le montant de l&apos;aide.
                   </>
@@ -680,6 +678,10 @@ function Pricing({ grille }: { grille: GrilleAffichee | null }) {
               <p className="mt-4 max-w-2xl text-lg leading-relaxed text-papier/75">
                 Un paiement unique par dossier, selon le montant d&apos;aide estimé.
                 Aucun pourcentage sur la prime, aucun abonnement et aucun frais caché.
+              </p>
+              <p className="mt-5 inline-flex flex-wrap items-center gap-2 border border-papier/30 bg-papier/10 px-4 py-3 text-sm font-semibold text-papier">
+                Offre de lancement : code <span className="font-mono text-blanc-casse">DOSSIMO50</span>
+                · 50 % sur le premier dossier · jusqu’au 26 juillet 2026
               </p>
             </div>
 
@@ -743,9 +745,9 @@ function Pricing({ grille }: { grille: GrilleAffichee | null }) {
             </div>
             <p className="mt-5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-papier/70">
               <CheckCircle2 className="h-4 w-4 text-succes" strokeWidth={1.5} />
-              Premier contrôle offert
+              Code DOSSIMO50 : 50 % sur le premier dossier
               <span className="text-papier/30">·</span>
-              vous voyez le contrôle avant de payer
+              valable jusqu’au 26 juillet 2026
             </p>
           </div>
         </div>

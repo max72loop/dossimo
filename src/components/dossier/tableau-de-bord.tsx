@@ -67,7 +67,7 @@ export function TableauDeBord({ stats }: { stats: StatsTableau }) {
         <Tuile
           label="Débloqués (payés)"
           valeur={String(stats.payes)}
-          sous={stats.revenu > 0 ? `${euro(stats.revenu)} encaissés` : "1er dossier offert"}
+          sous={stats.revenu > 0 ? `${euro(stats.revenu)} encaissés` : "Aucun paiement encaissé"}
         />
         <Tuile
           label="Conformité"

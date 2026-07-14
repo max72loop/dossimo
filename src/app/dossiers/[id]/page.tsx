@@ -23,7 +23,6 @@ import { DepotGuide } from "@/components/dossier/depot-guide";
 import { VerdictHero } from "@/components/dossier/verdict-hero";
 import { ActionsRestantes } from "@/components/dossier/actions-restantes";
 import { MetriquesValeur } from "@/components/dossier/metriques-valeur";
-import { ConversionOffert } from "@/components/dossier/conversion-offert";
 import { SectionRepliable } from "@/components/ui/section-repliable";
 import { FindingAssistance } from "@/components/dossier/finding-assistance";
 import { BTN_SECONDAIRE_SM } from "@/components/ui/boutons";
@@ -680,7 +679,6 @@ export default async function DossierPage({
       )}
 
       {/* 9. Conversion · uniquement pour le dossier offert */}
-      {acces.gratuit && <ConversionOffert prixLabel={prix.label} />}
 
       <p className="mt-8 text-center text-xs text-encre-claire">
         Dossimo · service indépendant d&apos;aide à la préparation de dossier,

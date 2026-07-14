@@ -31,6 +31,22 @@ function siteUrl(): string {
   );
 }
 
+const CODE_LANCEMENT = "DOSSIMO50";
+const FIN_CODE_LANCEMENT = Math.floor(new Date("2026-07-26T21:59:59.000Z").getTime() / 1000);
+
+async function garantirCodeLancement(stripe: ReturnType<typeof getStripe>) {
+  if (Math.floor(Date.now() / 1000) > FIN_CODE_LANCEMENT) return;
+  const existants = await stripe.promotionCodes.list({ code: CODE_LANCEMENT, active: true, limit: 1 });
+  if (existants.data.length) return;
+  const couponId = "dossimo-lancement-2026-50";
+  try {
+    await stripe.coupons.retrieve(couponId);
+  } catch {
+    await stripe.coupons.create({ id: couponId, percent_off: 50, duration: "once", name: "Lancement Dossimo — 50 % sur le premier dossier", redeem_by: FIN_CODE_LANCEMENT });
+  }
+  await stripe.promotionCodes.create({ promotion: { type: "coupon", coupon: couponId }, code: CODE_LANCEMENT, expires_at: FIN_CODE_LANCEMENT, restrictions: { first_time_transaction: true } });
+}
+
 /**
  * Crée une session Stripe Checkout pour débloquer le pack d'un dossier (paiement
  * ponctuel).
@@ -138,8 +154,10 @@ export async function creerSessionPaiementDossier(
 
   try {
     const stripe = getStripe();
+    await garantirCodeLancement(stripe);
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
+      allow_promotion_codes: Math.floor(Date.now() / 1000) <= FIN_CODE_LANCEMENT,
       line_items: [
         {
           quantity: 1,

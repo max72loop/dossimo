@@ -53,10 +53,8 @@ export default async function DossiersPage() {
     .eq("statut", "paye");
   const paidSet = new Set((paiements ?? []).map((p) => p.dossier_id));
   const revenu = (paiements ?? []).reduce((s, p) => s + (Number(p.montant) || 0), 0);
-  // rows est trié du plus récent au plus ancien → le dernier est le plus ancien.
-  const gratuitId = rows.length ? rows[rows.length - 1].id : null;
-  const acces = (id: string): "gratuit" | "paye" | "verrouille" =>
-    id === gratuitId ? "gratuit" : paidSet.has(id) ? "paye" : "verrouille";
+  const acces = (id: string): "paye" | "verrouille" =>
+    paidSet.has(id) ? "paye" : "verrouille";
 
   // Règles actives (1 requête) pour évaluer la conformité de chaque dossier.
   const { data: regles } = await supabase
@@ -348,12 +346,7 @@ export default async function DossiersPage() {
                         })()}
                       </td>
                       <td className="px-5 py-3">
-                        {acces(d.id) === "gratuit" ? (
-                          <span className="inline-flex items-center gap-1.5 rounded-full bg-tampon/10 px-2.5 py-1 text-xs font-medium text-tampon">
-                            <span className="h-1.5 w-1.5 rounded-full bg-tampon" />
-                            Offert
-                          </span>
-                        ) : acces(d.id) === "paye" ? (
+                        {acces(d.id) === "paye" ? (
                           <span className="inline-flex items-center gap-1.5 rounded-full bg-succes-bg px-2.5 py-1 text-xs font-medium text-succes">
                             <span className="h-1.5 w-1.5 rounded-full bg-succes" />
                             Débloqué

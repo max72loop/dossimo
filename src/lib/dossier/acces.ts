@@ -22,18 +22,9 @@ export interface AccesDossier {
 export async function accesDossier(data: DossierComplet): Promise<AccesDossier> {
   const supabase = await createClient();
 
-  // Gratuit : le plus ancien dossier de l'artisan.
-  let gratuit = false;
-  if (data.dossier.artisan_id) {
-    const { data: premier } = await supabase
-      .from("dossiers")
-      .select("id")
-      .eq("artisan_id", data.dossier.artisan_id)
-      .order("created_at", { ascending: true })
-      .limit(1)
-      .maybeSingle();
-    gratuit = !!premier && premier.id === data.dossier.id;
-  }
+  // La réduction de lancement diminue le prix, mais ne débloque jamais un
+  // livrable sans paiement confirmé.
+  const gratuit = false;
 
   // Payé : un paiement encaissé existe pour ce dossier.
   const { data: paiement } = await supabase
@@ -45,7 +36,7 @@ export async function accesDossier(data: DossierComplet): Promise<AccesDossier> 
     .maybeSingle();
   const paye = !!paiement;
 
-  return { gratuit, paye, debloque: gratuit || paye };
+  return { gratuit, paye, debloque: paye };
 }
 
 /**

@@ -17,7 +17,7 @@ export default async function InscriptionPage({
       <p className="mt-2 text-sm text-ardoise">
         {reprendEssai
           ? "Votre devis est prêt. Créez votre espace pour reprendre uniquement les informations qu'il reste à confirmer."
-          : "Deux minutes pour créer votre espace, puis vous pourrez déposer votre devis. Premier dossier offert."}
+          : "Deux minutes pour créer votre espace, puis vous pourrez déposer votre devis. Code DOSSIMO50 : 50 % sur votre premier dossier jusqu’au 26 juillet 2026."}
       </p>
       <div className="mt-6">
         <SignUpForm next={next} />

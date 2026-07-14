@@ -87,7 +87,7 @@ export function MobileMenu({
       </div>
 
       <p className="mt-8 text-xs leading-relaxed text-ardoise">
-        Premier dossier offert · sans carte bancaire
+        Code DOSSIMO50 · 50 % sur le premier dossier
       </p>
     </div>
   ) : null;

@@ -123,6 +123,7 @@ export function PaywallCta({
               : "mt-2 text-xs text-encre-claire"
           }
         >
+          Jusqu’au 21 juillet : saisissez <strong>DOSSIMO50</strong> dans Stripe pour obtenir 50 % sur votre premier dossier.{" "}
           En poursuivant, vous acceptez les{" "}
           <Link
             href="/cgv"

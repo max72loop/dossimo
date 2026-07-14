@@ -80,15 +80,15 @@ export default async function CgvPage() {
         </p>
       </LegalSection>
 
-      <LegalSection titre="4. Prix et premier dossier offert">
+      <LegalSection titre="4. Prix et offre de lancement">
         <p>
-          Le premier dossier créé sur le compte du Client, déterminé par sa date
-          de création, est offert. Cette gratuité est limitée à un dossier par
-          Client et par entreprise et ne peut être échangée contre une somme
-          d&rsquo;argent.
+          Le code promotionnel DOSSIMO50 accorde une réduction de 50 % sur la
+          première transaction du Client. Il est utilisable jusqu&rsquo;au 21 juillet
+          2026 à 23 h 59, heure de Paris, puis expire automatiquement. Il ne peut
+          être échangé contre une somme d&rsquo;argent.
         </p>
         <p>
-          Les dossiers suivants sont facturés selon un{" "}
+          Les dossiers sont facturés selon un{" "}
           <strong>forfait fixe par dossier</strong>
           {grille ? (
             <>
@@ -168,8 +168,7 @@ export default async function CgvPage() {
       <LegalSection titre="7. Livraison et vérification">
         <p>
           Le dossier et ses livrables disponibles sont débloqués dans
-          l&rsquo;espace du Client après confirmation du paiement, ou immédiatement
-          pour le premier dossier offert. Certains documents dépendent du type de
+          l&rsquo;espace du Client après confirmation du paiement. Certains documents dépendent du type de
           travaux, des données saisies et des modèles réglementaires disponibles ;
           l&rsquo;interface indique les éléments effectivement générables avant la
           commande.
