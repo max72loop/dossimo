@@ -87,24 +87,25 @@ function Hero() {
         <div>
           <p className="inline-flex items-center gap-2 border-y border-encre py-2 font-mono text-[11px] uppercase tracking-[0.16em] text-encre">
             <span className="h-2 w-2 rounded-full bg-terre-cuite" />
-            Le contrôle avant dépôt des artisans RGE
+            MaPrimeRénov&rsquo; & CEE · pour les artisans RGE
           </p>
 
           <h1 className="mt-6 max-w-3xl font-serif text-[2.65rem] font-semibold leading-[1.02] tracking-tight text-encre sm:text-[3.65rem] lg:text-[4.1rem]">
-            Prenez votre devis en photo.{" "}
+            Évitez qu&rsquo;une aide soit refusée.{" "}
             <span className="relative text-tampon">
-              Dossimo vous dit quoi corriger.
+              Photographiez votre devis.
               <span className="absolute -bottom-2 left-0 h-1 w-full bg-terre-cuite" />
             </span>
           </h1>
 
           <p className="mt-6 max-w-xl text-lg leading-relaxed text-ardoise">
-            Une photo suffit. Dossimo lit le devis, vérifie les points essentiels et
-            vous donne une correction prête à appliquer.
+            Dossimo vérifie que votre dossier MaPrimeRénov&rsquo; ou CEE contient ce
+            qu&rsquo;il faut avant le dépôt, puis vous dit exactement quoi corriger
+            pour protéger l&rsquo;aide de votre client.
           </p>
 
           <ul className="mt-6 grid max-w-xl gap-2 sm:grid-cols-2" aria-label="Ce que Dossimo contrôle">
-            {["Mentions obligatoires", "Chronologie du chantier", "Qualification RGE", "Cohérence devis / facture"].map((point) => (
+            {["Éligibilité à l’aide", "Mentions obligatoires", "Qualification RGE", "Cohérence devis / facture"].map((point) => (
               <li key={point} className="flex items-center gap-2 text-sm font-medium text-encre">
                 <CheckCircle2 className="h-4 w-4 shrink-0 text-succes" strokeWidth={1.5} />
                 {point}
