@@ -3,14 +3,14 @@ import "server-only";
 import { createClient } from "@/lib/supabase/server";
 
 /**
- * Contrôle d'accès admin, par liste d'e-mails (env `ADMIN_EMAILS`, séparés par
- * virgule). Sert à protéger l'édition de `regles_metier` : lecture de l'identité
+ * Contrôle d'accès admin, par liste d'UUID Auth immuables (`ADMIN_USER_IDS`).
+ * Sert à protéger l'édition de `regles_metier` : lecture de l'identité
  * via le client auth-scopé, écriture ensuite en service-role côté action.
  *
  * @returns l'e-mail admin connecté, ou null si l'utilisateur n'est pas admin.
  */
 export async function getAdminEmail(): Promise<string | null> {
-  const allow = (process.env.ADMIN_EMAILS ?? "")
+  const allow = (process.env.ADMIN_USER_IDS ?? "")
     .split(",")
     .map((s) => s.trim().toLowerCase())
     .filter(Boolean);
@@ -20,6 +20,6 @@ export async function getAdminEmail(): Promise<string | null> {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  const email = user?.email?.toLowerCase();
-  return email && allow.includes(email) ? email : null;
+  if (!user || !allow.includes(user.id)) return null;
+  return user.email?.toLowerCase() ?? user.id;
 }

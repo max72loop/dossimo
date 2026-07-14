@@ -233,13 +233,15 @@ export async function retirerPiece(
 
 /** Pièces déjà déposées par le bénéficiaire, pour l'affichage de la page publique. */
 export async function piecesDuBeneficiaire(
-  dossierId: string,
+  token: string,
 ): Promise<PieceDeposee[]> {
+  const lien = await resoudreLien(token);
+  if (!lien) return [];
   const admin = createAdminClient();
   const { data } = await admin
     .from("pieces_justificatives")
     .select("id, type, nom_fichier, created_at")
-    .eq("dossier_id", dossierId)
+    .eq("dossier_id", lien.dossierId)
     .eq("deposant", "beneficiaire")
     .order("created_at", { ascending: true });
 

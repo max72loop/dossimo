@@ -57,7 +57,7 @@ export default async function DepotPage({
   if (attendues.length === 0) return <LienMort />;
 
   const [deposees] = await Promise.all([
-    piecesDuBeneficiaire(lien.dossierId),
+    piecesDuBeneficiaire(token),
     marquerVisite(lien.lienId).catch(() => {}),
   ]);
 

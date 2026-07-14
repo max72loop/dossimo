@@ -589,6 +589,15 @@ export interface Database {
     };
     Views: Record<string, never>;
     Functions: {
+      consume_auth_rate_limit: {
+        Args: {
+          p_action: string;
+          p_key_hash: string;
+          p_limit: number;
+          p_window_seconds: number;
+        };
+        Returns: boolean;
+      };
       price_dossier: {
         Args: { p_dossier_id: string; p_estimated_aid_cents?: number | null };
         Returns: Database["public"]["Tables"]["dossiers"]["Row"];

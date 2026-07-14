@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Source_Serif_4, Geist_Mono, Unbounded } from "next/font/google";
+import { connection } from "next/server";
 import { SITE_DESCRIPTION, SITE_TITLE, SITE_URL } from "@/lib/seo/site";
 import "./globals.css";
 
@@ -71,11 +72,15 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // La CSP utilise un nonce unique par requête. Le rendu dynamique permet à
+  // Next.js de reporter ce nonce sur tous ses scripts d'hydratation.
+  await connection();
+
   return (
     <html
       lang="fr"
