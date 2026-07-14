@@ -1,1 +1,1 @@
-export const CTA_DEMO = "Voir gratuitement ce qui manque";
+export const CTA_DEMO = "Photographier mon devis gratuitement";

@@ -54,14 +54,8 @@ export default async function Home() {
       <main id="contenu" className="flex-1" tabIndex={-1}>
         <Hero />
         <TrustStrip grille={grille} />
-        <Preparation />
-        <Relecture />
-        <Etapes />
-        <Difference />
         <Pricing grille={grille} />
         <Reassurance />
-        <Contact />
-        <Faq />
       </main>
 
       <MobileConversionBar />
@@ -97,18 +91,16 @@ function Hero() {
           </p>
 
           <h1 className="mt-6 max-w-3xl font-serif text-[2.65rem] font-semibold leading-[1.02] tracking-tight text-encre sm:text-[3.65rem] lg:text-[4.1rem]">
-            Repérez{" "}
+            Prenez votre devis en photo.{" "}
             <span className="relative text-tampon">
-              ce qui bloque
+              Dossimo vous dit quoi corriger.
               <span className="absolute -bottom-2 left-0 h-1 w-full bg-terre-cuite" />
             </span>
-            {" "}votre dossier avant le dépôt.
           </h1>
 
           <p className="mt-6 max-w-xl text-lg leading-relaxed text-ardoise">
-            Ajoutez le PDF ou prenez le devis en photo. Dossimo contrôle les mentions,
-            les dates et le RGE, puis vous montre
-            <span className="font-medium text-encre"> le premier point à corriger</span>.
+            Une photo suffit. Dossimo lit le devis, vérifie les points essentiels et
+            vous donne une correction prête à appliquer.
           </p>
 
           <ul className="mt-6 grid max-w-xl gap-2 sm:grid-cols-2" aria-label="Ce que Dossimo contrôle">
@@ -171,7 +163,7 @@ function ReportCard() {
   const checks = [
     { label: "Chronologie : devis avant travaux", ok: true },
     { label: "Qualification RGE valide à la date du devis", ok: true },
-    { label: "Résistance thermique absente du devis", ok: false },
+    { label: "Ajoutez : « Résistance thermique R = 7 m².K/W »", ok: false },
     { label: "Montant différent entre devis et facture", ok: false },
   ];
   return (
@@ -200,7 +192,7 @@ function ReportCard() {
         ))}
       </ul>
       <div className="mt-4 rounded-sm bg-info-bg px-3 py-2 text-xs font-medium text-tampon">
-        Chaque alerte indique la pièce et le point à corriger
+        Pourquoi : sans cette valeur, le dossier d’isolation risque d’être refusé.
       </div>
     </div>
   );
