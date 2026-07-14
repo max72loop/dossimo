@@ -4,7 +4,7 @@ export const SITE_URL = "https://dossimo.app";
 export const SITE_NAME = "Dossimo";
 export const SITE_TITLE = "Dossimo · dossiers MaPrimeRénov' & CEE conformes";
 export const SITE_DESCRIPTION =
-  "Dossimo aide les artisans RGE à produire des dossiers MaPrimeRénov' et CEE conformes et anti-refus, sans mandataire : vous gardez votre client et votre prime.";
+  "Envoyez votre devis : Dossimo monte votre dossier MaPrimeRénov' ou CEE, le vérifie et vous rend le pack prêt à déposer. Sans mandataire, vous gardez client et prime.";
 
 export function publicMetadata({
   path,

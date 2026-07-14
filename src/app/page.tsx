@@ -22,7 +22,7 @@ import { FOCUS } from "@/components/ui/boutons";
 import { CTA_DEMO } from "@/lib/landing/copy";
 import { grillePublique } from "@/lib/landing/grille-publique";
 import { editeur } from "@/lib/legal/editeur";
-import type { GrilleAffichee } from "@/lib/pricing";
+import { labelEuros, type GrilleAffichee } from "@/lib/pricing";
 import { publicMetadata, SITE_DESCRIPTION, SITE_TITLE, SITE_URL } from "@/lib/seo/site";
 
 export const metadata: Metadata = publicMetadata({
@@ -39,6 +39,15 @@ export const metadata: Metadata = publicMetadata({
 const FOCUS_SOMBRE =
   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-papier";
 
+/**
+ * Prix d'appel affiché avec le code de lancement (« dès 24,50 € au lieu de 49 € ») :
+ * dérivé du palier le plus bas de la grille facturée, jamais écrit en dur — la grille
+ * peut encore bouger (§10) et un prix barré faux est un prix mensonger.
+ */
+function prixLancement(grille: GrilleAffichee): string {
+  return labelEuros(Math.round(grille.minCents / 2));
+}
+
 export default async function Home() {
   // Grille lue en base (`pricing_tiers`), la MÊME que celle du checkout : le prix
   // annoncé ici est celui qui sera facturé. `null` si la base est injoignable — on
@@ -51,11 +60,21 @@ export default async function Home() {
       <a href="#contenu" className="skip-link">Aller au contenu principal</a>
       <SiteHeader />
 
+      {/* Ordre de lecture : la promesse, puis « je n'ai rien à préparer », puis le
+          déroulé, puis les preuves (relecture, comparaison mandataire), et seulement
+          ensuite le prix. Chaque section porte une ancre : le sommaire du header
+          permet d'atterrir directement sur celle qu'on cherche. */}
       <main id="contenu" className="flex-1" tabIndex={-1}>
         <Hero />
         <TrustStrip grille={grille} />
+        <Preparation />
+        <Etapes />
+        <Relecture />
+        <Difference />
         <Pricing grille={grille} />
         <Reassurance />
+        <Faq />
+        <Contact />
       </main>
 
       <MobileConversionBar />
@@ -91,21 +110,26 @@ function Hero() {
           </p>
 
           <h1 className="mt-6 max-w-3xl font-serif text-[2.65rem] font-semibold leading-[1.02] tracking-tight text-encre sm:text-[3.65rem] lg:text-[4.1rem]">
-            Évitez qu&rsquo;une aide soit refusée.{" "}
+            Un dossier de prime, c&rsquo;est des heures de paperasse.{" "}
             <span className="relative text-tampon">
-              Photographiez votre devis.
+              Dossimo le monte à votre place.
               <span className="absolute -bottom-2 left-0 h-1 w-full bg-terre-cuite" />
             </span>
           </h1>
 
           <p className="mt-6 max-w-xl text-lg leading-relaxed text-ardoise">
-            Dossimo vérifie que votre dossier MaPrimeRénov&rsquo; ou CEE contient ce
-            qu&rsquo;il faut avant le dépôt, puis vous dit exactement quoi corriger
-            pour protéger l&rsquo;aide de votre client.
+            Envoyez votre devis, ou prenez-le en photo depuis le chantier. Dossimo
+            recopie le client, les montants et les données techniques, contrôle les
+            mentions obligatoires, la chronologie et la validité RGE, puis vous sort
+            le pack complet prêt à déposer.
           </p>
 
-          <ul className="mt-6 grid max-w-xl gap-2 sm:grid-cols-2" aria-label="Ce que Dossimo contrôle">
-            {["Éligibilité à l’aide", "Mentions obligatoires", "Qualification RGE", "Cohérence devis / facture"].map((point) => (
+          <p className="mt-4 max-w-xl text-lg font-medium leading-relaxed text-encre">
+            Votre seul effort : relire et déposer.
+          </p>
+
+          <ul className="mt-6 grid max-w-xl gap-2 sm:grid-cols-2" aria-label="Ce que Dossimo vous remet">
+            {["Récapitulatif client prérempli", "Checklist des pièces", "Rapport de contrôle avant dépôt", "Monté en minutes, pas en heures"].map((point) => (
               <li key={point} className="flex items-center gap-2 text-sm font-medium text-encre">
                 <CheckCircle2 className="h-4 w-4 shrink-0 text-succes" strokeWidth={1.5} />
                 {point}
@@ -125,9 +149,9 @@ function Hero() {
 
           <p className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-ardoise">
             <CheckCircle2 className="h-4 w-4 text-succes" strokeWidth={1.5} />
-            Aucun paiement aujourd&rsquo;hui
+            Deux minutes suffisent
             <span className="text-filigrane">·</span>
-            sans carte bancaire
+            aucun paiement aujourd&rsquo;hui
             <span className="text-filigrane">·</span>
             sans engagement
           </p>
@@ -257,7 +281,7 @@ function JsonLd({ grille }: { grille: GrilleAffichee | null }) {
       },
       description:
         "Service indépendant d'aide à la préparation et au contrôle de conformité de dossiers MaPrimeRénov' et CEE, destiné aux artisans RGE indépendants.",
-      slogan: "Des dossiers de prime qui passent. Du premier coup.",
+      slogan: "Le dossier de prime monté à votre place. Vous relisez, vous déposez.",
     },
     {
       "@context": "https://schema.org",
@@ -309,12 +333,12 @@ function JsonLd({ grille }: { grille: GrilleAffichee | null }) {
 /* ------------------------------------------------------------ TrustStrip */
 function TrustStrip({ grille }: { grille: GrilleAffichee | null }) {
   const items = [
-    "Code DOSSIMO50 : −50 %",
+    "Monté en minutes, pas en heures",
+    "Pack complet prêt à déposer",
+    "Vous gardez votre client et votre prime",
     grille
-      ? `De ${grille.minLabel} à ${grille.maxLabel} selon l’aide`
-      : "Un forfait fixe selon l’aide",
-    "Valable jusqu’au 26 juillet",
-    "Vous gardez client et prime",
+      ? `Dès ${prixLancement(grille)} au lieu de ${grille.minLabel} avec DOSSIMO50`
+      : "Code DOSSIMO50 : −50 % sur le premier dossier",
   ];
   return (
     <div className="border-b border-encre bg-papier-fonce">
@@ -335,28 +359,29 @@ function TrustStrip({ grille }: { grille: GrilleAffichee | null }) {
 /* ------------------------------------------------------------ Difference */
 function Difference() {
   const mandataire = [
-    "Prend la main sur votre dossier",
-    "S'intercale dans la relation avec votre client",
-    "Capte tout ou partie de la prime",
+    "Il monte le dossier, mais il devient l'interlocuteur",
+    "Il s'intercale dans la relation avec votre client",
+    "Il capte tout ou partie de la prime",
     "Vous dépendez de son rythme et de ses règles",
   ];
   const dossimo = [
-    "Vous gardez la main sur votre dossier",
+    "Dossimo monte le dossier, vous le déposez vous-même",
     "La relation client reste 100 % la vôtre",
     "Vous et votre client percevez l'intégralité de la prime",
-    "Dossimo sécurise juste la conformité avant dépôt",
+    "Un paiement fixe par dossier, jamais un pourcentage",
   ];
   return (
-    <section id="difference" className="border-y border-filigrane bg-papier-fonce/60 py-20 sm:py-24">
+    <section id="difference" className="py-16 sm:py-20">
       <Shell>
         <div className="max-w-2xl">
           <SectionLabel>La différence</SectionLabel>
           <h2 className="mt-5 font-serif text-3xl font-semibold tracking-tight text-encre sm:text-[2.25rem] sm:leading-tight">
-            Un mandataire prend le contrôle. Dossimo vous le laisse.
+            Un mandataire s&rsquo;intercale. Dossimo vous laisse la main.
           </h2>
           <p className="mt-4 text-lg leading-relaxed text-ardoise">
-            Dossimo ne dépose jamais le dossier et ne touche jamais la prime.
-            C&rsquo;est un choix : celui de vous laisser maître de votre affaire.
+            Le mandataire vous décharge de la paperasse, mais il prend votre client et
+            une part de sa prime au passage. Dossimo vous décharge de la même paperasse,
+            sans jamais déposer à votre place ni toucher à la prime.
           </p>
         </div>
 
@@ -397,36 +422,37 @@ function Etapes() {
   const steps = [
     {
       icon: ClipboardCheck,
-      title: "Votre devis d’abord",
-      body: "Ajoutez le PDF ou prenez-le en photo depuis le chantier. Aucun formulaire à préparer.",
+      title: "Vous envoyez le devis",
+      body: "Le PDF, ou une photo prise depuis le chantier. Aucun formulaire à remplir avant.",
     },
     {
       icon: ShieldCheck,
-      title: "Dossimo préremplit",
-      body: "L’assistant recopie le client, les montants et les données techniques. Vous confirmez ce qu’il a lu.",
+      title: "Dossimo recopie tout",
+      body: "Le client, les montants, les données techniques. Vous relisez ce qu’il a lu, vous corrigez si besoin.",
     },
     {
       icon: ScanSearch,
-      title: "Une action à la fois",
-      body: "Dossimo vérifie les règles et vous montre d’abord ce qui bloque, avec une explication concrète.",
+      title: "Dossimo contrôle",
+      body: "Mentions obligatoires, chronologie, validité RGE, cohérence devis et facture. Ce qui bloque remonte avant le dépôt.",
     },
     {
       icon: FolderCheck,
-      title: "Pack prêt à déposer",
-      body: "Récapitulatif client, checklist des pièces et rapport de contrôle. Vous et votre client déposez, sereins.",
+      title: "Vous recevez le pack",
+      body: "Récapitulatif client, checklist des pièces, rapport de contrôle. Il ne vous reste qu’à relire et déposer.",
     },
   ];
   return (
-    <section id="etapes" className="py-20 sm:py-24">
+    <section id="etapes" className="py-16 sm:py-20">
       <Shell>
         <div className="max-w-2xl">
-          <SectionLabel>La méthode</SectionLabel>
+          <SectionLabel>Comment ça marche</SectionLabel>
           <h2 className="mt-5 font-serif text-3xl font-semibold tracking-tight text-encre sm:text-[2.25rem] sm:leading-tight">
-            Du devis au dépôt, sans vous perdre
+            Du devis au pack complet, en quelques minutes
           </h2>
           <p className="mt-4 text-lg leading-relaxed text-ardoise">
-            Vous fournissez les documents que vous avez déjà. Dossimo organise le reste,
-            vous indique ce qui manque et garde les contrôles réglementaires vérifiables.
+            Vous fournissez le document que vous avez déjà. Dossimo fait la paperasse :
+            recopier, vérifier, assembler. Quelques minutes, là où un dossier monté à la
+            main vous prend une soirée.
           </p>
         </div>
 
@@ -448,10 +474,10 @@ function Etapes() {
         </div>
         <div className="mt-8 flex flex-col items-start justify-between gap-4 border-l-4 border-l-tampon bg-info-bg px-5 py-4 sm:flex-row sm:items-center">
           <p className="text-sm leading-relaxed text-encre">
-            <span className="font-semibold">Votre rôle reste simple :</span> vous relisez le rapport, puis vous déposez vous-même le dossier.
+            <span className="font-semibold">Votre seul effort :</span> relire le rapport, puis déposer vous-même le dossier avec votre client.
           </p>
           <Link href="/demo" className={`shrink-0 text-sm font-semibold text-tampon underline underline-offset-4 ${FOCUS}`}>
-            Essayer sur un dossier <span aria-hidden="true">→</span>
+            Envoyer un premier devis <span aria-hidden="true">→</span>
           </Link>
         </div>
       </Shell>
@@ -470,25 +496,25 @@ function Etapes() {
  */
 function Relecture() {
   return (
-    <section id="relecture" className="border-y border-filigrane bg-papier-fonce/60 py-20 sm:py-24">
+    <section id="relecture" className="border-y border-filigrane bg-papier-fonce/60 py-16 sm:py-20">
       <div className="mx-auto grid max-w-[1280px] items-center gap-14 px-5 sm:px-8 lg:grid-cols-[1fr_0.9fr]">
         <div>
-          <SectionLabel>La relecture</SectionLabel>
+          <SectionLabel>La garantie</SectionLabel>
           <h2 className="mt-5 font-serif text-3xl font-semibold tracking-tight text-encre sm:text-[2.25rem] sm:leading-tight">
-            Envoyez votre devis.{" "}
-            <span className="text-tampon">Dossimo le relit.</span>
+            La relecture que{" "}
+            <span className="text-tampon">personne n&rsquo;a le temps de faire</span>.
           </h2>
           <p className="mt-5 text-lg leading-relaxed text-ardoise">
             Un dossier peut être refusé alors que tous les chiffres sont justes :
             il suffit qu&rsquo;une <span className="text-encre">mention obligatoire</span>{" "}
-            manque au devis — la certification de l&rsquo;isolant, la résistance
-            thermique, le numéro RGE. C&rsquo;est la vérification que personne ne
-            fait, parce qu&rsquo;elle demande de relire chaque document ligne à ligne.
+            manque au devis, la certification de l&rsquo;isolant, la résistance
+            thermique, le numéro RGE. Les débusquer demande de relire chaque document
+            ligne à ligne, le soir, après le chantier.
           </p>
           <p className="mt-4 text-lg leading-relaxed text-ardoise">
-            Déposez le devis et la facture : Dossimo les relit, les compare à votre
-            dossier <span className="text-encre">et entre eux</span>, et signale ce
-            qui manque ou diverge. Il ne corrige rien tout seul :{" "}
+            Dossimo le fait à votre place. Il relit le devis et la facture, les compare
+            à votre dossier <span className="text-encre">et entre eux</span>, et signale
+            ce qui manque ou diverge. Il ne corrige rien tout seul :{" "}
             <span className="text-encre">vous restez juge</span>.
           </p>
 
@@ -496,7 +522,7 @@ function Relecture() {
             {[
               "Les mentions exigées par la fiche, cherchées une par une dans le document.",
               "Surface, résistance, montants, dates : la pièce confrontée à votre saisie.",
-              "Le devis confronté à la facture — la première cause de refus à l'instruction.",
+              "Le devis confronté à la facture, première cause de refus à l'instruction.",
             ].map((p) => (
               <li key={p} className="flex items-start gap-3 text-[0.95rem] leading-relaxed text-encre">
                 <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-succes" strokeWidth={1.5} />
@@ -566,7 +592,7 @@ function RelectureCard() {
                   <span className="text-encre">{l.texte}</span>
                   {l.statut === "absent" && (
                     <span className="ml-1.5 font-medium text-erreur">
-                      — absente du document
+                      · absente du document
                     </span>
                   )}
                   {l.statut === "ecart" && (
@@ -592,9 +618,9 @@ function RelectureCard() {
 /* --------------------------------------------------------- Réassurance */
 function Reassurance() {
   const garanties = [
-    { icon: Lock, title: "Aucune mainmise", body: "Dossimo ne dépose pas à votre place et ne s'intercale pas dans votre relation client." },
-    { icon: FileCheck2, title: "Un contrôle lisible", body: "Chaque alerte indique la pièce à vérifier : pas de note opaque à interpréter." },
-    { icon: CheckCircle2, title: "Sans engagement", body: "Paiement unique par dossier, sans abonnement imposé." },
+    { icon: Lock, title: "Le client reste le vôtre", body: "Dossimo ne dépose jamais à votre place et ne touche jamais la prime. Vous gardez la main sur votre affaire." },
+    { icon: FileCheck2, title: "Aucun oubli qui fait sauter la prime", body: "Chaque point de refus est signalé avant le dépôt, avec la pièce à corriger. Un dossier refusé, c'est la prime perdue et le montage à refaire." },
+    { icon: CheckCircle2, title: "Un paiement, pas un pourcentage", body: "Un seul paiement par dossier, sans abonnement imposé, jamais un prélèvement sur la prime." },
   ];
 
   return (
@@ -623,9 +649,9 @@ function Reassurance() {
 /* ---------------------------------------------------------- Préparation */
 function Preparation() {
   const pieces = [
-    { icon: FileText, title: "Le devis", body: "Pour vérifier les mentions et la chronologie." },
-    { icon: FileCheck2, title: "La facture", body: "Quand les travaux sont terminés, pour comparer les données." },
-    { icon: ShieldCheck, title: "Votre qualification RGE", body: "Pour contrôler sa validité à la date du dossier." },
+    { icon: FileText, title: "Le devis", body: "Le PDF, ou une photo prise sur le chantier. C’est le seul document qu’il faut pour démarrer." },
+    { icon: FileCheck2, title: "La facture", body: "À la fin des travaux. Dossimo la compare au devis à votre place." },
+    { icon: ShieldCheck, title: "Votre numéro RGE", body: "Saisi une fois, réutilisé sur tous vos dossiers suivants." },
   ];
 
   return (
@@ -634,7 +660,7 @@ function Preparation() {
         <div className="grid gap-6 lg:grid-cols-[0.72fr_2fr] lg:items-center">
           <div>
             <p className="label text-tampon">Pour commencer</p>
-            <h2 id="preparation-title" className="mt-2 font-serif text-xl font-semibold text-encre">Vous avez déjà tout ce qu&rsquo;il faut</h2>
+            <h2 id="preparation-title" className="mt-2 font-serif text-xl font-semibold text-encre">Rien à préparer, rien à ressaisir</h2>
           </div>
           <ul className="grid gap-4 sm:grid-cols-3">
             {pieces.map((piece) => (
@@ -656,33 +682,30 @@ function Preparation() {
 /* --------------------------------------------------------------- Pricing */
 function Pricing({ grille }: { grille: GrilleAffichee | null }) {
   return (
-    <section id="tarifs" className="py-20 sm:py-24">
+    <section id="tarifs" className="py-16 sm:py-20">
       <Shell>
         <div className="border border-encre bg-encre px-6 py-12 sm:px-14 sm:py-14">
           <div>
             <div className="max-w-3xl">
               <p className="label text-papier/70">Tarification transparente</p>
               <h2 className="mt-5 font-serif text-3xl font-semibold tracking-tight text-papier sm:text-[2.25rem] sm:leading-tight">
-                {grille ? (
-                  <>
-                    Le prix est{" "}
-                    <span className="text-blanc-casse">fixé à l&rsquo;avance</span>.
-                  </>
-                ) : (
-                  <>
-                    Un{" "}
-                    <span className="font-mono text-blanc-casse">forfait fixe</span>{" "}
-                    selon le montant de l&apos;aide.
-                  </>
-                )}
+                Un paiement fixé à l&rsquo;avance,{" "}
+                <span className="text-blanc-casse">
+                  jamais un pourcentage sur la prime
+                </span>
+                .
               </h2>
               <p className="mt-4 max-w-2xl text-lg leading-relaxed text-papier/75">
                 Un paiement unique par dossier, selon le montant d&apos;aide estimé.
-                Aucun pourcentage sur la prime, aucun abonnement et aucun frais caché.
+                Aucun abonnement, aucun frais caché, et rien qui soit prélevé sur la
+                prime de votre client : elle lui revient entière, là où un mandataire
+                s&apos;intercale et en capte une partie.
               </p>
               <p className="mt-5 inline-flex flex-wrap items-center gap-2 border border-papier/30 bg-papier/10 px-4 py-3 text-sm font-semibold text-papier">
                 Offre de lancement : code <span className="font-mono text-blanc-casse">DOSSIMO50</span>
-                · 50 % sur le premier dossier · jusqu’au 26 juillet 2026
+                · 50 % sur le premier dossier
+                {grille ? ` · dès ${prixLancement(grille)} au lieu de ${grille.minLabel}` : ""}
+                · jusqu’au 26 juillet 2026
               </p>
             </div>
 
@@ -720,7 +743,7 @@ function Pricing({ grille }: { grille: GrilleAffichee | null }) {
             <div className="mt-9 border-t border-papier/20 pt-7">
               <p className="text-sm font-semibold text-papier">Inclus dans chaque tarif</p>
               <ul className="mt-4 grid gap-2 text-sm text-papier/85 sm:grid-cols-2 lg:max-w-3xl">
-                {["Contrôle des informations du dossier", "Relecture devis et facture", "Rapport de contrôle téléchargeable", "Aucun abonnement mensuel"].map((item) => (
+                {["Dossier prérempli depuis votre devis", "Relecture du devis et de la facture", "Récapitulatif, checklist et rapport de contrôle", "Aucun abonnement, aucun engagement"].map((item) => (
                   <li key={item} className="flex items-center gap-2">
                     <CheckCircle2 className="h-4 w-4 shrink-0 text-succes" strokeWidth={1.5} />
                     {item}
@@ -746,9 +769,9 @@ function Pricing({ grille }: { grille: GrilleAffichee | null }) {
             </div>
             <p className="mt-5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-papier/70">
               <CheckCircle2 className="h-4 w-4 text-succes" strokeWidth={1.5} />
-              Code DOSSIMO50 : 50 % sur le premier dossier
+              Un dossier refusé, c’est la prime entière perdue et le montage à refaire
               <span className="text-papier/30">·</span>
-              valable jusqu’au 26 juillet 2026
+              DOSSIMO50 : −50 % jusqu’au 26 juillet 2026
             </p>
           </div>
         </div>
@@ -775,17 +798,17 @@ function MobileConversionBar() {
 /* --------------------------------------------------------------- Contact */
 function Contact() {
   return (
-    <section id="contact" className="border-t border-filigrane bg-papier-fonce/60 py-20 sm:py-24">
+    <section id="contact" className="border-t border-filigrane bg-papier-fonce/60 py-16 sm:py-20">
       <div className="mx-auto grid max-w-[1080px] items-start gap-14 px-5 sm:px-8 lg:grid-cols-2">
         <div>
           <SectionLabel>Rester en contact</SectionLabel>
           <h2 className="mt-5 font-serif text-3xl font-semibold tracking-tight text-encre sm:text-[2.25rem] sm:leading-tight">
-            Pas encore de dossier à contrôler ?
+            Pas de devis sous la main aujourd&rsquo;hui ?
           </h2>
           <p className="mt-4 text-lg leading-relaxed text-ardoise">
-            Laissez vos coordonnées et nous vous expliquons comment préparer votre
-            prochain dossier. Le contrôle gratuit reste le moyen le plus simple de
-            découvrir Dossimo si votre chantier est déjà prêt.
+            Laissez votre email : on vous recontacte pour monter votre prochain dossier
+            avec vous. Si vous avez déjà un devis, l&rsquo;essai gratuit reste le chemin
+            le plus court, deux minutes suffisent.
           </p>
           <p className="mt-5 text-sm text-ardoise">
             Vous préférez écrire directement ?{" "}
@@ -814,12 +837,20 @@ function Contact() {
  */
 const FAQ_ITEMS = [
   {
+    q: "Combien de temps ça me prend ?",
+    a: "Le temps d'envoyer votre devis et de relire ce que Dossimo en a recopié, soit quelques minutes. Le reste, recopier les informations, vérifier les mentions, comparer devis et facture, croiser les dates, est fait pour vous. Monté à la main, le même dossier vous prend plusieurs heures.",
+  },
+  {
+    q: "Qu'est-ce que je reçois exactement ?",
+    a: "Le pack complet, prêt à déposer : le récapitulatif client prérempli, la checklist des pièces à fournir, et le rapport de contrôle qui liste les points à corriger avant le dépôt. Votre seul effort est de relire et de déposer.",
+  },
+  {
     q: "Dossimo dépose-t-il le dossier à ma place ?",
     a: "Non, jamais. Le dépôt est réservé aux mandataires habilités par l'Anah. Dossimo produit le pack complet et vérifié ; vous et votre client déposez vous-mêmes et conservez la prime.",
   },
   {
     q: "En quoi est-ce différent d'un mandataire ?",
-    a: "Un mandataire prend la main sur votre dossier et capte tout ou partie de la prime. Dossimo ne s'intercale jamais : il sécurise seulement la conformité avant dépôt. Vous restez maître de votre client et de votre prime.",
+    a: "Un mandataire vous décharge de la paperasse, mais il prend la main sur votre dossier et capte tout ou partie de la prime. Dossimo vous décharge de la même paperasse sans jamais s'intercaler : vous restez maître de votre client et de votre prime, et vous payez un montant fixe par dossier, jamais un pourcentage.",
   },
   {
     q: "Quels dispositifs sont couverts ?",
@@ -842,7 +873,7 @@ const FAQ_ITEMS = [
 function Faq() {
   const items = FAQ_ITEMS;
   return (
-    <section id="faq" className="py-20 sm:py-24">
+    <section id="faq" className="py-16 sm:py-20">
       <div className="mx-auto max-w-[760px] px-5 sm:px-8">
         <SectionLabel>Questions fréquentes</SectionLabel>
         <h2 className="mt-5 font-serif text-3xl font-semibold tracking-tight text-encre sm:text-[2.25rem] sm:leading-tight">
