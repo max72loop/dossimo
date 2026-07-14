@@ -6,7 +6,7 @@ import { headers } from "next/headers";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function consumeAuthRateLimit(
-  action: "signin" | "signup" | "password-reset",
+  action: "signin" | "signup" | "password-reset" | "password-change" | "email-change",
   identity: string,
   limit: number,
   windowSeconds = 15 * 60,

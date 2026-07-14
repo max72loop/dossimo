@@ -4,6 +4,7 @@ import { z } from "zod";
 
 import { createClient } from "@/lib/supabase/server";
 import { consumeAuthRateLimit } from "@/lib/auth/rate-limit";
+import { mapAuthError, passwordSchema } from "@/lib/auth/password";
 
 export type AuthResult =
   | { ok: true; confirmationRequired?: boolean; message?: string }
@@ -16,14 +17,6 @@ const signInSchema = z.object({
   password: z.string().min(1, "Mot de passe requis.").max(128),
 });
 
-const passwordSchema = z
-  .string()
-  .min(12, "12 caractères minimum.")
-  .max(128, "128 caractères maximum.")
-  .regex(/[a-z]/, "Ajoutez une lettre minuscule.")
-  .regex(/[A-Z]/, "Ajoutez une lettre majuscule.")
-  .regex(/[0-9]/, "Ajoutez un chiffre.");
-
 const signUpSchema = z.object({
   email: z.email("Email invalide."),
   password: passwordSchema,
@@ -35,18 +28,6 @@ const signUpSchema = z.object({
     z.string().max(40).optional().or(z.literal("")),
   ),
 });
-
-/* ------------------------------------------------------------- Traductions */
-
-function mapAuthError(message: string): string {
-  const m = message.toLowerCase();
-  if (m.includes("invalid login credentials")) return "Email ou mot de passe incorrect.";
-  if (m.includes("already registered") || m.includes("already been registered"))
-    return "Un compte existe déjà avec cet email.";
-  if (m.includes("email not confirmed")) return "Votre email n'est pas encore confirmé.";
-  if (m.includes("password")) return "Mot de passe invalide (12 caractères minimum, avec majuscule, minuscule et chiffre).";
-  return "Une erreur est survenue. Réessayez.";
-}
 
 /* ------------------------------------------------------------------ Actions */
 
