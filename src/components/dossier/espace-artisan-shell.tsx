@@ -39,7 +39,7 @@ export function EspaceArtisanShell({
             <Link
               href="/dossiers/profil"
               className="hidden rounded px-2 py-1 text-sm font-medium text-ardoise transition-colors hover:bg-papier-fonce hover:text-encre sm:inline"
-              title="Voir le profil de l’entreprise"
+              title="Mon compte"
             >
               {artisan.entreprise}
             </Link>
