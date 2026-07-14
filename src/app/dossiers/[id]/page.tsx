@@ -227,7 +227,7 @@ export default async function DossierPage({
   const guide = depotGuide(dossier.dispositif);
 
   return (
-    <main className="mx-auto max-w-4xl px-8 py-10">
+    <main className="mx-auto max-w-6xl px-8 py-10 xl:px-10">
       <Link
         href="/dossiers/nouveau"
         className="text-sm text-tampon underline-offset-4 transition hover:underline"

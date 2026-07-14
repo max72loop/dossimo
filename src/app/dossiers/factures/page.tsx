@@ -17,7 +17,7 @@ export default async function FacturesPage() {
   const indisponible = mentionsIncompletes();
 
   return (
-    <div className="mx-auto max-w-3xl px-8 py-12">
+    <div className="mx-auto max-w-5xl px-8 py-12 xl:px-10">
       <h1 className="font-serif text-3xl font-semibold tracking-tight text-encre">
         Factures
       </h1>

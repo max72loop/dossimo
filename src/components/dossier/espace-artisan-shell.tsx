@@ -16,7 +16,7 @@ export function EspaceArtisanShell({
   return (
     <div className="flex min-h-screen flex-col bg-papier">
       <header className="sticky top-0 z-40 border-b border-filigrane bg-papier/90 backdrop-blur-md">
-        <div className="mx-auto flex h-16 max-w-[1280px] items-center justify-between px-5 sm:px-8">
+        <div className="mx-auto flex h-16 max-w-[1440px] items-center justify-between px-5 sm:px-8 xl:px-10">
           <Logo />
           <nav className="flex items-center gap-3 sm:gap-5" aria-label="Espace artisan">
             <Link

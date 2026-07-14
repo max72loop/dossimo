@@ -20,7 +20,7 @@ export default async function ProfilArtisanPage() {
   const adresse = [artisan.adresse, artisan.code_postal, artisan.ville].filter(Boolean).join(", ");
 
   return (
-    <main className="mx-auto max-w-3xl px-5 py-12 sm:px-8">
+    <main className="mx-auto max-w-5xl px-5 py-12 sm:px-8 xl:px-10">
       <p className="text-xs font-semibold uppercase tracking-[0.12em] text-tampon">Profil artisan</p>
       <h1 className="mt-2 font-serif text-3xl font-semibold tracking-tight text-encre">{artisan.entreprise}</h1>
       <p className="mt-3 text-ardoise">Ces informations préremplissent vos dossiers et vos factures.</p>

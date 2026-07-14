@@ -185,7 +185,7 @@ export default async function DossiersPage() {
   };
 
   return (
-    <div className="mx-auto max-w-[1280px] px-8 py-12">
+    <div className="mx-auto max-w-[1440px] px-8 py-12 xl:px-10">
       <div className="flex items-end justify-between gap-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-tampon">Bonjour {artisan.prenom}</p>

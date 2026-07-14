@@ -41,7 +41,7 @@ export default async function NouveauDossierPage({
       : profileValues;
 
   return (
-    <main className="mx-auto max-w-3xl px-8 py-12">
+    <main className="mx-auto max-w-5xl px-8 py-12 xl:px-10">
       <div className="mb-8">
         <Link
           href="/dossiers"
