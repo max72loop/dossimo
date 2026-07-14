@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Source_Serif_4, Geist_Mono, Unbounded } from "next/font/google";
+import { SITE_DESCRIPTION, SITE_TITLE, SITE_URL } from "@/lib/seo/site";
 import "./globals.css";
 
 const inter = Inter({
@@ -32,22 +33,14 @@ const unbounded = Unbounded({
  * pas résoudre les URLs relatives des images OpenGraph, et tout partage social
  * (LinkedIn, WhatsApp, SMS — les canaux réels entre artisans) affiche une carte vide.
  */
-const SITE_URL = new URL(
-  process.env.NEXT_PUBLIC_SITE_URL || "https://dossimo.app",
-);
-
-const TITRE = "Dossimo · dossiers MaPrimeRénov' & CEE conformes";
-const DESCRIPTION =
-  "Dossimo aide les artisans RGE indépendants à produire des dossiers MaPrimeRénov' et CEE conformes et anti-refus, sans mandataire : vous gardez votre client et votre prime.";
-
 export const metadata: Metadata = {
-  metadataBase: SITE_URL,
+  metadataBase: new URL(SITE_URL),
   title: {
-    default: TITRE,
+    default: SITE_TITLE,
     // Les pages internes n'ont plus à répéter la marque.
     template: "%s · Dossimo",
   },
-  description: DESCRIPTION,
+  description: SITE_DESCRIPTION,
   applicationName: "Dossimo",
   keywords: [
     "MaPrimeRénov'",
@@ -58,19 +51,18 @@ export const metadata: Metadata = {
     "anti-refus",
     "rénovation énergétique",
   ],
-  alternates: { canonical: "/" },
   openGraph: {
     type: "website",
     locale: "fr_FR",
     url: "/",
     siteName: "Dossimo",
-    title: TITRE,
-    description: DESCRIPTION,
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
   },
   twitter: {
     card: "summary_large_image",
-    title: TITRE,
-    description: DESCRIPTION,
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
   },
   robots: {
     index: true,

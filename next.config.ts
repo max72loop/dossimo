@@ -2,6 +2,14 @@ import type { NextConfig } from "next";
 import path from "node:path";
 
 const nextConfig: NextConfig = {
+  async redirects() {
+    return ["dossimo.pro", "www.dossimo.pro"].map((host) => ({
+      source: "/:path*",
+      has: [{ type: "host" as const, value: host }],
+      destination: "https://dossimo.app/:path*",
+      permanent: true,
+    }));
+  },
   // Les Server Actions reçoivent des justificatifs jusqu'à 15 Mo. La limite reste
   // volontairement proche de ce maximum afin de contenir l'impact d'une requête
   // abusive tout en laissant la marge du multipart.

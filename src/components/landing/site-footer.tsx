@@ -29,14 +29,16 @@ export function SiteFooter() {
             <div>
               <h3 className="label text-encre-claire">Dispositifs</h3>
               <ul className="mt-4 space-y-2.5 text-sm text-ardoise">
-                <li>MaPrimeRénov&rsquo;</li>
-                <li>CEE · Certificats d&rsquo;Économies d&rsquo;Énergie</li>
+                <li><Link href="/devis-maprimerenov-conforme" className="transition-colors hover:text-encre">Devis MaPrimeRénov&rsquo;</Link></li>
+                <li><Link href="/devis-cee-conforme" className="transition-colors hover:text-encre">Devis CEE conforme</Link></li>
               </ul>
             </div>
             <div>
               <h3 className="label text-encre-claire">Ressources</h3>
               <ul className="mt-4 space-y-2.5 text-sm text-ardoise">
                 <li><Link href="/#faq" className="transition-colors hover:text-encre">Questions fréquentes</Link></li>
+                <li><Link href="/mentions-obligatoires-devis-rge" className="transition-colors hover:text-encre">Mentions devis RGE</Link></li>
+                <li><Link href="/eviter-refus-maprimerenov" className="transition-colors hover:text-encre">Éviter un refus</Link></li>
                 <li><Link href="/#contact" className="transition-colors hover:text-encre">Contact</Link></li>
                 <li><a href={`mailto:${editeur.emailContact}`} className="transition-colors hover:text-encre">{editeur.emailContact}</a></li>
               </ul>

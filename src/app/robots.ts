@@ -1,6 +1,5 @@
 import type { MetadataRoute } from "next";
-
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://dossimo.app";
+import { SITE_URL } from "@/lib/seo/site";
 
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -9,7 +8,7 @@ export default function robots(): MetadataRoute.Robots {
       allow: "/",
       // Espace artisan et back-office : rien à indexer, et les URLs de dossiers
       // portent des identifiants qui n'ont pas à circuler.
-      disallow: ["/dossiers", "/admin", "/api"],
+      disallow: ["/dossiers", "/admin", "/api", "/depot", "/factures"],
     },
     sitemap: `${SITE_URL}/sitemap.xml`,
   };

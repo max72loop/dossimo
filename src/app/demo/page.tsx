@@ -1,9 +1,15 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 
 import { DemoGuide } from "@/components/landing/demo-guide";
 import { Logo } from "@/components/landing/site-header";
+import { publicMetadata } from "@/lib/seo/site";
 
-export const metadata = { title: "Analyser mon devis gratuitement" };
+export const metadata: Metadata = publicMetadata({
+  path: "/demo",
+  title: "Analyser un devis MaPrimeRénov’ ou CEE gratuitement",
+  description: "Ajoutez une photo ou un PDF de votre devis : Dossimo relève les informations lisibles et vous montre le premier point à confirmer.",
+});
 
 export default function DemoPage() {
   return (

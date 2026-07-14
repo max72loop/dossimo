@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import {
   AlertTriangle,
   ArrowRight,
@@ -22,6 +23,14 @@ import { CTA_DEMO } from "@/lib/landing/copy";
 import { grillePublique } from "@/lib/landing/grille-publique";
 import { editeur } from "@/lib/legal/editeur";
 import type { GrilleAffichee } from "@/lib/pricing";
+import { publicMetadata, SITE_DESCRIPTION, SITE_TITLE, SITE_URL } from "@/lib/seo/site";
+
+export const metadata: Metadata = publicMetadata({
+  path: "/",
+  title: SITE_TITLE,
+  description: SITE_DESCRIPTION,
+  absoluteTitle: true,
+});
 
 /**
  * Anneau de focus pour les CTA posés sur le bloc encre (section Tarification) :
@@ -237,7 +246,7 @@ function StatusBadge({
  * Aucun prix n'est balisé si la grille est illisible : plutôt rien qu'un tarif faux.
  */
 function JsonLd({ grille }: { grille: GrilleAffichee | null }) {
-  const site = process.env.NEXT_PUBLIC_SITE_URL || "https://dossimo.app";
+  const site = SITE_URL;
 
   const donnees = [
     {
@@ -245,9 +254,24 @@ function JsonLd({ grille }: { grille: GrilleAffichee | null }) {
       "@type": "Organization",
       name: "Dossimo",
       url: site,
+      logo: `${site}/icon.png`,
+      email: "max@dossimo.pro",
+      contactPoint: {
+        "@type": "ContactPoint",
+        contactType: "customer support",
+        email: "max@dossimo.pro",
+        availableLanguage: "French",
+      },
       description:
         "Service indépendant d'aide à la préparation et au contrôle de conformité de dossiers MaPrimeRénov' et CEE, destiné aux artisans RGE indépendants.",
       slogan: "Des dossiers de prime qui passent. Du premier coup.",
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      name: "Dossimo",
+      url: site,
+      inLanguage: "fr-FR",
     },
     {
       "@context": "https://schema.org",
@@ -266,13 +290,15 @@ function JsonLd({ grille }: { grille: GrilleAffichee | null }) {
             name: "Préparation et contrôle de dossier MaPrimeRénov' / CEE",
             provider: { "@type": "Organization", name: "Dossimo" },
             areaServed: "FR",
-            offers: {
-              "@type": "AggregateOffer",
+            offers: grille.lignes.map((ligne) => ({
+              "@type": "Offer",
+              name: ligne.name,
+              description: ligne.aidLabel,
               priceCurrency: "EUR",
-              lowPrice: grille.paliers[0].replace(/[^\d]/g, ""),
-              highPrice: grille.paliers.at(-1)!.replace(/[^\d]/g, ""),
-              offerCount: grille.paliers.length,
-            },
+              price: ligne.priceLabel.replace(/[^\d,]/g, "").replace(",", "."),
+              url: `${site}/#tarifs`,
+              availability: "https://schema.org/InStock",
+            })),
           },
         ]
       : []),

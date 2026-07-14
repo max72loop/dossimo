@@ -1,8 +1,13 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { AlertTriangle, ShieldCheck } from "lucide-react";
 
 import { getAdminEmail } from "@/lib/auth/is-admin";
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false, nocache: true },
+};
 
 /**
  * Garde du segment `/admin` : tout ce qui vit ici est réservé au rôle admin.

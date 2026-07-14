@@ -4,12 +4,13 @@ import Link from "next/link";
 import { LegalDoc, LegalRow, LegalSection } from "@/components/legal/legal-doc";
 import { editeur, derniereMajLegale } from "@/lib/legal/editeur";
 import { grillePublique } from "@/lib/landing/grille-publique";
+import { publicMetadata } from "@/lib/seo/site";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = publicMetadata({
+  path: "/cgv",
   title: "Conditions générales de vente",
-  description:
-    "Conditions générales de vente du service professionnel de préparation et de contrôle de dossiers Dossimo.",
-};
+  description: "Conditions générales de vente du service professionnel de préparation et de contrôle de dossiers Dossimo.",
+});
 
 const lien = "text-tampon underline-offset-4 hover:underline";
 

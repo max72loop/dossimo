@@ -2,12 +2,13 @@ import type { Metadata } from "next";
 
 import { LegalDoc, LegalSection } from "@/components/legal/legal-doc";
 import { editeur, derniereMajLegale } from "@/lib/legal/editeur";
+import { publicMetadata } from "@/lib/seo/site";
 
-export const metadata: Metadata = {
-  title: "Politique de confidentialité · Dossimo",
-  description:
-    "Comment Dossimo collecte, utilise et protège les données personnelles, conformément au RGPD.",
-};
+export const metadata: Metadata = publicMetadata({
+  path: "/confidentialite",
+  title: "Politique de confidentialité",
+  description: "Comment Dossimo collecte, utilise et protège les données personnelles, conformément au RGPD.",
+});
 
 export default function ConfidentialitePage() {
   return (

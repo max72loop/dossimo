@@ -7,12 +7,13 @@ import {
   LegalSection,
 } from "@/components/legal/legal-doc";
 import { editeur, derniereMajLegale } from "@/lib/legal/editeur";
+import { publicMetadata } from "@/lib/seo/site";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = publicMetadata({
+  path: "/mentions-legales",
   title: "Mentions légales",
-  description:
-    "Identité de l’éditeur, direction de la publication, hébergement et informations légales du service Dossimo.",
-};
+  description: "Identité de l’éditeur, direction de la publication, hébergement et informations légales du service Dossimo.",
+});
 
 const lien = "text-tampon underline-offset-4 hover:underline";
 
@@ -21,7 +22,7 @@ export default function MentionsLegalesPage() {
     <LegalDoc
       titre="Mentions légales"
       maj={derniereMajLegale}
-      intro="Les présentes mentions identifient l’éditeur et les prestataires techniques du site dossimo.fr, conformément aux règles applicables aux services en ligne professionnels."
+      intro="Les présentes mentions identifient l’éditeur et les prestataires techniques du site dossimo.app, conformément aux règles applicables aux services en ligne professionnels."
     >
       <LegalSection titre="1. Éditeur du site">
         <p>
