@@ -52,7 +52,7 @@ import { ObligeSuivi } from "@/components/dossier/oblige-suivi";
 import { RelancesBeneficiaire } from "@/components/dossier/relances-beneficiaire";
 import { retrouverLienActif } from "@/lib/depot/lien";
 
-export const metadata = { title: "Dossier · Dossimo" };
+export const metadata = { title: "Dossier" };
 
 // L'analyse assistée (points de vigilance) appelle un LLM sur un contexte enrichi :
 // on relève le plafond de durée de la fonction (défaut trop court sur Vercel).
@@ -334,7 +334,7 @@ export default async function DossierPage({
             )}
           </div>
           <p className="mt-3 text-xs text-encre-claire">
-            Paiement unique par Stripe. Le premier dossier de votre compte est offert.
+            Paiement unique par Stripe, sans abonnement ni engagement.
           </p>
         </section>
       )}

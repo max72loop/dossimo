@@ -18,7 +18,7 @@ import type { PieceJustificative } from "@/lib/database.types";
 import { TableauDeBord, type StatsTableau } from "@/components/dossier/tableau-de-bord";
 import { ActionsPrioritaires, type ActionPrioritaire } from "@/components/dossier/actions-prioritaires";
 
-export const metadata = { title: "Mes dossiers · Dossimo" };
+export const metadata = { title: "Mes dossiers"};
 
 // Parcours partagé (liste + page dossier). Repli sur « Nouveau » si l'état n'est
 // pas encore reconnu (migration 0007 du parcours pas encore appliquée).

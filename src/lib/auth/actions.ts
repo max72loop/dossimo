@@ -5,6 +5,7 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { consumeAuthRateLimit } from "@/lib/auth/rate-limit";
 import { mapAuthError, passwordSchema } from "@/lib/auth/password";
+import { destinationApresAuth } from "@/lib/auth/redirect";
 
 export type AuthResult =
   | { ok: true; confirmationRequired?: boolean; message?: string }
@@ -27,6 +28,9 @@ const signUpSchema = z.object({
     (v) => (typeof v === "string" ? v.trim() : v),
     z.string().max(40).optional().or(z.literal("")),
   ),
+  // Destination post-confirmation (reprise du brouillon d'essai, etc.).
+  // Assainie ensuite par `destinationApresAuth` — jamais utilisée telle quelle.
+  next: z.string().max(512).optional(),
 });
 
 /* ------------------------------------------------------------------ Actions */
@@ -61,18 +65,21 @@ export async function signUp(input: unknown): Promise<AuthResult> {
     };
   }
 
-  const { email, password, entreprise, nom, prenom, telephone } = parsed.data;
+  const { email, password, entreprise, nom, prenom, telephone, next } = parsed.data;
   if (!(await consumeAuthRateLimit("signup", email, 4, 60 * 60))) {
     return { ok: false, error: "Trop de créations depuis cette connexion. Réessayez plus tard." };
   }
 
   const supabase = await createClient();
   const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "").replace(/\/$/, "");
+  // `next` encodé : il peut porter sa propre query (`/dossiers/nouveau?reprise=essai`)
+  // et casserait le parsing du lien de confirmation s'il n'était pas échappé.
+  const destination = encodeURIComponent(destinationApresAuth(next));
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
-      emailRedirectTo: `${baseUrl}/auth/confirm?next=/dossiers`,
+      emailRedirectTo: `${baseUrl}/auth/confirm?next=${destination}`,
       data: { entreprise, nom, prenom, telephone: telephone || null },
     },
   });

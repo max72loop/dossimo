@@ -10,7 +10,7 @@ import {
 } from "@/components/admin/regle-editor";
 import type { Dispositif } from "@/lib/database.types";
 
-export const metadata = { title: "Règles métier · Admin Dossimo" };
+export const metadata = { title: "Règles métier · Admin"};
 
 export default async function AdminReglesPage() {
   const admin = await getAdminEmail();

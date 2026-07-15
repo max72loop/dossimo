@@ -5,7 +5,7 @@ import { getCurrentArtisan } from "@/lib/auth/get-artisan";
 import type { CeeIsolationInput } from "@/lib/dossier/cee-isolation";
 
 export const metadata = {
-  title: "Nouveau dossier CEE isolation · Dossimo",
+  title: "Nouveau dossier CEE isolation",
 };
 
 export default async function NouveauDossierPage({

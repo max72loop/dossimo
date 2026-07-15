@@ -2,7 +2,7 @@ import Link from "next/link";
 import { QuoteLibrary } from "@/components/quotes/quote-library";
 import { createClient } from "@/lib/supabase/server";
 
-export const metadata = { title: "Devis conformes · Dossimo" };
+export const metadata = { title: "Devis conformes"};
 
 export default async function DevisPage() {
   const supabase = await createClient();

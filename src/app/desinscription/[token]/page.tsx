@@ -8,7 +8,7 @@ import { desinscrire } from "@/lib/prospection/file";
 import { editeur } from "@/lib/legal/editeur";
 
 export const metadata: Metadata = {
-  title: "Désinscription · Dossimo",
+  title: "Désinscription",
   robots: { index: false, follow: false },
 };
 

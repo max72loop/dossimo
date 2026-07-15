@@ -1,6 +1,10 @@
-import { SignUpForm } from "@/components/auth/auth-forms";
+import { redirect } from "next/navigation";
 
-export const metadata = { title: "Créer un compte · Dossimo" };
+import { SignUpForm } from "@/components/auth/auth-forms";
+import { getCurrentUser } from "@/lib/auth/get-artisan";
+import { destinationApresAuth } from "@/lib/auth/redirect";
+
+export const metadata = { title: "Créer un compte" };
 
 export default async function InscriptionPage({
   searchParams,
@@ -8,6 +12,9 @@ export default async function InscriptionPage({
   searchParams: Promise<{ next?: string }>;
 }) {
   const { next } = await searchParams;
+  // Déjà connecté → inutile de recréer un compte : on suit `next` (reprise du
+  // brouillon d'essai) plutôt que de retomber en dur sur /dossiers.
+  if (await getCurrentUser()) redirect(destinationApresAuth(next));
   const reprendEssai = next?.includes("reprise=essai");
   return (
     <div className="rounded border border-filigrane bg-blanc-casse p-7 shadow-sm sm:p-8">

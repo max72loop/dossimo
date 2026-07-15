@@ -5,7 +5,7 @@ import { listerFactures } from "@/lib/factures/get-facture";
 import { mentionsIncompletes } from "@/lib/legal/editeur";
 import { formatEuros } from "@/lib/format/montant";
 
-export const metadata = { title: "Factures · Dossimo" };
+export const metadata = { title: "Factures"};
 
 function dateFr(iso: string): string {
   const d = new Date(iso);

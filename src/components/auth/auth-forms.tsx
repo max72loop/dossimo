@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { AlertCircle, Loader2 } from "lucide-react";
 
 import { requestPasswordReset, signIn, signUp, updatePassword, type AuthResult } from "@/lib/auth/actions";
+import { destinationApresAuth } from "@/lib/auth/redirect";
 
 const inputClass =
   "mt-1.5 h-11 w-full rounded border border-filigrane bg-blanc-casse px-3.5 text-sm text-encre placeholder:text-encre-claire outline-none transition focus:border-tampon focus:ring-2 focus:ring-tampon/15";
@@ -35,10 +36,6 @@ function SubmitButton({ loading, children }: { loading: boolean; children: strin
 }
 
 /* --------------------------------------------------------------- Connexion */
-function destinationSure(next?: string) {
-  return next?.startsWith("/dossiers") && !next.startsWith("//") ? next : "/dossiers";
-}
-
 export function SignInForm({ next }: { next?: string }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -55,7 +52,7 @@ export function SignInForm({ next }: { next?: string }) {
         password: fd.get("password"),
       });
       if (r.ok) {
-        router.push(destinationSure(next));
+        router.push(destinationApresAuth(next));
         router.refresh();
         return;
       }
@@ -96,7 +93,7 @@ export function SignInForm({ next }: { next?: string }) {
 
       <p className="text-center text-sm text-ardoise">
         Pas encore de compte ?{" "}
-        <Link href={next ? `/inscription?next=${encodeURIComponent(destinationSure(next))}` : "/inscription"} className="text-tampon underline-offset-4 hover:underline">
+        <Link href={next ? `/inscription?next=${encodeURIComponent(destinationApresAuth(next))}` : "/inscription"} className="text-tampon underline-offset-4 hover:underline">
           Créer un compte
         </Link>
       </p>
@@ -123,13 +120,16 @@ export function SignUpForm({ next }: { next?: string }) {
         nom: fd.get("nom"),
         prenom: fd.get("prenom"),
         telephone: fd.get("telephone"),
+        // Reporté dans le lien de confirmation : sans lui, un compte à
+        // confirmation email retomberait sur /dossiers et perdrait la reprise.
+        next,
       });
       if (r.ok) {
         if (r.confirmationRequired) {
           setResult(r);
           return;
         }
-        router.push(destinationSure(next));
+        router.push(destinationApresAuth(next));
         router.refresh();
         return;
       }
@@ -198,7 +198,7 @@ export function SignUpForm({ next }: { next?: string }) {
 
       <p className="text-center text-sm text-ardoise">
         Déjà un compte ?{" "}
-        <Link href={next ? `/connexion?next=${encodeURIComponent(destinationSure(next))}` : "/connexion"} className="text-tampon underline-offset-4 hover:underline">
+        <Link href={next ? `/connexion?next=${encodeURIComponent(destinationApresAuth(next))}` : "/connexion"} className="text-tampon underline-offset-4 hover:underline">
           Se connecter
         </Link>
       </p>

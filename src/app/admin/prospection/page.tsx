@@ -13,7 +13,7 @@ import {
   validerFile,
 } from "@/lib/prospection/actions";
 
-export const metadata = { title: "Prospection · Admin Dossimo" };
+export const metadata = { title: "Prospection · Admin"};
 export const dynamic = "force-dynamic";
 
 /**

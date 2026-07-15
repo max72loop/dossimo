@@ -23,7 +23,7 @@ export function SiteFooter() {
                 <li><Link href="/#etapes" className="transition-colors hover:text-encre">Méthode</Link></li>
                 <li><Link href="/#tarifs" className="transition-colors hover:text-encre">Tarifs</Link></li>
                 <li><Link href="/#difference" className="transition-colors hover:text-encre">Vs mandataire</Link></li>
-                <li><Link href="/inscription?next=%2Fdossiers%2Fnouveau" className="transition-colors hover:text-encre">Déposer mon devis</Link></li>
+                <li><Link href="/demo" className="transition-colors hover:text-encre">Déposer mon devis</Link></li>
               </ul>
             </div>
             <div>

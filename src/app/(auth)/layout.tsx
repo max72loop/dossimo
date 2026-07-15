@@ -1,22 +1,20 @@
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
 
 import { Logo } from "@/components/landing/site-header";
-import { getCurrentUser } from "@/lib/auth/get-artisan";
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false, nocache: true },
 };
 
-export default async function AuthLayout({
+export default function AuthLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  // Déjà connecté → pas de raison de rester sur connexion/inscription.
-  const user = await getCurrentUser();
-  if (user) redirect("/dossiers");
-
+  // La redirection d'un utilisateur déjà connecté vit dans chaque page (et non
+  // ici) : un layout ne reçoit pas `searchParams`, il ne pourrait donc pas
+  // honorer `?next=` et repartirait toujours en dur vers /dossiers, perdant la
+  // reprise du brouillon d'essai.
   return (
     <div className="flex min-h-screen flex-col bg-papier">
       <header className="border-b border-filigrane">
