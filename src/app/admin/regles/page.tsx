@@ -57,6 +57,7 @@ export default async function AdminReglesPage() {
       >
         Pilotage terrain →
       </Link>
+      <Link href="/admin/donnees" className="ml-4 text-sm text-tampon underline-offset-4 transition hover:underline">Nettoyage des données →</Link>
 
       <div className="mt-4 mb-2">
         <h1 className="font-serif text-3xl font-semibold tracking-tight text-encre">
