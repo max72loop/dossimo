@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, BarChart3 } from "lucide-react";
 
 import { getAdminEmail } from "@/lib/auth/is-admin";
 import { chargerLotDuJour, PLAFOND_QUOTIDIEN, DELAI_RELANCE_JOURS, type CanalSprint, type ModeSprint } from "@/lib/sprint/lot";
@@ -79,6 +79,13 @@ export default async function SprintPage({
             {m.libelle}
           </Link>
         ))}
+        <Link
+          href="/admin/sprint/pilotage"
+          className="ml-auto inline-flex items-center gap-1.5 text-xs font-medium text-tampon hover:underline"
+        >
+          <BarChart3 className="h-3.5 w-3.5" />
+          Pilotage
+        </Link>
       </div>
 
       {/* Le nurturing part par e-mail même pour le bras WhatsApp : le dire, sinon
