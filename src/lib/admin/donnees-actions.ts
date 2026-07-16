@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { getAdminEmail } from "@/lib/auth/is-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { interrogerDonnees, type InterrogationResult } from "@/lib/admin/nl-query";
 
 export type SuppressionResult =
   | { ok: true; dossiers: number; fichiers: number }
@@ -67,4 +68,13 @@ export async function supprimerDossiers(ids: string[]): Promise<SuppressionResul
 
   revalidatePath("/admin/donnees");
   return { ok: true, dossiers: count ?? cibles.length, fichiers };
+}
+
+/**
+ * Question en langage naturel sur la base (admin uniquement). La traduction et
+ * l'exécution — strictement en lecture seule — vivent dans `nl-query.ts`.
+ */
+export async function poserQuestion(question: string): Promise<InterrogationResult> {
+  if (!(await getAdminEmail())) return { ok: false, error: "Accès refusé." };
+  return interrogerDonnees(question);
 }

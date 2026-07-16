@@ -6,25 +6,24 @@ import type { DossierComplet } from "@/lib/dossier/get-dossier";
 /**
  * Droit d'accès au livrable d'un dossier (contrôle anti-vol du paiement).
  *
- * Règle (CLAUDE.md §10) : le PREMIER dossier de l'artisan est gratuit (produit
- * d'appel) ; les suivants nécessitent un paiement ponctuel. Un dossier est
- * « débloqué » s'il est le plus ancien de l'artisan OU s'il a un paiement `paye`.
+ * Règle : TOUT dossier nécessite un paiement ponctuel pour débloquer le
+ * livrable. Il n'y a pas de dossier offert (le modèle « premier dossier
+ * gratuit » a été abandonné) ; l'essai gratuit sans compte reste le produit
+ * d'appel, mais il ne produit pas de pack téléchargeable. La réduction de
+ * lancement (code DOSSIMO50) diminue le prix, elle ne débloque jamais un
+ * livrable sans paiement confirmé. Un dossier est « débloqué » s'il a un
+ * paiement `paye`.
  *
  * Utilisé côté serveur pour verrouiller à la fois les téléchargements PDF et le
  * détail affiché à l'écran (un simple bouton caché ne protège rien).
  */
 export interface AccesDossier {
   debloque: boolean;
-  gratuit: boolean;
   paye: boolean;
 }
 
 export async function accesDossier(data: DossierComplet): Promise<AccesDossier> {
   const supabase = await createClient();
-
-  // La réduction de lancement diminue le prix, mais ne débloque jamais un
-  // livrable sans paiement confirmé.
-  const gratuit = false;
 
   // Payé : un paiement encaissé existe pour ce dossier.
   const { data: paiement } = await supabase
@@ -36,7 +35,7 @@ export async function accesDossier(data: DossierComplet): Promise<AccesDossier> 
     .maybeSingle();
   const paye = !!paiement;
 
-  return { gratuit, paye, debloque: paye };
+  return { paye, debloque: paye };
 }
 
 /**

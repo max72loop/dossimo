@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { getAdminEmail } from "@/lib/auth/is-admin";
 import { chargerInventaire } from "@/lib/admin/inventaire";
 
+import { QuestionDonnees } from "./question-donnees";
 import { TableNettoyage } from "./table-nettoyage";
 
 export const metadata = { title: "Données · Admin" };
@@ -44,6 +45,8 @@ export default async function DonneesPage() {
         <Repartition titre="Par dispositif" items={resume.parDispositif} />
         <Repartition titre="Par statut" items={resume.parStatut} />
       </div>
+
+      <QuestionDonnees />
 
       <TableNettoyage dossiers={dossiers} />
     </main>

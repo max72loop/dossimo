@@ -21,9 +21,21 @@
  */
 
 import type { Accroche } from "./accroches";
+import { CODE_LANCEMENT } from "@/lib/lancement";
 
 /** Salutation unique. Le fichier ne porte aucun prénom : il n'y a rien à deviner. */
 export const SALUTATION = "Bonjour,";
+
+/**
+ * Signature. Précédée d'une ligne vide supplémentaire à l'assemblage (`\n` en
+ * plus du `\n\n` qui sépare les paragraphes) : elle se détache du corps au lieu
+ * de se lire comme un paragraphe de plus.
+ */
+const SIGNATURE = "Max Landry, Dossimo · dossimo.app";
+
+/** Bloc source + opposition. C'est lui qui rend un e-mail non sollicité licite. */
+const MENTIONS =
+  "Vos coordonnées proviennent de l'annuaire public des professionnels RGE (ADEME). Pour ne plus recevoir de message : répondez STOP.";
 
 /**
  * Normalise un numéro français au format international sans « + » pour wa.me
@@ -97,22 +109,41 @@ export function messageRelanceEmail(params: { accroche: Accroche }): { objet: st
     `${SALUTATION} je me permets une seule relance.`,
     `Si vous avez un devis sous la main, le test prend 2 minutes et vous montre ce qu'un instructeur verrait : ${DEMO}?utm_source=email`,
     "Sinon, dites-le-moi et je ne vous réécris pas. Bonne journée !",
-    "Max Landry, Dossimo · dossimo.app",
-    "Vos coordonnées proviennent de l'annuaire public des professionnels RGE (ADEME). Pour ne plus recevoir de message : répondez STOP.",
+    `\n${SIGNATURE}`,
+    MENTIONS,
   ].join("\n\n");
   return { objet: params.accroche.objet, corps };
 }
 
-/** Message e-mail de premier contact. Le bloc source + STOP rend l'envoi licite. */
-export function messageEmail(params: { accroche: Accroche }): { objet: string; corps: string } {
+/**
+ * Message e-mail de premier contact. Le bloc source + STOP rend l'envoi licite.
+ *
+ * `offre` est optionnelle : le prix vient de la grille facturée et l'échéance du
+ * module de lancement. Quand elle est absente (offre expirée, ou grille illisible
+ * parce que la base n'a pas répondu), le paragraphe saute entièrement plutôt que
+ * d'annoncer un tarif inventé ou une remise périmée.
+ *
+ * Le message se termine par une question : le taux de réponse est l'indicateur du
+ * sprint (§11), or une signature seule n'invite personne à répondre.
+ */
+export function messageEmail(params: {
+  accroche: Accroche;
+  offre?: { remise: string; plein: string; fin: string } | null;
+}): { objet: string; corps: string } {
+  const { offre } = params;
   const corps = [
     SALUTATION,
     `Un dossier MaPrimeRénov' ou CEE refusé, c'est la prime perdue et le montage à refaire. ${params.accroche.texte}`,
-    "J'ai créé Dossimo pour ça : vous envoyez votre devis (PDF ou photo), il recopie les informations, monte le dossier et vous sort un rapport de contrôle avant dépôt. Sans mandataire : vous gardez votre client et 100 % de la prime. Paiement fixe par dossier, à partir de 49 €.",
-    `Essai gratuit avec un de vos devis (2 minutes) : ${DEMO}?utm_source=email`,
-    "Je suis joignable en direct à ce mail, c'est moi qui réponds.",
-    "Max Landry, Dossimo · dossimo.app",
-    "Vos coordonnées proviennent de l'annuaire public des professionnels RGE (ADEME). Pour ne plus recevoir de message : répondez STOP.",
+    "J'ai créé Dossimo pour ça : vous envoyez votre devis (PDF ou photo), il recopie les informations, monte le dossier et vous sort un rapport de contrôle avant dépôt. Sans mandataire : vous gardez votre client et 100 % de la prime.",
+    `Essai gratuit avec un de vos devis, deux minutes : ${DEMO}?utm_source=email`,
+    ...(offre
+      ? [
+          `Pour le lancement, le premier dossier est à ${offre.remise} au lieu de ${offre.plein} avec le code ${CODE_LANCEMENT}, jusqu'au ${offre.fin}. Un paiement fixe par dossier, jamais un pourcentage sur la prime.`,
+        ]
+      : []),
+    "Vous avez un devis en cours sur lequel vous avez un doute ? Répondez-moi, c'est moi qui lis.",
+    `\n${SIGNATURE}`,
+    MENTIONS,
   ].join("\n\n");
   return { objet: params.accroche.objet, corps };
 }

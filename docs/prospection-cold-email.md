@@ -44,20 +44,29 @@ pas le lien de désinscription (un envoi sans moyen d'opposition serait illicite
 et il tient son propre plafond quotidien, pour borner les dégâts si le secret du
 webhook fuitait.
 
-## 3. DNS à poser sur `dossimo.pro` — bloquant
+## 3. DNS de `dossimo.pro` — bloquant
 
-Sans ces quatre enregistrements, les messages partent en indésirables.
+Sans ces quatre enregistrements, les messages partent en indésirables. État au
+14 juillet 2026 (zone hébergée chez Vercel, `ns1.vercel-dns.com`) :
 
 ```
-MX      dossimo.pro           → enregistrements MX Google Workspace
-TXT     dossimo.pro           → v=spf1 include:_spf.google.com ~all
-TXT     google._domainkey     → clé DKIM 2048 bits générée dans la console Admin
-TXT     _dmarc                → v=DMARC1; p=none; rua=mailto:dmarc@dossimo.pro; adkim=s; aspf=s
+MX      dossimo.pro           ✅ smtp.google.com
+TXT     dossimo.pro           ✅ v=spf1 include:_spf.google.com ~all
+TXT     google._domainkey     ✅ clé DKIM publiée
+TXT     _dmarc                ❌ MANQUANT
+                                 v=DMARC1; p=none; rua=mailto:max@dossimo.pro
 ```
 
-DKIM doit être **activé** dans la console Google après publication de la clé
-(l'onglet « Authentifier l'e-mail » reste inactif tant qu'on ne clique pas). DMARC
-démarre en `p=none` (observation), puis passe à `p=quarantine`.
+`p=none` d'abord : on observe les rapports quelques jours avant de durcir en
+`p=quarantine`. Une politique stricte posée d'emblée fait disparaître ses propres
+messages. Pour la même raison, pas d'alignement strict (`adkim=s`, `aspf=s`) au
+départ.
+
+Attention au piège DKIM : la clé peut être **publiée** sans être **activée**. Tant
+qu'on n'a pas cliqué sur « Démarrer l'authentification » dans la console Google
+(Applications > Google Workspace > Gmail > Authentifier l'e-mail), Google ne signe
+rien. Contrôle : envoyer un message vers une adresse Gmail, « Afficher l'original »,
+et vérifier `DKIM: PASS` avec le domaine `dossimo.pro`.
 
 Point de vigilance : `dossimo.pro` redirige en 301 vers `dossimo.app`. Les filtres
 consultent le domaine d'envoi ; une vraie page servie sur `dossimo.pro` vaudrait
@@ -191,10 +200,16 @@ Le bloc après `--` n'est pas décoratif : identité, source de l'adresse, oppos
 C'est lui qui rend l'envoi licite et qui, en pratique, transforme un signalement en
 spam en simple désinscription.
 
-Le message annonce « DOSSIMO50, jusqu'au 26 juillet », sans date de début : le code
-est actif depuis son introduction et expire le 26 (`src/lib/stripe/actions.ts`).
-Annoncer une ouverture au 21 aurait retardé la campagne d'une semaine et empêché
-toute montée en charge avant la fin de la promo.
+Le message annonce « DOSSIMO50, jusqu'au 31 juillet », sans date de début : le code
+est actif depuis son introduction et expire le 31 (`src/lib/stripe/actions.ts`,
+`FIN_CODE_LANCEMENT`). Annoncer une ouverture au 21 aurait retardé la campagne
+d'une semaine et empêché toute montée en charge avant la fin de la promo.
+
+La date vit à deux endroits que rien ne synchronise : `FIN_CODE_LANCEMENT` dans le
+code, et le corps de campagne dans `prospection_campagnes.corps` en base. Un
+déploiement ne corrige pas le second. Toute prolongation du code doit donc être
+répercutée à la main en base, sinon la campagne annonce une date d'expiration plus
+courte que la réalité — ce qui a été le cas entre le 15 et le 16 juillet 2026.
 
 ## 11. Mise en route
 

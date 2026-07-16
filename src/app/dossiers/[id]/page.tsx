@@ -174,8 +174,8 @@ export default async function DossierPage({
   // Points de vigilance déjà générés (persistés) : affichage instantané.
   const vigilance = storedVigilance(data);
 
-  // Droit d'accès au livrable (1er dossier gratuit, sinon paiement). Verrouille
-  // à la fois les téléchargements (routes PDF) et le détail affiché ici.
+  // Droit d'accès au livrable (paiement requis). Verrouille à la fois les
+  // téléchargements (routes PDF) et le détail affiché ici.
   const acces = await accesDossier(data);
 
   // Estimation indicative de prime (barème piloté par la règle métier).
@@ -246,12 +246,7 @@ export default async function DossierPage({
             <span className="font-mono text-xs">({c.beneficiaire.code_postal})</span>
           </p>
         </div>
-        {acces.gratuit ? (
-          <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-tampon/10 px-3 py-1 text-xs font-medium text-tampon">
-            <span className="h-1.5 w-1.5 rounded-full bg-tampon" />
-            Premier dossier · offert
-          </span>
-        ) : acces.paye ? (
+        {acces.paye ? (
           <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-succes-bg px-3 py-1 text-xs font-medium text-succes">
             <span className="h-1.5 w-1.5 rounded-full bg-succes" />
             Pack débloqué
@@ -677,8 +672,6 @@ export default async function DossierPage({
           />
         </SectionRepliable>
       )}
-
-      {/* 9. Conversion · uniquement pour le dossier offert */}
 
       <p className="mt-8 text-center text-xs text-encre-claire">
         Dossimo · service indépendant d&apos;aide à la préparation de dossier,

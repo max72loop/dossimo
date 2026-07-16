@@ -55,6 +55,37 @@ describe("rendu des messages", () => {
     expect(corps).toContain("STOP");
     expect(corps).toContain("ETAS");
   });
+
+  it("l'e-mail se termine par une question : le taux de réponse est l'indicateur du sprint", () => {
+    const { corps } = messageEmail({ accroche: ACCROCHES.pac });
+    expect(corps).toContain("Répondez-moi");
+    expect(corps).toMatch(/\?/);
+  });
+
+  it("la signature est détachée du corps par une ligne vide supplémentaire", () => {
+    const { corps } = messageEmail({ accroche: ACCROCHES.pac });
+    expect(corps).toContain("\n\n\nMax Landry, Dossimo");
+  });
+
+  it("annonce l'offre quand elle est fournie, avec le prix et l'échéance reçus", () => {
+    const { corps } = messageEmail({
+      accroche: ACCROCHES.pac,
+      offre: { remise: "24,50 €", plein: "49 €", fin: "31 juillet 2026" },
+    });
+    expect(corps).toContain("24,50 € au lieu de 49 €");
+    expect(corps).toContain("DOSSIMO50");
+    expect(corps).toContain("jusqu'au 31 juillet 2026");
+  });
+
+  it("tait l'offre plutôt que d'inventer un prix quand elle est absente", () => {
+    // Offre expirée ou grille illisible : mieux vaut aucun tarif qu'un tarif faux.
+    const { corps } = messageEmail({ accroche: ACCROCHES.pac, offre: null });
+    expect(corps).not.toContain("DOSSIMO50");
+    expect(corps).not.toMatch(/au lieu de/);
+    // Le reste du message tient debout sans elle.
+    expect(corps).toContain("Répondez-moi");
+    expect(corps).toContain("STOP");
+  });
 });
 
 describe("relance J+5", () => {

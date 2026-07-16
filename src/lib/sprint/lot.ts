@@ -11,6 +11,8 @@ import {
   normaliserTelephoneFr,
 } from "./message";
 import { debutDuMoisParis, editionDuMois, messageNurturing, moisParis } from "./nurturing";
+import { grillePublique } from "@/lib/landing/grille-publique";
+import { finLancementLisible, offreLancementActive, prixLancement } from "@/lib/lancement";
 
 /**
  * Sélection du « lot du jour » du sprint de prospection (plan v3, §12, outils 1 et 3).
@@ -113,6 +115,13 @@ export async function chargerLotDuJour(
   const mois = moisParis();
   const edition = mode === "nurturing" ? editionDuMois(mois) : null;
 
+  // Offre de lancement annoncée dans l'e-mail de premier contact : prix dérivé de
+  // la grille facturée, échéance du module de lancement. `null` si l'offre a
+  // expiré ou si la grille est illisible — le paragraphe saute alors, plutôt que
+  // d'annoncer un tarif inventé ou une remise périmée.
+  const prix = mode === "premier" && offreLancementActive() ? prixLancement(await grillePublique()) : null;
+  const offre = prix ? { ...prix, fin: finLancementLisible() } : null;
+
   // Le nurturing part par e-mail quel que soit le bras A/B du contact (plan §7).
   const canalRendu: CanalSprint = mode === "nurturing" ? "email" : canal;
 
@@ -208,7 +217,7 @@ export async function chargerLotDuJour(
           ? messageRelanceEmail({ accroche })
           : mode === "nurturing" && edition
             ? messageNurturing({ edition })
-            : messageEmail({ accroche });
+            : messageEmail({ accroche, offre });
       contacts.push({
         placeId: row.place_id, name: row.name, denomination: row.denomination, city: row.city,
         codePostal: row.code_postal, phone: null, email, rgeDomaines: rge,

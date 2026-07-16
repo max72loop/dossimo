@@ -45,8 +45,8 @@ export default async function DossiersPage() {
 
   const rows = dossiers ?? [];
 
-  // Accès (paiement) calculé pour toute la liste. Le dossier le plus ancien est
-  // offert (§10) ; les autres nécessitent un paiement encaissé.
+  // Accès (paiement) calculé pour toute la liste. Chaque dossier nécessite un
+  // paiement encaissé pour débloquer le livrable.
   const { data: paiements } = await supabase
     .from("paiements")
     .select("dossier_id, montant")
