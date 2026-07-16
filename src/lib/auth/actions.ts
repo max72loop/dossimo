@@ -3,7 +3,7 @@
 import { z } from "zod";
 
 import { createClient } from "@/lib/supabase/server";
-import { consumeAuthRateLimit } from "@/lib/auth/rate-limit";
+import { consumeAuthRateLimit, messageRateLimit } from "@/lib/auth/rate-limit";
 import { mapAuthError, passwordSchema } from "@/lib/auth/password";
 import { destinationApresAuth } from "@/lib/auth/redirect";
 
@@ -44,8 +44,9 @@ export async function signIn(input: unknown): Promise<AuthResult> {
       fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
     };
   }
-  if (!(await consumeAuthRateLimit("signin", parsed.data.email, 8))) {
-    return { ok: false, error: "Trop de tentatives. Réessayez dans 15 minutes." };
+  const quota = await consumeAuthRateLimit("signin", parsed.data.email, 8);
+  if (quota !== "ok") {
+    return { ok: false, error: messageRateLimit(quota, "Trop de tentatives. Réessayez dans 15 minutes.") };
   }
 
   const supabase = await createClient();
@@ -66,8 +67,12 @@ export async function signUp(input: unknown): Promise<AuthResult> {
   }
 
   const { email, password, entreprise, nom, prenom, telephone, next } = parsed.data;
-  if (!(await consumeAuthRateLimit("signup", email, 4, 60 * 60))) {
-    return { ok: false, error: "Trop de créations depuis cette connexion. Réessayez plus tard." };
+  const quota = await consumeAuthRateLimit("signup", email, 4, 60 * 60);
+  if (quota !== "ok") {
+    return {
+      ok: false,
+      error: messageRateLimit(quota, "Trop de créations depuis cette connexion. Réessayez plus tard."),
+    };
   }
 
   const supabase = await createClient();
@@ -100,8 +105,9 @@ export async function signUp(input: unknown): Promise<AuthResult> {
 export async function requestPasswordReset(input: unknown): Promise<AuthResult> {
   const parsed = z.object({ email: z.email("Email invalide.") }).safeParse(input);
   if (!parsed.success) return { ok: false, error: "Email invalide." };
-  if (!(await consumeAuthRateLimit("password-reset", parsed.data.email, 3, 60 * 60))) {
-    return { ok: false, error: "Trop de demandes. Réessayez plus tard." };
+  const quota = await consumeAuthRateLimit("password-reset", parsed.data.email, 3, 60 * 60);
+  if (quota !== "ok") {
+    return { ok: false, error: messageRateLimit(quota, "Trop de demandes. Réessayez plus tard.") };
   }
   const supabase = await createClient();
   const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "").replace(/\/$/, "");
