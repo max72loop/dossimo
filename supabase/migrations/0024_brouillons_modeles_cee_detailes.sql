@@ -1,1 +1,23 @@
-c'est bon 
+-- NO-OP INTENTIONNEL — ne rien ajouter dans ce fichier.
+--
+-- Historique : ce fichier a été committé par erreur avec le texte « c'est bon »
+-- à la place de son SQL (collage accidentel depuis l'éditeur Supabase). Il n'a
+-- donc JAMAIS rien créé, alors qu'il est enregistré comme appliqué dans
+-- `supabase_migrations.schema_migrations` en production.
+--
+-- Conséquence : `supabase db reset` échouait ici en erreur de syntaxe, et tout
+-- l'historique de migrations était irrejouable (cf. 0025, même incident).
+--
+-- Pourquoi un no-op plutôt qu'une suppression du fichier ou une renumérotation :
+-- la production a déjà la ligne `0024` dans sa table de migrations. Supprimer le
+-- fichier ou le renuméroter ferait diverger l'historique local de l'historique
+-- distant. On neutralise donc le fichier en place, et on repart proprement au
+-- numéro suivant. C'est la seule option qui laisse prod et local d'accord.
+--
+-- Ce que ce fichier devait porter, d'après son nom : les brouillons de modèles
+-- CEE détaillés, c'est-à-dire l'enrichissement de `quote_gestures` /
+-- `quote_templates` amorcé en 0021 et complété en 0023. Ce travail n'a jamais
+-- été écrit. S'il est repris un jour, il doit l'être dans une NOUVELLE migration
+-- numérotée à la suite, jamais ici.
+
+select 1 where false;

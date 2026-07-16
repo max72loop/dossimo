@@ -170,6 +170,26 @@ templates/cerfa/      # modèles maîtres Cerfa versionnés (+ archive/)
 
 ## 13. Prochaines tâches
 
+> Le back-end a été audité le 2026-07-16. L'état du schéma, le modèle de
+> sécurité, l'historique des incidents et la dette restante sont documentés dans
+> **`supabase/README.md`** : c'est la référence, à lire avant toute migration.
+
+**Dette back-end prioritaire (issue de l'audit)**
+
+- [ ] **Purger les pièces justificatives.** Avis d'imposition, RIB et pièces
+      d'identité s'accumulent sans limite (art. 5.1.e RGPD). Point le plus lourd
+      du projet, sur les données les plus sensibles.
+- [ ] Donner au bénéficiaire un droit exerçable (accès / rectification /
+      effacement) : il dépose ses pièces via une URL et n'existe pas en base.
+- [ ] Borner par colonne le `grant update` sur `dossiers`, comme `0031` l'a fait
+      pour `artisans`.
+- [ ] Câbler `expire_old_credits` à un cron : sans lui `credit_balance_cents`
+      dérive dès qu'un crédit expire.
+- [ ] Purger `leads`, `prospects` et `auth_rate_limits` (CNIL : ~3 ans après le
+      dernier contact en prospection B2B).
+
+**Produit**
+
 - [ ] Implémenter le remplissage des Cerfa officiels CEE isolation avec `pdf-lib`,
       piloté par `version_formulaire` de `regles_metier`.
 - [ ] Mettre en place le processus de surveillance Cerfa (§8) et créer

@@ -1,1 +1,26 @@
-Error: Failed to run sql query: ERROR: 42P07: relation "reminder_schedules" already exists
+-- NO-OP INTENTIONNEL — le contenu réel de cette migration vit dans 0027.
+--
+-- Historique : ce fichier créait `reminder_schedules` et `reminder_logs`. Il a
+-- été exécuté À LA MAIN dans l'éditeur SQL Supabase, puis rejoué, ce qui a
+-- renvoyé :
+--
+--   ERROR: 42P07: relation "reminder_schedules" already exists
+--
+-- Ce message d'erreur a été collé PAR-DESSUS le contenu du fichier, écrasant les
+-- 52 lignes de SQL qu'il contenait. Le fichier committé n'était donc plus du SQL
+-- du tout, et `supabase db reset` échouait ici en erreur de syntaxe.
+--
+-- La réparation a été faite dans `0027_reparer_relances_beneficiaire.sql`, qui
+-- rejoue le contenu en `create table if not exists` + `drop policy if exists`,
+-- donc rejouable sans risque. 0027 est la source de vérité pour ces deux tables.
+--
+-- Pourquoi un no-op plutôt qu'une restauration du SQL ici : 0027 fait déjà le
+-- travail, et de façon idempotente. Remettre le SQL dans 0025 créerait deux
+-- migrations qui créent les mêmes tables, sans rien gagner. Voir 0024 pour la
+-- raison de ne pas supprimer ni renuméroter le fichier.
+--
+-- LEÇON, à ne pas répéter : ne jamais exécuter une migration à la main dans
+-- l'éditeur SQL. Elle est alors appliquée sans être enregistrée, l'historique
+-- ment, et la réparation coûte plus cher que l'attente. Utiliser `db push`.
+
+select 1 where false;

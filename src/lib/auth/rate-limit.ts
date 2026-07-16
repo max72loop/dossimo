@@ -31,7 +31,11 @@ export async function consumeAuthRateLimit(
 ): Promise<RateLimitVerdict> {
   const h = await headers();
   const ip = h.get("x-forwarded-for")?.split(",")[0]?.trim() || h.get("x-real-ip") || "unknown";
-  const secret = process.env.AUTH_RATE_LIMIT_SECRET || process.env.DEPOT_LINK_SECRET;
+  // Un secret par usage : pas de repli sur DEPOT_LINK_SECRET. Ce repli faisait
+  // converger deux usages cryptographiques distincts (dérivation d'un token
+  // public, hachage d'une clé de limitation) sur un même secret, si bien qu'en
+  // faire tourner un cassait l'autre.
+  const secret = process.env.AUTH_RATE_LIMIT_SECRET;
   if (!secret) {
     console.error("[auth] AUTH_RATE_LIMIT_SECRET manquant");
     return "unavailable";

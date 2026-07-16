@@ -187,11 +187,34 @@ export async function chargerLotDuJour(
       : await requete.order("score", { ascending: false, nullsFirst: false }).limit(Math.max(taille * 2, taille));
   if (error) throw new Error(`Lecture prospects_dossimo : ${error.message}`);
 
+  // Refus DURABLES. `prospects_dossimo.opt_out` est un drapeau de confort qui
+  // vaut `false` par défaut : il disparaît si la ligne est supprimée puis
+  // réimportée, et le contact ressortirait dans un lot après avoir dit STOP.
+  // `prospection_suppressions` (migration 0032) est la preuve qui survit à tout
+  // réimport, et c'est elle qui fait foi ici. Voir `marquerStop`, qui écrit dans
+  // les deux. Table volontairement petite (seuls les refus y entrent) : on la
+  // charge entière plutôt que de la joindre contact par contact.
+  const { data: suppressions, error: suppressionsError } = await admin
+    .from("prospection_suppressions")
+    .select("email");
+  if (suppressionsError) {
+    throw new Error(`Lecture des refus : ${suppressionsError.message}`);
+  }
+  const refuses = new Set((suppressions ?? []).map((s) => s.email.trim().toLowerCase()));
+
   const inconnusGlobaux = new Set<string>();
   const contacts: ContactSprint[] = [];
 
   for (const row of data ?? []) {
     if (contacts.length >= taille) break;
+    // Un refus sur N'IMPORTE QUELLE adresse connue du contact vaut refus, quel
+    // que soit le canal : quelqu'un qui a dit STOP par e-mail ne doit pas être
+    // rattrapé par WhatsApp.
+    const aRefuse = (row.emails ?? []).some((e) =>
+      refuses.has((e ?? "").trim().toLowerCase()),
+    );
+    if (aRefuse) continue;
+
     const rge = (row.rge_domaines ?? []).filter(Boolean) as string[];
     const { bucket, accroche, inconnus } = choisirAccroche(rge);
     for (const i of inconnus) inconnusGlobaux.add(i);

@@ -3,6 +3,8 @@ import Link from "next/link";
 import { DemarrageAssiste } from "@/components/dossier/demarrage-assiste";
 import { getCurrentArtisan } from "@/lib/auth/get-artisan";
 import type { CeeIsolationInput } from "@/lib/dossier/cee-isolation";
+import { fetchSeuilsIsolation } from "@/lib/rules/regles-metier";
+import { createClient } from "@/lib/supabase/server";
 
 export const metadata = {
   title: "Nouveau dossier CEE isolation",
@@ -15,6 +17,12 @@ export default async function NouveauDossierPage({
 }) {
   const { mode, dispositif, geste } = await searchParams;
   const artisan = await getCurrentArtisan();
+
+  // Seuils R affichés en aide à la saisie, lus dans `regles_metier` : la même
+  // source que le moteur de contrôle. Jamais codés en dur côté formulaire, sans
+  // quoi l'écran et le moteur finissent par annoncer deux seuils différents.
+  // `{}` si la table est illisible : l'indication est alors tue, pas inventée.
+  const seuilsIsolation = await fetchSeuilsIsolation(await createClient());
 
   // Préremplissage depuis le profil connecté : l'artisan ne resaisit pas son
   // entreprise ni sa qualification RGE à chaque dossier.
@@ -57,7 +65,11 @@ export default async function NouveauDossierPage({
         </p>
       </div>
 
-      <DemarrageAssiste initialValues={initialValues} manual={mode === "manuel"} />
+      <DemarrageAssiste
+        initialValues={initialValues}
+        manual={mode === "manuel"}
+        seuilsIsolation={seuilsIsolation}
+      />
 
       <p className="mt-6 text-center text-xs text-encre-claire">
         Dossimo est un service indépendant d&apos;aide à la préparation de

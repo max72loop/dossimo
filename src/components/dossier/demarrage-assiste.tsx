@@ -14,9 +14,17 @@ const inputClass =
 export function DemarrageAssiste({
   initialValues,
   manual = false,
+  seuilsIsolation = {},
 }: {
   initialValues: Partial<CeeIsolationInput>;
   manual?: boolean;
+  /**
+   * R minimal par poste d'isolation, lu dans `regles_metier` côté serveur et
+   * traversé jusqu'au formulaire. Ce composant ne fait que le convoyer : il est
+   * client, il ne peut pas lire la base, et ces seuils ne doivent pas être
+   * réécrits en dur (cf. TYPES_ISOLATION).
+   */
+  seuilsIsolation?: Record<string, number>;
 }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [geste, setGeste] = useState<Famille>((initialValues.geste as Famille) ?? "isolation");
@@ -101,6 +109,7 @@ export function DemarrageAssiste({
           assisted={found > 0}
           assistedFields={champsLus}
           initialDocument={sourceFile}
+          seuilsIsolation={seuilsIsolation}
         />
       </div>
     );

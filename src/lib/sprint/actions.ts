@@ -51,10 +51,15 @@ export async function marquerEnvoye(formData: FormData): Promise<void> {
   const mode: ModeSprint =
     modeBrut === "relance" || modeBrut === "nurturing" ? modeBrut : "premier";
   const admin = createAdminClient();
-  await admin
+  const { error } = await admin
     .from("prospects_dossimo")
     .update(patchDuMode(mode, jourParis()))
     .eq("place_id", placeId);
+  // On lève au lieu d'ignorer : sans ça, un échec d'écriture laissait l'UI
+  // afficher un succès et le contact ressortait dans le lot du lendemain, où il
+  // aurait été recontacté. Les cinq chiffres du pilotage A/B divergeaient aussi
+  // du réel, en silence.
+  if (error) throw new Error(`Marquage « ${mode} » impossible : ${error.message}`);
   revalidatePath("/admin/sprint");
 }
 
@@ -68,25 +73,72 @@ export async function marquerReponse(formData: FormData): Promise<void> {
   const placeId = String(formData.get("place_id") ?? "");
   if (!placeId) return;
   const admin = createAdminClient();
-  await admin
+  const { error } = await admin
     .from("prospects_dossimo")
     .update({ reponse: true })
     .eq("place_id", placeId);
+  if (error) throw new Error(`Marquage de la réponse impossible : ${error.message}`);
   revalidatePath("/admin/sprint");
 }
 
 /**
- * Pose `opt_out = true` (STOP). Priorité RGPD : un refus est enregistré le jour
- * même, définitivement. Le contact ne ressortira plus dans aucun lot.
+ * Enregistre un STOP. Priorité RGPD : un refus est enregistré le jour même,
+ * définitivement, et le contact ne ressort dans aucun lot.
+ *
+ * DEUX ÉCRITURES, et les deux comptent :
+ *  1. `prospection_suppressions` (clé = e-mail) : la preuve DURABLE de
+ *     l'opposition, exigible en cas de contrôle. Elle ne se purge jamais et
+ *     survit à tout réimport du fichier.
+ *  2. `prospects_dossimo.opt_out` : le drapeau de confort qui sort le contact
+ *     des lots. Il est NON durable : un `default false` sur une colonne d'une
+ *     table réimportable veut dire qu'un opt-out disparaît si la ligne est
+ *     supprimée puis réimportée. C'est exactement le scénario contre lequel
+ *     `prospection_suppressions` a été conçue (migration 0032).
+ *
+ * La suppression est écrite EN PREMIER, volontairement : si la seconde écriture
+ * échoue, il reste la preuve du refus, et `chargerLotDuJour` filtre déjà sur les
+ * suppressions. L'inverse laisserait un refus sans trace.
+ *
+ * On lève à la moindre erreur : un STOP avalé en silence, c'est un contact
+ * recontacté après avoir dit non.
  */
 export async function marquerStop(formData: FormData): Promise<void> {
   await exigerAdmin();
   const placeId = String(formData.get("place_id") ?? "");
   if (!placeId) return;
   const admin = createAdminClient();
-  await admin
+
+  const { data: contact, error: lectureError } = await admin
+    .from("prospects_dossimo")
+    .select("emails")
+    .eq("place_id", placeId)
+    .maybeSingle();
+  if (lectureError) {
+    throw new Error(`Lecture du contact impossible : ${lectureError.message}`);
+  }
+
+  // 1) La preuve durable, sur chaque adresse connue du contact.
+  const emails = (contact?.emails ?? [])
+    .map((e) => (e ?? "").trim().toLowerCase())
+    .filter((e) => e.includes("@"));
+  if (emails.length) {
+    const { error: suppressionError } = await admin
+      .from("prospection_suppressions")
+      .upsert(
+        emails.map((email) => ({ email, motif: "stop sprint prospection" })),
+        { onConflict: "email" },
+      );
+    if (suppressionError) {
+      throw new Error(`Enregistrement du refus impossible : ${suppressionError.message}`);
+    }
+  }
+
+  // 2) Le drapeau qui le sort des lots.
+  const { error } = await admin
     .from("prospects_dossimo")
     .update({ opt_out: true })
     .eq("place_id", placeId);
+  if (error) throw new Error(`Opt-out impossible : ${error.message}`);
+
   revalidatePath("/admin/sprint");
 }

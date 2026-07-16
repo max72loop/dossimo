@@ -161,10 +161,12 @@ export default async function DossiersPage() {
         conforme: rapport.conforme,
       });
       const aide = estimerPrime(data);
-      prixParDossier.set(
-        d.id,
-        prixPack(aide ? Math.round(aide.montant * 100) : null, tiers).label,
-      );
+      // On ne mémorise le libellé QUE s'il correspond à un prix réel. `prixPack`
+      // renvoie `{ cents: null, label: "—" }` quand l'aide est inconnue ou hors
+      // palier : stocker ce "—" ferait afficher « Débloquer · — » au bouton.
+      // Absent de la Map = prix tu, ce que `PaywallCta` sait rendre.
+      const prix = prixPack(aide ? Math.round(aide.montant * 100) : null, tiers);
+      if (prix.cents != null) prixParDossier.set(d.id, prix.label);
     } catch {
       // dossier incomplet : exclu du calcul de conformité.
     }
@@ -355,7 +357,13 @@ export default async function DossiersPage() {
                           // relative z-10 : le CTA de paiement reste cliquable au-dessus
                           // de l'overlay qui rend toute la ligne cliquable.
                           <div className="relative z-10 flex w-fit flex-col items-start gap-1.5">
-                            <PaywallCta dossierId={d.id} prix={prixParDossier.get(d.id) ?? "149 €"} compact />
+                            {/* `?? null` et surtout pas `?? "149 €"` : le repli codé
+                                en dur réintroduisait exactement le tarif inventé que
+                                `prixPack` refuse d'afficher (il renvoie "—" quand
+                                l'aide est inconnue ou hors palier). Un dossier du
+                                palier 49 € s'affichait alors à 149 €. La grille vit
+                                dans `pricing_tiers`, jamais dans le code (CLAUDE.md §10). */}
+                            <PaywallCta dossierId={d.id} prix={prixParDossier.get(d.id) ?? null} compact />
                             {(() => {
                               const ctrl = controleParDossier.get(d.id);
                               if (!ctrl) return null;

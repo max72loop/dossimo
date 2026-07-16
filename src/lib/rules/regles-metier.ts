@@ -102,3 +102,44 @@ export async function fetchRegleActive(
     mentions: mentions.success ? mentions.data : [],
   };
 }
+
+/**
+ * Seuils R minimaux des postes d'isolation CEE, lus depuis `regles_metier`.
+ *
+ * Pourquoi cette fonction existe : ces seuils étaient AUSSI écrits en dur dans
+ * `TYPES_ISOLATION` (src/lib/dossier/cee-isolation.ts) pour alimenter l'aide à la
+ * saisie, alors que la table les porte déjà et que `/admin/regles` permet de les
+ * éditer. Deux sources de vérité pour un seuil réglementaire : le jour où un
+ * arrêté change le R minimal et où l'admin corrige la base, le formulaire
+ * continuait d'afficher l'ancien seuil pendant que le moteur refusait sur le
+ * nouveau. Dossimo fabriquait le motif de refus qu'il prétend éviter (CLAUDE.md
+ * §8), et l'artisan ne comprenait pas pourquoi.
+ *
+ * Une seule requête pour les quatre postes : l'écran de saisie n'a pas à faire
+ * quatre allers-retours. Un poste absent ou illisible n'apparaît pas dans le
+ * résultat, et l'appelant TAIT alors l'indication au lieu d'en inventer une.
+ */
+export async function fetchSeuilsIsolation(
+  supabase: DbClient,
+): Promise<Record<string, number>> {
+  const { data, error } = await supabase
+    .from("regles_metier")
+    .select("type_travaux, condition_json, version")
+    .eq("dispositif", "cee")
+    .eq("actif", true)
+    .order("version", { ascending: false });
+
+  if (error || !data) return {};
+
+  const seuils: Record<string, number> = {};
+  for (const ligne of data) {
+    // `order` décroissant + premier gagnant : on garde la version active la plus
+    // élevée par poste, comme `fetchRegleActive`.
+    if (ligne.type_travaux in seuils) continue;
+    const condition = conditionSchema.safeParse(ligne.condition_json);
+    if (condition.success && typeof condition.data.r_min === "number") {
+      seuils[ligne.type_travaux] = condition.data.r_min;
+    }
+  }
+  return seuils;
+}

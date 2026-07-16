@@ -75,13 +75,25 @@ export async function marquerPiecesVues(
   return { ok: true };
 }
 
-/** Coupe l'accès de tous les liens émis pour ce dossier. */
+/**
+ * Coupe l'accès de tous les liens émis pour ce dossier, définitivement : le
+ * prochain lien émis aura une URL différente (nonce neuf, cf. lien.ts).
+ *
+ * On ne renvoie `ok: true` que si l'écriture a réellement eu lieu. Annoncer une
+ * révocation qui n'a pas été enregistrée, c'est promettre à l'artisan que l'accès
+ * est coupé alors que l'URL fuitée fonctionne toujours.
+ */
 export async function revoquerLienDepot(
   dossierId: string,
 ): Promise<{ ok: boolean }> {
   const data = await getDossier(dossierId);
   if (!data) return { ok: false };
-  await revoquerLiens(dossierId);
+  try {
+    await revoquerLiens(dossierId);
+  } catch (err) {
+    console.error("[depot] revocation:", err);
+    return { ok: false };
+  }
   revalidatePath(`/dossiers/${dossierId}`);
   return { ok: true };
 }

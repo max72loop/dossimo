@@ -7,6 +7,28 @@ import type { Finding, RapportControle } from "@/lib/rules/types";
 const TVA_ISOLATION_DEFAUT = 0.055; // taux réduit rénovation énergétique (repli)
 const ANCIENNETE_MIN_DEFAUT = 2; // années (repli)
 
+/**
+ * R minimal par poste d'isolation — REPLI UNIQUEMENT, quand aucune règle active
+ * n'existe pour le couple (dispositif, type_travaux). La source de vérité est
+ * `regles_metier.condition_json.r_min` (migration 0004), éditable dans
+ * /admin/regles : elle gagne toujours, voir `rMin` plus bas.
+ *
+ * Ces valeurs vivaient dans `TYPES_ISOLATION` (référentiel de SAISIE), d'où le
+ * formulaire les tirait aussi pour afficher son indication. Le formulaire lit
+ * désormais la base (`fetchSeuilsIsolation`) : les deux affichages ne peuvent
+ * plus diverger. Le repli reste ici, avec les autres replis du moteur, parce que
+ * le moteur doit rester best-effort et jamais bloquant faute de règle.
+ *
+ * Si un arrêté change un seuil : corriger `regles_metier`, PAS cette constante.
+ * Elle ne sert que le cas dégradé « aucune règle en base ».
+ */
+const R_MIN_DEFAUT: Record<string, number> = {
+  combles_perdus: 7,
+  rampants_toiture: 6,
+  murs: 3.7,
+  plancher_bas: 3,
+};
+
 function parseDate(s: string | null | undefined): Date | null {
   if (!s) return null;
   const d = new Date(`${s}T00:00:00`);
@@ -33,7 +55,7 @@ export function controlerDossier(
   const ancienneteMin = cond?.anciennete_min_ans ?? ANCIENNETE_MIN_DEFAUT;
   const rMin =
     cond?.r_min ??
-    (c.travaux?.type_isolation ? TYPES_ISOLATION[c.travaux.type_isolation].r_min : 0);
+    (c.travaux?.type_isolation ? R_MIN_DEFAUT[c.travaux.type_isolation] ?? 0 : 0);
 
   const dispositif = data.dossier.dispositif;
   const dispositifLabel =

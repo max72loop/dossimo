@@ -492,6 +492,12 @@ export interface Database {
           dossier_id: string;
           /** SHA-256 du token. Le token en clair n'est jamais stocké. */
           token_hash: string;
+          /**
+           * Aléa entrant dans la dérivation du token (migration 0041). Neuf à
+           * chaque nouveau lien : c'est lui qui rend la révocation définitive.
+           * NULL = lien v1 historique, résoluble mais non réaffichable.
+           */
+          token_nonce: string | null;
           expire_at: string;
           revoque_at: string | null;
           derniere_visite_at: string | null;
@@ -501,6 +507,7 @@ export interface Database {
           id?: string;
           dossier_id: string;
           token_hash: string;
+          token_nonce?: string | null;
           expire_at: string;
           revoque_at?: string | null;
           derniere_visite_at?: string | null;

@@ -132,6 +132,7 @@ export function DossierCeeIsolationForm({
   assisted = false,
   assistedFields = [],
   initialDocument,
+  seuilsIsolation = {},
 }: {
   initialValues?: Partial<CeeIsolationInput>;
   initialStep?: number;
@@ -139,6 +140,12 @@ export function DossierCeeIsolationForm({
   /** Noms des champs réellement lus sur le document, hors profil artisan. */
   assistedFields?: string[];
   initialDocument?: File;
+  /**
+   * R minimal par poste d'isolation, venu de `regles_metier` (source de vérité,
+   * éditable dans /admin/regles). Vide = seuil inconnu : l'indication est tue.
+   * Ne JAMAIS remettre ces valeurs en dur ici, elles divergeraient du moteur.
+   */
+  seuilsIsolation?: Record<string, number>;
 }) {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
@@ -179,7 +186,7 @@ export function DossierCeeIsolationForm({
   const nbInformationsProfilEtape = nbInformationsDisponiblesEtape - nbInformationsLuesEtape;
   const dernier = etape === etapesActives.length - 1;
   const typeIsolation = useWatch({ control, name: "type_isolation" });
-  const rMin = typeIsolation ? TYPES_ISOLATION[typeIsolation]?.r_min : undefined;
+  const rMin = typeIsolation ? seuilsIsolation[typeIsolation] : undefined;
   const dispositif = useWatch({ control, name: "dispositif" });
   const geste = useWatch({ control, name: "geste" });
   const estPac = geste === "pac_air_eau";

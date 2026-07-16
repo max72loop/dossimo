@@ -90,7 +90,14 @@ export function PaywallCta({
   compact = false,
 }: {
   dossierId: string;
-  prix: string;
+  /**
+   * Prix à annoncer, déjà formaté (`prixPack().label`). `null` quand la grille
+   * ne permet pas de le déterminer : le bouton tait alors le montant au lieu
+   * d'en afficher un faux. Voir la doc de `prixPack` : annoncer un tarif faux
+   * est pire que ne pas l'annoncer, et l'artisan découvrira le vrai prix à
+   * l'écran de paiement.
+   */
+  prix: string | null;
   /** Variante réduite pour la liste des dossiers. */
   compact?: boolean;
 }) {
@@ -113,8 +120,12 @@ export function PaywallCta({
           {busy
             ? "Ouverture…"
             : compact
-              ? `Débloquer · ${prix}`
-              : `Débloquer le pack · ${prix}`}
+              ? prix
+                ? `Débloquer · ${prix}`
+                : "Débloquer"
+              : prix
+                ? `Débloquer le pack · ${prix}`
+                : "Débloquer le pack"}
         </button>
         <p
           className={

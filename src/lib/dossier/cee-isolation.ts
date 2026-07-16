@@ -10,28 +10,34 @@ import { z } from "zod";
 
 // ---------------------------------------------------------------------------
 // Référentiel isolation → fiche CEE (BAR-EN)
+//
+// PAS DE SEUIL ICI. Les `r_min` ont vécu dans cet objet en même temps que dans
+// `regles_metier.condition_json` (migration 0004), qui est leur source de vérité
+// et que `/admin/regles` permet d'éditer. Deux sources pour un seuil
+// réglementaire, c'est la garantie qu'elles divergeront : après un arrêté, la
+// base est corrigée, le formulaire continue d'afficher l'ancien seuil, et le
+// moteur refuse sur le nouveau. Les seuils se lisent désormais avec
+// `fetchSeuilsIsolation` (src/lib/rules/regles-metier.ts).
+//
+// Ce qui reste ici est du référentiel de SAISIE (libellé affiché, fiche CEE
+// associée) : rien qu'un arrêté ne change sans changer aussi le code.
 // ---------------------------------------------------------------------------
 export const TYPES_ISOLATION = {
   combles_perdus: {
     label: "Combles perdus",
     fiche: "BAR-EN-101",
-    // R minimal réglementaire indicatif (contrôle réel = moteur de règles, §9 étape 1).
-    r_min: 7,
   },
   rampants_toiture: {
     label: "Rampants de toiture",
     fiche: "BAR-EN-101",
-    r_min: 6,
   },
   murs: {
     label: "Murs (intérieur / extérieur)",
     fiche: "BAR-EN-102",
-    r_min: 3.7,
   },
   plancher_bas: {
     label: "Plancher bas",
     fiche: "BAR-EN-103",
-    r_min: 3,
   },
 } as const;
 

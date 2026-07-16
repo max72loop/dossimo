@@ -42,3 +42,7 @@ yarn-error.log*
 next-env.d.ts
 
 .vercel
+
+# Cache local de la CLI Supabase : lien du projet, URL du pooler, versions.
+# Propre à un poste, jamais partagé.
+supabase/.temp/
