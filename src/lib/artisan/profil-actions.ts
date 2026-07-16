@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient as createStatelessClient } from "@supabase/supabase-js";
 import { z } from "zod";
 
-import { consumeAuthRateLimit } from "@/lib/auth/rate-limit";
+import { consumeAuthRateLimit, messageRateLimit } from "@/lib/auth/rate-limit";
 import { mapAuthError, passwordSchema } from "@/lib/auth/password";
 import { createClient } from "@/lib/supabase/server";
 import { normaliserSiret, siretValide } from "@/lib/artisan/siret";
@@ -135,8 +135,9 @@ export async function changePassword(input: unknown): Promise<ProfilResult> {
   } = await supabase.auth.getUser();
   if (!user?.email) return { ok: false, error: "Vous devez être connecté." };
 
-  if (!(await consumeAuthRateLimit("password-change", user.id, 5))) {
-    return { ok: false, error: "Trop de tentatives. Réessayez dans 15 minutes." };
+  const quota = await consumeAuthRateLimit("password-change", user.id, 5);
+  if (quota !== "ok") {
+    return { ok: false, error: messageRateLimit(quota, "Trop de tentatives. Réessayez dans 15 minutes.") };
   }
 
   if (!(await motDePasseCourantValide(user.email, parsed.data.currentPassword))) {
@@ -175,8 +176,9 @@ export async function changeEmail(input: unknown): Promise<ProfilResult> {
     return { ok: false, error: "C'est déjà votre adresse actuelle." };
   }
 
-  if (!(await consumeAuthRateLimit("email-change", user.id, 3, 60 * 60))) {
-    return { ok: false, error: "Trop de demandes. Réessayez plus tard." };
+  const quota = await consumeAuthRateLimit("email-change", user.id, 3, 60 * 60);
+  if (quota !== "ok") {
+    return { ok: false, error: messageRateLimit(quota, "Trop de demandes. Réessayez plus tard.") };
   }
 
   if (!(await motDePasseCourantValide(user.email, parsed.data.currentPassword))) {
