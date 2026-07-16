@@ -13,7 +13,7 @@ import { getReferralOverview } from "@/lib/referral";
 import { createClient } from "@/lib/supabase/server";
 import type { Artisan } from "@/lib/database.types";
 
-export const metadata = { title: "Mon compte · Dossimo" };
+export const metadata = { title: "Mon compte"};
 
 const SECTIONS = [
   { id: "entreprise", titre: "Entreprise" },

@@ -1,6 +1,10 @@
-import { SignInForm } from "@/components/auth/auth-forms";
+import { redirect } from "next/navigation";
 
-export const metadata = { title: "Connexion · Dossimo" };
+import { SignInForm } from "@/components/auth/auth-forms";
+import { getCurrentUser } from "@/lib/auth/get-artisan";
+import { destinationApresAuth } from "@/lib/auth/redirect";
+
+export const metadata = { title: "Connexion" };
 
 export default async function ConnexionPage({
   searchParams,
@@ -8,6 +12,9 @@ export default async function ConnexionPage({
   searchParams: Promise<{ next?: string }>;
 }) {
   const { next } = await searchParams;
+  // Déjà connecté → on l'emmène directement là où il allait (reprise du
+  // brouillon d'essai comprise), au lieu de le bloquer sur la connexion.
+  if (await getCurrentUser()) redirect(destinationApresAuth(next));
   return (
     <div className="rounded border border-filigrane bg-blanc-casse p-7 shadow-sm sm:p-8">
       <h1 className="font-serif text-2xl font-semibold tracking-tight text-encre">

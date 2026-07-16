@@ -15,8 +15,8 @@ const TODO = "[À COMPLÉTER]";
 export const editeur = {
   // --- Marque ---
   nomCommercial: "Dossimo",
-  domaine: "dossimo.fr",
-  siteUrl: "https://dossimo.fr",
+  domaine: "dossimo.app",
+  siteUrl: "https://dossimo.app",
 
   // --- Entité juridique ---
   // Entreprise individuelle : la dénomination est le nom de l'entrepreneur,

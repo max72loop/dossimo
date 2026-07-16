@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { getAdminEmail } from "@/lib/auth/is-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-export const metadata = { title: "Pilotage produit · Admin Dossimo" };
+export const metadata = { title: "Pilotage produit · Admin"};
 
 const label: Record<string, string> = { en_cours: "En cours", accepte: "Accepté", refuse: "Refusé", abandonne: "Abandonné" };
 

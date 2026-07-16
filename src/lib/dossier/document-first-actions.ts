@@ -2,7 +2,7 @@
 
 import { cookies } from "next/headers";
 
-import { familleDeGeste, type CeeIsolationInput, type Famille } from "@/lib/dossier/cee-isolation";
+import { familleDeGeste, type CeeIsolationInput, type Famille, type TypeIsolation } from "@/lib/dossier/cee-isolation";
 import { getCurrentArtisan } from "@/lib/auth/get-artisan";
 import { ACCEPTED_DOCUMENT_MIMES, isAcceptedDocument } from "@/lib/piece/file-validation";
 import { extractPiece } from "@/lib/piece/extract";
@@ -40,6 +40,45 @@ function nomBeneficiaire(value: string | null) {
 function profilSoutirage(value: string | null): "M" | "L" | "XL" | undefined {
   const normalise = value?.trim().toUpperCase();
   return normalise === "M" || normalise === "L" || normalise === "XL" ? normalise : undefined;
+}
+
+/**
+ * Commune du chantier. Priorité à ce que l'IA a lu ; à défaut, on la déduit de
+ * l'adresse quand la ville suit le code postal ("… 93170 Bagnolet") — le cas le
+ * plus fréquent sur un devis. Sans indice fiable, on laisse vide (l'artisan la
+ * saisit) plutôt que d'inventer une commune depuis le seul code postal.
+ */
+function communeChantier(d: {
+  commune: string | null;
+  adresse: string | null;
+  code_postal: string | null;
+}): string | undefined {
+  if (d.commune?.trim()) return d.commune.trim();
+  if (d.adresse && d.code_postal) {
+    const apresCp = d.adresse.match(new RegExp(`${d.code_postal}\\s+([A-Za-zÀ-ÿ'’\\- ]{2,})`));
+    if (apresCp) return apresCp[1].split(/[,;]/)[0].trim() || undefined;
+  }
+  return undefined;
+}
+
+/**
+ * Emplacement isolé (texte libre du devis) → type d'isolation du référentiel.
+ * On lit d'abord le libellé ("combles perdus", "murs"…), puis on retombe sur la
+ * fiche BAR-EN si besoin. L'artisan confirme ensuite.
+ */
+function typeIsolationDepuis(
+  emplacement: string | null,
+  fiche: string | null,
+): TypeIsolation | undefined {
+  const t = emplacement?.toLowerCase() ?? "";
+  if (t.includes("comble")) return "combles_perdus";
+  if (t.includes("rampant") || t.includes("toiture")) return "rampants_toiture";
+  if (t.includes("mur")) return "murs";
+  if (t.includes("plancher") || t.includes("sol")) return "plancher_bas";
+  if (fiche?.startsWith("BAR-EN-102")) return "murs";
+  if (fiche?.startsWith("BAR-EN-103")) return "plancher_bas";
+  if (fiche?.startsWith("BAR-EN-101")) return "combles_perdus";
+  return undefined;
 }
 
 /**
@@ -115,12 +154,20 @@ export async function analyserDevisInitial(formData: FormData): Promise<AnalyseD
     ...nomBeneficiaire(d.beneficiaire_nom),
     client_adresse: d.adresse ?? undefined,
     client_code_postal: d.code_postal ?? undefined,
+    client_commune: communeChantier(d),
     montant_ht: d.montant_ht ?? undefined,
     montant_ttc: d.montant_ttc ?? undefined,
     date_devis: dateIso(d.date),
     rge_numero: d.rge_numero ?? undefined,
+    rge_domaine: d.rge_domaine ?? undefined,
+    rge_date_fin: dateIso(d.rge_validite),
+    type_isolation:
+      gesteDetecte === "isolation"
+        ? typeIsolationDepuis(d.isolation_emplacement, d.fiche)
+        : undefined,
     surface_isolee_m2: d.surface_isolee_m2 ?? undefined,
     resistance_thermique_r: d.resistance_thermique_r ?? undefined,
+    epaisseur_mm: d.isolant_epaisseur_mm ?? undefined,
     isolant_marque: d.isolant_marque ?? undefined,
     isolant_reference: d.isolant_reference ?? undefined,
     pac_etas: d.pac_etas ?? undefined,

@@ -43,15 +43,20 @@ const extractedSchema = z.object({
   beneficiaire_nom: str,
   adresse: str,
   code_postal: str,
+  commune: str, // ville du chantier (ex. "Bagnolet"), souvent collée au code postal
   montant_ht: frNum,
   montant_ttc: frNum,
   date: str, // date du devis / de la facture, telle qu'écrite
   rge_numero: str,
+  rge_domaine: str, // domaine / mention RGE (ex. "QUALIBAT 7131")
+  rge_validite: str, // date de fin de validité RGE (ex. "31/12/2026")
   fiche: str, // ex. BAR-EN-101 si présent
 
   // Isolation
+  isolation_emplacement: str, // ex. "combles perdus", "rampants", "murs", "plancher bas"
   surface_isolee_m2: frNum,
   resistance_thermique_r: frNum,
+  isolant_epaisseur_mm: frNum, // épaisseur posée, en millimètres
   isolant_marque: str,
   isolant_reference: str,
 
@@ -84,12 +89,15 @@ export type ExtractResult =
 
 /** Champs communs, demandés quelle que soit la famille. */
 const CHAMPS_COMMUNS = `  "beneficiaire_nom": "nom du client bénéficiaire",
-  "adresse": "adresse du chantier",
-  "code_postal": "code postal du chantier",
+  "adresse": "adresse du chantier (voie et numéro, sans le code postal ni la ville)",
+  "code_postal": "code postal du chantier (5 chiffres)",
+  "commune": "ville du chantier — le nom qui suit le code postal (ex. 93170 Bagnolet -> Bagnolet)",
   "montant_ht": nombre (total HT en euros),
   "montant_ttc": nombre (total TTC en euros),
   "date": "date du document (JJ/MM/AAAA)",
   "rge_numero": "numéro de qualification RGE de l'entreprise",
+  "rge_domaine": "domaine ou mention RGE tel qu'écrit, organisme compris (ex. QUALIBAT 7131, Qualibat 7131 Isolation)",
+  "rge_validite": "date de fin de validité de la qualification RGE, JJ/MM/AAAA (ex. \\"valide jusqu'au 31/12/2026\\" -> 31/12/2026)",
   "fiche": "fiche CEE si mentionnée (ex. BAR-EN-101, BAR-TH-171)"`;
 
 /**
@@ -100,8 +108,10 @@ const CHAMPS_COMMUNS = `  "beneficiaire_nom": "nom du client bénéficiaire",
 const BLOC: Record<Famille, { objet: string; champs: string }> = {
   isolation: {
     objet: "travaux d'isolation",
-    champs: `  "surface_isolee_m2": nombre (m² isolés),
+    champs: `  "isolation_emplacement": "partie isolée en clair (ex. combles perdus, rampants de toiture, murs, plancher bas)",
+  "surface_isolee_m2": nombre (m² isolés),
   "resistance_thermique_r": nombre (résistance thermique R, en m²·K/W),
+  "isolant_epaisseur_mm": nombre (épaisseur de l'isolant posé, en millimètres — ex. 292),
   "isolant_marque": "marque de l'isolant",
   "isolant_reference": "référence produit de l'isolant"`,
   },

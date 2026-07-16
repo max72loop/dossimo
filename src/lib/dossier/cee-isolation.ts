@@ -156,9 +156,11 @@ const nombreOptionnel = z.preprocess(
   z.coerce.number().nonnegative().optional(),
 );
 
+// Message calé sur ce que l'utilisateur voit : l'<input type="date"> affiche
+// jj/mm/aaaa (et non le format ISO stocké en interne).
 const dateISO = z
   .string()
-  .regex(/^\d{4}-\d{2}-\d{2}$/, "Date invalide (AAAA-MM-JJ)");
+  .regex(/^\d{4}-\d{2}-\d{2}$/, "Date invalide (jj/mm/aaaa)");
 
 const dateISOOptionnelle = z.preprocess(
   (v) => (v === "" || v === null ? undefined : v),

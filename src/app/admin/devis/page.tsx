@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { QuoteTemplateEditor } from "@/components/quotes/quote-template-editor";
 import { getAdminEmail } from "@/lib/auth/is-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
-export const metadata = { title: "Modèles de devis · Admin Dossimo" };
+export const metadata = { title: "Modèles de devis · Admin"};
 export default async function AdminDevisPage() {
   if (!(await getAdminEmail())) notFound();
   const admin = createAdminClient();
