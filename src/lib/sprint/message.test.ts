@@ -36,6 +36,23 @@ describe("normaliserTelephoneFr", () => {
 });
 
 describe("rendu des messages", () => {
+  it("tous les liens portent https:// : sans schéma, Gmail ne les rend pas cliquables", () => {
+    // Un domaine nu suivi d'une query (« dossimo.app/demo?utm_source=email »)
+    // reste du texte brut dans Gmail et Outlook. Sur une campagne dont le seul
+    // objectif est le clic vers /demo, un lien mort la vide de son objet.
+    const corpus = [
+      messageWhatsApp({ ville: "CLICHY", metier: "isolation", accroche: ACCROCHES.isolation }),
+      messageRelanceWhatsApp(),
+      messageEmail({ accroche: ACCROCHES.pac }).corps,
+      messageRelanceEmail({ accroche: ACCROCHES.pac }).corps,
+    ];
+    for (const texte of corpus) {
+      expect(texte).toContain("https://dossimo.app/demo");
+      // Aucune occurrence de l'URL sans schéma.
+      expect(texte).not.toMatch(/(^|[^/])\bdossimo\.app\/demo/);
+    }
+  });
+
   it("le lien wa.me porte le numéro international", () => {
     expect(lienWhatsApp("06 80 26 45 56", "coucou")).toContain("wa.me/33680264556");
     expect(lienWhatsApp("pas un numéro", "coucou")).toBeNull();

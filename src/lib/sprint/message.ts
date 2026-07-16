@@ -61,7 +61,14 @@ export function lienWhatsApp(phone: string | null | undefined, message: string):
   return `https://wa.me/${num}?text=${encodeURIComponent(message)}`;
 }
 
-const DEMO = "dossimo.app/demo";
+/**
+ * Lien d'essai, schéma inclus. Le `https://` n'est pas cosmétique : sans lui,
+ * Gmail et Outlook ne transforment pas un domaine nu suivi d'une query
+ * (`dossimo.app/demo?utm_source=email`) en lien cliquable, et le message laisse
+ * au destinataire une URL à recopier à la main — ce que personne ne fait. Pour
+ * une campagne dont le seul but est le clic vers /demo, ça la vide de son objet.
+ */
+const DEMO = "https://dossimo.app/demo";
 
 /** Message WhatsApp de premier contact (RGPD : source + STOP possibles à l'oral). */
 export function messageWhatsApp(params: {
