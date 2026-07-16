@@ -1,9 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Copy, MessageCircle, Mail, Ban, Send } from "lucide-react";
+import { Check, Copy, MessageCircle, Mail, Ban, Send, MessageSquareReply } from "lucide-react";
 
-import { marquerEnvoye, marquerStop } from "@/lib/sprint/actions";
+import { marquerEnvoye, marquerStop, marquerReponse } from "@/lib/sprint/actions";
+
+type Mode = "premier" | "relance" | "nurturing";
+
+/** Libellé du bouton de marquage : dire quelle colonne on écrit, pas « envoyé » partout. */
+const LIBELLE_MARQUAGE: Record<Mode, string> = {
+  premier: "Marquer envoyé",
+  relance: "Marquer relancé",
+  nurturing: "Marquer nurturing",
+};
 
 type Contact = {
   placeId: string;
@@ -40,7 +49,7 @@ function BoutonCopier({ texte, libelle }: { texte: string; libelle: string }) {
   );
 }
 
-function Carte({ c, canal }: { c: Contact; canal: "whatsapp" | "email" }) {
+function Carte({ c, canal, mode }: { c: Contact; canal: "whatsapp" | "email"; mode: Mode }) {
   return (
     <li className="rounded border border-filigrane bg-blanc-casse p-4">
       <div className="flex flex-wrap items-start justify-between gap-2">
@@ -105,12 +114,24 @@ function Carte({ c, canal }: { c: Contact; canal: "whatsapp" | "email" }) {
         <div className="ml-auto flex items-center gap-2">
           <form action={marquerEnvoye}>
             <input type="hidden" name="place_id" value={c.placeId} />
+            <input type="hidden" name="mode" value={mode} />
             <button
               type="submit"
               className="inline-flex items-center gap-1.5 rounded bg-terre-cuite px-3 py-1.5 text-xs font-medium text-blanc-casse transition hover:bg-terre-cuite-hover"
             >
               <Send className="h-3.5 w-3.5" />
-              Marquer envoyé
+              {LIBELLE_MARQUAGE[mode]}
+            </button>
+          </form>
+          <form action={marquerReponse}>
+            <input type="hidden" name="place_id" value={c.placeId} />
+            <button
+              type="submit"
+              title="Le contact a répondu : le sort de la relance et du nurturing"
+              className="inline-flex items-center gap-1.5 rounded border border-filigrane px-3 py-1.5 text-xs font-medium text-ardoise transition hover:border-tampon hover:text-tampon"
+            >
+              <MessageSquareReply className="h-3.5 w-3.5" />
+              A répondu
             </button>
           </form>
           <form action={marquerStop}>
@@ -130,20 +151,32 @@ function Carte({ c, canal }: { c: Contact; canal: "whatsapp" | "email" }) {
   );
 }
 
-export function SprintListe({ contacts, canal }: { contacts: Contact[]; canal: "whatsapp" | "email" }) {
+/** Pourquoi un lot est vide dépend du mode : un message générique enverrait chercher au mauvais endroit. */
+const VIDE: Record<Mode, string> = {
+  premier:
+    "Aucun contact à afficher pour ce canal. Vérifie que le tirage a été lancé (script prospect_dossimo_tirage.sql), que le plafond du jour n'est pas atteint, et pour l'e-mail que des adresses sont validées.",
+  relance:
+    "Personne à relancer sur ce canal : soit les premiers contacts datent de moins de 5 jours, soit ceux qui étaient éligibles ont déjà été relancés ou ont répondu.",
+  nurturing:
+    "Personne à nourrir sur ce canal : le nurturing ne prend que les contacts déjà relancés, restés silencieux, et qui n'ont pas encore reçu l'édition de ce mois.",
+};
+
+export function SprintListe({
+  contacts,
+  canal,
+  mode = "premier",
+}: {
+  contacts: Contact[];
+  canal: "whatsapp" | "email";
+  mode?: Mode;
+}) {
   if (contacts.length === 0) {
-    return (
-      <p className="rounded border border-filigrane bg-papier/40 p-6 text-sm text-ardoise">
-        Aucun contact à afficher pour ce canal. Vérifie que le tirage a été lancé
-        (script <code>prospect_dossimo_tirage.sql</code>), que le plafond du jour
-        n&apos;est pas atteint, et pour l&apos;e-mail que des adresses sont validées.
-      </p>
-    );
+    return <p className="rounded border border-filigrane bg-papier/40 p-6 text-sm text-ardoise">{VIDE[mode]}</p>;
   }
   return (
     <ul className="space-y-3">
       {contacts.map((c) => (
-        <Carte key={c.placeId} c={c} canal={canal} />
+        <Carte key={c.placeId} c={c} canal={canal} mode={mode} />
       ))}
     </ul>
   );

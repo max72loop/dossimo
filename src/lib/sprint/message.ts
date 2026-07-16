@@ -84,6 +84,45 @@ export function messageWhatsApp(params: {
   ].join("\n\n");
 }
 
+/**
+ * Relance unique J+5, texte repris de la section 10 du plan v3.
+ *
+ * Une seule relance par contact, les deux canaux (plan §6 : « une seule relance
+ * par contact »). La porte de sortie explicite (« dites-le-moi et je ne vous
+ * réécris pas ») fait partie du message : c'est elle qui rend une relance non
+ * sollicitée acceptable.
+ */
+export function messageRelanceWhatsApp(params: { salutation: string }): string {
+  return [
+    `${params.salutation} je me permets une seule relance.`,
+    `Si vous avez un devis sous la main, le test prend 2 minutes et vous montre ce qu'un instructeur verrait : ${DEMO}?utm_source=whatsapp`,
+    "Sinon, dites-le-moi et je ne vous réécris pas. Bonne journée !",
+  ].join("\n\n");
+}
+
+/**
+ * Relance e-mail J+5. Même texte que le canal WhatsApp, plus le bloc source +
+ * STOP : le plan ne le remet pas sur la relance, mais un e-mail non sollicité
+ * doit le porter à chaque envoi, pas seulement au premier.
+ *
+ * Objet identique à celui du premier contact, volontairement : le fil se
+ * regroupe naturellement dans la boîte du destinataire, sans « Re: » postiche
+ * qui simulerait une réponse qu'il n'a jamais écrite.
+ */
+export function messageRelanceEmail(params: {
+  salutation: string;
+  accroche: Accroche;
+}): { objet: string; corps: string } {
+  const corps = [
+    `${params.salutation} je me permets une seule relance.`,
+    `Si vous avez un devis sous la main, le test prend 2 minutes et vous montre ce qu'un instructeur verrait : ${DEMO}?utm_source=email`,
+    "Sinon, dites-le-moi et je ne vous réécris pas. Bonne journée !",
+    "Max Landry, Dossimo · dossimo.app",
+    "Vos coordonnées proviennent de l'annuaire public des professionnels RGE (ADEME). Pour ne plus recevoir de message : répondez STOP.",
+  ].join("\n\n");
+  return { objet: params.accroche.objet, corps };
+}
+
 /** Message e-mail de premier contact. Le bloc source + STOP rend l'envoi licite. */
 export function messageEmail(params: {
   salutation: string;

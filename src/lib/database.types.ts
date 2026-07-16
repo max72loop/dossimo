@@ -160,6 +160,8 @@ export interface Database {
           email_valide: boolean | null;
           date_envoi: string | null;
           date_relance: string | null;
+          /** Dernière édition de nurturing reçue (migration 0037). Récurrente, écrasée chaque mois. */
+          date_nurturing: string | null;
           reponse: boolean | null;
           essai_demo: boolean | null;
           dossier_paye: boolean | null;
@@ -190,6 +192,7 @@ export interface Database {
           email_valide?: boolean | null;
           date_envoi?: string | null;
           date_relance?: string | null;
+          date_nurturing?: string | null;
           reponse?: boolean | null;
           essai_demo?: boolean | null;
           dossier_paye?: boolean | null;

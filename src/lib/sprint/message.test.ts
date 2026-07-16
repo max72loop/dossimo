@@ -1,6 +1,14 @@
 import { describe, it, expect } from "vitest";
 
-import { saluer, normaliserTelephoneFr, lienWhatsApp, messageWhatsApp, messageEmail } from "./message";
+import {
+  saluer,
+  normaliserTelephoneFr,
+  lienWhatsApp,
+  messageWhatsApp,
+  messageEmail,
+  messageRelanceWhatsApp,
+  messageRelanceEmail,
+} from "./message";
 import { ACCROCHES } from "./accroches";
 
 describe("saluer", () => {
@@ -55,5 +63,34 @@ describe("rendu des messages", () => {
     expect(corps).toContain("utm_source=email");
     expect(corps).toContain("STOP");
     expect(corps).toContain("ETAS");
+  });
+});
+
+describe("relance J+5", () => {
+  it("annonce une relance unique et laisse une porte de sortie", () => {
+    // Les deux tiennent le message : sans « une seule », la promesse du plan
+    // n'est pas tenue ; sans la porte de sortie, la relance devient du forcing.
+    const m = messageRelanceWhatsApp({ salutation: "Bonjour Alain," });
+    expect(m).toContain("une seule relance");
+    expect(m).toContain("je ne vous réécris pas");
+    expect(m).toContain("utm_source=whatsapp");
+  });
+
+  it("la relance e-mail porte la source et le STOP, que le premier contact portait déjà", () => {
+    // Chaque e-mail non sollicité doit porter sa sortie, pas seulement le premier.
+    const { objet, corps } = messageRelanceEmail({ salutation: "Bonjour,", accroche: ACCROCHES.isolation });
+    expect(corps).toContain("une seule relance");
+    expect(corps).toContain("utm_source=email");
+    expect(corps).toContain("STOP");
+    expect(corps).toContain("annuaire public");
+    // Objet identique au premier contact : le fil se regroupe naturellement,
+    // sans « Re: » postiche qui simulerait une réponse jamais écrite.
+    expect(objet).toBe(ACCROCHES.isolation.objet);
+    expect(objet).not.toMatch(/^Re\s*:/i);
+  });
+
+  it("la relance ne rejoue pas l'argumentaire du premier contact", () => {
+    const m = messageRelanceWhatsApp({ salutation: "Bonjour," });
+    expect(m).not.toMatch(/mandataire|ACERMI|49\s?€/i);
   });
 });
