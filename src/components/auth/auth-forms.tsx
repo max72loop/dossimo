@@ -7,6 +7,7 @@ import { AlertCircle, Loader2 } from "lucide-react";
 
 import { requestPasswordReset, signIn, signUp, updatePassword, type AuthResult } from "@/lib/auth/actions";
 import { destinationApresAuth } from "@/lib/auth/redirect";
+import { readSource } from "@/lib/tracking/source";
 
 const inputClass =
   "mt-1.5 h-11 w-full rounded border border-filigrane bg-blanc-casse px-3.5 text-sm text-encre placeholder:text-encre-claire outline-none transition focus:border-tampon focus:ring-2 focus:ring-tampon/15";
@@ -123,6 +124,8 @@ export function SignUpForm({ next }: { next?: string }) {
         // Reporté dans le lien de confirmation : sans lui, un compte à
         // confirmation email retomberait sur /dossiers et perdrait la reprise.
         next,
+        // Canal d'acquisition capté à l'arrivée sur le site (plan v3, §12.5).
+        source: readSource() ?? undefined,
       });
       if (r.ok) {
         if (r.confirmationRequired) {

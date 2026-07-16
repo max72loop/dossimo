@@ -44,7 +44,7 @@ export async function createDossierCeeIsolation(
 
   const { data: artisan, error: artisanErr } = await supabase
     .from("artisans")
-    .select("id")
+    .select("id, source")
     .eq("user_id", user.id)
     .maybeSingle();
 
@@ -156,6 +156,9 @@ export async function createDossierCeeIsolation(
       statut_rge: d.rge_numero,
       client_identifie: true,
       montant_estime: d.montant_prime_estime ?? null,
+      // Canal d'acquisition figé à la création, hérité de l'artisan (plan v3,
+      // §12.5) : compte dossiers et paiements par canal sans jointure.
+      source: artisan.source ?? null,
       dates_json: {
         visite_technique: d.date_visite_technique ?? null,
         devis: d.date_devis,

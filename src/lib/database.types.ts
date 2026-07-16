@@ -109,6 +109,7 @@ export interface Database {
           statut_abonnement: StatutAbonnement;
           referral_code: string | null;
           credit_balance_cents: number;
+          source: string | null;
           created_at: string;
         };
         Insert: {
@@ -127,9 +128,76 @@ export interface Database {
           statut_abonnement?: StatutAbonnement;
           referral_code?: string | null;
           credit_balance_cents?: number;
+          source?: string | null;
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["artisans"]["Insert"]>;
+        Relationships: [];
+      };
+      // Fichier de prospection ADEME (créé hors migrations, clé `place_id`).
+      // Colonnes de suivi ajoutées par la migration 0033.
+      prospects_dossimo: {
+        Row: {
+          place_id: string;
+          name: string | null;
+          address: string | null;
+          code_postal: string | null;
+          city: string | null;
+          phone: string | null;
+          website: string | null;
+          emails: string[] | null;
+          siren: string | null;
+          denomination: string | null;
+          tranche_effectif: string | null;
+          rge_domaines: string[] | null;
+          score: number | null;
+          statut: string | null;
+          source: string | null;
+          source_query: string | null;
+          created_at: string;
+          updated_at: string;
+          canal: string | null;
+          email_valide: boolean | null;
+          date_envoi: string | null;
+          date_relance: string | null;
+          reponse: boolean | null;
+          essai_demo: boolean | null;
+          dossier_paye: boolean | null;
+          opt_out: boolean | null;
+          question_posee: string | null;
+          notes: string | null;
+        };
+        Insert: {
+          place_id: string;
+          name?: string | null;
+          address?: string | null;
+          code_postal?: string | null;
+          city?: string | null;
+          phone?: string | null;
+          website?: string | null;
+          emails?: string[] | null;
+          siren?: string | null;
+          denomination?: string | null;
+          tranche_effectif?: string | null;
+          rge_domaines?: string[] | null;
+          score?: number | null;
+          statut?: string | null;
+          source?: string | null;
+          source_query?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          canal?: string | null;
+          email_valide?: boolean | null;
+          date_envoi?: string | null;
+          date_relance?: string | null;
+          reponse?: boolean | null;
+          essai_demo?: boolean | null;
+          dossier_paye?: boolean | null;
+          opt_out?: boolean | null;
+          question_posee?: string | null;
+          notes?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["prospects_dossimo"]["Insert"]>;
         Relationships: [];
       };
       dossiers: {
@@ -163,6 +231,7 @@ export interface Database {
           price_locked_at: string | null;
           price_warning: boolean;
           oblige_id: string | null;
+          source: string | null;
         };
         Insert: {
           id?: string;
@@ -193,6 +262,7 @@ export interface Database {
           price_locked_at?: string | null;
           price_warning?: boolean;
           oblige_id?: string | null;
+          source?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["dossiers"]["Insert"]>;
         Relationships: [

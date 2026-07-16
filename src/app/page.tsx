@@ -705,7 +705,7 @@ function Pricing({ grille }: { grille: GrilleAffichee | null }) {
                 Offre de lancement : code <span className="font-mono text-blanc-casse">DOSSIMO50</span>
                 · 50 % sur le premier dossier
                 {grille ? ` · dès ${prixLancement(grille)} au lieu de ${grille.minLabel}` : ""}
-                · jusqu’au 26 juillet 2026
+                · jusqu’au 31 juillet 2026
               </p>
             </div>
 
@@ -771,7 +771,7 @@ function Pricing({ grille }: { grille: GrilleAffichee | null }) {
               <CheckCircle2 className="h-4 w-4 text-succes" strokeWidth={1.5} />
               Un dossier refusé, c’est la prime entière perdue et le montage à refaire
               <span className="text-papier/30">·</span>
-              DOSSIMO50 : −50 % jusqu’au 26 juillet 2026
+              DOSSIMO50 : −50 % jusqu’au 31 juillet 2026
             </p>
           </div>
         </div>

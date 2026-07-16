@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Source_Serif_4, Geist_Mono, Unbounded } from "next/font/google";
 import { connection } from "next/server";
 import { SITE_DESCRIPTION, SITE_TITLE, SITE_URL } from "@/lib/seo/site";
+import { CaptureSource } from "@/components/tracking/capture-source";
 import "./globals.css";
 
 const inter = Inter({
@@ -87,6 +88,7 @@ export default async function RootLayout({
       className={`${inter.variable} ${sourceSerif.variable} ${geistMono.variable} ${unbounded.variable} h-full`}
     >
       <body className="min-h-full flex flex-col">
+        <CaptureSource />
         {children}
       </body>
     </html>

@@ -32,7 +32,7 @@ function siteUrl(): string {
 }
 
 const CODE_LANCEMENT = "DOSSIMO50";
-const FIN_CODE_LANCEMENT = Math.floor(new Date("2026-07-26T21:59:59.000Z").getTime() / 1000);
+const FIN_CODE_LANCEMENT = Math.floor(new Date("2026-07-31T21:59:59.000Z").getTime() / 1000);
 
 async function garantirCodeLancement(stripe: ReturnType<typeof getStripe>) {
   if (Math.floor(Date.now() / 1000) > FIN_CODE_LANCEMENT) return;
@@ -40,11 +40,18 @@ async function garantirCodeLancement(stripe: ReturnType<typeof getStripe>) {
   const existant = existants.data[0];
   if (existant?.expires_at === FIN_CODE_LANCEMENT) return;
   if (existant) await stripe.promotionCodes.update(existant.id, { active: false });
-  const couponId = "dossimo-lancement-2026-50-26juillet";
+  // L'id change avec la date de fin : un coupon Stripe déjà créé garde son
+  // `redeem_by` d'origine (retrieve réussit, create est sauté), donc prolonger la
+  // fenêtre sans changer l'id laisserait le coupon expirer au 26 malgré un code
+  // promo au 31. Nouvel id => nouveau coupon avec le bon `redeem_by`.
+  const couponId = "dossimo-lancement-2026-50-31juillet";
   try {
     await stripe.coupons.retrieve(couponId);
   } catch {
-    await stripe.coupons.create({ id: couponId, percent_off: 50, duration: "once", name: "Lancement Dossimo — 50 % sur le premier dossier", redeem_by: FIN_CODE_LANCEMENT });
+    // `name` Stripe est plafonné à 40 caractères : le dépasser fait échouer la
+    // création du coupon (400), donc garantirCodeLancement() lèverait à chaque
+    // ouverture de paiement pendant toute la fenêtre de lancement.
+    await stripe.coupons.create({ id: couponId, percent_off: 50, duration: "once", name: "Lancement Dossimo : 50% premier dossier", redeem_by: FIN_CODE_LANCEMENT });
   }
   await stripe.promotionCodes.create({ promotion: { type: "coupon", coupon: couponId }, code: CODE_LANCEMENT, expires_at: FIN_CODE_LANCEMENT, restrictions: { first_time_transaction: true } });
 }
