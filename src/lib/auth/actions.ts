@@ -29,8 +29,14 @@ const signUpSchema = z.object({
     z.string().max(40).optional().or(z.literal("")),
   ),
   // Destination post-confirmation (reprise du brouillon d'essai, etc.).
-  // Assainie ensuite par `destinationApresAuth` — jamais utilisée telle quelle.
+  // Assainie ensuite par `destinationApresAuth`, jamais utilisée telle quelle.
   next: z.string().max(512).optional(),
+  // Canal d'acquisition capté côté site (plan v3, §12.5). Déjà assaini côté
+  // client ; on reborne ici (libellé court) et on ne le fait jamais échouer.
+  source: z.preprocess(
+    (v) => (typeof v === "string" ? v.toLowerCase().replace(/[^a-z0-9_-]/g, "").slice(0, 40) : undefined),
+    z.string().min(1).max(40).optional(),
+  ),
 });
 
 /* ------------------------------------------------------------------ Actions */
@@ -66,7 +72,7 @@ export async function signUp(input: unknown): Promise<AuthResult> {
     };
   }
 
-  const { email, password, entreprise, nom, prenom, telephone, next } = parsed.data;
+  const { email, password, entreprise, nom, prenom, telephone, next, source } = parsed.data;
   const quota = await consumeAuthRateLimit("signup", email, 4, 60 * 60);
   if (quota !== "ok") {
     return {
@@ -85,7 +91,7 @@ export async function signUp(input: unknown): Promise<AuthResult> {
     password,
     options: {
       emailRedirectTo: `${baseUrl}/auth/confirm?next=${destination}`,
-      data: { entreprise, nom, prenom, telephone: telephone || null },
+      data: { entreprise, nom, prenom, telephone: telephone || null, source: source ?? null },
     },
   });
   if (error) {

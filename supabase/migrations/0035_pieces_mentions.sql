@@ -1,5 +1,10 @@
 -- Vérification des mentions obligatoires sur les pièces réelles (devis / facture).
 --
+-- Renumérotée de 0014 à 0035 (16/07/2026) : elle partageait le préfixe `0014`
+-- avec `0014_facturation.sql`, or Supabase suit les migrations par ce numéro
+-- (clé unique dans schema_migrations) — le doublon bloquait tout `db push`
+-- rejouant l'historique. Contenu strictement idempotent, l'ordre n'importe pas.
+--
 -- Jusqu'ici, l'extraction VLM ne relevait que des VALEURS (surface, R, montants…),
 -- comparées à la saisie. Elle ne vérifiait AUCUNE des mentions obligatoires que la
 -- fiche CEE impose de porter sur le devis et la facture — alors que leur absence est
