@@ -49,6 +49,43 @@ function BoutonCopier({ texte, libelle }: { texte: string; libelle: string }) {
   );
 }
 
+/**
+ * Aperçu du message avec ses URL cliquables.
+ *
+ * Le texte reste identique au caractère près : ce qui est copié vient de
+ * `c.message`, jamais du DOM. Les liens ne servent qu'à te laisser vérifier ta
+ * propre URL avant d'envoyer, sans la recopier. Ce que verra le destinataire
+ * dépend de son client, pas d'ici — c'est le `https://` du message qui le lui
+ * rend cliquable.
+ */
+function Lisible({ texte }: { texte: string }) {
+  // Une URL s'arrête au premier blanc ; on retire la ponctuation finale, qui
+  // appartient à la phrase et non au lien.
+  const morceaux = texte.split(/(https?:\/\/[^\s]+)/g);
+  return (
+    <>
+      {morceaux.map((m, i) => {
+        if (!/^https?:\/\//.test(m)) return m;
+        const fin = m.match(/[.,;:!?)]+$/)?.[0] ?? "";
+        const url = fin ? m.slice(0, -fin.length) : m;
+        return (
+          <span key={i}>
+            <a
+              href={url}
+              target="_blank"
+              rel="noreferrer"
+              className="text-tampon underline underline-offset-2 hover:text-terre-cuite"
+            >
+              {url}
+            </a>
+            {fin}
+          </span>
+        );
+      })}
+    </>
+  );
+}
+
 function Carte({ c, canal, mode }: { c: Contact; canal: "whatsapp" | "email"; mode: Mode }) {
   return (
     <li className="rounded border border-filigrane bg-blanc-casse p-4">
@@ -80,7 +117,7 @@ function Carte({ c, canal, mode }: { c: Contact; canal: "whatsapp" | "email"; mo
       )}
 
       <pre className="mt-3 max-h-64 overflow-auto whitespace-pre-wrap rounded bg-papier/60 p-3 font-sans text-xs leading-relaxed text-encre">
-        {c.message}
+        <Lisible texte={c.message} />
       </pre>
 
       <div className="mt-3 flex flex-wrap items-center gap-2">
