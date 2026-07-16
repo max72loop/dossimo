@@ -3,7 +3,6 @@ import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { choisirAccroche, type Bucket } from "./accroches";
 import {
-  saluer,
   messageWhatsApp,
   messageEmail,
   messageRelanceWhatsApp,
@@ -187,13 +186,12 @@ export async function chargerLotDuJour(
     const rge = (row.rge_domaines ?? []).filter(Boolean) as string[];
     const { bucket, accroche, inconnus } = choisirAccroche(rge);
     for (const i of inconnus) inconnusGlobaux.add(i);
-    const salutation = saluer(row.name);
 
     if (canalRendu === "whatsapp") {
       const message =
         mode === "relance"
-          ? messageRelanceWhatsApp({ salutation })
-          : messageWhatsApp({ salutation, ville: row.city, metier: accroche.metier, accroche });
+          ? messageRelanceWhatsApp()
+          : messageWhatsApp({ ville: row.city, metier: accroche.metier, accroche });
       const lienWa = lienWhatsApp(row.phone, message);
       if (!normaliserTelephoneFr(row.phone)) continue; // numéro inexploitable : on saute
       contacts.push({
@@ -207,10 +205,10 @@ export async function chargerLotDuJour(
       if (!email) continue; // aucune adresse exploitable : on saute
       const { objet, corps } =
         mode === "relance"
-          ? messageRelanceEmail({ salutation, accroche })
+          ? messageRelanceEmail({ accroche })
           : mode === "nurturing" && edition
-            ? messageNurturing({ salutation, edition })
-            : messageEmail({ salutation, accroche });
+            ? messageNurturing({ edition })
+            : messageEmail({ accroche });
       contacts.push({
         placeId: row.place_id, name: row.name, denomination: row.denomination, city: row.city,
         codePostal: row.code_postal, phone: null, email, rgeDomaines: rge,

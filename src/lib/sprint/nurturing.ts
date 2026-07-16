@@ -16,6 +16,8 @@
  * nurturing plutôt que d'envoyer une coquille.
  */
 
+import { SALUTATION } from "./message";
+
 /** Guides réellement publiés. Typé pour qu'une édition ne puisse pas lier un 404. */
 export const GUIDES = {
   "eviter-refus-maprimerenov": "Éviter un refus MaPrimeRénov'",
@@ -80,13 +82,10 @@ const SITE = "dossimo.app";
  * (l'envoi reste non sollicité, chaque message doit porter la sortie), aucun
  * argumentaire de vente : c'est ce qui distingue le nurturing de la prospection.
  */
-export function messageNurturing(params: {
-  salutation: string;
-  edition: EditionNurturing;
-}): { objet: string; corps: string } {
-  const { salutation, edition } = params;
+export function messageNurturing(params: { edition: EditionNurturing }): { objet: string; corps: string } {
+  const { edition } = params;
   const corps = [
-    salutation,
+    SALUTATION,
     edition.lignes.join("\n"),
     `Le détail est ici : ${SITE}/${edition.guide}?utm_source=nurturing`,
     "Max Landry, Dossimo · dossimo.app",

@@ -42,9 +42,9 @@ describe("editionDuMois", () => {
 
 describe("messageNurturing", () => {
   it("rend les cinq lignes, le guide, la signature et le STOP", () => {
-    const { objet, corps } = messageNurturing({ salutation: "Bonjour Alain,", edition: EDITION });
+    const { objet, corps } = messageNurturing({ edition: EDITION });
     expect(objet).toBe(EDITION.objet);
-    expect(corps).toContain("Bonjour Alain,");
+    expect(corps).toContain("Bonjour,");
     expect(corps).toContain("Ligne cinq.");
     expect(corps).toContain("dossimo.app/mentions-obligatoires-devis-rge?utm_source=nurturing");
     expect(corps).toContain("Max Landry, Dossimo");
@@ -55,7 +55,7 @@ describe("messageNurturing", () => {
   it("ne vend rien : ni prix, ni essai, ni relance commerciale", () => {
     // Le nurturing sert à rester dans le paysage sans griller le fichier (§7).
     // Un argumentaire de vente ici transforme un rappel utile en spam.
-    const { corps } = messageNurturing({ salutation: "Bonjour,", edition: EDITION });
+    const { corps } = messageNurturing({ edition: EDITION });
     expect(corps).not.toMatch(/49\s?€|essai gratuit|2 minutes|mandataire/i);
   });
 
