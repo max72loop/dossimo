@@ -1,9 +1,10 @@
 import Link from "next/link";
 
 import { getCurrentUser } from "@/lib/auth/get-artisan";
-import { MobileMenu } from "@/components/landing/mobile-menu";
+import { SiteMenu } from "@/components/landing/site-menu";
 import { FOCUS } from "@/components/ui/boutons";
 import { CTA_DEMO } from "@/lib/landing/copy";
+import { guideList } from "@/lib/seo/guides";
 
 /**
  * Sommaire de la vitrine. Ancres ABSOLUES (`/#etapes`) : ce header coiffe aussi les
@@ -12,6 +13,7 @@ import { CTA_DEMO } from "@/lib/landing/copy";
 const NAV = [
   { href: "/#etapes", label: "Comment ça marche" },
   { href: "/#tarifs", label: "Tarifs" },
+  { href: "/guides", label: "Guides" },
   { href: "/#faq", label: "Questions" },
 ] as const;
 
@@ -70,7 +72,7 @@ export async function SiteHeader() {
           >
             {user ? "Nouveau dossier" : CTA_DEMO}
           </Link>
-          <MobileMenu nav={NAV} connecte={Boolean(user)} />
+          <SiteMenu nav={NAV} guides={guideList} connecte={Boolean(user)} />
         </div>
       </div>
     </header>

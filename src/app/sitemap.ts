@@ -12,9 +12,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
   return [
     { url: SITE_URL, lastModified: LAST_SIGNIFICANT_UPDATE },
     { url: `${SITE_URL}/demo`, lastModified: LAST_SIGNIFICANT_UPDATE },
+    { url: `${SITE_URL}/guides`, lastModified: LAST_SIGNIFICANT_UPDATE },
     ...guideList.map((guide) => ({
       url: `${SITE_URL}/${guide.slug}`,
-      lastModified: LAST_SIGNIFICANT_UPDATE,
+      lastModified: new Date(`${guide.updated}T00:00:00.000Z`),
     })),
     { url: `${SITE_URL}/cgv`, lastModified: LAST_SIGNIFICANT_UPDATE },
     { url: `${SITE_URL}/mentions-legales`, lastModified: LAST_SIGNIFICANT_UPDATE },

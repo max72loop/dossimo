@@ -3,13 +3,12 @@ import Link from "next/link";
 
 import { SiteFooter } from "@/components/landing/site-footer";
 import { SiteHeader } from "@/components/landing/site-header";
-import { guideList, type SeoGuide } from "@/lib/seo/guides";
+import { formatGuideDate, guideList, type SeoGuide } from "@/lib/seo/guides";
 import { SITE_URL } from "@/lib/seo/site";
-
-const dateVerification = "14 juillet 2026";
 
 export function SeoGuidePage({ guide }: { guide: SeoGuide }) {
   const pageUrl = `${SITE_URL}/${guide.slug}`;
+  const dateVerification = formatGuideDate(guide.updated);
   const jsonLd = [
     {
       "@context": "https://schema.org",
@@ -17,8 +16,8 @@ export function SeoGuidePage({ guide }: { guide: SeoGuide }) {
       headline: guide.title,
       description: guide.description,
       mainEntityOfPage: pageUrl,
-      datePublished: "2026-07-14",
-      dateModified: "2026-07-14",
+      datePublished: guide.updated,
+      dateModified: guide.updated,
       inLanguage: "fr-FR",
       author: { "@type": "Organization", name: "Dossimo", url: SITE_URL },
       publisher: {
@@ -33,7 +32,8 @@ export function SeoGuidePage({ guide }: { guide: SeoGuide }) {
       "@type": "BreadcrumbList",
       itemListElement: [
         { "@type": "ListItem", position: 1, name: "Accueil", item: SITE_URL },
-        { "@type": "ListItem", position: 2, name: guide.title, item: pageUrl },
+        { "@type": "ListItem", position: 2, name: "Guides", item: `${SITE_URL}/guides` },
+        { "@type": "ListItem", position: 3, name: guide.title, item: pageUrl },
       ],
     },
   ];
@@ -49,7 +49,9 @@ export function SeoGuidePage({ guide }: { guide: SeoGuide }) {
               <nav aria-label="Fil d’Ariane" className="text-sm text-ardoise">
                 <Link href="/" className="underline underline-offset-4 hover:text-encre">Accueil</Link>
                 <span aria-hidden="true"> / </span>
-                <span>Guides</span>
+                <Link href="/guides" className="underline underline-offset-4 hover:text-encre">Guides</Link>
+                <span aria-hidden="true"> / </span>
+                <span className="text-encre-claire">{guide.category}</span>
               </nav>
               <p className="mt-8 text-xs font-semibold uppercase tracking-[0.14em] text-tampon">{guide.eyebrow}</p>
               <h1 className="mt-3 max-w-3xl font-serif text-4xl font-semibold tracking-tight text-encre sm:text-5xl">{guide.title}</h1>
