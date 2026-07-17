@@ -21,6 +21,8 @@ export const conditionSchema = z
     etas_min: z.number().optional(),
     cop_min: z.number().optional(),
     rendement_min: z.number().optional(),
+    efficacite_ecs_min: z.number().optional(),
+    surface_capteurs_min: z.number().optional(),
     tva_taux: z.number().optional(),
     anciennete_min_ans: z.number().optional(),
   })
@@ -32,15 +34,21 @@ export type SeuilsInput = {
   etas_min?: number | null;
   cop_min?: number | null;
   rendement_min?: number | null;
+  efficacite_ecs_min?: number | null;
+  surface_capteurs_min?: number | null;
   tva_taux?: number | null;
   anciennete_min_ans?: number | null;
 };
 
+// Tout seuil éditable doit figurer ici : `fusionnerCondition` ne touche QUE ces
+// clés, donc une clé oubliée n'est jamais écrite par l'éditeur admin.
 const SEUIL_KEYS = [
   "r_min",
   "etas_min",
   "cop_min",
   "rendement_min",
+  "efficacite_ecs_min",
+  "surface_capteurs_min",
   "tva_taux",
   "anciennete_min_ans",
 ] as const;

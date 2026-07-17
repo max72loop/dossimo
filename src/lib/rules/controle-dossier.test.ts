@@ -358,3 +358,136 @@ describe("controlerDossier — appareil de chauffage au bois (BAR-TH-112)", () =
     expect(cs.some((c) => c.startsWith("technique_cop"))).toBe(false);
   });
 });
+
+/* ------------------- Chauffe-eau solaire individuel (BAR-TH-101) ---------- */
+
+function regleSolaire(
+  over: Partial<RegleMetierResolue["condition"]> = {},
+): RegleMetierResolue {
+  return {
+    version: 1,
+    versionFormulaire: "BAR-TH-101 vA78-3 (a compter du 01/01/2026)",
+    pieces: [],
+    mentions: [],
+    condition: {
+      tva_taux: 0.055,
+      anciennete_min_ans: 2,
+      surface_capteurs_min: 2,
+      ...over,
+    },
+  };
+}
+
+function dossierSolaire(
+  over: { solaire?: Record<string, unknown>; regle?: RegleMetierResolue | null } = {},
+): DossierComplet {
+  const { base, carac } = baseSansTravaux();
+  return {
+    ...base,
+    caracteristiques: {
+      ...carac,
+      geste: "solaire_thermique",
+      fiche: "BAR-TH-101",
+      solaire: {
+        type_solaire: "cesi",
+        fiche: "BAR-TH-101",
+        appoint: "electrique_joule",
+        fluide: "eau_glycolee",
+        surface_capteurs_m2: 4,
+        profil_soutirage: "L",
+        efficacite_ecs: 45,
+        nb_ballons: 1,
+        volume_ballon_l: 300,
+        classe_ballon: "B",
+        certification: "solar_keymark",
+        marque: "Viessmann",
+        reference: "Vitosol 200-FM",
+        ...over.solaire,
+      },
+    },
+    regle: over.regle === undefined ? regleSolaire() : over.regle,
+  } as unknown as DossierComplet;
+}
+
+const codesSolaire = (d: DossierComplet) =>
+  controlerDossier(d, AUJ).findings.map((f) => `${f.code}:${f.severite}`);
+
+describe("controlerDossier — chauffe-eau solaire individuel (BAR-TH-101)", () => {
+  it("CESI de référence : conforme, efficacité et surface ok", () => {
+    const r = controlerDossier(dossierSolaire(), AUJ);
+    expect(r.conforme).toBe(true);
+    const cs = codesSolaire(dossierSolaire());
+    expect(cs).toContain("technique_efficacite_ecs:ok");
+    expect(cs).toContain("technique_surface_capteurs:ok");
+  });
+
+  it("efficacité ECS insuffisante en appoint électrique (< 37 % au profil L) : bloquant", () => {
+    const d = dossierSolaire({ solaire: { efficacite_ecs: 35 } });
+    expect(controlerDossier(d, AUJ).conforme).toBe(false);
+    expect(codesSolaire(d)).toContain("technique_efficacite_ecs:bloquant");
+  });
+
+  it("le seuil suit l'appoint : 45 % passe en électrique, échoue en autre énergie", () => {
+    const electrique = dossierSolaire();
+    const autre = dossierSolaire({ solaire: { appoint: "autre" } });
+    // Même efficacité (45 %), même profil (L) : seul l'appoint change. Sans
+    // croisement appoint × profil, un CESI électrique conforme serait refusé.
+    expect(codesSolaire(electrique)).toContain("technique_efficacite_ecs:ok");
+    expect(codesSolaire(autre)).toContain("technique_efficacite_ecs:bloquant");
+  });
+
+  it("le seuil suit le profil : 38 % passe en XL, échoue en XXL (appoint électrique)", () => {
+    const xl = dossierSolaire({ solaire: { efficacite_ecs: 38, profil_soutirage: "XL" } });
+    const xxl = dossierSolaire({ solaire: { efficacite_ecs: 38, profil_soutirage: "XXL" } });
+    expect(codesSolaire(xl)).toContain("technique_efficacite_ecs:ok");
+    expect(codesSolaire(xxl)).toContain("technique_efficacite_ecs:bloquant");
+  });
+
+  it("surface de capteurs sous 2 m² : bloquant", () => {
+    const d = dossierSolaire({ solaire: { surface_capteurs_m2: 1.5 } });
+    expect(controlerDossier(d, AUJ).conforme).toBe(false);
+    expect(codesSolaire(d)).toContain("technique_surface_capteurs:bloquant");
+  });
+
+  it("aucune surface maximale : 25 m² de capteurs reste conforme", () => {
+    // Le plafond de 20 m² est le périmètre de la qualification QualiSol, pas un
+    // critère de la fiche : le contrôler refuserait des dossiers valides.
+    const d = dossierSolaire({ solaire: { surface_capteurs_m2: 25 } });
+    expect(codesSolaire(d)).toContain("technique_surface_capteurs:ok");
+    expect(controlerDossier(d, AUJ).conforme).toBe(true);
+  });
+
+  it("efficacite_ecs_min de la règle surcharge la matrice codée", () => {
+    const d = dossierSolaire({ regle: regleSolaire({ efficacite_ecs_min: 50 }) });
+    expect(controlerDossier(d, AUJ).conforme).toBe(false);
+    expect(codesSolaire(d)).toContain("technique_efficacite_ecs:bloquant");
+  });
+
+  it("ballon <= 500 L de classe D : bloquant (classe C exigée)", () => {
+    const d = dossierSolaire({ solaire: { classe_ballon: "D" } });
+    expect(controlerDossier(d, AUJ).conforme).toBe(false);
+    expect(codesSolaire(d)).toContain("technique_classe_ballon:bloquant");
+  });
+
+  it("ballon > 500 L : la classe n'est pas exigée, aucun finding", () => {
+    const d = dossierSolaire({
+      solaire: { volume_ballon_l: 600, classe_ballon: null },
+    });
+    expect(codesSolaire(d).some((c) => c.startsWith("technique_classe_ballon"))).toBe(false);
+    expect(controlerDossier(d, AUJ).conforme).toBe(true);
+  });
+
+  it("appoint ou profil manquant : avertissement, jamais un seuil supposé", () => {
+    const d = dossierSolaire({ solaire: { profil_soutirage: undefined } });
+    expect(codesSolaire(d)).toContain("technique_efficacite_ecs:avertissement");
+    expect(controlerDossier(d, AUJ).conforme).toBe(true);
+  });
+
+  it("ne déclenche aucun contrôle d'isolation, ETAS, COP ni rendement sur un CESI", () => {
+    const cs = codesSolaire(dossierSolaire());
+    expect(cs.some((c) => c.startsWith("technique_resistance"))).toBe(false);
+    expect(cs.some((c) => c.startsWith("technique_etas"))).toBe(false);
+    expect(cs.some((c) => c.startsWith("technique_cop"))).toBe(false);
+    expect(cs.some((c) => c.startsWith("technique_rendement"))).toBe(false);
+  });
+});

@@ -41,6 +41,24 @@ const bois = (emissions_co: number | null) =>
     bois: { fiche: "BAR-TH-112", combustible: "granules", rendement: 87, emissions_co },
   });
 
+const solaire = (over: Record<string, unknown> = {}) =>
+  dossier({
+    geste: "solaire_thermique",
+    fiche: "BAR-TH-101",
+    solaire: {
+      fiche: "BAR-TH-101",
+      appoint: "electrique_joule",
+      fluide: "eau_glycolee",
+      surface_capteurs_m2: 4,
+      profil_soutirage: "L",
+      efficacite_ecs: 45,
+      nb_ballons: 1,
+      volume_ballon_l: 300,
+      classe_ballon: "B",
+      ...over,
+    },
+  });
+
 describe("mentionsTemplates", () => {
   it("interpole les valeurs du dossier d'isolation", () => {
     const ms = mentionsTemplates(isolation);
@@ -79,6 +97,33 @@ describe("mentionsTemplates", () => {
     const ms = mentionsTemplates(bois(300));
     expect(ms).toContain("Rendement énergétique : 87 %");
     expect(ms).toContain("Émissions de monoxyde de carbone : 300 mg/Nm³");
+  });
+
+  it("un dossier solaire exige les mentions littérales du BAR-TH-101", () => {
+    const ms = solaire();
+    const out = mentionsTemplates(ms);
+    expect(out).toContain("Fiche CEE : BAR-TH-101");
+    expect(out).toContain("Surface hors-tout totale des capteurs : 4 m²");
+    expect(out).toContain(
+      "Efficacité énergétique pour le chauffage de l'eau (profil L) : 45 %",
+    );
+    expect(out).toContain("Capacité de stockage de chaque ballon : 300 L");
+    expect(out).toContain("Nature du fluide circulant dans les capteurs : Eau glycolée");
+  });
+
+  it("un dossier solaire n'exige AUCUNE mention d'isolation ni de CET", () => {
+    const joint = mentionsTemplates(solaire()).join(" | ");
+    expect(joint).not.toMatch(/ACERMI/i);
+    expect(joint).not.toMatch(/isolant/i);
+    expect(joint).not.toMatch(/COP/);
+  });
+
+  it("ballon > 500 L : la mention de classe d'efficacité n'est pas exigée", () => {
+    // La fiche ne l'exige qu'au-dessous de 500 L. Sans classe au dossier, la
+    // mention tombe au lieu d'exiger « Classe d'efficacité énergétique :  ».
+    const out = mentionsTemplates(solaire({ volume_ballon_l: 600, classe_ballon: null }));
+    expect(out.some((m) => m.includes("Classe d'efficacité"))).toBe(false);
+    expect(out.every((m) => !m.includes("{"))).toBe(true);
   });
 
   it("aucune mention amputée quand la donnée manque au dossier", () => {

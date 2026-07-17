@@ -42,7 +42,7 @@ export default async function NouveauDossierPage({
       ? {
           ...profileValues,
           dispositif: dispositif === "maprimerenov" ? "maprimerenov" : "cee",
-          geste: ["isolation", "pac_air_eau", "cet", "bois"].includes(geste ?? "")
+          geste: ["isolation", "pac_air_eau", "cet", "bois", "solaire_thermique"].includes(geste ?? "")
             ? (geste as CeeIsolationInput["geste"])
             : "isolation",
         }

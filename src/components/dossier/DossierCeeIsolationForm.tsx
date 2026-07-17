@@ -10,10 +10,15 @@ import { verifierSiretRge } from "@/lib/dossier/verification-actions";
 import { uploadPiece } from "@/lib/piece/actions";
 import type { VerificationEntreprise } from "@/lib/verification/types";
 import {
+  FAMILLES,
   LOGEMENT_TYPES,
   OCCUPATIONS,
   PRECARITES,
   RESIDENCES,
+  SOLAIRE_APPOINTS,
+  SOLAIRE_CERTIFICATIONS,
+  SOLAIRE_FLUIDES,
+  SOLAIRE_SOUTIRAGE_PROFILS,
   TYPES_ISOLATION,
   ceeIsolationDefaults,
   ceeIsolationSchema,
@@ -192,6 +197,7 @@ export function DossierCeeIsolationForm({
   const estPac = geste === "pac_air_eau";
   const estCet = geste === "cet";
   const estBois = geste === "bois";
+  const estSolaire = geste === "solaire_thermique";
 
   // Vérification SIRET + RGE contre les annuaires officiels (à la demande).
   const [verif, setVerif] = useState<VerificationEntreprise | null>(null);
@@ -396,7 +402,7 @@ export function DossierCeeIsolationForm({
             <SelectField
               label="Type de geste"
               required
-              options={{ isolation: "Isolation", pac_air_eau: "Pompe à chaleur air/eau", cet: "Chauffe-eau thermodynamique", bois: "Appareil de chauffage au bois" }}
+              options={FAMILLES}
               hint="Détermine les caractéristiques techniques demandées."
               error={errors.geste}
               register={register("geste")}
@@ -536,7 +542,94 @@ export function DossierCeeIsolationForm({
           </Section>
         )}
 
-        {etapeCourante.id === "travaux" && !estPac && !estCet && !estBois && (
+        {etapeCourante.id === "travaux" && estSolaire && (
+          <Section
+            title="Chauffe-eau solaire individuel"
+            description="Caractéristiques techniques du CESI (fiche BAR-TH-101). Ce sont les mentions que la facture devra porter."
+          >
+            <SelectField
+              label="Énergie de l'appoint"
+              required
+              options={SOLAIRE_APPOINTS}
+              hint="Conditionne l'efficacité ECS minimale : les seuils de l'appoint électrique sont bien plus bas que ceux des autres énergies."
+              error={errors.solaire_appoint}
+              register={register("solaire_appoint")}
+            />
+            <SelectField
+              label="Fluide caloporteur"
+              required
+              options={SOLAIRE_FLUIDES}
+              hint="Le fluide circulant dans les capteurs doit figurer sur la facture."
+              error={errors.solaire_fluide}
+              register={register("solaire_fluide")}
+            />
+            <TextField
+              label="Surface hors-tout des capteurs (m²)"
+              required
+              type="number"
+              step="0.01"
+              inputMode="decimal"
+              hint="Minimum 2 m². La fiche ne fixe aucun maximum."
+              error={errors.solaire_surface_capteurs_m2}
+              register={register("solaire_surface_capteurs_m2")}
+            />
+            <SelectField
+              label="Profil de soutirage"
+              required
+              options={SOLAIRE_SOUTIRAGE_PROFILS}
+              hint="Profil déclaré (règlement UE 814/2013)."
+              error={errors.solaire_profil_soutirage}
+              register={register("solaire_profil_soutirage")}
+            />
+            <TextField
+              label="Efficacité énergétique ECS (%)"
+              required
+              type="number"
+              step="0.1"
+              inputMode="decimal"
+              hint="Efficacité pour le chauffage de l'eau, au profil déclaré."
+              error={errors.solaire_efficacite_ecs}
+              register={register("solaire_efficacite_ecs")}
+            />
+            <TextField
+              label="Nombre de ballons"
+              required
+              type="number"
+              step="1"
+              inputMode="numeric"
+              error={errors.solaire_nb_ballons}
+              register={register("solaire_nb_ballons")}
+            />
+            <TextField
+              label="Capacité de chaque ballon (L)"
+              required
+              type="number"
+              step="1"
+              inputMode="numeric"
+              error={errors.solaire_volume_ballon_l}
+              register={register("solaire_volume_ballon_l")}
+            />
+            <TextField
+              label="Classe d'efficacité du ballon"
+              placeholder="Ex. C"
+              hint="Exigée pour un ballon de 500 L ou moins : classe C a minima."
+              error={errors.solaire_classe_ballon}
+              register={register("solaire_classe_ballon")}
+            />
+            <SelectField
+              label="Certification des capteurs"
+              required
+              options={SOLAIRE_CERTIFICATIONS}
+              hint="Le justificatif de certification est exigé au contrôle."
+              error={errors.solaire_certification}
+              register={register("solaire_certification")}
+            />
+            <TextField label="Marque" required error={errors.solaire_marque} register={register("solaire_marque")} />
+            <TextField label="Référence / modèle" error={errors.solaire_reference} register={register("solaire_reference")} />
+          </Section>
+        )}
+
+        {etapeCourante.id === "travaux" && !estPac && !estCet && !estBois && !estSolaire && (
           <Section
             title="Travaux d'isolation"
             description="Caractéristiques techniques du poste isolé."

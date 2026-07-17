@@ -112,7 +112,7 @@ export function comparerPiece(
   };
 
   const t = c.travaux;
-  const { pac, cet, bois } = c;
+  const { pac, cet, bois, solaire } = c;
 
   if (pac) {
     nombre("ETAS", pac.etas, ex.pac_etas, " %", 0.5);
@@ -137,6 +137,32 @@ export function comparerPiece(
     }
     texte("Marque de l'appareil", bois.marque, ex.bois_marque);
     texte("Référence de l'appareil", bois.reference, ex.bois_reference);
+  } else if (solaire) {
+    nombre(
+      "Surface de capteurs",
+      solaire.surface_capteurs_m2,
+      ex.solaire_surface_capteurs_m2,
+      " m²",
+      0.1,
+    );
+    nombre(
+      "Efficacité énergétique ECS",
+      solaire.efficacite_ecs,
+      ex.solaire_efficacite_ecs,
+      " %",
+      0.5,
+    );
+    nombre("Nombre de ballons", solaire.nb_ballons, ex.solaire_nb_ballons, "", 0);
+    nombre(
+      "Volume du ballon",
+      solaire.volume_ballon_l,
+      ex.solaire_volume_ballon_l,
+      " L",
+      1,
+    );
+    texte("Classe du ballon", solaire.classe_ballon, ex.solaire_classe_ballon);
+    texte("Marque du chauffe-eau solaire", solaire.marque, ex.solaire_marque);
+    texte("Référence du chauffe-eau solaire", solaire.reference, ex.solaire_reference);
   } else if (t) {
     nombre("Surface isolée", t.surface_isolee_m2, ex.surface_isolee_m2, " m²", 0.5);
     nombre(

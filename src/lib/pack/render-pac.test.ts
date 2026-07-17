@@ -165,3 +165,54 @@ describe("rendu du pack — geste appareil de chauffage au bois (BAR-TH-112)", (
     expect(buf.length).toBeGreaterThan(1000);
   });
 });
+
+function dossierSolaire(): DossierComplet {
+  const base = dossierPac();
+  return {
+    ...base,
+    caracteristiques: {
+      ...base.caracteristiques,
+      geste: "solaire_thermique",
+      fiche: "BAR-TH-101",
+      pac: undefined,
+      solaire: {
+        type_solaire: "cesi", fiche: "BAR-TH-101", appoint: "electrique_joule",
+        fluide: "eau_glycolee", surface_capteurs_m2: 4.5, profil_soutirage: "L",
+        efficacite_ecs: 46, nb_ballons: 1, volume_ballon_l: 300,
+        classe_ballon: "B", certification: "solar_keymark",
+        marque: "Viessmann", reference: "Vitosol 200-FM",
+      },
+    },
+    regle: {
+      ...reglePac,
+      versionFormulaire: "BAR-TH-101 vA78-3 (a compter du 01/01/2026)",
+      mentions: [
+        "Fiche CEE : {fiche}",
+        "Surface hors-tout totale des capteurs : {surface} m²",
+      ],
+      condition: { tva_taux: 0.055, anciennete_min_ans: 2, surface_capteurs_min: 2 },
+    },
+  } as unknown as DossierComplet;
+}
+
+describe("rendu du pack — chauffe-eau solaire individuel (BAR-TH-101)", () => {
+  it("récapitulatif : PDF non vide", async () => {
+    expect((await renderRecapPdf(dossierSolaire())).length).toBeGreaterThan(1000);
+  });
+  it("checklist : PDF non vide", async () => {
+    expect((await renderChecklistPdf(dossierSolaire())).length).toBeGreaterThan(1000);
+  });
+  it("rapport de contrôle : PDF non vide", async () => {
+    expect((await renderControlePdf(dossierSolaire())).length).toBeGreaterThan(1000);
+  });
+  it("attestation sur l'honneur CEE : PDF non vide", async () => {
+    const buf = await renderAhCeePdf(dossierSolaire(), {
+      titre: "Attestation sur l'honneur — CEE chauffe-eau solaire individuel",
+      arrete: "annexe 7-1",
+      version: "2026-04 (P6)",
+      variant: "p6",
+      ficheRef: "BAR-TH-101",
+    });
+    expect(buf.length).toBeGreaterThan(1000);
+  });
+});

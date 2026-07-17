@@ -14,6 +14,8 @@ const pacChauffage = "Pompe à chaleur : chauffage";
 const cet = "Chauffe-Eau Thermodynamique";
 const poeleBois = "Poêle ou insert bois";
 const etudeBois = "Etude bois énergie";
+const solaireThermique = "Chauffage et/ou eau chaude solaire";
+const photovoltaique = "Électricité solaire (photovoltaïque)";
 
 describe("domaineCouvreGeste", () => {
   it("associe les domaines d'isolation à la famille isolation", () => {
@@ -30,6 +32,22 @@ describe("domaineCouvreGeste", () => {
 
   it("ne prend PAS une étude bois pour une qualif de travaux bois", () => {
     expect(domaineCouvreGeste(etudeBois, "bois")).toBe(false);
+  });
+
+  it("associe le domaine solaire thermique à la famille solaire_thermique", () => {
+    expect(domaineCouvreGeste(solaireThermique, "solaire_thermique")).toBe(true);
+  });
+
+  it("ne prend PAS une qualif photovoltaïque pour du solaire thermique", () => {
+    // Les deux libellés ADEME contiennent « solaire ». Un artisan qualifié pour
+    // poser des panneaux électriques n'a pas le droit d'installer un CESI : le
+    // laisser passer produirait le refus au contrôle CEE.
+    expect(domaineCouvreGeste(photovoltaique, "solaire_thermique")).toBe(false);
+  });
+
+  it("ne confond pas solaire thermique et chauffe-eau thermodynamique", () => {
+    expect(domaineCouvreGeste(solaireThermique, "cet")).toBe(false);
+    expect(domaineCouvreGeste(cet, "solaire_thermique")).toBe(false);
   });
 });
 
