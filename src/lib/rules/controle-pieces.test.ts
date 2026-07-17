@@ -178,6 +178,46 @@ describe("concordance devis ↔ facture", () => {
     expect(codes(controlerPieces([devis]))).not.toContain("piece_devis_facture:ok");
   });
 
+  it("aucun champ commun lu : n'annonce pas une concordance jamais vérifiée", () => {
+    // Le faux positif le plus dangereux : deux documents dont le VLM n'a rien tiré
+    // affichaient « Devis et facture concordent », c'est-à-dire un feu vert sur le
+    // premier motif de refus, alors que rien n'avait été comparé.
+    const vide = () =>
+      extrait({
+        surface_isolee_m2: null,
+        resistance_thermique_r: null,
+        isolant_marque: null,
+        isolant_reference: null,
+        montant_ht: null,
+        montant_ttc: null,
+      });
+    const fs = controlerPieces([
+      piece({ type: "devis", extraction: vide() }),
+      piece({ type: "facture", extraction: vide() }),
+    ]);
+    expect(codes(fs)).not.toContain("piece_devis_facture:ok");
+    expect(codes(fs)).toContain("piece_devis_facture:avertissement");
+  });
+
+  it("un seul champ commun lu suffit à conclure à la concordance", () => {
+    // La contrepartie : l'avertissement ne doit se déclencher que sur le vide
+    // total, pas dès qu'un champ manque.
+    const partiel = (over = {}) =>
+      extrait({
+        surface_isolee_m2: null,
+        resistance_thermique_r: null,
+        isolant_marque: null,
+        isolant_reference: null,
+        montant_ht: null,
+        ...over,
+      });
+    const fs = controlerPieces([
+      piece({ type: "devis", extraction: partiel() }),
+      piece({ type: "facture", extraction: partiel() }),
+    ]);
+    expect(codes(fs)).toContain("piece_devis_facture:ok");
+  });
+
   it("tolère les micro-écarts d'arrondi sur les montants", () => {
     const fs = controlerPieces([
       devis,

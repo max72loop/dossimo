@@ -239,6 +239,13 @@ const CROISES: Record<Famille, ChampCroise[]> = {
     { cle: "bois_marque", label: "Marque de l'appareil" },
     { cle: "bois_reference", label: "Référence de l'appareil" },
   ],
+  solaire_thermique: [
+    { cle: "solaire_surface_capteurs_m2", label: "Surface de capteurs", tolerance: 0.1 },
+    { cle: "solaire_efficacite_ecs", label: "Efficacité énergétique ECS", tolerance: 0.5 },
+    { cle: "solaire_volume_ballon_l", label: "Volume du ballon", tolerance: 1 },
+    { cle: "solaire_marque", label: "Marque du chauffe-eau solaire" },
+    { cle: "solaire_reference", label: "Référence du chauffe-eau solaire" },
+  ],
 };
 
 const normTexte = (s: string) =>
@@ -258,6 +265,11 @@ function findingsCroises(pieces: PieceChantier[], famille: Famille): Finding[] {
   const d = devis.extraction;
   const f = facture.extraction;
   const divergents: string[] = [];
+  // Combien de champs ont VRAIMENT été confrontés. Sans ce compte, deux documents
+  // dont le VLM n'a rien tiré tombaient dans la branche « divergents.length === 0 »
+  // et affichaient « Devis et facture concordent » alors que rien n'avait été
+  // comparé : le pire des faux positifs, celui qui rassure.
+  let compares = 0;
 
   for (const { cle, label, tolerance } of [
     ...CROISES_COMMUNS,
@@ -266,6 +278,7 @@ function findingsCroises(pieces: PieceChantier[], famille: Famille): Finding[] {
     const vd = d[cle];
     const vf = f[cle];
     if (vd == null || vf == null) continue; // non lu d'un côté : rien à conclure.
+    compares++;
 
     const identique =
       typeof vd === "number" && typeof vf === "number"
@@ -273,6 +286,19 @@ function findingsCroises(pieces: PieceChantier[], famille: Famille): Finding[] {
         : normTexte(String(vd)) === normTexte(String(vf));
 
     if (!identique) divergents.push(`${label} (devis : ${vd} · facture : ${vf})`);
+  }
+
+  if (compares === 0) {
+    return [
+      {
+        code: "piece_devis_facture",
+        categorie: "pieces",
+        severite: "avertissement",
+        titre: "Devis et facture n'ont pas pu être confrontés",
+        detail:
+          "Aucun champ commun n'a pu être lu sur les deux documents à la fois : la concordance devis / facture n'est pas vérifiée. Redéposez des scans plus nets pour que ce contrôle, qui porte sur le premier motif de refus, puisse être fait.",
+      },
+    ];
   }
 
   if (divergents.length === 0) {

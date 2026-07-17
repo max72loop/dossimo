@@ -4,6 +4,7 @@ import { describe, it, expect } from "vitest";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 
 import { verifierMentions } from "@/lib/piece/mentions";
+import { preparerDocument } from "@/lib/piece/document";
 
 /**
  * Test d'INTÉGRATION de la passe « mentions » : il appelle vraiment le VLM.
@@ -103,10 +104,14 @@ describe.skipIf(!CLE)("verifierMentions — appel réel au VLM", () => {
     "voit la mention absente et la mention divergente d'un devis piégé",
     { timeout: 90_000 },
     async () => {
-      const res = await verifierMentions({
+      const prep = await preparerDocument({
         bytes: await devisPiege(),
         mime: "application/pdf",
         filename: "devis-piege.pdf",
+      });
+      if (!prep.ok) throw new Error("préparation du devis piégé impossible");
+      const res = await verifierMentions({
+        doc: prep.doc,
         type: "devis",
         mentions: MENTIONS_EXIGEES,
       });

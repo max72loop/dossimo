@@ -2,7 +2,9 @@ import "server-only";
 
 import { z } from "zod";
 
-import { isLlmConfigured, openRouterVision } from "@/lib/llm/openrouter";
+import { isLlmConfigured, LlmIndisponibleError, openRouterVision } from "@/lib/llm/openrouter";
+import { extraireJson, type DocumentPrepare } from "@/lib/piece/document";
+import { parseNombreFr } from "@/lib/piece/num";
 import type { Famille } from "@/lib/dossier/cee-isolation";
 import type { TypePiece } from "@/lib/database.types";
 
@@ -13,16 +15,7 @@ import type { TypePiece } from "@/lib/database.types";
  */
 
 // Nombre tolérant aux formats FR : "4 200,00 €", "95 m²", "7,5" → number.
-const frNum = z.preprocess((v) => {
-  if (v == null || v === "") return null;
-  if (typeof v === "number") return Number.isFinite(v) ? v : null;
-  if (typeof v === "string") {
-    const cleaned = v.replace(/\s| | /g, "").replace(/[^\d.,-]/g, "");
-    const n = parseFloat(cleaned.replace(",", "."));
-    return Number.isNaN(n) ? null : n;
-  }
-  return null;
-}, z.number().nullable());
+const frNum = z.preprocess(parseNombreFr, z.number().nullable());
 
 const str = z.preprocess(
   (v) => (typeof v === "string" && v.trim() ? v.trim() : null),
@@ -37,7 +30,10 @@ const str = z.preprocess(
  * relire sans migration : une clé manquante vaut null.
  */
 const extractedSchema = z.object({
-  famille: z.enum(["isolation", "pac_air_eau", "cet", "bois"]).nullable().optional(),
+  famille: z
+    .enum(["isolation", "pac_air_eau", "cet", "bois", "solaire_thermique"])
+    .nullable()
+    .optional(),
   dispositif: z.enum(["cee", "maprimerenov"]).nullable().optional(),
   // Communs à toutes les familles
   beneficiaire_nom: str,
@@ -79,6 +75,16 @@ const extractedSchema = z.object({
   bois_emissions_co: frNum,
   bois_marque: str,
   bois_reference: str,
+
+  // Chauffe-eau solaire individuel
+  solaire_surface_capteurs_m2: frNum,
+  solaire_efficacite_ecs: frNum,
+  solaire_profil_soutirage: str,
+  solaire_nb_ballons: frNum,
+  solaire_volume_ballon_l: frNum,
+  solaire_classe_ballon: str,
+  solaire_marque: str,
+  solaire_reference: str,
 });
 
 export type ExtractedPiece = z.infer<typeof extractedSchema>;
@@ -138,6 +144,17 @@ const BLOC: Record<Famille, { objet: string; champs: string }> = {
   "bois_marque": "marque de l'appareil",
   "bois_reference": "référence / modèle de l'appareil"`,
   },
+  solaire_thermique: {
+    objet: "installation d'un chauffe-eau solaire individuel (CESI)",
+    champs: `  "solaire_surface_capteurs_m2": nombre (surface hors-tout totale des capteurs, en m²),
+  "solaire_efficacite_ecs": nombre (efficacité énergétique pour le chauffage de l'eau, en % — PAS la productivité des capteurs en W/m², qui est un autre critère),
+  "solaire_profil_soutirage": "profil de soutirage (M, L, XL ou XXL)",
+  "solaire_nb_ballons": nombre (nombre de ballons d'eau chaude solaires installés),
+  "solaire_volume_ballon_l": nombre (capacité de stockage de chaque ballon, en litres),
+  "solaire_classe_ballon": "classe d'efficacité énergétique du ballon (ex. A+, B, C)",
+  "solaire_marque": "marque du chauffe-eau solaire",
+  "solaire_reference": "référence / modèle du chauffe-eau solaire"`,
+  },
 };
 
 const BLOC_AUTO = {
@@ -152,7 +169,7 @@ On te fournit un DEVIS ou une FACTURE portant sur : ${objet}. Tu extrais uniquem
 
 Renvoie STRICTEMENT un JSON conforme à ce schéma (mets null si l'information n'est pas présente sur le document) :
 {
-  "famille": "isolation" | "pac_air_eau" | "cet" | "bois" | null,
+  "famille": "isolation" | "pac_air_eau" | "cet" | "bois" | "solaire_thermique" | null,
   "dispositif": "cee" | "maprimerenov" | null,
 ${CHAMPS_COMMUNS},
 ${champs}
@@ -160,20 +177,8 @@ ${champs}
 Les nombres sont des nombres (pas de symbole, séparateur décimal au choix). Aucune phrase autour du JSON.`;
 }
 
-function extractJson(raw: string): unknown {
-  let s = raw.trim();
-  const fenced = s.match(/```(?:json)?\s*([\s\S]*?)```/i);
-  if (fenced) s = fenced[1].trim();
-  const start = s.indexOf("{");
-  const end = s.lastIndexOf("}");
-  if (start >= 0 && end > start) s = s.slice(start, end + 1);
-  return JSON.parse(s);
-}
-
 export async function extractPiece(params: {
-  bytes: Uint8Array;
-  mime: string;
-  filename: string;
+  doc: DocumentPrepare;
   type: TypePiece;
   /** Famille du geste du dossier : détermine les champs techniques à chercher. */
   famille: Famille | "auto";
@@ -182,17 +187,16 @@ export async function extractPiece(params: {
 
   const label = params.type === "facture" ? "une FACTURE" : "un DEVIS";
   const bloc = params.famille === "auto" ? BLOC_AUTO : BLOC[params.famille];
-  const dataUrl = `data:${params.mime};base64,${Buffer.from(params.bytes).toString("base64")}`;
 
   try {
     const raw = await openRouterVision({
       system: systemPrompt(params.famille),
       userText: `Voici ${label} portant sur : ${bloc.objet}. Identifie le type de travaux et extrais les champs demandés en JSON.`,
-      file: { mime: params.mime, dataUrl, filename: params.filename },
+      file: params.doc,
       jsonMode: true,
       maxTokens: 1200,
     });
-    const parsed = extractedSchema.safeParse(extractJson(raw));
+    const parsed = extractedSchema.safeParse(extraireJson(raw));
     if (!parsed.success) {
       console.error("[piece] extraction inattendue:", parsed.error.message);
       return { ok: false, reason: "erreur", message: "Lecture du document impossible." };
@@ -203,7 +207,12 @@ export async function extractPiece(params: {
     return {
       ok: false,
       reason: "erreur",
-      message: "L'analyse du document a échoué. Réessayez avec un fichier plus lisible.",
+      // Le document n'est pas en cause quand c'est le service qui flanche : lui
+      // demander un scan plus net le ferait tourner en rond sur un fichier net.
+      message:
+        err instanceof LlmIndisponibleError
+          ? "Le service de lecture est momentanément indisponible. Le document est bien enregistré ; relancez la lecture dans quelques instants."
+          : "L'analyse du document a échoué. Réessayez avec un fichier plus lisible.",
     };
   }
 }

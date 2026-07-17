@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 import { familleDeGeste, type CeeIsolationInput, type Famille, type TypeIsolation } from "@/lib/dossier/cee-isolation";
 import { getCurrentArtisan } from "@/lib/auth/get-artisan";
 import { ACCEPTED_DOCUMENT_MIMES, isAcceptedDocument } from "@/lib/piece/file-validation";
+import { preparerDocument } from "@/lib/piece/document";
 import { extractPiece } from "@/lib/piece/extract";
 
 const TAILLE_MAX = 15 * 1024 * 1024;
@@ -40,6 +41,21 @@ function nomBeneficiaire(value: string | null) {
 function profilSoutirage(value: string | null): "M" | "L" | "XL" | undefined {
   const normalise = value?.trim().toUpperCase();
   return normalise === "M" || normalise === "L" || normalise === "XL" ? normalise : undefined;
+}
+
+/**
+ * Profil de soutirage du CESI. Distinct de `profilSoutirage` : le BAR-TH-101
+ * admet XXL, que la fiche du chauffe-eau thermodynamique ne connaît pas. Lire un
+ * XXL avec l'autre fonction le renverrait `undefined`, et l'artisan verrait un
+ * champ vide sans comprendre pourquoi.
+ */
+function profilSoutirageSolaire(
+  value: string | null,
+): "M" | "L" | "XL" | "XXL" | undefined {
+  const normalise = value?.trim().toUpperCase();
+  return normalise === "M" || normalise === "L" || normalise === "XL" || normalise === "XXL"
+    ? normalise
+    : undefined;
 }
 
 /**
@@ -102,7 +118,7 @@ export async function analyserDevisInitial(formData: FormData): Promise<AnalyseD
   if (!(file instanceof File) || file.size === 0) {
     return { ok: false, error: "Ajoutez un devis en PDF ou en photo." };
   }
-  if (typeof geste !== "string" || !["auto", "isolation", "pac_air_eau", "cet", "bois"].includes(geste)) {
+  if (typeof geste !== "string" || !["auto", "isolation", "pac_air_eau", "cet", "bois", "solaire_thermique"].includes(geste)) {
     return { ok: false, error: "Choisissez d'abord le type de travaux." };
   }
   if (dispositif !== "auto" && dispositif !== "cee" && dispositif !== "maprimerenov") {
@@ -117,10 +133,11 @@ export async function analyserDevisInitial(formData: FormData): Promise<AnalyseD
     return { ok: false, error: "Le fichier ne semble pas être un PDF ou une image valide." };
   }
 
+  const prep = await preparerDocument({ bytes, mime: file.type, filename: file.name });
+  if (!prep.ok) return { ok: false, error: prep.message };
+
   const extraction = await extractPiece({
-    bytes,
-    mime: file.type,
-    filename: file.name,
+    doc: prep.doc,
     type: "devis",
     famille: geste === "auto" ? "auto" : familleDeGeste(geste),
   });
@@ -140,13 +157,19 @@ export async function analyserDevisInitial(formData: FormData): Promise<AnalyseD
     geste !== "auto"
       ? (geste as Famille)
       : d.famille ??
+        // BAR-TH-101 = CESI. Les autres fiches solaires (143 : système solaire
+        // combiné, 168 : dispositif sur appoint séparé) ne sont pas modélisées :
+        // elles retombent volontairement sur le repli plutôt que d'être
+        // traitées comme un CESI, dont elles n'ont pas les critères.
         (d.fiche?.startsWith("BAR-TH-171")
           ? "pac_air_eau"
           : d.fiche?.startsWith("BAR-TH-148")
             ? "cet"
             : d.fiche?.startsWith("BAR-TH-112")
               ? "bois"
-              : "isolation");
+              : d.fiche?.startsWith("BAR-TH-101")
+                ? "solaire_thermique"
+                : "isolation");
   const dispositifDetecte = dispositif === "auto" ? d.dispositif ?? "cee" : dispositif;
   const valeurs: Partial<CeeIsolationInput> = {
     dispositif: dispositifDetecte,
@@ -184,6 +207,14 @@ export async function analyserDevisInitial(formData: FormData): Promise<AnalyseD
     bois_emissions_co: d.bois_emissions_co ?? undefined,
     bois_marque: d.bois_marque ?? undefined,
     bois_reference: d.bois_reference ?? undefined,
+    solaire_surface_capteurs_m2: d.solaire_surface_capteurs_m2 ?? undefined,
+    solaire_efficacite_ecs: d.solaire_efficacite_ecs ?? undefined,
+    solaire_profil_soutirage: profilSoutirageSolaire(d.solaire_profil_soutirage),
+    solaire_nb_ballons: d.solaire_nb_ballons ?? undefined,
+    solaire_volume_ballon_l: d.solaire_volume_ballon_l ?? undefined,
+    solaire_classe_ballon: d.solaire_classe_ballon ?? undefined,
+    solaire_marque: d.solaire_marque ?? undefined,
+    solaire_reference: d.solaire_reference ?? undefined,
   };
 
   const champsTrouves = Object.entries(valeurs)

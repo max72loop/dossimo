@@ -4,6 +4,7 @@ import { familleDeGeste } from "@/lib/dossier/cee-isolation";
 import { getDossier } from "@/lib/dossier/get-dossier";
 import { createClient } from "@/lib/supabase/server";
 import { extractPiece } from "@/lib/piece/extract";
+import { preparerDocument, type DocumentPrepare } from "@/lib/piece/document";
 import { comparerPiece, type Comparaison } from "@/lib/piece/compare";
 import { verifierMentions, type MentionVerifiee } from "@/lib/piece/mentions";
 import { mentionsTemplates } from "@/lib/pack/pieces-cee-isolation";
@@ -74,6 +75,28 @@ export async function uploadPiece(
   if (!isAcceptedDocument(bytes, file.type)) {
     return { ok: false, error: "Le contenu du fichier ne correspond pas au format annoncé." };
   }
+
+  // Seuls le devis et la facture sont LUS. Eux seuls portent les caractéristiques du
+  // chantier et les mentions exigées par la fiche ; eux seuls peuvent donc contredire
+  // la saisie. Passer un certificat RGE ou une photo de combles au modèle coûterait un
+  // appel pour ne rien juger — et le contrôle des mentions y répondrait « toutes
+  // absentes », ce qui n'aurait aucun sens.
+  //
+  // Le certificat RGE, en particulier, n'a pas besoin d'être lu : le dossier est déjà
+  // confronté à l'annuaire officiel RGE (`controle-dossier.ts`), ce qui vaut mieux que
+  // la lecture d'un PDF que l'artisan fournit lui-même.
+  const lisible = type === "devis" || type === "facture";
+
+  // Document préparé une seule fois pour les deux passes VLM (valeurs + mentions),
+  // et volume borné avant même l'upload : refuser un lot de 40 pages ici évite de
+  // le stocker pour rien. Les pièces non lues ne sont ni comptées ni encodées.
+  let doc: DocumentPrepare | null = null;
+  if (lisible) {
+    const prep = await preparerDocument({ bytes, mime: file.type, filename: file.name });
+    if (!prep.ok) return { ok: false, error: prep.message };
+    doc = prep.doc;
+  }
+
   const supabase = await createClient();
 
   // Chemin : {dossierId}/{uuid}.<ext> — le premier segment porte la RLS.
@@ -89,33 +112,16 @@ export async function uploadPiece(
     return { ok: false, error: "Échec de l'envoi du fichier." };
   }
 
-  // Seuls le devis et la facture sont LUS. Eux seuls portent les caractéristiques du
-  // chantier et les mentions exigées par la fiche ; eux seuls peuvent donc contredire
-  // la saisie. Passer un certificat RGE ou une photo de combles au modèle coûterait un
-  // appel pour ne rien juger — et le contrôle des mentions y répondrait « toutes
-  // absentes », ce qui n'aurait aucun sens.
-  //
-  // Le certificat RGE, en particulier, n'a pas besoin d'être lu : le dossier est déjà
-  // confronté à l'annuaire officiel RGE (`controle-dossier.ts`), ce qui vaut mieux que
-  // la lecture d'un PDF que l'artisan fournit lui-même.
-  const lisible = type === "devis" || type === "facture";
-
   // Deux passes VLM sur le même document, en parallèle (best-effort : la pièce est
   // conservée même si l'IA échoue) :
   //  1. les VALEURS, que le code compare ensuite à la saisie (écarts) ;
   //  2. les MENTIONS OBLIGATOIRES exigées par la fiche, que le document doit porter.
   // La seconde est celle qui attrape les refus « chiffres justes, mention manquante ».
   const famille = familleDeGeste(data.caracteristiques.geste ?? "isolation");
-  const [ex, mn] = lisible
+  const [ex, mn] = doc
     ? await Promise.all([
-        extractPiece({ bytes, mime: file.type, filename: file.name, type, famille }),
-        verifierMentions({
-          bytes,
-          mime: file.type,
-          filename: file.name,
-          type,
-          mentions: mentionsTemplates(data),
-        }),
+        extractPiece({ doc, type, famille }),
+        verifierMentions({ doc, type, mentions: mentionsTemplates(data) }),
       ])
     : [null, null];
 
