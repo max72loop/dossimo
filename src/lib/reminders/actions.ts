@@ -6,6 +6,7 @@ import { piecesAttendues } from "@/lib/depot/pieces-attendues";
 import { emettreLien } from "@/lib/depot/lien";
 import { resoudreLien } from "@/lib/depot/lien";
 import { formatReminderMessage } from "@/lib/reminders/message";
+import { chargerEtatRelance } from "@/lib/reminders/get";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -54,6 +55,54 @@ export async function preparerRelanceManuelle(dossierId: string) {
   const base = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ?? "";
   const message = formatReminderMessage({ prenom: data.caracteristiques.beneficiaire.prenom, entreprise: data.artisan?.entreprise ?? "Votre artisan", documents, url: `${base}/depot/${token}` });
   return { ok: true as const, ...message };
+}
+
+/**
+ * Consigne qu'une relance vient d'être envoyée par l'artisan (WhatsApp, SMS ou
+ * copie). C'est ce log qui réserve l'étape et débloque la suivante : sans lui, la
+ * cadence n'avance jamais et le dossier reste éternellement « à relancer ».
+ *
+ * L'étape est recalculée côté serveur (jamais reçue du client) pour qu'un appel
+ * ne puisse pas sauter ou rejouer une étape. L'écriture est idempotente via le
+ * `unique(dossier_id, cadence_step, channel)` : un double clic ne double pas.
+ */
+export async function enregistrerRelanceEnvoyee(dossierId: string) {
+  const data = await getDossier(dossierId);
+  if (!data) return { ok: false as const, error: "Dossier introuvable." };
+
+  const etat = await chargerEtatRelance(dossierId);
+  if (etat.desinscrit) return { ok: false as const, error: "Le client s'est désinscrit des relances." };
+  if (!etat.active) return { ok: false as const, error: "Activez d'abord les relances sur ce dossier." };
+  if (!etat.due) return { ok: false as const, error: "Aucune relance n'est due pour l'instant." };
+
+  const supabase = await createClient();
+  const { data: uploads } = await supabase
+    .from("pieces_justificatives")
+    .select("type,validation_status")
+    .eq("dossier_id", dossierId)
+    .eq("deposant", "beneficiaire");
+  const manquants = piecesAttendues(data).flatMap((expected) => {
+    const upload = (uploads ?? []).find((item) => item.type === expected.type);
+    return upload?.validation_status === "approved" ? [] : [expected.type];
+  });
+  if (!manquants.length) return { ok: false as const, error: "Toutes les pièces attendues sont validées." };
+
+  const { error } = await supabase.from("reminder_logs").upsert(
+    {
+      dossier_id: dossierId,
+      cadence_step: etat.due.cadenceStep,
+      document_types: manquants,
+      channel: "manual",
+      status: "sent",
+      sent_at: new Date().toISOString(),
+    },
+    { onConflict: "dossier_id,cadence_step,channel", ignoreDuplicates: true },
+  );
+  if (error) return { ok: false as const, error: "Enregistrement de la relance impossible." };
+
+  revalidatePath(`/dossiers/${dossierId}`);
+  revalidatePath("/dossiers");
+  return { ok: true as const, etape: etat.due.cadenceStep };
 }
 
 /** Désinscription publique, autorisée uniquement par un token de dépôt encore valide. */

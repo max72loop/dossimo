@@ -530,8 +530,8 @@ export interface Database {
         Relationships: [{ foreignKeyName: "reminder_schedules_dossier_id_fkey"; columns: ["dossier_id"]; referencedRelation: "dossiers"; referencedColumns: ["id"] }];
       };
       reminder_logs: {
-        Row: { id: string; dossier_id: string; cadence_step: number; document_types: Json; channel: "email" | "sms"; status: "queued" | "sent" | "delivered" | "bounced" | "failed" | "skipped"; sent_at: string | null; opened_at: string | null; clicked_at: string | null; provider_message_id: string | null; error_detail: string | null; created_at: string };
-        Insert: { id?: string; dossier_id: string; cadence_step: number; document_types?: Json; channel: "email" | "sms"; status: "queued" | "sent" | "delivered" | "bounced" | "failed" | "skipped"; sent_at?: string | null; opened_at?: string | null; clicked_at?: string | null; provider_message_id?: string | null; error_detail?: string | null; created_at?: string };
+        Row: { id: string; dossier_id: string; cadence_step: number; document_types: Json; channel: "email" | "sms" | "manual"; status: "queued" | "sent" | "delivered" | "bounced" | "failed" | "skipped"; sent_at: string | null; opened_at: string | null; clicked_at: string | null; provider_message_id: string | null; error_detail: string | null; created_at: string };
+        Insert: { id?: string; dossier_id: string; cadence_step: number; document_types?: Json; channel: "email" | "sms" | "manual"; status: "queued" | "sent" | "delivered" | "bounced" | "failed" | "skipped"; sent_at?: string | null; opened_at?: string | null; clicked_at?: string | null; provider_message_id?: string | null; error_detail?: string | null; created_at?: string };
         Update: Partial<Database["public"]["Tables"]["reminder_logs"]["Insert"]>;
         Relationships: [{ foreignKeyName: "reminder_logs_dossier_id_fkey"; columns: ["dossier_id"]; referencedRelation: "dossiers"; referencedColumns: ["id"] }];
       };

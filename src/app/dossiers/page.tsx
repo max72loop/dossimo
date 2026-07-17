@@ -13,6 +13,7 @@ import { fusionnerRapport } from "@/lib/rules/controle-pieces";
 import { chargerPlafonds, findingsDesPieces } from "@/lib/dossier/rapport";
 import { versEcarts } from "@/lib/piece/get";
 import { suivrePieces, type SuiviPieces } from "@/lib/depot/suivi";
+import { nextReminder, scheduleFromRow, type ReminderLog } from "@/lib/reminders/schedule";
 import type { DossierComplet } from "@/lib/dossier/get-dossier";
 import type { PieceJustificative } from "@/lib/database.types";
 import { TableauDeBord, type StatsTableau } from "@/components/dossier/tableau-de-bord";
@@ -73,7 +74,7 @@ export default async function DossiersPage() {
   // « conforme » un dossier que la page dossier déclare bloquant, écarts et mentions
   // manquantes à l'appui : deux verdicts pour un même dossier.
   const idsDossiers = rows.map((d) => d.id);
-  const [{ data: toutesPieces }, plafonds] = await Promise.all([
+  const [{ data: toutesPieces }, plafonds, { data: schedulesRows }, { data: logsRows }] = await Promise.all([
     idsDossiers.length
       ? supabase
           .from("pieces_justificatives")
@@ -82,6 +83,15 @@ export default async function DossiersPage() {
           .order("created_at", { ascending: true })
       : Promise.resolve({ data: [] as PieceJustificative[] }),
     chargerPlafonds(supabase),
+    idsDossiers.length
+      ? supabase
+          .from("reminder_schedules")
+          .select("dossier_id,enabled,enabled_at,cadence_days,max_reminders,opt_out_at")
+          .in("dossier_id", idsDossiers)
+      : Promise.resolve({ data: [] as { dossier_id: string; enabled: boolean; enabled_at: string | null; cadence_days: unknown; max_reminders: number | null; opt_out_at: string | null }[] }),
+    idsDossiers.length
+      ? supabase.from("reminder_logs").select("dossier_id,cadence_step,channel").in("dossier_id", idsDossiers)
+      : Promise.resolve({ data: [] as { dossier_id: string; cadence_step: number; channel: "email" | "sms" | "manual" }[] }),
   ]);
   const piecesParDossier = new Map<string, PieceJustificative[]>();
   for (const p of toutesPieces ?? []) {
@@ -89,6 +99,28 @@ export default async function DossiersPage() {
     liste.push(p);
     piecesParDossier.set(p.dossier_id, liste);
   }
+
+  // État de relance par dossier : la cadence [0,3,7,14] éteint le rappel « relancer »
+  // dès que l'artisan a consigné un envoi, jusqu'à l'étape suivante. Fenêtre ignorée
+  // (relance assistée : l'artisan est l'expéditeur). Un dossier sans planning reste
+  // relançable par défaut ; une désinscription le retire.
+  const scheduleParDossier = new Map((schedulesRows ?? []).map((r) => [r.dossier_id, r]));
+  const logsParDossier = new Map<string, ReminderLog[]>();
+  for (const l of logsRows ?? []) {
+    const liste = logsParDossier.get(l.dossier_id) ?? [];
+    liste.push({ cadenceStep: l.cadence_step, channel: l.channel });
+    logsParDossier.set(l.dossier_id, liste);
+  }
+  const maintenant = new Date();
+  const relanceSupprimee = (dossierId: string): boolean => {
+    const row = scheduleParDossier.get(dossierId);
+    if (!row) return false; // pas de planning : on relance comme avant
+    if (row.opt_out_at) return true; // le client a refusé
+    const schedule = scheduleFromRow(row);
+    if (!schedule.enabled) return false; // suivi non activé : on nudge encore
+    // Activé : on ne rappelle que si une étape est réellement due.
+    return nextReminder(schedule, logsParDossier.get(dossierId) ?? [], maintenant, { ignoreWindow: true }) === null;
+  };
 
   // Statistiques du tableau de bord.
   const parEtat = Object.fromEntries(
@@ -144,9 +176,9 @@ export default async function DossiersPage() {
         const manquantes = suivi.attendues - suivi.recues;
         if (suivi.nouvelles > 0) {
           actionsPrioritaires.push({ dossierId: d.id, beneficiaire: nomClient, detail: `examiner ${suivi.nouvelles} nouvelle${suivi.nouvelles > 1 ? "s" : ""} pièce${suivi.nouvelles > 1 ? "s" : ""}`, categorie: "aujourdhui" });
-        } else if (manquantes > 0) {
+        } else if (manquantes > 0 && !relanceSupprimee(d.id)) {
           actionsPrioritaires.push({ dossierId: d.id, beneficiaire: nomClient, detail: `relancer pour ${manquantes} pièce${manquantes > 1 ? "s" : ""} manquante${manquantes > 1 ? "s" : ""}`, categorie: "client" });
-        } else {
+        } else if (manquantes === 0) {
           const premierBlocage = rapport.findings.find((finding) => finding.severite === "bloquant");
           actionsPrioritaires.push({
             dossierId: d.id,

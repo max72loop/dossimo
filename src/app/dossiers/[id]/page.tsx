@@ -50,6 +50,7 @@ import {
 import { SEVERITE_LABEL, type Finding, type Severite } from "@/lib/rules/types";
 import { ObligeSuivi } from "@/components/dossier/oblige-suivi";
 import { RelancesBeneficiaire } from "@/components/dossier/relances-beneficiaire";
+import { chargerEtatRelance } from "@/lib/reminders/get";
 import { retrouverLienActif } from "@/lib/depot/lien";
 
 export const metadata = { title: "Dossier" };
@@ -184,11 +185,12 @@ export default async function DossierPage({
   // source de vérité que le checkout : l'affiché correspond au facturé.
   const supabase = await createClient();
   const tiers = await getActiveTiers(supabase);
-  const [{ data: obliges }, { data: retourDepot }, { data: beneficiaryUploads }, tokenDepotActif] = await Promise.all([
+  const [{ data: obliges }, { data: retourDepot }, { data: beneficiaryUploads }, tokenDepotActif, etatRelance] = await Promise.all([
     supabase.from("obliges").select("id, nom").eq("actif", true).order("nom"),
     supabase.from("retours_depot").select("statut, motif, detail").eq("dossier_id", dossier.id).maybeSingle(),
     supabase.from("pieces_justificatives").select("id,type,nom_fichier,validation_status,rejection_reason").eq("dossier_id", dossier.id).eq("deposant", "beneficiaire").order("created_at", { ascending: false }),
     retrouverLienActif(dossier.id),
+    chargerEtatRelance(dossier.id),
   ]);
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ?? "";
   const urlDepotActif = tokenDepotActif ? `${baseUrl}/depot/${tokenDepotActif}` : null;
@@ -356,6 +358,13 @@ export default async function DossierPage({
               dossierId={id}
               attendues={attenduesClient}
               uploads={beneficiaryUploads ?? []}
+              etat={{
+                active: etatRelance.active,
+                desinscrit: etatRelance.desinscrit,
+                envoyees: etatRelance.envoyees,
+                plafond: etatRelance.plafond,
+                due: Boolean(etatRelance.due),
+              }}
             />
             {suivi.nouvelles > 0 ? <MarquerVues dossierId={id} /> : null}
           </div>
