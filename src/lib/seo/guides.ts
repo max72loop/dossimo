@@ -1,9 +1,31 @@
+/**
+ * Ordre éditorial des familles de guides. Il pilote l'affichage du hub `/guides`
+ * (page pilier) et le regroupement dans le menu. Ajouter une catégorie ici suffit
+ * à la faire apparaître ; un guide qui pointe une catégorie absente de cette liste
+ * ne serait jamais rendu, donc les deux doivent rester synchronisés.
+ */
+export const GUIDE_CATEGORIES = [
+  "Monter le dossier",
+  "Devis & conformité",
+  "Refus & prévention",
+] as const;
+
+export type GuideCategory = (typeof GUIDE_CATEGORIES)[number];
+
 export interface SeoGuide {
   slug: string;
   title: string;
   metaTitle: string;
   description: string;
   eyebrow: string;
+  category: GuideCategory;
+  /**
+   * Date de dernière vérification éditoriale, au format ISO `AAAA-MM-JJ`. Source
+   * unique pour l'affichage (« Vérifié le… »), le JSON-LD `dateModified` et le
+   * `lastModified` du sitemap : la faire vivre ici évite les dates codées en dur
+   * qui « périment » le contenu aux yeux de Google.
+   */
+  updated: string;
   intro: string;
   checklist: Array<{ title: string; text: string }>;
   errors: string[];
@@ -21,8 +43,47 @@ const questionsCee =
   "https://www.ecologie.gouv.fr/politiques-publiques/questions-reponses-dispositif-cee";
 const mentionsFacture =
   "https://www.service-public.fr/entreprendre/vosdroits/F31808";
+const annuaireRge = "https://france-renov.gouv.fr/annuaire-rge";
+const anahModeEmploi =
+  "https://www.anah.gouv.fr/anatheque/maprimerenov-mode-emploi";
 
 export const guides = {
+  dossierCee: {
+    slug: "constituer-dossier-cee-conforme",
+    metaTitle: "Constituer un dossier CEE conforme : le pack complet",
+    title: "Constituer un dossier CEE conforme : qui fournit quoi, et dans quel ordre",
+    description:
+      "La cartographie d’un dossier CEE complet : les pièces de l’artisan, celles du bénéficiaire, la chronologie du rôle incitatif et le délai d’envoi, pour un pack cohérent avant dépôt.",
+    eyebrow: "Guide artisan RGE · Pack CEE",
+    category: "Monter le dossier",
+    updated: "2026-07-17",
+    intro:
+      "Un dossier CEE conforme ne se résume pas au devis. C’est un ensemble de pièces produites par l’artisan et par le bénéficiaire, qui doivent rester cohérentes entre elles et respecter une chronologie précise. Une seule mention qui diffère d’une pièce à l’autre, ou une date placée au mauvais moment, suffit à bloquer la prime. Ce guide cartographie ce que le dossier doit contenir et qui fournit quoi.",
+    checklist: [
+      { title: "Pièces produites par l’artisan RGE", text: "Devis conforme (fiche CEE, surface, résistance thermique, marque et référence de l’isolant, ACERMI, numéro et domaine RGE), facture reprenant ces mentions à l’identique, certificat RGE, fiche technique du produit, attestation sur l’honneur co-signée, photos avant et après." },
+      { title: "Pièces fournies par le bénéficiaire", text: "Selon la situation : pièce d’identité, RIB, justificatif de propriété et d’occupation. Cas particuliers du bailleur (bail, engagement de location) et de la copropriété (procès-verbal d’assemblée, quote-part)." },
+      { title: "Chronologie du rôle actif et incitatif", text: "L’offre CEE doit être engagée avant l’acceptation du devis. La constitution du dossier démarre donc avant les travaux, pas après." },
+      { title: "Délai d’envoi", text: "Le dossier part au plus tard trois mois après la date de la facture. Anticipez la collecte des pièces pour ne pas dépasser ce délai." },
+      { title: "Cohérence croisée des pièces", text: "Rapprochez devis, facture, attestation sur l’honneur et photos : surfaces, références et performances doivent être identiques d’une pièce à l’autre." },
+      { title: "Version des modèles en vigueur", text: "Depuis 2026, la sixième période CEE renforce la collecte au dépôt et re-version fiches et modèles. Partez de la version en vigueur, jamais d’un modèle d’une période antérieure." },
+    ],
+    errors: [
+      "Une mention (surface, référence, performance) diffère entre le devis et la facture.",
+      "Une pièce du bénéficiaire manque et n’est réclamée qu’au moment du dépôt.",
+      "Le dossier est envoyé plus de trois mois après la facture.",
+      "L’attestation sur l’honneur n’est pas co-signée ou reprend des valeurs différentes.",
+      "Un modèle ou une fiche d’une période antérieure est utilisé après le passage à la sixième période.",
+    ],
+    example: {
+      before: "Les pièces sont réunies au fil de l’eau, sans relecture d’ensemble, et la facture porte une surface légèrement différente du devis.",
+      after: "Chaque pièce est rapprochée des autres avant l’envoi, les écarts sont corrigés, et le dossier part dans le délai avec des mentions identiques partout.",
+    },
+    sources: [
+      { label: "Questions-réponses officielles sur le dispositif CEE (ecologie.gouv.fr)", href: questionsCee },
+      { label: "Catalogue officiel des fiches d’opérations standardisées CEE", href: catalogueCee },
+      { label: "Mentions obligatoires d’une facture — Service Public", href: mentionsFacture },
+    ],
+  },
   maprimerenov: {
     slug: "devis-maprimerenov-conforme",
     metaTitle: "Devis MaPrimeRénov' conforme : checklist artisan RGE",
@@ -30,6 +91,8 @@ export const guides = {
     description:
       "Vérifiez les mentions, le RGE, l’adresse, les montants et les caractéristiques techniques d’un devis MaPrimeRénov’ avant le dépôt.",
     eyebrow: "Guide artisan RGE · MaPrimeRénov’",
+    category: "Devis & conformité",
+    updated: "2026-07-14",
     intro:
       "Un devis lisible ne suffit pas : les informations de l’entreprise, du logement, des travaux et de la qualification doivent rester cohérentes avec la demande d’aide puis avec la facture. Cette checklist organise la relecture avant que le client ne dépose son dossier.",
     checklist: [
@@ -63,6 +126,8 @@ export const guides = {
     description:
       "Préparez un devis CEE contrôlable : référence de fiche, caractéristiques techniques, qualification RGE, dates et preuves attendues.",
     eyebrow: "Guide artisan RGE · Certificats d’économies d’énergie",
+    category: "Devis & conformité",
+    updated: "2026-07-14",
     intro:
       "Une opération CEE est appréciée à partir de sa fiche d’opération standardisée et de ses modes de preuve. Le devis doit donc décrire précisément ce qui sera posé, sans mélanger les critères de plusieurs gestes.",
     checklist: [
@@ -95,6 +160,8 @@ export const guides = {
     description:
       "Checklist des mentions d’entreprise, de chantier et de travaux à contrôler sur un devis RGE avant un dossier MaPrimeRénov’ ou CEE.",
     eyebrow: "Guide pratique · Devis artisan RGE",
+    category: "Devis & conformité",
+    updated: "2026-07-14",
     intro:
       "La conformité se vérifie plus vite lorsque le devis est relu en trois blocs : l’entreprise, le client et le chantier, puis la description technique et financière des travaux.",
     checklist: [
@@ -127,6 +194,8 @@ export const guides = {
     description:
       "Sept contrôles de cohérence entre demande, devis, RGE et facture pour réduire les dossiers MaPrimeRénov’ incomplets ou bloqués.",
     eyebrow: "Prévention des blocages · MaPrimeRénov’",
+    category: "Refus & prévention",
+    updated: "2026-07-14",
     intro:
       "Les erreurs les plus coûteuses ne sont pas toujours visibles sur une pièce isolée. Elles apparaissent lorsque le nom, l’adresse, les dates, les travaux ou les montants divergent entre la demande, le devis et la facture.",
     checklist: [
@@ -152,9 +221,98 @@ export const guides = {
     sources: [
       { label: "Les règles d’or d’un dossier MaPrimeRénov’ — France Rénov’", href: franceRenovDossier },
       { label: "Guide MaPrimeRénov’ rénovation par geste — France Rénov’", href: "https://france-renov.gouv.fr/preparer-projet/dossier-demande-aide/guide-geste" },
-      { label: "Mode d’emploi MaPrimeRénov’ 2026 — Anah", href: "https://www.anah.gouv.fr/anatheque/maprimerenov-mode-emploi" },
+      { label: "Mode d’emploi MaPrimeRénov’ 2026 — Anah", href: anahModeEmploi },
+    ],
+  },
+  rai: {
+    slug: "offre-cee-avant-le-devis",
+    metaTitle: "Offre CEE avant le devis : sécuriser le rôle actif incitatif",
+    title: "Offre CEE avant le devis : sécuriser le rôle actif et incitatif",
+    description:
+      "Pour une prime CEE valable, l’offre doit être engagée avant l’acceptation du devis. Comprendre la chronologie du rôle actif et incitatif (RAI) pour éviter un rejet sans recours.",
+    eyebrow: "Guide artisan RGE · Chronologie CEE",
+    category: "Refus & prévention",
+    updated: "2026-07-17",
+    intro:
+      "Une prime CEE n’est valable que si elle a réellement contribué à décider les travaux. C’est le rôle actif et incitatif : l’offre CEE doit être engagée avant que le client n’accepte le devis. Si l’engagement est daté après, le dossier tombe pour effet d’aubaine, sans recours possible. La chronologie se sécurise document par document, avant le chantier.",
+    checklist: [
+      { title: "Situer l’engagement CEE", text: "L’offre ou le contrat CEE (bon d’adhésion, courrier, contrat cadre) doit porter une date antérieure à l’acceptation du devis par le client." },
+      { title: "Dater l’acceptation du devis", text: "La date d’acceptation du devis fait foi. Elle doit venir après l’engagement CEE, et rester lisible sur la pièce signée." },
+      { title: "Ne rien démarrer avant", text: "Aucun début de travaux ni acompte engageant tant que la chronologie du rôle incitatif n’est pas établie." },
+      { title: "Relier l’offre au chantier", text: "Le devis mentionne le dispositif CEE et conservez la trace écrite qui rattache l’offre à ce projet précis, et non à un autre." },
+      { title: "Vérifier la tolérance applicable", text: "Une tolérance encadrée peut exister pour les particuliers, à confirmer dans les textes en vigueur, jamais après le démarrage des travaux. En cas de doute, restez sur l’engagement avant le devis." },
+    ],
+    errors: [
+      "L’engagement CEE est daté après l’acceptation du devis.",
+      "Des travaux ou un acompte ont démarré avant l’engagement CEE.",
+      "Le devis ne fait aucune mention du dispositif CEE incitatif.",
+      "Aucune preuve écrite ne relie l’offre CEE à ce chantier précis.",
+      "La date d’acceptation du devis est absente ou illisible.",
+    ],
+    example: {
+      before: "Devis accepté le 3 mars, contrat CEE signé le 20 mars : l’incitation arrive après la décision de travaux.",
+      after: "Offre CEE engagée le 1er mars, devis accepté le 3 mars : la prime a bien précédé la décision, la chronologie est défendable.",
+    },
+    sources: [
+      { label: "Questions-réponses officielles sur le dispositif CEE (ecologie.gouv.fr)", href: questionsCee },
+      { label: "Catalogue officiel des fiches d’opérations standardisées CEE", href: catalogueCee },
+    ],
+  },
+  rge: {
+    slug: "qualification-rge-valide-geste",
+    metaTitle: "Qualification RGE valide et adaptée au geste : le contrôle",
+    title: "Qualification RGE : valide, dans le bon domaine, à la bonne date",
+    description:
+      "Une aide est bloquée si la qualification RGE ne couvre pas le geste réalisé ou n’est pas valable à la date utile. Les points à vérifier avant d’engager le chantier.",
+    eyebrow: "Guide artisan RGE · Éligibilité",
+    category: "Refus & prévention",
+    updated: "2026-07-17",
+    intro:
+      "Le statut RGE ne suffit pas à lui seul : il doit couvrir précisément le geste réalisé et être valable à la date qui compte pour le dispositif. Une qualification dans un domaine voisin, expirée ou portée par la mauvaise entreprise bloque l’accès aux aides. Ces contrôles se font avant d’engager les travaux, quand tout est encore corrigeable.",
+    checklist: [
+      { title: "Identifier le domaine exact", text: "La qualification doit couvrir précisément le geste concerné, par exemple pompe à chaleur, isolation ou ventilation, et non un domaine seulement proche." },
+      { title: "Vérifier la validité à la date utile", text: "Contrôlez que la qualification est active à la date qui compte pour le dispositif, souvent l’acceptation du devis ou l’engagement de l’opération." },
+      { title: "Rapprocher RGE et travaux exécutés", text: "Le geste facturé doit relever du domaine RGE mentionné, y compris lorsque le devis comporte plusieurs postes." },
+      { title: "Traiter la sous-traitance", text: "Si un poste est sous-traité, c’est la qualification de l’entreprise qui exécute réellement le geste qui doit le couvrir." },
+      { title: "Anticiper le renouvellement", text: "Une qualification proche de son échéance peut expirer avant la date utile. Vérifiez sa validité avant d’engager le chantier." },
+    ],
+    errors: [
+      "La qualification RGE couvre un domaine proche mais pas le geste facturé.",
+      "La qualification a expiré ou n’était pas encore active à la date utile.",
+      "Le geste est sous-traité à une entreprise sans le RGE correspondant.",
+      "Le numéro RGE figure sur le devis sans domaine vérifiable.",
+      "Une seule qualification est invoquée pour des postes relevant de domaines différents.",
+    ],
+    example: {
+      before: "Une qualification « chauffage » est invoquée pour une isolation de combles : le domaine ne correspond pas au geste.",
+      after: "Le geste d’isolation est porté par une qualification RGE isolation, valide à la date d’acceptation du devis et vérifiable dans l’annuaire officiel.",
+    },
+    sources: [
+      { label: "Annuaire officiel des professionnels RGE (France Rénov’)", href: annuaireRge },
+      { label: "Bien monter son dossier MaPrimeRénov’ — France Rénov’", href: franceRenovDossier },
+      { label: "Mode d’emploi MaPrimeRénov’ 2026 — Anah", href: anahModeEmploi },
     ],
   },
 } satisfies Record<string, SeoGuide>;
 
 export const guideList = Object.values(guides);
+
+/**
+ * Guides regroupés par famille, dans l'ordre de `GUIDE_CATEGORIES`. Les catégories
+ * vides ne sont pas rendues : le hub grandit tout seul quand on ajoute un guide.
+ */
+export function guidesByCategory(): Array<{ category: GuideCategory; guides: SeoGuide[] }> {
+  return GUIDE_CATEGORIES.map((category) => ({
+    category,
+    guides: guideList.filter((guide) => guide.category === category),
+  })).filter((group) => group.guides.length > 0);
+}
+
+/** Date ISO d'un guide → « 14 juillet 2026 » pour l'affichage. */
+export function formatGuideDate(iso: string): string {
+  return new Intl.DateTimeFormat("fr-FR", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(new Date(`${iso}T00:00:00Z`));
+}
