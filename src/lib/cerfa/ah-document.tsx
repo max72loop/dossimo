@@ -144,7 +144,9 @@ export function AttestationHonneurDocument({
         ? "COP, profil de soutirage, volume, marque et référence de l'appareil"
         : geste === "bois"
           ? "combustible, rendement énergétique, marque et référence de l'appareil"
-          : "surface, résistance thermique, marque et référence de l'isolant";
+          : geste === "solaire_thermique"
+            ? "nature de l'appoint et du fluide, surface hors-tout des capteurs, efficacité énergétique ECS, nombre et capacité des ballons, certification des capteurs, marque et référence de l'équipement"
+            : "surface, résistance thermique, marque et référence de l'isolant";
 
   return (
     <Document>

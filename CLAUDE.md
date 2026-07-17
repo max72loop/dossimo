@@ -190,6 +190,17 @@ templates/cerfa/      # modèles maîtres Cerfa versionnés (+ archive/)
 
 **Produit**
 
+- [ ] **Porter les quatre profils de revenus MaPrimeRénov'.** Le modèle n'en
+      connaît que trois (`grande_precarite` / `precaire` / `classique`, calqués
+      sur le CEE) alors que l'Anah en a quatre, et son `classique` confond
+      *violet* (intermédiaire, éligible) et *rose* (supérieur, **non éligible**).
+      Conséquence actuelle : le barème MPR du CESI ne seede que les deux profils
+      représentables sans ambiguïté (migration `0042`), donc un ménage
+      « classique » n'a aucune estimation. Tous les gestes sont concernés.
+- [ ] **Contrôler le non-cumul CEE du solaire.** Depuis 2026, BAR-TH-101 / 143 /
+      168 ne sont plus cumulables avec BAR-TH-171 et BAR-TH-172 (PAC air/eau et
+      eau/eau). Non détectable aujourd'hui : la règle est inter-dossiers, et le
+      moteur ne voit qu'un dossier à la fois.
 - [ ] Implémenter le remplissage des Cerfa officiels CEE isolation avec `pdf-lib`,
       piloté par `version_formulaire` de `regles_metier`.
 - [ ] Mettre en place le processus de surveillance Cerfa (§8) et créer

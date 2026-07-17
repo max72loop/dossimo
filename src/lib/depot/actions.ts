@@ -8,6 +8,7 @@ import { getDossier } from "@/lib/dossier/get-dossier";
 import { emettreLien, resoudreLien, revoquerLiens } from "@/lib/depot/lien";
 import { piecesAttendues, PIECES_BENEFICIAIRE } from "@/lib/depot/pieces-attendues";
 import { lireAvisImposition } from "@/lib/piece/avis-imposition";
+import { preparerDocument, type DocumentPrepare } from "@/lib/piece/document";
 import { ACCEPTED_DOCUMENT_MIMES, isAcceptedDocument } from "@/lib/piece/file-validation";
 import type { Json, TypePiece } from "@/lib/database.types";
 
@@ -156,6 +157,22 @@ export async function deposerPiece(
   if (!isAcceptedDocument(bytes, file.type)) {
     return { ok: false, error: "Le contenu du fichier ne correspond pas au format annoncé." };
   }
+
+  // Seul l'avis d'imposition est lu : c'est lui qui commande le montant de l'aide,
+  // donc le seul dont le contenu peut contredire le dossier. Les autres pièces sont
+  // reçues et rangées, sans être passées à un modèle — traiter un RIB ou une carte
+  // d'identité n'apporterait rien au contrôle et beaucoup au risque.
+  //
+  // Volume borné avant l'upload sur ce seul chemin de lecture : un avis tient en
+  // quelques pages, un lot scanné n'a pas à être stocké ni lu.
+  const aLire = type === "avis_imposition";
+  let doc: DocumentPrepare | null = null;
+  if (aLire) {
+    const prep = await preparerDocument({ bytes, mime: file.type, filename: file.name });
+    if (!prep.ok) return { ok: false, error: prep.message };
+    doc = prep.doc;
+  }
+
   const admin = createAdminClient();
 
   const ext = file.name.split(".").pop()?.toLowerCase() || "bin";
@@ -170,14 +187,7 @@ export async function deposerPiece(
     return { ok: false, error: "L'envoi a échoué. Réessayez." };
   }
 
-  // Seul l'avis d'imposition est lu : c'est lui qui commande le montant de l'aide,
-  // donc le seul dont le contenu peut contredire le dossier. Les autres pièces sont
-  // reçues et rangées, sans être passées à un modèle — traiter un RIB ou une carte
-  // d'identité n'apporterait rien au contrôle et beaucoup au risque.
-  const lu =
-    type === "avis_imposition"
-      ? await lireAvisImposition({ bytes, mime: file.type, filename: file.name })
-      : null;
+  const lu = doc ? await lireAvisImposition({ doc }) : null;
 
   const { error: insErr } = await admin.from("pieces_justificatives").insert({
     id: pieceId,

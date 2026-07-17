@@ -64,7 +64,14 @@ export function checklistDossier(
   data: DossierComplet,
   pieces: readonly PieceJustificative[],
 ): EntreeChecklist[] {
-  const presents = new Set(pieces.map((p) => p.type));
+  // Une pièce rejetée par l'artisan n'est pas une pièce fournie. Compter son seul
+  // type cochait la case et affichait le dossier comme réuni, alors que le rejet
+  // signifie précisément « recommence ». Les autres statuts (`submitted`, `approved`,
+  // et `null` pour les dépôts artisan qui ne passent par aucune revue) comptent :
+  // la case dit « c'est arrivé », pas « c'est validé ».
+  const presents = new Set(
+    pieces.filter((p) => p.validation_status !== "rejected").map((p) => p.type),
+  );
 
   return piecesCeeIsolation(data).map((p) => {
     const types = TYPES[p.id] ?? [];

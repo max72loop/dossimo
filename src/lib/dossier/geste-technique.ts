@@ -1,6 +1,10 @@
 import {
   BOIS_COMBUSTIBLES,
   PAC_TEMPERATURES,
+  SOLAIRE_APPOINTS,
+  SOLAIRE_CERTIFICATIONS,
+  SOLAIRE_FLUIDES,
+  SOLAIRE_SOUTIRAGE_PROFILS,
   SOUTIRAGE_PROFILS,
   posteLabel,
 } from "@/lib/dossier/cee-isolation";
@@ -58,6 +62,22 @@ export function lignesTechniques(
     ];
   }
 
+  if (geste === "solaire_thermique" && c.solaire) {
+    // Ordre calé sur les mentions qu'exige le BAR-TH-101 sur la facture.
+    return [
+      { label: "Énergie de l'appoint", value: SOLAIRE_APPOINTS[c.solaire.appoint] },
+      { label: "Fluide caloporteur", value: SOLAIRE_FLUIDES[c.solaire.fluide] },
+      { label: "Surface hors-tout des capteurs", value: `${c.solaire.surface_capteurs_m2} m²`, mono: true },
+      { label: "Profil de soutirage", value: SOLAIRE_SOUTIRAGE_PROFILS[c.solaire.profil_soutirage] },
+      { label: "Efficacité énergétique ECS", value: `${c.solaire.efficacite_ecs} %`, mono: true },
+      { label: "Nombre de ballons", value: String(c.solaire.nb_ballons), mono: true },
+      { label: "Capacité de chaque ballon", value: `${c.solaire.volume_ballon_l} L`, mono: true },
+      { label: "Classe d'efficacité du ballon", value: c.solaire.classe_ballon || "—" },
+      { label: "Certification des capteurs", value: SOLAIRE_CERTIFICATIONS[c.solaire.certification] },
+      { label: "Marque / référence", value: ou(c.solaire.marque, c.solaire.reference) },
+    ];
+  }
+
   // Isolation (défaut, y compris dossiers antérieurs au multi-geste). Le bloc
   // peut manquer si le geste déclaré n'a pas son bloc technique (donnée
   // incohérente) : on rend une liste vide plutôt que de lever.
@@ -78,6 +98,7 @@ export function titreSectionTechnique(c: CeeIsolationCaracteristiques): string {
   if (geste === "pac_air_eau") return "Pompe à chaleur air/eau";
   if (geste === "cet") return "Chauffe-eau thermodynamique";
   if (geste === "bois") return "Appareil de chauffage au bois";
+  if (geste === "solaire_thermique") return "Chauffe-eau solaire individuel";
   return "Travaux d'isolation";
 }
 

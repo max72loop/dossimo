@@ -2,7 +2,8 @@ import "server-only";
 
 import { z } from "zod";
 
-import { isLlmConfigured, openRouterVision } from "@/lib/llm/openrouter";
+import { isLlmConfigured, LlmIndisponibleError, openRouterVision } from "@/lib/llm/openrouter";
+import { extraireJson, type DocumentPrepare } from "@/lib/piece/document";
 import type { TypePiece } from "@/lib/database.types";
 
 /**
@@ -75,16 +76,6 @@ Renvoie STRICTEMENT ce JSON, une entrée par mention exigée, dans le même ordr
 {"mentions":[{"mention":"<recopie la mention exigée>","statut":"presente|absente|divergente","verbatim":"..."|null,"confiance":0.0}]}
 Aucune phrase autour du JSON.`;
 
-function extractJson(raw: string): unknown {
-  let s = raw.trim();
-  const fenced = s.match(/```(?:json)?\s*([\s\S]*?)```/i);
-  if (fenced) s = fenced[1].trim();
-  const start = s.indexOf("{");
-  const end = s.lastIndexOf("}");
-  if (start >= 0 && end > start) s = s.slice(start, end + 1);
-  return JSON.parse(s);
-}
-
 /**
  * Réaligne la réponse du modèle sur la liste EXIGÉE : on n'accepte que les mentions
  * demandées, dans l'ordre demandé. Une mention que le modèle aurait omise est traitée
@@ -106,9 +97,7 @@ function realigner(
 }
 
 export async function verifierMentions(params: {
-  bytes: Uint8Array;
-  mime: string;
-  filename: string;
+  doc: DocumentPrepare;
   type: TypePiece;
   /** Mentions exigées, déjà interpolées aux valeurs du dossier. */
   mentions: readonly string[];
@@ -117,18 +106,17 @@ export async function verifierMentions(params: {
   if (params.mentions.length === 0) return { ok: true, mentions: [] };
 
   const label = params.type === "facture" ? "une FACTURE" : "un DEVIS";
-  const dataUrl = `data:${params.mime};base64,${Buffer.from(params.bytes).toString("base64")}`;
   const liste = params.mentions.map((m, i) => `${i + 1}. ${m}`).join("\n");
 
   try {
     const raw = await openRouterVision({
       system: SYSTEM,
       userText: `Voici ${label}. Vérifie sur ce document, une par une, les ${params.mentions.length} mentions obligatoires suivantes :\n\n${liste}`,
-      file: { mime: params.mime, dataUrl, filename: params.filename },
+      file: params.doc,
       jsonMode: true,
       maxTokens: 2000,
     });
-    const parsed = reponseSchema.safeParse(extractJson(raw));
+    const parsed = reponseSchema.safeParse(extraireJson(raw));
     if (!parsed.success) {
       console.error("[piece] mentions inattendues:", parsed.error.message);
       return { ok: false, reason: "erreur", message: "Contrôle des mentions impossible." };
@@ -139,7 +127,10 @@ export async function verifierMentions(params: {
     return {
       ok: false,
       reason: "erreur",
-      message: "Le contrôle des mentions a échoué. Réessayez avec un fichier plus lisible.",
+      message:
+        err instanceof LlmIndisponibleError
+          ? "Le service de lecture est momentanément indisponible. Les mentions seront contrôlées à la prochaine lecture."
+          : "Le contrôle des mentions a échoué. Réessayez avec un fichier plus lisible.",
     };
   }
 }

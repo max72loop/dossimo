@@ -145,6 +145,7 @@ export function DemarrageAssiste({
             <option value="pac_air_eau">Pompe à chaleur air/eau</option>
             <option value="cet">Chauffe-eau thermodynamique</option>
             <option value="bois">Chauffage au bois</option>
+            <option value="solaire_thermique">Chauffe-eau solaire individuel</option>
           </select>
         </label>
       </div>

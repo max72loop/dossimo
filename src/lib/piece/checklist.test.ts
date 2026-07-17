@@ -82,6 +82,33 @@ describe("checklist reliée aux pièces réelles", () => {
     expect(apres.total).toBe(avant.total);
   });
 
+  it("une pièce rejetée ne coche pas sa case et ne compte pas dans la complétude", () => {
+    // Le rejet n'avait aucun effet : le dossier s'affichait comme réuni sur une
+    // pièce que l'artisan venait justement de refuser.
+    const rejetee = { ...piece("avis_imposition"), validation_status: "rejected" as const };
+    const mpr = dossier("maprimerenov");
+    const e = entree(mpr, [rejetee], "avis_imposition");
+    expect(e.deposee).toBe(false);
+    expect(e.manquants).toEqual(["avis_imposition"]);
+
+    const avec = completude(checklistDossier(cee, [piece("devis"), piece("facture")]));
+    const apresRejet = completude(
+      checklistDossier(cee, [
+        piece("devis"),
+        { ...piece("facture"), validation_status: "rejected" as const },
+      ]),
+    );
+    expect(apresRejet.reunies).toBe(avec.reunies - 1);
+  });
+
+  it("une pièce soumise ou validée coche sa case", () => {
+    // La case dit « c'est arrivé », pas « c'est validé » : seul le rejet la décoche.
+    for (const statut of ["submitted", "approved", null] as const) {
+      const e = entree(cee, [{ ...piece("devis"), validation_status: statut }], "devis_signe");
+      expect(e.deposee, `statut ${statut}`).toBe(true);
+    }
+  });
+
   it("une pièce du bénéficiaire coche bien sa case (MaPrimeRénov')", () => {
     const mpr = dossier("maprimerenov");
     const e = entree(mpr, [piece("avis_imposition")], "avis_imposition");

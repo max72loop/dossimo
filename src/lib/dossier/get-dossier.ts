@@ -10,13 +10,19 @@ import type {
   PRECARITES,
   LOGEMENT_TYPES,
   RESIDENCES,
+  Famille,
   TypeIsolation,
 } from "@/lib/dossier/cee-isolation";
 
 /** Forme typée de `caracteristiques_techniques_json` d'un dossier. */
 export interface CeeIsolationCaracteristiques {
-  /** Famille de geste ; absent = isolation (dossiers créés avant le multi-geste). */
-  geste?: "isolation" | "pac_air_eau" | "cet" | "bois";
+  /**
+   * Famille de geste ; absent = isolation (dossiers créés avant le multi-geste).
+   * Dérivé de `Famille` et NON réécrit à la main : cette union a déjà divergé du
+   * référentiel, et un geste manquant ici ne lève aucune erreur — il est juste
+   * traité en isolation, silencieusement, jusque dans les PDF.
+   */
+  geste?: Famille;
   fiche: string;
   beneficiaire: {
     nom: string;
@@ -79,6 +85,26 @@ export interface CeeIsolationCaracteristiques {
     combustible: "granules" | "buches";
     rendement: number;
     emissions_co: number | null;
+    marque: string | null;
+    reference: string | null;
+  };
+  /**
+   * Bloc technique du chauffe-eau solaire individuel (famille solaire_thermique).
+   * `profil_soutirage` admet XXL, que le bloc `cet` ne connaît pas : les deux
+   * fiches ne définissent pas les mêmes profils.
+   */
+  solaire?: {
+    type_solaire: "cesi";
+    fiche: string;
+    appoint: "electrique_joule" | "autre";
+    fluide: "eau" | "eau_glycolee";
+    surface_capteurs_m2: number;
+    profil_soutirage: "M" | "L" | "XL" | "XXL";
+    efficacite_ecs: number;
+    nb_ballons: number;
+    volume_ballon_l: number;
+    classe_ballon: string | null;
+    certification: "cstbat" | "solar_keymark" | "equivalence";
     marque: string | null;
     reference: string | null;
   };

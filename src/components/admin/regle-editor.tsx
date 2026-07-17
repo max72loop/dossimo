@@ -13,17 +13,31 @@ import { FAMILLES, familleDeGeste, type Famille } from "@/lib/dossier/cee-isolat
 
 /**
  * Seuil technique édité selon la famille de geste : chaque geste a UN critère
- * (R pour l'isolation, ETAS pour la PAC, COP pour le CET, rendement pour le
- * bois). Piloté par la table, jamais codé en dur dans le contrôle.
+ * principal (R pour l'isolation, ETAS pour la PAC, COP pour le CET, rendement
+ * pour le bois, efficacité ECS pour le solaire). Piloté par la table, jamais
+ * codé en dur dans le contrôle.
+ *
+ * Le CESI a un second critère de fiche, la surface de capteurs
+ * (`surface_capteurs_min`) : il s'édite dans le JSON de condition, comme tout
+ * seuil secondaire. `fusionnerCondition` le préserve.
  */
 const SEUIL_PAR_FAMILLE: Record<
   Famille,
-  { name: "r_min" | "etas_min" | "cop_min" | "rendement_min"; label: string; step: string }
+  {
+    name: "r_min" | "etas_min" | "cop_min" | "rendement_min" | "efficacite_ecs_min";
+    label: string;
+    step: string;
+  }
 > = {
   isolation: { name: "r_min", label: "R minimal (m²·K/W)", step: "0.1" },
   pac_air_eau: { name: "etas_min", label: "ETAS minimal (%)", step: "1" },
   cet: { name: "cop_min", label: "COP minimal", step: "0.1" },
   bois: { name: "rendement_min", label: "Rendement minimal (%)", step: "0.1" },
+  solaire_thermique: {
+    name: "efficacite_ecs_min",
+    label: "Efficacité ECS minimale (%)",
+    step: "0.1",
+  },
 };
 
 /** Indication de barème (mode + gabarit JSON) selon la famille de geste. */
@@ -68,6 +82,8 @@ export interface RegleRow {
     etas_min?: number;
     cop_min?: number;
     rendement_min?: number;
+    efficacite_ecs_min?: number;
+    surface_capteurs_min?: number;
     tva_taux?: number;
     anciennete_min_ans?: number;
     prime?: unknown;
@@ -89,12 +105,18 @@ export function RegleEditor({ row }: { row: RegleRow }) {
     const fd = new FormData(e.currentTarget);
     // Seul le seuil du geste est présent dans le formulaire ; les autres partent
     // à null (retirés au merge), ce qui nettoie d'éventuelles clés parasites.
+    //
+    // `surface_capteurs_min` est volontairement ABSENT de cette liste : c'est un
+    // seuil secondaire que ce formulaire n'expose pas, donc `fd.get` renverrait
+    // toujours null et l'effacerait à chaque enregistrement. Ne pas le passer le
+    // laisse inchangé (`undefined` = intouché dans `fusionnerCondition`).
     const r = await updateRegle({
       id: row.id,
       r_min: num(fd.get("r_min")),
       etas_min: num(fd.get("etas_min")),
       cop_min: num(fd.get("cop_min")),
       rendement_min: num(fd.get("rendement_min")),
+      efficacite_ecs_min: num(fd.get("efficacite_ecs_min")),
       tva_taux: num(fd.get("tva_taux")),
       anciennete_min_ans: num(fd.get("anciennete_min_ans")),
       version_formulaire: String(fd.get("version_formulaire") ?? ""),
@@ -164,7 +186,11 @@ export function RegleEditor({ row }: { row: RegleRow }) {
       <div className="mt-3">
         <label className={label}>
           Mentions obligatoires devis + facture (JSON)
-          {famille === "isolation" ? " · variables {fiche} {surface} {r}" : " · variables {fiche}"}
+          {famille === "isolation"
+            ? " · variables {fiche} {surface} {r}"
+            : famille === "solaire_thermique"
+              ? " · variables {fiche} {appoint} {fluide} {surface} {soutirage} {efficacite} {ballons} {volume} {classe}"
+              : " · variables {fiche}"}
         </label>
         <textarea
           name="mentions_json"
@@ -213,6 +239,8 @@ export function RegleCreator() {
       etas_min: num(fd.get("etas_min")),
       cop_min: num(fd.get("cop_min")),
       rendement_min: num(fd.get("rendement_min")),
+      efficacite_ecs_min: num(fd.get("efficacite_ecs_min")),
+      surface_capteurs_min: num(fd.get("surface_capteurs_min")),
       tva_taux: num(fd.get("tva_taux")),
       anciennete_min_ans: num(fd.get("anciennete_min_ans")),
       version_formulaire: String(fd.get("version_formulaire") ?? ""),
@@ -258,7 +286,7 @@ export function RegleCreator() {
 
       <p className="mt-3 text-xs text-ardoise">
         Seuil technique · renseignez celui du geste : R (isolation), ETAS (PAC),
-        COP (chauffe-eau thermo), rendement (bois).
+        COP (chauffe-eau thermo), rendement (bois), efficacité ECS (solaire).
       </p>
       <div className="mt-1 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <div>
@@ -276,6 +304,14 @@ export function RegleCreator() {
         <div>
           <label className={label}>Rendement min (bois)</label>
           <input className={input} type="number" step="0.1" name="rendement_min" />
+        </div>
+        <div>
+          <label className={label}>Efficacité ECS min (solaire)</label>
+          <input className={input} type="number" step="0.1" name="efficacite_ecs_min" />
+        </div>
+        <div>
+          <label className={label}>Surface capteurs min (solaire, m²)</label>
+          <input className={input} type="number" step="0.1" name="surface_capteurs_min" />
         </div>
       </div>
 

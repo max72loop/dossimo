@@ -2,7 +2,9 @@ import "server-only";
 
 import { z } from "zod";
 
-import { isLlmConfigured, openRouterVision } from "@/lib/llm/openrouter";
+import { isLlmConfigured, LlmIndisponibleError, openRouterVision } from "@/lib/llm/openrouter";
+import { extraireJson, type DocumentPrepare } from "@/lib/piece/document";
+import { parseNombreFr } from "@/lib/piece/num";
 
 /**
  * Lecture de l'avis d'imposition du bénéficiaire.
@@ -19,15 +21,7 @@ import { isLlmConfigured, openRouterVision } from "@/lib/llm/openrouter";
  * des revenus : ces données n'ajouteraient rien au jugement et tout au risque.
  */
 
-const num = z.preprocess((v) => {
-  if (v == null || v === "") return null;
-  if (typeof v === "number") return Number.isFinite(v) ? v : null;
-  if (typeof v === "string") {
-    const n = parseFloat(v.replace(/\s| |€/g, "").replace(",", "."));
-    return Number.isNaN(n) ? null : n;
-  }
-  return null;
-}, z.number().nullable());
+const num = z.preprocess(parseNombreFr, z.number().nullable());
 
 const str = z.preprocess(
   (v) => (typeof v === "string" && v.trim() ? v.trim() : null),
@@ -77,35 +71,21 @@ Précisions :
 
 Aucune phrase autour du JSON.`;
 
-function extractJson(raw: string): unknown {
-  let s = raw.trim();
-  const fenced = s.match(/```(?:json)?\s*([\s\S]*?)```/i);
-  if (fenced) s = fenced[1].trim();
-  const start = s.indexOf("{");
-  const end = s.lastIndexOf("}");
-  if (start >= 0 && end > start) s = s.slice(start, end + 1);
-  return JSON.parse(s);
-}
-
 export async function lireAvisImposition(params: {
-  bytes: Uint8Array;
-  mime: string;
-  filename: string;
+  doc: DocumentPrepare;
 }): Promise<AvisResult> {
   if (!isLlmConfigured()) return { ok: false, reason: "non-configure" };
-
-  const dataUrl = `data:${params.mime};base64,${Buffer.from(params.bytes).toString("base64")}`;
 
   try {
     const raw = await openRouterVision({
       system: SYSTEM,
       userText:
         "Voici un avis d'imposition. Relève le revenu fiscal de référence, l'année des revenus et la composition du foyer.",
-      file: { mime: params.mime, dataUrl, filename: params.filename },
+      file: params.doc,
       jsonMode: true,
       maxTokens: 800,
     });
-    const parsed = avisSchema.safeParse(extractJson(raw));
+    const parsed = avisSchema.safeParse(extraireJson(raw));
     if (!parsed.success) {
       console.error("[avis] lecture inattendue:", parsed.error.message);
       return { ok: false, reason: "erreur", message: "Lecture de l'avis impossible." };
@@ -116,7 +96,10 @@ export async function lireAvisImposition(params: {
     return {
       ok: false,
       reason: "erreur",
-      message: "L'analyse de l'avis a échoué. Réessayez avec un scan plus net.",
+      message:
+        err instanceof LlmIndisponibleError
+          ? "Le service de lecture est momentanément indisponible. L'avis est bien enregistré ; la lecture sera reprise."
+          : "L'analyse de l'avis a échoué. Réessayez avec un scan plus net.",
     };
   }
 }

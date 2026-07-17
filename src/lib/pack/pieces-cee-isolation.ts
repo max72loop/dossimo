@@ -1,6 +1,8 @@
 import {
   BOIS_COMBUSTIBLES,
   PAC_TEMPERATURES,
+  SOLAIRE_APPOINTS,
+  SOLAIRE_FLUIDES,
   familleDeGeste,
   type Famille,
 } from "@/lib/dossier/cee-isolation";
@@ -71,6 +73,22 @@ const MENTIONS_DEFAUT: Record<Famille, string[]> = {
     "Émissions de monoxyde de carbone : {co} mg/Nm³",
     "Mention de la qualification RGE (n° et domaine)",
   ],
+  // Mentions littérales de la preuve de réalisation du BAR-TH-101. La mention
+  // de classe d'efficacité tombe d'elle-même quand le ballon dépasse 500 L
+  // (`classe` absente → `interpolerMention` renvoie null), ce qui est bien ce
+  // que veut la fiche : elle ne l'exige qu'au-dessous de ce seuil.
+  solaire_thermique: [
+    "Fiche CEE : {fiche}",
+    "Mise en place d'un chauffe-eau solaire individuel, appoint : {appoint}",
+    "Nature du fluide circulant dans les capteurs : {fluide}",
+    "Surface hors-tout totale des capteurs : {surface} m²",
+    "Efficacité énergétique pour le chauffage de l'eau (profil {soutirage}) : {efficacite} %",
+    "Nombre de ballons d'eau chaude solaires installés : {ballons}",
+    "Capacité de stockage de chaque ballon : {volume} L",
+    "Classe d'efficacité énergétique du ballon : {classe}",
+    "Marque et référence du chauffe-eau solaire",
+    "Mention de la qualification RGE (n° et domaine)",
+  ],
 };
 
 /** Valeurs interpolables du dossier, lues dans le bloc technique de sa famille. */
@@ -99,6 +117,19 @@ function valeursMention(c: CeeIsolationCaracteristiques): Record<string, string>
       rendement: String(c.bois.rendement),
       combustible: BOIS_COMBUSTIBLES[c.bois.combustible],
       co: c.bois.emissions_co != null ? String(c.bois.emissions_co) : "",
+    };
+  }
+  if (famille === "solaire_thermique" && c.solaire) {
+    return {
+      fiche: c.solaire.fiche || c.fiche,
+      appoint: SOLAIRE_APPOINTS[c.solaire.appoint],
+      fluide: SOLAIRE_FLUIDES[c.solaire.fluide],
+      surface: String(c.solaire.surface_capteurs_m2),
+      soutirage: c.solaire.profil_soutirage,
+      efficacite: String(c.solaire.efficacite_ecs),
+      ballons: String(c.solaire.nb_ballons),
+      volume: String(c.solaire.volume_ballon_l),
+      classe: c.solaire.classe_ballon ?? "",
     };
   }
   return {

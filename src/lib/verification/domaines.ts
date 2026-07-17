@@ -22,6 +22,13 @@ const MOTS_CLES: Record<Famille, string[]> = {
   pac_air_eau: ["pompe a chaleur"],
   cet: ["chauffe-eau thermodynamique", "thermodynamique"],
   bois: ["chaudiere bois", "poele ou insert bois", "poele", "insert bois"],
+  // Le domaine ADEME est « Chauffage et/ou eau chaude solaire » (QualiSol,
+  // Qualibat 5131/5132/5143/5241). PAS de « solaire » nu : le domaine du
+  // photovoltaïque s'appelle « Électricité solaire (photovoltaïque) », et un
+  // artisan qualifié pour poser des panneaux électriques passerait alors le
+  // contrôle sur un dossier de chauffe-eau solaire — qu'il n'a pas le droit
+  // d'installer, ce qui vaut refus au contrôle CEE.
+  solaire_thermique: ["eau chaude solaire", "chauffe-eau solaire", "qualisol"],
 };
 
 /** Le domaine RGE correspond-il à la famille de geste du dossier ? */
@@ -36,4 +43,5 @@ export const DOMAINE_ATTENDU_LABEL: Record<Famille, string> = {
   pac_air_eau: "pompe à chaleur",
   cet: "chauffe-eau thermodynamique",
   bois: "chauffage au bois",
+  solaire_thermique: "chauffage et/ou eau chaude solaire",
 };

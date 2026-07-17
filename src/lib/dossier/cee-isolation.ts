@@ -67,6 +67,42 @@ export const TYPES_BOIS = {
 } as const;
 export type TypeBois = keyof typeof TYPES_BOIS;
 
+// BAR-TH-101 = chauffe-eau solaire individuel. À NE PAS confondre avec :
+//  - BAR-TH-143 : système solaire combiné (chauffage + ECS), critères tout
+//    autres (productivité >= 600 W/m², capteurs >= 8 m², ballon > 400 L) ;
+//  - BAR-TH-168 : dispositif solaire sur appoint séparé (puissance de sortie).
+// Seul le CESI est couvert ici. Le photovoltaïque ne relève ni du CEE ni de
+// MaPrimeRénov' (prime à l'autoconsommation, circuit EDF OA) : hors périmètre.
+export const TYPES_SOLAIRE_THERMIQUE = {
+  cesi: {
+    label: "Chauffe-eau solaire individuel",
+    fiche: "BAR-TH-101",
+  },
+} as const;
+export type TypeSolaireThermique = keyof typeof TYPES_SOLAIRE_THERMIQUE;
+
+/** Énergie de l'appoint du CESI — conditionne le seuil d'efficacité ECS. */
+export const SOLAIRE_APPOINTS = {
+  electrique_joule: "Électrique à effet Joule",
+  autre: "Autre énergie (gaz, bois, PAC…)",
+} as const;
+export type SolaireAppoint = keyof typeof SOLAIRE_APPOINTS;
+
+/** Fluide caloporteur des capteurs — mention obligatoire sur la facture. */
+export const SOLAIRE_FLUIDES = {
+  eau: "Eau",
+  eau_glycolee: "Eau glycolée",
+} as const;
+export type SolaireFluide = keyof typeof SOLAIRE_FLUIDES;
+
+/** Certification des capteurs exigée par le BAR-TH-101. */
+export const SOLAIRE_CERTIFICATIONS = {
+  cstbat: "CSTBat",
+  solar_keymark: "Solar Keymark",
+  equivalence: "Équivalence (organisme accrédité EEE)",
+} as const;
+export type SolaireCertification = keyof typeof SOLAIRE_CERTIFICATIONS;
+
 /** Combustible bois — conditionne le rendement minimal (granulés vs bûches). */
 export const BOIS_COMBUSTIBLES = {
   granules: "Granulés (pellets)",
@@ -82,20 +118,40 @@ export const SOUTIRAGE_PROFILS = {
 } as const;
 export type SoutirageProfil = keyof typeof SOUTIRAGE_PROFILS;
 
+/**
+ * Profils de soutirage du CESI (règlement UE 814/2013). Volontairement DISTINCT
+ * de `SOUTIRAGE_PROFILS` : le BAR-TH-101 admet XXL, que la fiche CET ne connaît
+ * pas. Fusionner les deux ferait accepter un XXL sur un chauffe-eau
+ * thermodynamique, où il n'a pas de seuil défini.
+ */
+export const SOLAIRE_SOUTIRAGE_PROFILS = {
+  M: "Profil M",
+  L: "Profil L",
+  XL: "Profil XL",
+  XXL: "Profil XXL",
+} as const;
+export type SolaireSoutirageProfil = keyof typeof SOLAIRE_SOUTIRAGE_PROFILS;
+
 /** Familles de gestes couvertes. Chaque dossier appartient à une famille. */
 export const FAMILLES = {
   isolation: "Isolation",
   pac_air_eau: "Pompe à chaleur air/eau",
   cet: "Chauffe-eau thermodynamique",
   bois: "Appareil de chauffage au bois",
+  solaire_thermique: "Chauffe-eau solaire individuel",
 } as const;
 export type Famille = keyof typeof FAMILLES;
 
-/** type_travaux -> famille de geste. */
+/**
+ * type_travaux -> famille de geste. Le repli `isolation` couvre les postes
+ * d'isolation, qui portent leur propre slug (`combles_perdus`, `murs`…), et les
+ * dossiers antérieurs au multi-geste.
+ */
 export function familleDeGeste(typeTravaux: string): Famille {
   if (typeTravaux === "pac_air_eau") return "pac_air_eau";
   if (typeTravaux === "cet") return "cet";
   if (typeTravaux === "bois") return "bois";
+  if (typeTravaux === "solaire_thermique") return "solaire_thermique";
   return "isolation";
 }
 
@@ -110,11 +166,15 @@ export function posteLabel(c: {
   pac?: { type_pac?: TypePac };
   cet?: { type_cet?: TypeCet };
   bois?: { type_bois?: TypeBois };
+  solaire?: { type_solaire?: TypeSolaireThermique };
 }): string {
   const geste = c.geste ?? "isolation";
   if (geste === "pac_air_eau") return TYPES_PAC[c.pac?.type_pac ?? "air_eau"].label;
   if (geste === "cet") return TYPES_CET[c.cet?.type_cet ?? "accumulation"].label;
   if (geste === "bois") return TYPES_BOIS[c.bois?.type_bois ?? "appareil"].label;
+  if (geste === "solaire_thermique") {
+    return TYPES_SOLAIRE_THERMIQUE[c.solaire?.type_solaire ?? "cesi"].label;
+  }
   const ti = c.travaux?.type_isolation;
   return ti ? TYPES_ISOLATION[ti].label : "Travaux";
 }
@@ -181,7 +241,9 @@ export const ceeIsolationSchema = z.object({
   dispositif: z.enum(["cee", "maprimerenov"]).default("cee"),
 
   // --- Famille de geste (isolation ou chauffage) ---
-  geste: z.enum(["isolation", "pac_air_eau", "cet", "bois"]).default("isolation"),
+  geste: z
+    .enum(["isolation", "pac_air_eau", "cet", "bois", "solaire_thermique"])
+    .default("isolation"),
 
   // --- Entreprise (artisan RGE) ---
   entreprise: z.string().min(1, requis),
@@ -268,6 +330,22 @@ export const ceeIsolationSchema = z.object({
   bois_marque: z.string().optional().default(""),
   bois_reference: z.string().optional().default(""),
 
+  // --- Travaux : chauffe-eau solaire individuel (requis si geste =
+  // solaire_thermique). Champs calés sur les mentions qu'exige le BAR-TH-101 sur
+  // la preuve de réalisation : appoint, fluide, surface, efficacité, ballons.
+  solaire_appoint: z.enum(["electrique_joule", "autre"]).optional(),
+  solaire_fluide: z.enum(["eau", "eau_glycolee"]).optional(),
+  solaire_surface_capteurs_m2: nombreOptionnel,
+  solaire_profil_soutirage: z.enum(["M", "L", "XL", "XXL"]).optional(),
+  solaire_efficacite_ecs: nombreOptionnel,
+  solaire_nb_ballons: nombreOptionnel,
+  solaire_volume_ballon_l: nombreOptionnel,
+  /** Classe d'efficacité du ballon (UE 812/2013) — exigée si volume <= 500 L. */
+  solaire_classe_ballon: z.string().optional().default(""),
+  solaire_certification: z.enum(["cstbat", "solar_keymark", "equivalence"]).optional(),
+  solaire_marque: z.string().optional().default(""),
+  solaire_reference: z.string().optional().default(""),
+
   // --- Chronologie (dates_json) — clé du contrôle anti-refus ---
   date_visite_technique: dateISOOptionnelle,
   date_devis: dateISO,
@@ -306,6 +384,32 @@ export const ceeIsolationSchema = z.object({
     requisSi("bois_combustible", v.bois_combustible);
     requisSi("bois_rendement", v.bois_rendement, "Rendement requis (%)");
     requisSi("bois_marque", v.bois_marque);
+  } else if (v.geste === "solaire_thermique") {
+    requisSi("solaire_appoint", v.solaire_appoint);
+    requisSi("solaire_fluide", v.solaire_fluide);
+    requisSi(
+      "solaire_surface_capteurs_m2",
+      v.solaire_surface_capteurs_m2,
+      "Surface de capteurs requise (m²)",
+    );
+    requisSi("solaire_profil_soutirage", v.solaire_profil_soutirage);
+    requisSi("solaire_efficacite_ecs", v.solaire_efficacite_ecs, "Efficacité ECS requise (%)");
+    requisSi("solaire_nb_ballons", v.solaire_nb_ballons, "Nombre de ballons requis");
+    requisSi("solaire_volume_ballon_l", v.solaire_volume_ballon_l, "Volume requis (L)");
+    requisSi("solaire_certification", v.solaire_certification);
+    requisSi("solaire_marque", v.solaire_marque);
+    // Classe d'efficacité : exigée par la fiche pour les ballons <= 500 L
+    // seulement. Au-dessus, la fiche ne la demande pas : ne pas la réclamer.
+    if (
+      typeof v.solaire_volume_ballon_l === "number" &&
+      v.solaire_volume_ballon_l <= 500
+    ) {
+      requisSi(
+        "solaire_classe_ballon",
+        v.solaire_classe_ballon,
+        "Classe d'efficacité requise (ballon <= 500 L)",
+      );
+    }
   } else {
     requisSi("type_isolation", v.type_isolation);
     requisSi("surface_isolee_m2", v.surface_isolee_m2, "Surface requise");
@@ -367,6 +471,20 @@ export const ceeIsolationDefaults: CeeIsolationInput = {
   bois_emissions_co: "",
   bois_marque: "",
   bois_reference: "",
+  solaire_appoint: undefined as unknown as "electrique_joule" | "autre",
+  solaire_fluide: undefined as unknown as "eau" | "eau_glycolee",
+  solaire_surface_capteurs_m2: "",
+  solaire_profil_soutirage: undefined as unknown as "M" | "L" | "XL" | "XXL",
+  solaire_efficacite_ecs: "",
+  solaire_nb_ballons: "",
+  solaire_volume_ballon_l: "",
+  solaire_classe_ballon: "",
+  solaire_certification: undefined as unknown as
+    | "cstbat"
+    | "solar_keymark"
+    | "equivalence",
+  solaire_marque: "",
+  solaire_reference: "",
   date_visite_technique: "",
   date_devis: "",
   date_debut_travaux: "",

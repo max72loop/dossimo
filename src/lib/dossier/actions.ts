@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getDossier } from "@/lib/dossier/get-dossier";
 import { applyReferralCode } from "@/lib/referral";
-import { TYPES_BOIS, TYPES_CET, TYPES_ISOLATION, TYPES_PAC, ceeIsolationSchema, familleDeGeste } from "@/lib/dossier/cee-isolation";
+import { TYPES_BOIS, TYPES_CET, TYPES_ISOLATION, TYPES_PAC, TYPES_SOLAIRE_THERMIQUE, ceeIsolationSchema, familleDeGeste } from "@/lib/dossier/cee-isolation";
 import { verifierEntreprise } from "@/lib/verification/verifier";
 
 export type CreateDossierResult =
@@ -125,6 +125,26 @@ export async function createDossierCeeIsolation(
         emissions_co: d.bois_emissions_co ?? null,
         marque: d.bois_marque || null,
         reference: d.bois_reference || null,
+      },
+    };
+  } else if (d.geste === "solaire_thermique") {
+    fiche = TYPES_SOLAIRE_THERMIQUE.cesi.fiche;
+    typeTravaux = "solaire_thermique";
+    blocTechnique = {
+      solaire: {
+        type_solaire: "cesi",
+        fiche,
+        appoint: d.solaire_appoint,
+        fluide: d.solaire_fluide,
+        surface_capteurs_m2: d.solaire_surface_capteurs_m2,
+        profil_soutirage: d.solaire_profil_soutirage,
+        efficacite_ecs: d.solaire_efficacite_ecs,
+        nb_ballons: d.solaire_nb_ballons,
+        volume_ballon_l: d.solaire_volume_ballon_l,
+        classe_ballon: d.solaire_classe_ballon || null,
+        certification: d.solaire_certification,
+        marque: d.solaire_marque || null,
+        reference: d.solaire_reference || null,
       },
     };
   } else {

@@ -251,6 +251,41 @@ const TEMPLATES: CerfaTemplate[] = [
     strategy: "reproduction",
     ahVariant: "p6",
   },
+  // AH CEE chauffe-eau solaire individuel (BAR-TH-101) — même modèle
+  // réglementaire (annexe 7-1), cadre technique adapté au geste. Deux périodes.
+  // La partie A du BAR-TH-101 porte, depuis le 01/07/2026, le coût HT/TTC et le
+  // montant prévisionnel des aides publiques hors CEE : c'est exactement ce que
+  // couvre la variante p6, d'où le même découpage que les autres fiches.
+  {
+    id: "ah-cee-bar-th-101-p5",
+    dispositif: "cee",
+    fiches: ["BAR-TH-101"],
+    titre: "Attestation sur l'honneur — CEE Chauffe-eau solaire individuel (BAR-TH-101)",
+    arrete:
+      "Modèle d'attestation sur l'honneur — arrêté du 4 septembre 2014 modifié (annexe 7-1)",
+    version: "2025-01",
+    effectiveFrom: "2024-01-01",
+    effectiveTo: "2026-03-31",
+    official: false,
+    kind: "reproduction",
+    strategy: "reproduction",
+    ahVariant: "p5",
+  },
+  {
+    id: "ah-cee-bar-th-101-p6",
+    dispositif: "cee",
+    fiches: ["BAR-TH-101"],
+    titre: "Attestation sur l'honneur — CEE Chauffe-eau solaire individuel (BAR-TH-101)",
+    arrete:
+      "Modèle d'attestation sur l'honneur 6e période — arrêté du 4 septembre 2014 modifié (annexe 7-1) et arrêté du 21 décembre 2025",
+    version: "2026-04 (P6)",
+    effectiveFrom: "2026-04-01",
+    effectiveTo: null,
+    official: false,
+    kind: "reproduction",
+    strategy: "reproduction",
+    ahVariant: "p6",
+  },
   {
     id: "cerfa-16089-02-mandat-mpr",
     dispositif: "maprimerenov",
