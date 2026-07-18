@@ -4,17 +4,18 @@ name: Prospection
 # plan Hobby, et une fonction serverless ne peut pas s'étaler sur huit heures : le
 # tempo vient donc d'ici.
 #
-# Les heures sont en UTC. En été, Paris = UTC+2 :
+# Envoi 7 jours sur 7 (décision 2026-07-18 : la prospection tourne aussi le
+# week-end). Les heures sont en UTC. En été, Paris = UTC+2 :
 #   prepare : 06:15 UTC = 08:15 à Paris, avant l'ouverture de la fenêtre d'envoi.
 #   tick    : toutes les 10 min de 07:00 à 16:00 UTC = 09:00 à 18:00 à Paris.
-# La fenêtre exacte (9h30-17h30, jours ouvrés) et le plafond du jour sont
-# revérifiés côté application : ce planificateur peut déborder sans conséquence,
-# et GitHub Actions décale régulièrement ses exécutions de plusieurs minutes.
+# La fenêtre exacte (9h30-17h30) et le plafond du jour sont revérifiés côté
+# application : ce planificateur peut déborder sans conséquence, et GitHub Actions
+# décale régulièrement ses exécutions de plusieurs minutes.
 
 on:
   schedule:
-    - cron: "15 6 * * 1-5"
-    - cron: "*/10 7-16 * * 1-5"
+    - cron: "15 6 * * *"
+    - cron: "*/10 7-16 * * *"
   workflow_dispatch:
 
 concurrency:
@@ -26,14 +27,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Préparer la file (une fois par jour)
-        if: github.event.schedule == '15 6 * * 1-5'
+        if: github.event.schedule == '15 6 * * *'
         run: |
           curl --fail-with-body -sS \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
             "${{ secrets.SITE_URL }}/api/prospection/prepare"
 
       - name: Envoyer au plus un message
-        if: github.event.schedule != '15 6 * * 1-5'
+        if: github.event.schedule != '15 6 * * *'
         run: |
           curl --fail-with-body -sS \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
