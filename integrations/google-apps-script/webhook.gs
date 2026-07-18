@@ -18,6 +18,11 @@
 
 var PLAFOND_QUOTIDIEN = 60; // marge au-dessus des 40 pilotés par l'application
 var EXPEDITEUR = "Max Landry";
+// Adresse expéditrice, en dur. On ne peut PAS la déduire via
+// Session.getEffectiveUser() : dans une web app en accès « Tout le monde »,
+// Google interdit cet appel (confidentialité) et le script plante avant l'envoi.
+// Le script tourne sous ce compte de toute façon ; Gmail n'enverra que sous lui.
+var EXPEDITEUR_EMAIL = "max@dossimo.pro";
 
 function doPost(event) {
   try {
@@ -67,18 +72,33 @@ function envoyerProspection(payload) {
     return jsonResponse({ ok: false, error: "daily_cap_reached" });
   }
 
+  // On tente l'envoi brut (avec en-tête List-Unsubscribe), et à défaut on
+  // retombe sur MailApp. Si les DEUX échouent, on renvoie le détail des erreurs
+  // plutôt qu'un « internal_error » muet : c'est la seule façon de diagnostiquer
+  // un envoi qui ne part pas sans fouiller les journaux Apps Script.
+  var erreurs = [];
+  var envoye = false;
   try {
     envoyerBrutAvecEnTetes(to, subject, body, unsubscribeUrl);
-  } catch (error) {
-    console.error(error);
-    // Repli sans en-tête plutôt que pas d'envoi du tout.
-    MailApp.sendEmail({
-      to: to,
-      replyTo: Session.getEffectiveUser().getEmail(),
-      name: EXPEDITEUR,
-      subject: subject,
-      body: body,
-    });
+    envoye = true;
+  } catch (erreurGmail) {
+    erreurs.push("gmail: " + erreurGmail);
+    try {
+      MailApp.sendEmail({
+        to: to,
+        replyTo: EXPEDITEUR_EMAIL,
+        name: EXPEDITEUR,
+        subject: subject,
+        body: body,
+      });
+      envoye = true;
+    } catch (erreurMailApp) {
+      erreurs.push("mailapp: " + erreurMailApp);
+    }
+  }
+
+  if (!envoye) {
+    return jsonResponse({ ok: false, error: "send_failed", detail: erreurs.join(" | ") });
   }
 
   incrementerCompteur();
@@ -87,7 +107,7 @@ function envoyerProspection(payload) {
 
 /** Message RFC 822 brut : seul moyen de poser des en-têtes personnalisés. */
 function envoyerBrutAvecEnTetes(to, subject, body, unsubscribeUrl) {
-  var from = Session.getEffectiveUser().getEmail();
+  var from = EXPEDITEUR_EMAIL;
   var raw = [
     "From: " + EXPEDITEUR + " <" + from + ">",
     "To: " + to,

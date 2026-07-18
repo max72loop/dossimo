@@ -7,18 +7,24 @@
  * Tout est calculé en heure de Paris. Le serveur tourne en UTC : un envoi
  * planifié « 9h30 » sans conversion partirait à 11h30 en été, hors de la fenêtre
  * où un artisan lit ses mails.
+ *
+ * Décision 2026-07-18 : la campagne prospecte 7 jours sur 7 (le sprint contacte
+ * aussi le week-end). Il n'y a donc plus de notion de jour ouvré ici ; le rythme
+ * ne dépend que de la fenêtre horaire et de la montée en charge en jours
+ * calendaires.
  */
 
 /**
- * Montée en charge d'une boîte neuve, par jour ouvré de campagne. Une adresse
- * qui n'a jamais envoyé et qui sort 40 messages le premier jour se fait classer
- * en spam, et la réputation d'un domaine se répare beaucoup plus lentement
- * qu'elle ne se casse.
+ * Montée en charge du volume quotidien, par jour calendaire de campagne
+ * (jour 1 = `demarre_le`). Une boîte qui n'a jamais envoyé en masse et qui sort
+ * 40 messages dès le premier jour se fait classer en spam, et la réputation d'un
+ * domaine se répare beaucoup plus lentement qu'elle ne se casse : on démarre à
+ * 15 et on monte en quatre paliers jusqu'à 40.
  *
  * Au-delà du dernier palier, le plafond de la campagne (`daily_cap_max`) prend
  * le relais.
  */
-export const RAMPE_MONTEE_EN_CHARGE = [10, 15, 20, 30] as const;
+export const RAMPE_MONTEE_EN_CHARGE = [15, 25, 35, 40] as const;
 
 /** Fenêtre d'envoi, en minutes depuis minuit (heure de Paris). */
 export const FENETRE = { debut: 9 * 60 + 30, fin: 17 * 60 + 30 } as const;
@@ -50,39 +56,22 @@ export function minutesParis(maintenant: Date): number {
   return heure * 60 + get("minute");
 }
 
-/** Lundi = 1 … dimanche = 7, à partir d'une date `YYYY-MM-DD`. */
-function jourDeLaSemaine(iso: string): number {
-  const [a, m, j] = iso.split("-").map(Number);
-  const jour = new Date(Date.UTC(a, m - 1, j)).getUTCDay();
-  return jour === 0 ? 7 : jour;
-}
-
-export function estJourOuvre(iso: string): boolean {
-  return jourDeLaSemaine(iso) <= 5;
-}
-
-/** Nombre de jours ouvrés entre deux dates incluses. 0 si `fin` précède `debut`. */
-export function joursOuvresEntre(debut: string, fin: string): number {
+/** Nombre de jours calendaires entre deux dates incluses. 0 si `fin` précède `debut`. */
+export function joursEntre(debut: string, fin: string): number {
   if (fin < debut) return 0;
-  let compte = 0;
-  const [a, m, j] = debut.split("-").map(Number);
-  const curseur = new Date(Date.UTC(a, m - 1, j));
-  for (let i = 0; i < 400; i++) {
-    const iso = curseur.toISOString().slice(0, 10);
-    if (iso > fin) break;
-    if (estJourOuvre(iso)) compte++;
-    curseur.setUTCDate(curseur.getUTCDate() + 1);
-  }
-  return compte;
+  const [a1, m1, j1] = debut.split("-").map(Number);
+  const [a2, m2, j2] = fin.split("-").map(Number);
+  const ms = Date.UTC(a2, m2 - 1, j2) - Date.UTC(a1, m1 - 1, j1);
+  return Math.round(ms / 86_400_000) + 1;
 }
 
 /**
  * Plafond d'envois pour la journée : palier de montée en charge tant qu'on est
- * dans les premiers jours ouvrés de la campagne, plafond de la campagne ensuite.
+ * dans les premiers jours de la campagne, plafond de la campagne ensuite.
  *
- * Renvoie 0 hors de la fenêtre de campagne et les jours non ouvrés : un mail de
- * prospection qui tombe un dimanche est un mail lu lundi, dans une pile, ou pas
- * lu du tout.
+ * Renvoie 0 en dehors de la fenêtre de campagne. Aucun filtre week-end : la
+ * décision du 2026-07-18 est de prospecter tous les jours, la montée en charge
+ * se compte donc en jours calendaires.
  */
 export function plafondDuJour(params: {
   debut: string;
@@ -92,9 +81,8 @@ export function plafondDuJour(params: {
 }): number {
   const { debut, fin, jour, capMax } = params;
   if (jour < debut || jour > fin) return 0;
-  if (!estJourOuvre(jour)) return 0;
 
-  const index = joursOuvresEntre(debut, jour); // 1 = premier jour ouvré
+  const index = joursEntre(debut, jour); // 1 = premier jour de campagne
   if (index <= 0) return 0;
 
   const palier =
@@ -104,10 +92,8 @@ export function plafondDuJour(params: {
   return Math.min(palier, capMax);
 }
 
-/** Vrai si l'instant tombe dans la fenêtre d'envoi d'un jour ouvré. */
+/** Vrai si l'instant tombe dans la fenêtre horaire d'envoi (tous les jours). */
 export function dansLaFenetre(maintenant: Date): boolean {
-  const jour = jourParis(maintenant);
-  if (!estJourOuvre(jour)) return false;
   const minutes = minutesParis(maintenant);
   return minutes >= FENETRE.debut && minutes <= FENETRE.fin;
 }
