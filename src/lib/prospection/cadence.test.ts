@@ -38,15 +38,22 @@ describe("plafondDuJour — montée en charge, envoi 7 jours sur 7", () => {
 });
 
 describe("fenêtre horaire — heure de Paris, tous les jours", () => {
-  it("ouvre à 9h30 et ferme à 17h30, heure de Paris", () => {
+  it("ouvre à 9h30 et ferme à 18h30, heure de Paris", () => {
     // 07:00 UTC = 09:00 à Paris (CEST) : trop tôt.
     expect(dansLaFenetre(new Date("2026-07-20T07:00:00Z"))).toBe(false);
     // 07:30 UTC = 09:30 à Paris : ouverture.
     expect(dansLaFenetre(new Date("2026-07-20T07:30:00Z"))).toBe(true);
     expect(dansLaFenetre(new Date("2026-07-20T14:00:00Z"))).toBe(true);
-    // 15:30 UTC = 17:30 à Paris : dernière minute.
-    expect(dansLaFenetre(new Date("2026-07-20T15:30:00Z"))).toBe(true);
-    expect(dansLaFenetre(new Date("2026-07-20T15:31:00Z"))).toBe(false);
+    // 16:30 UTC = 18:30 à Paris : dernière minute.
+    expect(dansLaFenetre(new Date("2026-07-20T16:30:00Z"))).toBe(true);
+    expect(dansLaFenetre(new Date("2026-07-20T16:31:00Z"))).toBe(false);
+  });
+
+  it("accepte un tick de fin de journée retardé par le planificateur", () => {
+    // Cas réel du 2026-07-19 : exécution demandée à 16:00 UTC, lancée à 16:11,
+    // soit 18h11 à Paris. L'ancienne fermeture à 17h30 la refusait alors qu'il
+    // restait 23 messages en file.
+    expect(dansLaFenetre(new Date("2026-07-19T16:11:00Z"))).toBe(true);
   });
 
   it("reste ouverte le week-end (décision : prospection 7j/7)", () => {
