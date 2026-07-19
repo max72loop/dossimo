@@ -26,8 +26,15 @@
  */
 export const RAMPE_MONTEE_EN_CHARGE = [15, 25, 35, 40] as const;
 
-/** Fenêtre d'envoi, en minutes depuis minuit (heure de Paris). */
-export const FENETRE = { debut: 9 * 60 + 30, fin: 17 * 60 + 30 } as const;
+/**
+ * Fenêtre d'envoi, en minutes depuis minuit (heure de Paris).
+ *
+ * Fermeture repoussée à 18h30 le 2026-07-19 : GitHub Actions lance les exécutions
+ * planifiées avec un retard régulier de une à deux heures, et un tick qui arrivait
+ * à 18h10 était refusé alors qu'il restait de la file à écouler. Une demi-heure de
+ * marge en fin de journée coûte peu et sauve les derniers envois.
+ */
+export const FENETRE = { debut: 9 * 60 + 30, fin: 18 * 60 + 30 } as const;
 
 /** Date du jour au format `YYYY-MM-DD`, en heure de Paris. */
 export function jourParis(maintenant: Date): string {

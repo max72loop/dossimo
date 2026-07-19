@@ -5,17 +5,33 @@ name: Prospection
 # tempo vient donc d'ici.
 #
 # Envoi 7 jours sur 7 (décision 2026-07-18 : la prospection tourne aussi le
-# week-end). Les heures sont en UTC. En été, Paris = UTC+2 :
-#   prepare : 06:15 UTC = 08:15 à Paris, avant l'ouverture de la fenêtre d'envoi.
-#   tick    : toutes les 10 min de 07:00 à 16:00 UTC = 09:00 à 18:00 à Paris.
-# La fenêtre exacte (9h30-17h30) et le plafond du jour sont revérifiés côté
-# application : ce planificateur peut déborder sans conséquence, et GitHub Actions
-# décale régulièrement ses exécutions de plusieurs minutes.
+# week-end).
+#
+# LE PIÈGE, constaté le 2026-07-19 : GitHub n'honore PAS un cron haute fréquence.
+# Ce fichier a demandé `*/10` pendant deux jours, soit 54 exécutions attendues ;
+# GitHub en a lancé 9, espacées d'environ une heure et décalées jusqu'à deux heures
+# après l'horaire demandé. Comme chaque exécution n'envoyait qu'un message, le
+# volume réel n'était plus piloté par `daily_cap_max` mais par la générosité du
+# planificateur : 4 messages partis sur 27 préparés.
+#
+# Le tempo ne dépend donc plus du cron. Chaque exécution DRIPPE plusieurs messages
+# en bouclant à l'intérieur du job, avec des pauses aléatoires de 2 à 6 minutes.
+# Un run manqué coûte une heure, plus la journée. Le goutte-à-goutte anti-spam est
+# préservé : c'est la pause entre deux appels qui le produit, pas la fréquence du
+# cron.
+#
+# Les heures sont en UTC. En été, Paris = UTC+2 :
+#   prepare : 04:00 UTC = 06:00 à Paris. Deux heures d'avance sur l'ouverture de la
+#             fenêtre, pour absorber le retard de planification (le 19/07 la
+#             préparation demandée à 06:15 UTC est partie à 08:33).
+#   tick    : à l'heure ronde de 07:00 à 16:00 UTC = 09:00 à 18:00 à Paris.
+# La fenêtre exacte (9h30-18h30) et le plafond du jour sont revérifiés côté
+# application : ce planificateur peut déborder sans conséquence.
 
 on:
   schedule:
-    - cron: "15 6 * * *"
-    - cron: "*/10 7-16 * * *"
+    - cron: "0 4 * * *"
+    - cron: "5 7-16 * * *"
   workflow_dispatch:
 
 concurrency:
@@ -25,17 +41,53 @@ concurrency:
 jobs:
   tick:
     runs-on: ubuntu-latest
+    # Le drip dure une trentaine de minutes. La limite garde le job largement en
+    # deçà du déclenchement suivant : deux runs qui se chevauchent seraient mis en
+    # file par `concurrency` et décaleraient tout le reste de la journée.
+    timeout-minutes: 45
     steps:
       - name: Préparer la file (une fois par jour)
-        if: github.event.schedule == '15 6 * * *'
+        if: github.event.schedule == '0 4 * * *'
         run: |
           curl --fail-with-body -sS \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
             "${{ secrets.SITE_URL }}/api/prospection/prepare"
 
-      - name: Envoyer au plus un message
-        if: github.event.schedule != '15 6 * * *'
+      - name: Envoyer au goutte-à-goutte
+        if: github.event.schedule != '0 4 * * *'
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SITE_URL: ${{ secrets.SITE_URL }}
+          # 8 appels par exécution. Le plafond quotidien est revérifié à chaque
+          # appel côté application : viser large ici ne fait que rattraper les
+          # exécutions que GitHub n'a pas lancées, jamais dépasser le cap.
+          APPELS: "8"
         run: |
-          curl --fail-with-body -sS \
-            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
-            "${{ secrets.SITE_URL }}/api/prospection/tick"
+          set -uo pipefail
+          echecs=0
+          for i in $(seq 1 "$APPELS"); do
+            if [ "$i" -gt 1 ]; then
+              # 120 à 360 s : c'est cette pause qui rend la cadence irrégulière,
+              # et donc humaine. Le tick lui-même n'a plus de tirage au sort.
+              pause=$(( 120 + RANDOM % 241 ))
+              echo "--- pause ${pause}s"
+              sleep "$pause"
+            fi
+
+            echo "--- appel $i/$APPELS ($(date -u +%H:%M:%S) UTC)"
+            if ! curl --fail-with-body -sS --max-time 60 \
+              -H "Authorization: Bearer ${CRON_SECRET}" \
+              "${SITE_URL}/api/prospection/tick"; then
+              # Un appel qui casse ne doit pas emporter les suivants : la file
+              # reste à écouler. On sort en erreur à la fin pour que le run soit
+              # rouge et visible.
+              echo "!!! appel $i en échec"
+              echecs=$(( echecs + 1 ))
+            fi
+            echo
+          done
+
+          if [ "$echecs" -gt 0 ]; then
+            echo "$echecs appel(s) en échec sur $APPELS."
+            exit 1
+          fi
