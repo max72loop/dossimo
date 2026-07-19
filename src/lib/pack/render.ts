@@ -6,11 +6,15 @@ import { PDFDocument } from "pdf-lib";
 
 import type { DossierComplet } from "@/lib/dossier/get-dossier";
 import {
+  AttestationControleDocument,
   ChecklistDocument,
   ControleDocument,
+  FeuilleRouteDocument,
+  FicheClientDocument,
   PackCoverDocument,
   RecapDocument,
 } from "@/lib/pack/documents";
+import type { FeuilleRoute } from "@/lib/dossier/feuille-route";
 import { controlerDossier } from "@/lib/rules/controle-dossier";
 import type { RapportControle } from "@/lib/rules/types";
 import {
@@ -29,6 +33,16 @@ export function renderRecapPdf(data: DossierComplet): Promise<Buffer> {
 
 export function renderChecklistPdf(data: DossierComplet): Promise<Buffer> {
   return renderToBuffer(createElement(ChecklistDocument, { data }) as unknown as DocElement);
+}
+
+export function renderFeuilleRoutePdf(
+  data: DossierComplet,
+  feuille: FeuilleRoute,
+  pieces?: { reunies: number; total: number; manquantes: string[] },
+): Promise<Buffer> {
+  return renderToBuffer(
+    createElement(FeuilleRouteDocument, { data, feuille, pieces }) as unknown as DocElement,
+  );
 }
 
 /**
@@ -58,6 +72,44 @@ export function renderAhCeePdf(
     createElement(AttestationHonneurDocument, {
       data,
       template: ref,
+    }) as unknown as DocElement,
+  );
+}
+
+/**
+ * Fiche client : la pièce destinée au bénéficiaire, que l'artisan lui remet.
+ * Ton grand public, la prime et les étapes à sa charge. `primeMontant` est le
+ * montant retenu (ou estimé) ; `pieces` liste ses justificatifs et leur état.
+ */
+export function renderFicheClientPdf(
+  data: DossierComplet,
+  primeMontant: number | null,
+  pieces: { titre: string; deposee: boolean }[],
+): Promise<Buffer> {
+  return renderToBuffer(
+    createElement(FicheClientDocument, {
+      data,
+      primeMontant,
+      pieces,
+    }) as unknown as DocElement,
+  );
+}
+
+/**
+ * Attestation de pré-contrôle : preuve datée du passage du contrôle Dossimo.
+ * `rapport` doit venir de `rapportComplet()` pour porter le même verdict que
+ * l'écran. `dateControle` est la date de délivrance (ISO yyyy-mm-dd).
+ */
+export function renderAttestationPdf(
+  data: DossierComplet,
+  rapport: RapportControle,
+  dateControle: string,
+): Promise<Buffer> {
+  return renderToBuffer(
+    createElement(AttestationControleDocument, {
+      data,
+      rapport,
+      dateControle,
     }) as unknown as DocElement,
   );
 }

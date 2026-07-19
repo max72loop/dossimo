@@ -99,3 +99,19 @@ export function completude(entrees: readonly EntreeChecklist[]): {
     total: obligatoires.length,
   };
 }
+
+/**
+ * Résumé de complétude prêt à afficher (feuille de route, page dossier) : le
+ * ratio réuni/exigé et les libellés des pièces obligatoires encore manquantes.
+ */
+export function resumePieces(entrees: readonly EntreeChecklist[]): {
+  reunies: number;
+  total: number;
+  manquantes: string[];
+} {
+  const { reunies, total } = completude(entrees);
+  const manquantes = entrees
+    .filter((e) => e.obligatoire && !e.deposee)
+    .map((e) => e.label);
+  return { reunies, total, manquantes };
+}

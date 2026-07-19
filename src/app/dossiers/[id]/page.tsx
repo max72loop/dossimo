@@ -11,7 +11,9 @@ import { PiecesJustificatives } from "@/components/dossier/pieces-justificatives
 import { LienDepot } from "@/components/dossier/lien-depot";
 import { MarquerVues } from "@/components/dossier/marquer-vues";
 import { ChecklistPieces } from "@/components/dossier/checklist-pieces";
-import { checklistDossier, completude } from "@/lib/piece/checklist";
+import { checklistDossier, completude, resumePieces } from "@/lib/piece/checklist";
+import { feuilleRoute } from "@/lib/dossier/feuille-route";
+import { FeuilleDeRoute } from "@/components/dossier/feuille-de-route";
 import { piecesAttendues } from "@/lib/depot/pieces-attendues";
 import { suivrePieces } from "@/lib/depot/suivi";
 import { EcartPrime } from "@/components/dossier/ecart-prime";
@@ -49,6 +51,7 @@ import {
 } from "@/lib/pack/pieces-cee-isolation";
 import { SEVERITE_LABEL, type Finding, type Severite } from "@/lib/rules/types";
 import { ObligeSuivi } from "@/components/dossier/oblige-suivi";
+import { IssueDossier } from "@/components/dossier/issue-dossier";
 import { RelancesBeneficiaire } from "@/components/dossier/relances-beneficiaire";
 import { chargerEtatRelance } from "@/lib/reminders/get";
 import { retrouverLienActif } from "@/lib/depot/lien";
@@ -156,6 +159,8 @@ export default async function DossierPage({
     piecesReelles.map((p) => p.piece),
   );
   const { reunies, total: totalObligatoires } = completude(checklist);
+  const resumeRoute = resumePieces(checklist);
+  const routeDossier = feuilleRoute(data);
 
   // Pièces que seul le bénéficiaire peut fournir, et ce qu'il a déjà déposé.
   const attenduesClient = piecesAttendues(data);
@@ -282,6 +287,14 @@ export default async function DossierPage({
       {/* Une seule décision visible avant les détails du dossier. */}
       {acces.debloque && <ActionsRestantes synthese={synthese} />}
 
+      {/* Feuille de route : quoi faire, avec qui, avant quand. */}
+      <FeuilleDeRoute
+        feuille={routeDossier}
+        resume={resumeRoute}
+        dossierId={id}
+        debloque={acces.debloque}
+      />
+
       <details className="mb-6 rounded border border-filigrane bg-blanc-casse">
         <summary className="cursor-pointer px-5 py-4 text-sm font-semibold text-tampon">
           Voir l'état général, la prime et les contrôles déjà passés
@@ -367,6 +380,14 @@ export default async function DossierPage({
               }}
             />
             {suivi.nouvelles > 0 ? <MarquerVues dossierId={id} /> : null}
+            <a
+              href={`/dossiers/${id}/fiche-client.pdf`}
+              target="_blank"
+              rel="noopener"
+              className={`mt-3 ${BTN_SECONDAIRE_SM}`}
+            >
+              ↓ Fiche client (à remettre au bénéficiaire)
+            </a>
           </div>
         </>
       ) : (
@@ -431,6 +452,14 @@ export default async function DossierPage({
         </div>
       )}
 
+      {/* MaPrimeRénov' n'a pas d'obligé, mais l'issue reste à capturer : sans
+          elle, le refus survenu malgré le contrôle n'apprend rien à la règle. */}
+      {dossier.dispositif === "maprimerenov" && (
+        <div className="mt-6">
+          <IssueDossier dossierId={dossier.id} retour={retourDepot} />
+        </div>
+      )}
+
       {/* 8. Détails repliés */}
       <h2 className="mt-8 mb-3 text-xs font-semibold uppercase tracking-[0.12em] text-ardoise">
         Détails du dossier
@@ -449,14 +478,24 @@ export default async function DossierPage({
                 <FindingRow key={f.code} f={f} />
               ))}
             </ul>
-            <a
-              href={`/dossiers/${id}/rapport.pdf`}
-              target="_blank"
-              rel="noopener"
-              className={`mt-4 ${BTN_SECONDAIRE_SM}`}
-            >
-              ↓ Rapport PDF
-            </a>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <a
+                href={`/dossiers/${id}/rapport.pdf`}
+                target="_blank"
+                rel="noopener"
+                className={BTN_SECONDAIRE_SM}
+              >
+                ↓ Rapport PDF
+              </a>
+              <a
+                href={`/dossiers/${id}/attestation.pdf`}
+                target="_blank"
+                rel="noopener"
+                className={BTN_SECONDAIRE_SM}
+              >
+                ↓ Attestation de pré-contrôle
+              </a>
+            </div>
           </>
         ) : (
           <p className="text-sm text-ardoise">

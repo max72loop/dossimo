@@ -14,6 +14,7 @@ import {
   titreSectionTechnique,
 } from "@/lib/dossier/geste-technique";
 import { dateFr, euro } from "@/lib/pack/format";
+import type { FeuilleRoute, Urgence } from "@/lib/dossier/feuille-route";
 import {
   mentionsObligatoires,
   piecesCeeIsolation,
@@ -438,6 +439,7 @@ export function PackCoverDocument({
   const statutColor = conforme ? COLORS.ok : COLORS.danger;
 
   const sommaire = [
+    { t: "Feuille de route de dépôt", d: "Le chemin daté et l'échéance à tenir" },
     { t: "Récapitulatif client", d: "La saisie unique dont tout le pack découle" },
     { t: "Rapport de contrôle anti-refus", d: hasVigilance ? "Dont points de vigilance rédigés" : "Règles dures : chronologie, RGE, montants" },
     { t: "Checklist de conformité", d: "Pièces à réunir et mentions obligatoires" },
@@ -521,6 +523,463 @@ export function PackCoverDocument({
             son client déposent eux-mêmes le dossier auprès de l&apos;organisme
             compétent.
           </NoteCard>
+        </View>
+
+        <Footer />
+      </Page>
+    </Document>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Attestation de pré-contrôle
+// ---------------------------------------------------------------------------
+export function AttestationControleDocument({
+  data,
+  rapport,
+  dateControle,
+}: {
+  data: DossierComplet;
+  rapport: RapportControle;
+  /** Date de délivrance de l'attestation (ISO yyyy-mm-dd). */
+  dateControle: string;
+}) {
+  const { caracteristiques: c } = data;
+  const poste = posteLabel(c);
+  const conforme = rapport.conforme;
+  const total = rapport.findings.length;
+  const verdictColor = conforme ? COLORS.ok : COLORS.danger;
+
+  // Regroupement des points de contrôle par famille : une famille est « passée »
+  // si elle ne porte aucun point bloquant.
+  const familles = new Map<string, { n: number; bloquants: number }>();
+  for (const f of rapport.findings) {
+    const e = familles.get(f.categorie) ?? { n: 0, bloquants: 0 };
+    e.n += 1;
+    if (f.severite === "bloquant") e.bloquants += 1;
+    familles.set(f.categorie, e);
+  }
+
+  return (
+    <Document
+      title={`Attestation de pré-contrôle — ${c.beneficiaire.prenom} ${c.beneficiaire.nom}`}
+      author="Dossimo"
+    >
+      <Page size="A4" style={styles.page}>
+        <Header
+          eyebrow={`Attestation de pré-contrôle · ${dispoLabel(data)}`}
+          title={conforme ? "Dossier vérifié, aucun point bloquant." : "Dossier non déposable en l'état."}
+          subtitle={`${poste} · ${c.fiche} · ${c.beneficiaire.prenom} ${c.beneficiaire.nom}`}
+          refTop={packRef(data)}
+          refSub={`Délivrée le ${dateFr(dateControle)}`}
+        />
+
+        <View style={{ flexDirection: "row", gap: 16, alignItems: "flex-start", marginBottom: 16 }}>
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontSize: 11, lineHeight: 1.5 }}>
+              Dossimo atteste avoir soumis ce dossier à son{" "}
+              <Text style={{ fontFamily: "Helvetica-Bold" }}>
+                contrôle de conformité anti-refus
+              </Text>{" "}
+              avant tout dépôt, et{" "}
+              {conforme ? (
+                <Text>
+                  n&apos;avoir relevé{" "}
+                  <Text style={{ fontFamily: "Helvetica-Bold" }}>
+                    aucun point bloquant
+                  </Text>{" "}
+                  sur les {total} points contrôlés.
+                </Text>
+              ) : (
+                <Text>
+                  avoir relevé{" "}
+                  <Text style={{ fontFamily: "Helvetica-Bold", color: COLORS.danger }}>
+                    {rapport.nbBloquants} point(s) bloquant(s)
+                  </Text>{" "}
+                  à corriger avant tout dépôt.
+                </Text>
+              )}
+            </Text>
+          </View>
+          {/* Cachet : cadre double, sémantique par la bordure. */}
+          <View
+            style={{
+              width: 150,
+              borderWidth: 2,
+              borderColor: verdictColor,
+              borderRadius: 4,
+              paddingVertical: 8,
+              paddingHorizontal: 10,
+              alignItems: "center",
+            }}
+          >
+            <Text style={{ fontSize: 7, fontFamily: "Helvetica-Bold", color: verdictColor, letterSpacing: 1, borderBottomWidth: 0.5, borderBottomColor: verdictColor, paddingBottom: 3, marginBottom: 4, textAlign: "center" }}>
+              DOSSIMO · CONTRÔLE
+            </Text>
+            <Text style={{ fontSize: 17, fontFamily: "Helvetica-Bold", color: verdictColor, letterSpacing: 1 }}>
+              {conforme ? "CONFORME" : "À CORRIGER"}
+            </Text>
+            <Text style={{ fontSize: 7.5, color: verdictColor, marginTop: 3 }}>
+              {rapport.nbBloquants} bloquant · {dateFr(dateControle)}
+            </Text>
+          </View>
+        </View>
+
+        <Text style={styles.sectionTitle}>Familles de contrôle</Text>
+        <View style={{ marginBottom: 16 }}>
+          {[...familles.entries()].map(([cat, e]) => (
+            <View
+              key={cat}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 10,
+                paddingVertical: 5,
+                borderBottomWidth: 0.5,
+                borderBottomColor: COLORS.line,
+              }}
+              wrap={false}
+            >
+              <View
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: 4,
+                  backgroundColor: e.bloquants === 0 ? COLORS.ok : COLORS.danger,
+                }}
+              />
+              <Text style={{ flex: 1, fontFamily: "Helvetica-Bold" }}>{catLabel(cat)}</Text>
+              <Text style={{ fontSize: 9, color: COLORS.muted }}>
+                {e.n} point{e.n > 1 ? "s" : ""}
+                {e.bloquants > 0 ? ` · ${e.bloquants} bloquant(s)` : ""}
+              </Text>
+            </View>
+          ))}
+        </View>
+
+        <Text style={{ fontFamily: "Helvetica-Bold", fontSize: 8.5, color: COLORS.muted }}>
+          Contrôle automatisé Dossimo · {packRef(data)} · {dateFr(dateControle)}
+        </Text>
+
+        <View style={{ marginTop: 14 }}>
+          <View style={[styles.banner, { borderColor: COLORS.ink, borderLeftColor: COLORS.ink }]}>
+            <Text style={{ fontSize: 9, color: COLORS.muted, lineHeight: 1.5 }}>
+              Cette attestation certifie le{" "}
+              <Text style={{ fontFamily: "Helvetica-Bold", color: COLORS.ink }}>
+                passage du contrôle Dossimo
+              </Text>
+              . Elle ne vaut pas accord de l&apos;Anah, de France Rénov&apos; ni de
+              l&apos;obligé : la décision finale appartient à l&apos;instructeur.
+            </Text>
+          </View>
+        </View>
+
+        <Footer />
+      </Page>
+    </Document>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Feuille de route de dépôt
+// ---------------------------------------------------------------------------
+const URGENCE_COLOR: Record<Urgence, string> = {
+  depasse: COLORS.danger,
+  proche: COLORS.warn,
+  calme: COLORS.tampon,
+};
+
+export function FeuilleRouteDocument({
+  data,
+  feuille,
+  pieces,
+}: {
+  data: DossierComplet;
+  feuille: FeuilleRoute;
+  pieces?: { reunies: number; total: number; manquantes: string[] };
+}) {
+  const { caracteristiques: c } = data;
+  const poste = posteLabel(c);
+  const ech = feuille.prochaine?.echeance ?? null;
+  const echColor = ech ? URGENCE_COLOR[ech.urgence] : COLORS.tampon;
+
+  return (
+    <Document
+      title={`Feuille de route — ${c.beneficiaire.prenom} ${c.beneficiaire.nom}`}
+      author="Dossimo"
+    >
+      <Page size="A4" style={styles.page}>
+        <Header
+          eyebrow={`Feuille de route de dépôt · ${dispoLabel(data)}`}
+          title={poste}
+          subtitle={`${c.fiche} · ${c.beneficiaire.commune}`}
+          refTop={packRef(data)}
+          refSub={`${c.beneficiaire.prenom} ${c.beneficiaire.nom}`}
+        />
+
+        <NoteCard>
+          Le chemin de ce dossier, daté depuis votre saisie, et l&apos;échéance
+          légale qui en découle. Dossimo ne dépose jamais : cette feuille dit quoi
+          faire, avec qui, et avant quand.
+        </NoteCard>
+
+        <Text style={styles.sectionTitle}>Le chemin du dossier</Text>
+        <View style={{ marginBottom: 14 }}>
+          {feuille.etapes.map((e, i) => (
+            <View
+              key={i}
+              style={{
+                flexDirection: "row",
+                gap: 10,
+                alignItems: "flex-start",
+                paddingVertical: 5,
+                borderBottomWidth: 0.5,
+                borderBottomColor: COLORS.line,
+              }}
+              wrap={false}
+            >
+              <Text style={{ width: 68, fontSize: 9, color: COLORS.muted }}>
+                {e.date ? dateFr(e.date) : "à venir"}
+              </Text>
+              <View
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: 4,
+                  marginTop: 3,
+                  backgroundColor: e.fait ? COLORS.ok : COLORS.card,
+                  borderWidth: e.fait ? 0 : 1,
+                  borderColor: COLORS.faint,
+                }}
+              />
+              <View style={{ flex: 1 }}>
+                <Text
+                  style={{
+                    fontFamily: "Helvetica-Bold",
+                    color: e.fait ? COLORS.muted : COLORS.ink,
+                  }}
+                >
+                  {e.titre}
+                </Text>
+                {e.detail ? (
+                  <Text style={{ fontSize: 8.5, color: COLORS.muted, marginTop: 1 }}>
+                    {e.detail}
+                  </Text>
+                ) : null}
+              </View>
+            </View>
+          ))}
+        </View>
+
+        {feuille.prochaine ? (
+          <View
+            style={[styles.banner, { borderColor: echColor, borderLeftColor: echColor }]}
+            wrap={false}
+          >
+            <Text style={styles.sectionTitle}>À faire maintenant</Text>
+            <Text style={[styles.bannerTitle, { color: COLORS.ink }]}>
+              {feuille.prochaine.titre}
+            </Text>
+            {ech ? (
+              <Text style={{ marginTop: 4, fontFamily: "Helvetica-Bold", color: echColor }}>
+                {ech.urgence === "depasse"
+                  ? `Échéance dépassée depuis ${Math.abs(ech.joursRestants)} jour(s) · le ${dateFr(ech.date)}`
+                  : `Plus que ${ech.joursRestants} jour(s) · avant le ${dateFr(ech.date)}`}
+              </Text>
+            ) : null}
+            <Text style={{ marginTop: 4, color: COLORS.muted }}>
+              {feuille.prochaine.detail}
+            </Text>
+            <Text style={{ marginTop: 4, fontSize: 8.5, color: COLORS.tampon }}>
+              {feuille.prochaine.qui}
+            </Text>
+          </View>
+        ) : null}
+
+        <View style={styles.twoCol}>
+          <View style={styles.col}>
+            <View style={styles.card}>
+              <Text style={styles.sectionTitle}>À transmettre à</Text>
+              <Text style={{ fontFamily: "Helvetica-Bold", fontSize: 12 }}>
+                {feuille.destinataire}
+              </Text>
+              <Text style={{ fontSize: 8.5, color: COLORS.muted, marginTop: 3 }}>
+                {feuille.destinataireDetail}
+              </Text>
+            </View>
+          </View>
+          {pieces ? (
+            <View style={styles.col}>
+              <View style={styles.card}>
+                <Text style={styles.sectionTitle}>Pièces réunies</Text>
+                <Text
+                  style={{
+                    fontFamily: "Helvetica-Bold",
+                    fontSize: 12,
+                    color: pieces.reunies >= pieces.total ? COLORS.ok : COLORS.warn,
+                  }}
+                >
+                  {pieces.reunies} / {pieces.total} obligatoires
+                </Text>
+                {pieces.manquantes.length > 0 ? (
+                  <Text style={{ fontSize: 8.5, color: COLORS.muted, marginTop: 3 }}>
+                    Manque : {pieces.manquantes.join(", ")}
+                  </Text>
+                ) : (
+                  <Text style={{ fontSize: 8.5, color: COLORS.muted, marginTop: 3 }}>
+                    Toutes les pièces obligatoires sont réunies.
+                  </Text>
+                )}
+              </View>
+            </View>
+          ) : null}
+        </View>
+
+        <Footer />
+      </Page>
+    </Document>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Fiche client (bénéficiaire)
+// ---------------------------------------------------------------------------
+const ETAPES_CLIENT: Record<
+  "cee" | "maprimerenov",
+  { titre: string; detail: string; flag?: string }[]
+> = {
+  maprimerenov: [
+    {
+      titre: "Déposez votre demande sur maprimerenov.gouv.fr",
+      detail:
+        "La demande doit être faite, et acceptée, avant que le chantier commence. Votre dossier est déjà prêt : il n'y a qu'à le déposer.",
+      flag: "avant les travaux",
+    },
+    {
+      titre: "Attendez l'accord de l'Anah",
+      detail:
+        "Votre artisan ne démarre les travaux qu'une fois votre accord reçu. C'est ce qui protège votre prime.",
+    },
+    {
+      titre: "Après les travaux, déposez votre facture",
+      detail:
+        "Ce dernier geste déclenche le versement de la prime sur votre compte.",
+    },
+  ],
+  cee: [
+    {
+      titre: "Vous n'avez aucun dépôt à faire",
+      detail: "Votre artisan transmet le dossier complet au financeur (l'obligé).",
+    },
+    {
+      titre: "Signez l'attestation sur l'honneur",
+      detail:
+        "Votre artisan vous la présente : datez et signez à la main, sans rature ni blanc correcteur.",
+    },
+    {
+      titre: "La prime vous revient",
+      detail: "Selon les modalités de l'offre signée avec le financeur.",
+    },
+  ],
+};
+
+export function FicheClientDocument({
+  data,
+  primeMontant,
+  pieces,
+}: {
+  data: DossierComplet;
+  primeMontant: number | null;
+  pieces: { titre: string; deposee: boolean }[];
+}) {
+  const { caracteristiques: c, artisan } = data;
+  const poste = posteLabel(c);
+  const entreprise = artisan?.entreprise ?? "votre artisan";
+  const dispositif =
+    data.dossier.dispositif === "maprimerenov" ? "maprimerenov" : "cee";
+  const etapes = ETAPES_CLIENT[dispositif];
+
+  return (
+    <Document
+      title={`Votre dossier — ${c.beneficiaire.prenom} ${c.beneficiaire.nom}`}
+      author="Dossimo"
+    >
+      <Page size="A4" style={styles.page}>
+        <Header
+          eyebrow={`Votre dossier · ${dispoLabel(data)}`}
+          title={`Bonjour ${c.beneficiaire.prenom}, votre dossier est prêt.`}
+          subtitle={`${poste} · préparé pour vous par ${entreprise}`}
+          refTop={entreprise}
+          refSub="votre artisan RGE"
+        />
+
+        <View
+          style={[
+            styles.card,
+            { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end" },
+          ]}
+        >
+          <View>
+            <Text style={styles.sectionTitle}>Montant estimé de votre prime</Text>
+            <Text style={{ fontFamily: "Helvetica-Bold", fontSize: 26, color: COLORS.ok }}>
+              {primeMontant != null ? euro(primeMontant) : "à confirmer"}
+            </Text>
+          </View>
+          <Text style={{ fontSize: 8.5, color: COLORS.muted, maxWidth: 190, textAlign: "right" }}>
+            Versée sur votre compte, à vous. Estimation indicative : elle ne vaut
+            pas notification de la prime.
+          </Text>
+        </View>
+
+        <View style={{ marginTop: 6 }}>
+          <Text style={styles.sectionTitle}>Ce qu&apos;il vous reste à faire</Text>
+          {etapes.map((e, i) => (
+            <View key={i} style={{ flexDirection: "row", gap: 10, marginBottom: 8 }} wrap={false}>
+              <Text style={{ width: 16, fontFamily: "Helvetica-Bold", color: COLORS.tampon }}>
+                {i + 1}
+              </Text>
+              <View style={{ flex: 1 }}>
+                <Text>
+                  <Text style={{ fontFamily: "Helvetica-Bold" }}>{e.titre}</Text>
+                  {e.flag ? (
+                    <Text style={{ color: COLORS.warn, fontFamily: "Helvetica-Bold" }}>
+                      {"  "}({e.flag})
+                    </Text>
+                  ) : null}
+                </Text>
+                <Text style={{ fontSize: 9, color: COLORS.muted, marginTop: 1 }}>{e.detail}</Text>
+              </View>
+            </View>
+          ))}
+        </View>
+
+        {pieces.length > 0 ? (
+          <View style={{ marginTop: 6 }}>
+            <Text style={styles.sectionTitle}>Vos pièces</Text>
+            {pieces.map((p, i) => (
+              <View key={i} style={styles.checkItem} wrap={false}>
+                <View
+                  style={[
+                    styles.checkBox,
+                    p.deposee ? { backgroundColor: COLORS.ok, borderColor: COLORS.ok } : {},
+                  ]}
+                />
+                <Text style={{ flex: 1 }}>
+                  {p.titre}
+                  {p.deposee ? <Text style={styles.badge}>  · reçue</Text> : null}
+                </Text>
+              </View>
+            ))}
+          </View>
+        ) : null}
+
+        <View style={[styles.noteCard, { marginTop: 12 }]}>
+          <Text>
+            {entreprise} a fait vérifier la conformité de votre dossier par Dossimo,
+            un service indépendant, avant tout dépôt. Vous gardez votre artisan et
+            l&apos;intégralité de votre prime. Dossimo ne dépose pas votre dossier
+            et ne touche jamais votre prime.
+          </Text>
         </View>
 
         <Footer />

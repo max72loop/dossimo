@@ -5,12 +5,15 @@ import {
   packSlug,
   renderChecklistPdf,
   renderControlePdf,
+  renderFeuilleRoutePdf,
   renderPackCoverPdf,
   renderRecapPdf,
 } from "@/lib/pack/render";
 import { generateCerfa } from "@/lib/cerfa/generate";
 import { storedVigilance } from "@/lib/llm/vigilance";
 import { verrouGesteDocumente, verrouLivrable } from "@/lib/dossier/acces";
+import { feuilleRoute } from "@/lib/dossier/feuille-route";
+import { checklistDossier, resumePieces } from "@/lib/piece/checklist";
 
 export const runtime = "nodejs";
 
@@ -36,24 +39,31 @@ export async function GET(
   const stored = storedVigilance(data);
   // Saisie + pièces réelles : la page de garde et le rapport du pack portent le
   // même verdict que l'écran, écarts et mentions manquantes compris.
-  const { rapport } = await rapportComplet(data);
+  const { rapport, pieces } = await rapportComplet(data);
+  const resume = resumePieces(
+    checklistDossier(
+      data,
+      pieces.map((p) => p.piece),
+    ),
+  );
 
   // Le formulaire officiel peut ne pas être résolu (aucun modèle en vigueur) :
   // le pack reste produit sans lui, plutôt que d'échouer.
   const cerfa = await generateCerfa(data);
 
-  const [cover, recap, controle, checklist] = await Promise.all([
+  const [cover, feuille, recap, controle, checklist] = await Promise.all([
     renderPackCoverPdf(data, {
       rapport,
       cerfaTitre: cerfa.ok ? cerfa.meta.titre : undefined,
       hasVigilance: !!stored && stored.points.length > 0,
     }),
+    renderFeuilleRoutePdf(data, feuilleRoute(data), resume),
     renderRecapPdf(data),
     renderControlePdf(data, stored?.points, rapport),
     renderChecklistPdf(data),
   ]);
 
-  const parts: Array<Uint8Array | Buffer> = [cover, recap, controle, checklist];
+  const parts: Array<Uint8Array | Buffer> = [cover, feuille, recap, controle, checklist];
   if (cerfa.ok) parts.push(cerfa.bytes);
 
   const merged = await mergePdfs(parts);
