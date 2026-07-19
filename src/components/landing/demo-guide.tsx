@@ -2,7 +2,8 @@
 
 import { useRef, useState } from "react";
 import Link from "next/link";
-import { AlertTriangle, Camera, CheckCircle2, FileText, Loader2, PlayCircle } from "lucide-react";
+import { AlertTriangle, Camera, CheckCircle2, FileText, PlayCircle } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 
 import { analyserDevisInitial } from "@/lib/dossier/document-first-actions";
 import { saveGuestDraft } from "@/lib/dossier/guest-draft";
@@ -96,7 +97,7 @@ export function DemoGuide() {
           </div>
           <input ref={photoRef} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" className="sr-only" onChange={(event) => selectionner(event.target.files?.[0])} />
           <input ref={pdfRef} type="file" accept="application/pdf" className="sr-only" onChange={(event) => selectionner(event.target.files?.[0])} />
-          {loading && <div className="mt-5 flex items-center gap-3 rounded-lg bg-info-bg px-4 py-4 text-sm font-semibold text-tampon" role="status"><Loader2 className="h-5 w-5 animate-spin" />{loadingStep}…</div>}
+          {loading && <div className="mt-5 flex items-center gap-3 rounded-lg bg-info-bg px-4 py-4 text-sm font-semibold text-tampon" role="status"><Spinner className="h-5 w-5" />{loadingStep}…</div>}
           {!loading && fileName && <p className="mt-3 text-center text-xs text-encre-claire">{fileName}</p>}
           {error && <p className="mt-3 rounded border-l-4 border-erreur bg-erreur-bg px-4 py-3 text-sm text-erreur">{error}</p>}
           <button type="button" onClick={() => void essayerExemple()} disabled={loading} className="mt-4 inline-flex h-11 w-full items-center justify-center gap-2 rounded border border-filigrane px-5 text-sm font-semibold text-tampon transition hover:bg-info-bg disabled:opacity-60"><PlayCircle className="h-4 w-4" />Essayer avec un exemple</button>

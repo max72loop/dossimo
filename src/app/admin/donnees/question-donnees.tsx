@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Loader2, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 
 import { poserQuestion } from "@/lib/admin/donnees-actions";
 import type { InterrogationResult } from "@/lib/admin/nl-query";
@@ -55,7 +56,7 @@ export function QuestionDonnees() {
           disabled={pending || !question.trim()}
           className="inline-flex items-center gap-2 rounded bg-encre px-4 py-2 text-sm font-semibold text-blanc-casse hover:opacity-90 disabled:opacity-40"
         >
-          {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+          {pending ? <Spinner className="h-4 w-4" /> : <Sparkles className="h-4 w-4" />}
           Demander
         </button>
       </form>

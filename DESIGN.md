@@ -331,8 +331,8 @@ facto à tenir :
 - **Erreur** : `role="alert"` (`lead-form.tsx`).
 - **Bandeau de page** : encart coloré en tête pour un événement de navigation
   (« Paiement confirmé… », « Code parrain… »), avec la sémantique du §2.
-- Chargement d'une action : le [`Spinner`](src/components/ui/spinner.tsx) maison,
-  **pas** `Loader2` de lucide (un doublon traîne dans `demo-guide.tsx`, à résorber).
+- Chargement d'une action : le [`Spinner`](src/components/ui/spinner.tsx) maison
+  (il gère `motion-reduce`), **pas** `Loader2` de lucide (doublon résorbé le 2026-07-19).
 
 À trancher (§8) : quand un toast se justifie plutôt qu'un inline, et son placement.
 
@@ -434,7 +434,7 @@ vérité, partagée entre les supports.
 - [ ] Centraliser la mention légale du pied de page (§5).
 - [ ] Stratégie responsive des tables (§5).
 - [ ] Convention toast vs message inline, et son placement (§5).
-- [ ] Résorber le doublon de spinner (`Spinner` maison vs `Loader2`, §5).
+- [x] Résorber le doublon de spinner : tous les `Loader2` ramenés sur le `Spinner` maison (§5) — 2026-07-19.
 - [ ] Cibles tactiles minimales sur mobile (§4).
 - [ ] Échelle de titres et style de liens de la prose éditoriale (§3).
 - [ ] Impression : quelles pages web sont pensées pour le papier (§1).

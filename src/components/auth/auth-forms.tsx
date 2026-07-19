@@ -3,7 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 
 import { requestPasswordReset, signIn, signUp, updatePassword, type AuthResult } from "@/lib/auth/actions";
 import { destinationApresAuth } from "@/lib/auth/redirect";
@@ -30,7 +31,7 @@ function SubmitButton({ loading, children }: { loading: boolean; children: strin
       disabled={loading}
       className="mt-2 inline-flex h-11 w-full items-center justify-center gap-2 rounded bg-accent px-5 text-sm font-medium text-blanc-casse transition-colors hover:bg-accent-hover disabled:opacity-60"
     >
-      {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+      {loading && <Spinner className="h-4 w-4" />}
       {children}
     </button>
   );

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
+import { AlertCircle, CheckCircle2 } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 
 import { FOCUS } from "@/components/ui/boutons";
 import { submitLead } from "@/lib/landing/actions";
@@ -123,7 +124,7 @@ export function LeadForm() {
         disabled={status === "loading"}
         className={`mt-1 inline-flex h-11 items-center justify-center gap-2 rounded bg-accent px-5 text-sm font-medium text-blanc-casse transition-colors hover:bg-accent-hover disabled:opacity-60 ${FOCUS}`}
       >
-        {status === "loading" && <Loader2 className="h-4 w-4 animate-spin" />}
+        {status === "loading" && <Spinner className="h-4 w-4" />}
         Être recontacté
       </button>
       <p className="text-center text-xs text-ardoise">

@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Camera, CheckCircle2, FileText, Loader2, Sparkles } from "lucide-react";
+import { Camera, CheckCircle2, FileText, Sparkles } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 
 import { DossierCeeIsolationForm } from "@/components/dossier/DossierCeeIsolationForm";
 import { analyserDevisInitial } from "@/lib/dossier/document-first-actions";
@@ -175,7 +176,7 @@ export function DemarrageAssiste({
           onClick={analyser}
           className="inline-flex h-12 items-center justify-center gap-2 rounded bg-accent px-6 text-sm font-semibold text-blanc-casse transition hover:bg-accent-hover disabled:opacity-60"
         >
-          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
+          {loading ? <Spinner className="h-4 w-4" /> : <Camera className="h-4 w-4" />}
           {loading ? "Lecture du devis…" : "Lire mon devis et préremplir"}
         </button>
         <a

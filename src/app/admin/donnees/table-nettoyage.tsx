@@ -2,7 +2,8 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { AlertTriangle, Loader2, Trash2 } from "lucide-react";
+import { AlertTriangle, Trash2 } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 
 import { supprimerDossiers } from "@/lib/admin/donnees-actions";
 import type { DossierInventaire } from "@/lib/admin/inventaire";
@@ -222,7 +223,7 @@ export function TableNettoyage({ dossiers }: { dossiers: DossierInventaire[] }) 
               className="inline-flex items-center gap-2 rounded bg-avertissement px-4 py-2 text-sm font-semibold text-blanc-casse hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
             >
               {pending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Spinner className="h-4 w-4" />
               ) : (
                 <Trash2 className="h-4 w-4" />
               )}
