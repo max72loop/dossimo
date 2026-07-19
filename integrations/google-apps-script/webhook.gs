@@ -55,6 +55,7 @@ function envoyerProspection(payload) {
   var to = String(payload.to || "").trim();
   var subject = String(payload.subject || "").trim();
   var body = String(payload.body || "");
+  var html = String(payload.html || "");
   var unsubscribeUrl = String(payload.unsubscribeUrl || "").trim();
 
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) {
@@ -79,18 +80,20 @@ function envoyerProspection(payload) {
   var erreurs = [];
   var envoye = false;
   try {
-    envoyerBrutAvecEnTetes(to, subject, body, unsubscribeUrl);
+    envoyerBrutAvecEnTetes(to, subject, body, html, unsubscribeUrl);
     envoye = true;
   } catch (erreurGmail) {
     erreurs.push("gmail: " + erreurGmail);
     try {
-      MailApp.sendEmail({
+      var options = {
         to: to,
         replyTo: EXPEDITEUR_EMAIL,
         name: EXPEDITEUR,
         subject: subject,
         body: body,
-      });
+      };
+      if (html) options.htmlBody = html;
+      MailApp.sendEmail(options);
       envoye = true;
     } catch (erreurMailApp) {
       erreurs.push("mailapp: " + erreurMailApp);
@@ -105,26 +108,64 @@ function envoyerProspection(payload) {
   return jsonResponse({ ok: true });
 }
 
-/** Message RFC 822 brut : seul moyen de poser des en-têtes personnalisés. */
-function envoyerBrutAvecEnTetes(to, subject, body, unsubscribeUrl) {
+/**
+ * Message RFC 822 brut : seul moyen de poser des en-têtes personnalisés.
+ * Avec `html`, on part en multipart/alternative (texte + HTML) ; sans, en texte
+ * seul. La partie texte vient en premier, la HTML en second : un client affiche
+ * la DERNIÈRE partie qu'il sait rendre, donc le HTML là où c'est possible, le
+ * texte en repli.
+ */
+function envoyerBrutAvecEnTetes(to, subject, body, html, unsubscribeUrl) {
   var from = EXPEDITEUR_EMAIL;
-  var raw = [
+  var entetes = [
     "From: " + EXPEDITEUR + " <" + from + ">",
     "To: " + to,
     "Subject: " + encoderSujet(subject),
     "MIME-Version: 1.0",
-    "Content-Type: text/plain; charset=UTF-8",
-    "Content-Transfer-Encoding: base64",
     "List-Unsubscribe: <" + unsubscribeUrl + ">, <mailto:" + from + "?subject=STOP>",
     "List-Unsubscribe-Post: List-Unsubscribe=One-Click",
-    "",
-    Utilities.base64Encode(body, Utilities.Charset.UTF_8),
-  ].join("\r\n");
+  ];
+
+  var lignes;
+  if (html) {
+    var b = "dossimo_boundary_alt";
+    lignes = entetes.concat([
+      'Content-Type: multipart/alternative; boundary="' + b + '"',
+      "",
+      "--" + b,
+      "Content-Type: text/plain; charset=UTF-8",
+      "Content-Transfer-Encoding: base64",
+      "",
+      base64Plie(body),
+      "--" + b,
+      "Content-Type: text/html; charset=UTF-8",
+      "Content-Transfer-Encoding: base64",
+      "",
+      base64Plie(html),
+      "--" + b + "--",
+    ]);
+  } else {
+    lignes = entetes.concat([
+      "Content-Type: text/plain; charset=UTF-8",
+      "Content-Transfer-Encoding: base64",
+      "",
+      base64Plie(body),
+    ]);
+  }
 
   Gmail.Users.Messages.send(
-    { raw: Utilities.base64EncodeWebSafe(raw, Utilities.Charset.UTF_8) },
+    { raw: Utilities.base64EncodeWebSafe(lignes.join("\r\n"), Utilities.Charset.UTF_8) },
     "me",
   );
+}
+
+/**
+ * Encode en base64 et plie à 76 caractères par ligne (RFC 2045). Une ligne base64
+ * unique de plusieurs kilo-octets dépasse la limite SMTP de 998 caractères et
+ * certains serveurs récepteurs la rejettent ou la tronquent.
+ */
+function base64Plie(texte) {
+  return Utilities.base64Encode(texte, Utilities.Charset.UTF_8).replace(/(.{76})/g, "$1\r\n");
 }
 
 /** Un sujet non-ASCII doit être encodé (RFC 2047), sinon il arrive en charabia. */
