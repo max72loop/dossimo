@@ -9,7 +9,7 @@ import { SITE_URL } from "@/lib/seo/site";
 export function SeoGuidePage({ guide }: { guide: SeoGuide }) {
   const pageUrl = `${SITE_URL}/${guide.slug}`;
   const dateVerification = formatGuideDate(guide.updated);
-  const jsonLd = [
+  const jsonLd: Array<Record<string, unknown>> = [
     {
       "@context": "https://schema.org",
       "@type": "Article",
@@ -38,6 +38,20 @@ export function SeoGuidePage({ guide }: { guide: SeoGuide }) {
     },
   ];
 
+  // FAQPage à part : ne l'émettre que si des questions sont réellement affichées,
+  // sinon le balisage ne refléterait pas le contenu visible de la page.
+  if (guide.faq?.length) {
+    jsonLd.push({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: guide.faq.map((item) => ({
+        "@type": "Question",
+        name: item.question,
+          acceptedAnswer: { "@type": "Answer", text: item.answer },
+      })),
+    });
+  }
+
   return (
     <div className="flex min-h-full flex-col bg-papier">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
@@ -64,6 +78,21 @@ export function SeoGuidePage({ guide }: { guide: SeoGuide }) {
           </header>
 
           <div className="mx-auto max-w-4xl px-5 py-14 sm:px-8 sm:py-20">
+            {guide.sections?.length ? (
+              <div className="mb-16 max-w-3xl space-y-12 border-b border-filigrane pb-14">
+                {guide.sections.map((section) => (
+                  <section key={section.heading} aria-label={section.heading}>
+                    <h2 className="font-serif text-3xl font-semibold text-encre">{section.heading}</h2>
+                    <div className="mt-5 space-y-4">
+                      {section.paragraphs.map((paragraph, index) => (
+                        <p key={index} className="text-lg leading-relaxed text-ardoise">{paragraph}</p>
+                      ))}
+                    </div>
+                  </section>
+                ))}
+              </div>
+            ) : null}
+
             <section aria-labelledby="checklist">
               <p className="text-xs font-semibold uppercase tracking-[0.14em] text-tampon">Contrôle avant dépôt</p>
               <h2 id="checklist" className="mt-2 font-serif text-3xl font-semibold text-encre">La checklist de relecture</h2>
@@ -107,6 +136,20 @@ export function SeoGuidePage({ guide }: { guide: SeoGuide }) {
                 </div>
               </div>
             </section>
+
+            {guide.faq?.length ? (
+              <section aria-labelledby="faq" className="mt-16 border-t border-filigrane pt-14">
+                <h2 id="faq" className="font-serif text-3xl font-semibold text-encre">Questions fréquentes</h2>
+                <dl className="mt-8 max-w-3xl space-y-8">
+                  {guide.faq.map((item) => (
+                    <div key={item.question}>
+                      <dt className="font-serif text-xl font-semibold text-encre">{item.question}</dt>
+                      <dd className="mt-3 text-lg leading-relaxed text-ardoise">{item.answer}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </section>
+            ) : null}
 
             <section aria-labelledby="sources" className="mt-16 border-t border-filigrane pt-14">
               <div className="flex items-center gap-3">

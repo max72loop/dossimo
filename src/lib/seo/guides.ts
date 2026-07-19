@@ -27,9 +27,23 @@ export interface SeoGuide {
    */
   updated: string;
   intro: string;
+  /**
+   * Prose longue optionnelle, rendue juste après l'introduction. Sert à donner de la
+   * profondeur éditoriale (le « pourquoi ») là où la checklist ne donne que le « quoi ».
+   * Un guide sans `sections` garde exactement son rendu d'origine : le champ est
+   * additif, jamais requis. Chaque section porte un `heading` (h2 serif) et ses
+   * paragraphes.
+   */
+  sections?: Array<{ heading: string; paragraphs: string[] }>;
   checklist: Array<{ title: string; text: string }>;
   errors: string[];
   example: { before: string; after: string };
+  /**
+   * Questions fréquentes optionnelles. Rendues visiblement ET exposées en JSON-LD
+   * `FAQPage` (rich snippets Google). N'ajouter le champ que si les réponses sont
+   * réellement affichées : le balisage FAQ doit refléter le contenu visible.
+   */
+  faq?: Array<{ question: string; answer: string }>;
   sources: Array<{ label: string; href: string }>;
 }
 
@@ -127,9 +141,46 @@ export const guides = {
       "Préparez un devis CEE contrôlable : référence de fiche, caractéristiques techniques, qualification RGE, dates et preuves attendues.",
     eyebrow: "Guide artisan RGE · Certificats d’économies d’énergie",
     category: "Devis & conformité",
-    updated: "2026-07-14",
+    updated: "2026-07-19",
     intro:
-      "Une opération CEE est appréciée à partir de sa fiche d’opération standardisée et de ses modes de preuve. Le devis doit donc décrire précisément ce qui sera posé, sans mélanger les critères de plusieurs gestes.",
+      "Une opération CEE est appréciée à partir de sa fiche d’opération standardisée et de ses modes de preuve. Le devis doit donc décrire précisément ce qui sera posé, sans mélanger les critères de plusieurs gestes. Ce guide détaille ce qui distingue un devis CEE d’un devis commercial ordinaire, ce qu’il doit faire figurer et comment le préparer pour qu’il tienne face au contrôle.",
+    sections: [
+      {
+        heading: "Un devis CEE ne se lit pas comme un devis ordinaire",
+        paragraphs: [
+          "Un devis CEE n’est pas seulement une proposition de prix : c’est la première pièce d’un dossier qui sera contrôlé, et souvent celle qui fixe l’éligibilité de toute l’opération. Une prime CEE repose sur une fiche d’opération standardisée, un document officiel qui décrit le geste, les conditions à respecter et les preuves à fournir. Le devis doit permettre de rattacher chaque ligne à la bonne fiche et de vérifier, pièce en main, que les critères sont réunis.",
+          "Concrètement, cela change la façon de le rédiger. Là où un devis commercial peut se contenter d’un forfait, un devis CEE doit rendre le geste vérifiable : nature exacte des travaux, surface ou quantité, matériau, référence, performance thermique. Ce qui n’apparaît pas noir sur blanc sur le devis devra être rattrapé plus tard, au moment du dépôt, quand il est souvent trop tard pour corriger sans refaire une pièce.",
+        ],
+      },
+      {
+        heading: "Relier chaque ligne à la bonne fiche d’opération",
+        paragraphs: [
+          "Le catalogue des fiches d’opérations standardisées liste, geste par geste, ce qui ouvre droit à une prime CEE (isolation, chauffage, ventilation, etc.). Chaque fiche a son périmètre et ses critères propres. La première décision, avant même de chiffrer, est d’identifier la fiche en vigueur qui correspond au bâtiment, au geste et à la date d’engagement de l’opération.",
+          "Sur le devis, consacrez une ligne par geste et faites-y figurer les critères qui justifieront l’éligibilité : performances, dimensions, usages, marque et référence du produit. Ne mélangez jamais sur une même ligne les critères de deux fiches différentes : un contrôleur doit pouvoir mettre en regard votre ligne et la fiche, et retrouver chaque exigence. Une référence de fiche absente, ou une fiche qui ne correspond pas au geste réellement réalisé, est un motif de blocage classique.",
+        ],
+      },
+      {
+        heading: "Devis et facture : la cohérence se prépare dès le devis",
+        paragraphs: [
+          "Le motif de refus le plus fréquent n’est pas une erreur sur une pièce isolée : c’est un écart entre le devis et la facture. Une surface, une référence produit ou une performance qui diffère d’un document à l’autre suffit à bloquer le dossier, même si chaque pièce est correcte prise séparément.",
+          "La parade se joue au moment du devis. Écrivez-le en pensant au rapprochement ligne à ligne qui aura lieu ensuite : mêmes désignations, mêmes références, mêmes performances, mêmes unités. Si un élément change entre le devis et la facture (un produit indisponible remplacé par un équivalent, par exemple), la nouvelle référence doit rester couverte par la même fiche et sa performance doit être tout aussi justifiable. Avec Dossimo, cette cohérence est structurelle : le devis et la facture sont générés depuis une saisie unique, donc l’écart devient très difficile à produire par accident.",
+        ],
+      },
+      {
+        heading: "La chronologie : l’offre CEE avant l’acceptation du devis",
+        paragraphs: [
+          "Une prime CEE n’est valable que si elle a réellement contribué à décider les travaux. C’est le rôle actif et incitatif : l’offre CEE doit être engagée avant que le client n’accepte le devis. Un engagement daté après l’acceptation fait tomber le dossier pour effet d’aubaine, sans recours. La date d’acceptation du devis, lisible sur la pièce signée, est donc un élément de conformité à part entière, pas un simple détail administratif.",
+          "En pratique, ne démarrez ni travaux ni acompte engageant tant que cette chronologie n’est pas établie, et conservez la trace écrite qui rattache l’offre CEE à ce chantier précis. Ce point est développé dans notre guide dédié à l’offre CEE avant le devis.",
+        ],
+      },
+      {
+        heading: "Anticiper les preuves attendues",
+        paragraphs: [
+          "Chaque fiche précise ses modes de preuve. Au-delà du devis et de la facture, un dossier CEE mobilise en général des références produit, des fiches techniques, des certificats (l’ACERMI pour les isolants, par exemple), une attestation sur l’honneur co-signée et des photos avant et après travaux. Préparer ces éléments dès le devis évite de courir après les pièces au moment du dépôt.",
+          "Dossimo est un service indépendant d’aide à la préparation de dossier, non affilié à l’Anah ni à France Rénov’. Il ne dépose pas le dossier et ne touche pas la prime : il vous aide à ce que chaque pièce soit cohérente avant que vous et votre client ne déposiez.",
+        ],
+      },
+    ],
     checklist: [
       { title: "Choisir la fiche applicable", text: "Identifiez la fiche en vigueur correspondant au bâtiment, au geste et à la date d’engagement de l’opération." },
       { title: "Reprendre les critères utiles", text: "Faites apparaître sur le devis les performances, dimensions, usages et références qui permettront de justifier l’éligibilité." },
@@ -148,9 +199,220 @@ export const guides = {
       before: "Pose d’un isolant conforme CEE — 4 800 €",
       after: "Fiche CEE, zone concernée, surface, matériau, référence, épaisseur et performance thermique identifiés sur une ligne dédiée.",
     },
+    faq: [
+      {
+        question: "Qu’est-ce qu’un devis CEE ?",
+        answer:
+          "C’est le devis d’un chantier de rénovation énergétique dont l’artisan RGE prévoit qu’il ouvrira droit à une prime au titre des Certificats d’économies d’énergie. Au-delà du prix, il doit décrire le geste de façon assez précise pour le rattacher à une fiche d’opération standardisée et prouver l’éligibilité : surface ou quantité, matériau, référence, performance.",
+      },
+      {
+        question: "Quelles mentions doivent figurer sur un devis CEE ?",
+        answer:
+          "Les mentions habituelles d’un devis (identité de l’entreprise, SIRET, client, adresse du chantier, prix détaillés HT, TVA, TTC) et, en plus, les éléments qui rendent le geste vérifiable : référence de la fiche applicable, caractéristiques techniques exigées par cette fiche, marque et référence du produit, et la qualification RGE couvrant le domaine concerné.",
+      },
+      {
+        question: "Faut-il indiquer la fiche CEE sur le devis ?",
+        answer:
+          "Oui. Chaque ligne éligible doit pouvoir être reliée à la fiche d’opération standardisée en vigueur qui la couvre, et reprendre les critères de cette fiche. C’est ce qui permet au contrôleur de mettre en regard votre devis et la fiche officielle, et de retrouver chaque exigence.",
+      },
+      {
+        question: "Peut-on commencer les travaux avant l’acceptation du devis CEE ?",
+        answer:
+          "Non. L’offre CEE doit être engagée avant que le client n’accepte le devis, et aucun travail ni acompte engageant ne doit démarrer avant que cette chronologie soit établie. Un engagement daté après l’acceptation fait tomber le dossier pour effet d’aubaine, sans recours possible.",
+      },
+      {
+        question: "Devis CEE et devis MaPrimeRénov’, est-ce le même document ?",
+        answer:
+          "C’est le même devis de chantier, mais il doit satisfaire les exigences des deux dispositifs à la fois lorsque vous visez le cumul. Les critères ne se recouvrent pas exactement : mieux vaut relire le devis une fois pour le CEE et une fois pour MaPrimeRénov’ avant de le faire signer. Reportez-vous aux sources officielles pour les conditions de cumul en vigueur.",
+      },
+      {
+        question: "Combien de temps un devis CEE reste-t-il valable ?",
+        answer:
+          "La durée de validité est fixée par l’artisan et indiquée sur le devis lui-même. Ce qui compte pour la conformité CEE, ce n’est pas cette durée commerciale mais la cohérence des dates : l’offre CEE engagée avant l’acceptation du devis, puis un enchaînement acceptation, réalisation et achèvement cohérent d’une pièce à l’autre.",
+      },
+    ],
     sources: [
       { label: "Catalogue officiel des fiches d’opérations standardisées CEE", href: catalogueCee },
       { label: "Questions-réponses officielles sur le dispositif CEE", href: questionsCee },
+      { label: "Mentions obligatoires d’une facture — Service Public", href: mentionsFacture },
+    ],
+  },
+  modeleCee: {
+    slug: "modele-devis-cee",
+    metaTitle: "Modèle de devis CEE : structure et exemple ligne par ligne",
+    title: "Modèle de devis CEE : la structure à reprendre, avec un exemple",
+    description:
+      "Il n’existe pas de modèle officiel imposé de devis CEE, mais une structure et des mentions à respecter. Les blocs à reprendre et un exemple de ligne conforme, geste par geste.",
+    eyebrow: "Guide artisan RGE · Modèle de devis CEE",
+    category: "Devis & conformité",
+    updated: "2026-07-19",
+    intro:
+      "« Où trouver un modèle de devis CEE ? » revient souvent, et la réponse tient en deux temps : il n’existe pas de modèle officiel imposé, mais un devis CEE doit respecter des mentions et une structure précises pour ouvrir droit à la prime. Ce guide donne la trame à reprendre, bloc par bloc, et un exemple de ligne conforme pour un geste d’isolation.",
+    sections: [
+      {
+        heading: "Pas de modèle officiel, mais des mentions non négociables",
+        paragraphs: [
+          "Aucun formulaire type n’est imposé pour un devis CEE : vous pouvez partir de votre propre modèle d’entreprise. Ce qui est encadré, ce n’est pas la forme du document mais son contenu. Un devis reste soumis aux mentions obligatoires habituelles (identité de l’entreprise, SIRET, client, prix détaillés), et un devis CEE y ajoute ce qui rend le geste vérifiable au regard de sa fiche d’opération standardisée.",
+          "Autrement dit, un « modèle de devis CEE » réussi n’est pas un joli gabarit Word : c’est un document dont chaque ligne éligible peut être rapprochée d’une fiche officielle et, plus tard, d’une facture identique. C’est cette relecture qui décide de la prime, pas la mise en page.",
+        ],
+      },
+      {
+        heading: "Les blocs à reprendre",
+        paragraphs: [
+          "Un devis CEE contrôlable s’organise en blocs stables, quel que soit votre gabarit : un en-tête entreprise (raison sociale, SIRET, coordonnées, qualification RGE et son domaine) ; un bloc d’identification du client et de l’adresse exacte du chantier ; une ou plusieurs lignes de geste, une par opération, portant les critères de la fiche CEE applicable ; un bloc financier détaillé (prix unitaires, HT, taux et montant de TVA, TTC) ; enfin les mentions de validité et de dates. La checklist ci-dessous reprend ces blocs un à un.",
+        ],
+      },
+      {
+        heading: "La ligne de geste, cœur d’un devis CEE",
+        paragraphs: [
+          "C’est la ligne de geste qui distingue un devis CEE d’un devis ordinaire. Une ligne au forfait du type « pose d’un isolant conforme » ne prouve rien. La même opération devient contrôlable dès lors qu’elle précise la fiche CEE visée, la zone concernée, la surface, le matériau, sa marque et sa référence, l’épaisseur et la performance thermique (résistance thermique R pour un isolant, avec sa certification quand la fiche l’exige).",
+          "Consacrez une ligne par geste et ne mélangez jamais les critères de deux fiches sur la même ligne. Si un chantier combine plusieurs opérations, chacune a sa ligne, sa fiche et ses critères propres.",
+        ],
+      },
+      {
+        heading: "Comment produire le vôtre",
+        paragraphs: [
+          "Vous pouvez composer ce devis dans votre outil habituel, à condition de vérifier chaque ligne contre la fiche en vigueur et de garder en tête le rapprochement futur avec la facture. L’espace Dossimo propose une bibliothèque de devis qui génère ce bloc de lignes (désignation, caractéristiques, référence de fiche CEE et mentions RGE) prêt à intégrer, à partir d’une saisie unique : le devis et la facture partant de la même source, l’écart entre les deux, premier motif de refus, devient très difficile à produire par accident.",
+          "Dossimo est un service indépendant d’aide à la préparation de dossier, non affilié à l’Anah ni à France Rénov’. Il ne dépose pas le dossier et ne touche pas la prime.",
+        ],
+      },
+    ],
+    checklist: [
+      { title: "En-tête entreprise", text: "Raison sociale, forme juridique le cas échéant, adresse, SIRET, coordonnées, et la qualification RGE avec son domaine, lisible sans ambiguïté." },
+      { title: "Client et chantier", text: "Nom du client et adresse exacte du logement concerné, identiques à celles qui figureront sur la facture et le reste du dossier." },
+      { title: "Ligne de geste CEE", text: "Une ligne par opération : fiche applicable, zone, surface ou quantité, matériau, marque, référence, épaisseur et performance exigée par la fiche." },
+      { title: "Bloc financier", text: "Prix unitaires ou forfaits explicites, total HT, taux et montant de TVA, TTC, afin que la future facture se rapproche ligne à ligne." },
+      { title: "Dates et validité", text: "Durée de validité du devis et emplacement pour la date d’acceptation signée, qui devra rester postérieure à l’engagement de l’offre CEE." },
+    ],
+    errors: [
+      "Une ligne au forfait regroupe le geste sans fiche, surface ni performance.",
+      "La référence de la fiche CEE applicable n’apparaît nulle part.",
+      "Le même modèle sert pour deux gestes sans distinguer leurs critères.",
+      "La performance (résistance thermique, référence produit) est renvoyée à une brochure au lieu d’être sur le devis.",
+      "Le devis n’a pas de place pour une date d’acceptation lisible.",
+    ],
+    example: {
+      before: "Pose d’un isolant conforme CEE — forfait 4 800 € TTC",
+      after: "Isolation de 95 m² de combles perdus — fiche CEE applicable, isolant (marque, référence), épaisseur et résistance thermique R indiquées — prix HT, TVA et TTC séparés.",
+    },
+    faq: [
+      {
+        question: "Existe-t-il un modèle officiel de devis CEE ?",
+        answer:
+          "Non. Aucun formulaire type n’est imposé. Vous utilisez votre propre modèle de devis, à condition qu’il respecte les mentions obligatoires d’un devis et qu’il fasse figurer, pour chaque ligne éligible, les critères de la fiche d’opération standardisée concernée.",
+      },
+      {
+        question: "Où trouver un exemple de devis CEE ?",
+        answer:
+          "La trame et l’exemple de ligne de ce guide en donnent la structure. Dans l’espace Dossimo, la bibliothèque de devis génère un bloc de lignes conforme (désignation, caractéristiques, référence de fiche CEE, mentions RGE) à partir d’une saisie unique, prêt à intégrer à votre devis.",
+      },
+      {
+        question: "Un modèle Word ou Excel suffit-il pour un devis CEE ?",
+        answer:
+          "Techniquement oui, la forme est libre. Le risque n’est pas l’outil mais l’écart : un devis et une facture composés séparément finissent souvent par diverger sur une surface ou une référence, ce qui bloque le dossier. L’intérêt d’une saisie unique est justement d’empêcher cet écart.",
+      },
+      {
+        question: "Le devis CEE doit-il mentionner le montant de la prime ?",
+        answer:
+          "Le devis chiffre les travaux, pas la prime, dont le montant relève de l’offre CEE et de ses conditions. Ce qui compte sur le devis, c’est de décrire le geste de façon vérifiable et de garder une chronologie cohérente : offre CEE engagée avant l’acceptation du devis.",
+      },
+    ],
+    sources: [
+      { label: "Catalogue officiel des fiches d’opérations standardisées CEE", href: catalogueCee },
+      { label: "Mentions obligatoires d’une facture — Service Public", href: mentionsFacture },
+      { label: "Questions-réponses officielles sur le dispositif CEE", href: questionsCee },
+    ],
+  },
+  prixCee: {
+    slug: "prix-devis-cee",
+    metaTitle: "Devis CEE gratuit ? Ce qui fait le prix et le reste à charge",
+    title: "Devis CEE : gratuit ou payant, et ce qui fait varier le reste à charge",
+    description:
+      "Un devis CEE est-il gratuit, et qu’est-ce qui fait varier son prix et le reste à charge ? Les repères pour lire un devis, distinguer les travaux de la prime et comparer deux offres sans se tromper.",
+    eyebrow: "Guide artisan RGE · Prix & devis CEE",
+    category: "Devis & conformité",
+    updated: "2026-07-19",
+    intro:
+      "« Devis CEE gratuit », « prix d’un devis CEE » : derrière ces recherches, deux questions se mélangent, l’établissement du devis lui-même et le coût réel des travaux une fois la prime déduite. Ce guide les sépare, sans annoncer de montant de prime : celui-ci dépend de la fiche, du geste et de l’offre du signataire, jamais d’un barème universel. L’objectif est de savoir lire un devis CEE et d’en comparer deux sans se faire piéger.",
+    sections: [
+      {
+        heading: "Un devis CEE est-il gratuit ?",
+        paragraphs: [
+          "Dans la très grande majorité des cas, l’établissement d’un devis est gratuit et n’engage à rien tant qu’il n’est pas signé. La loi autorise toutefois un professionnel à facturer un devis, notamment lorsqu’il demande une étude poussée ou un déplacement, à la condition d’en informer le client à l’avance. Un devis « gratuit » qui se transforme en diagnostic payant non annoncé est un signal à ne pas ignorer.",
+          "Signer le devis, en revanche, n’est jamais anodin pour un dossier CEE : la date d’acceptation doit rester postérieure à l’engagement de l’offre CEE, et aucun acompte engageant ne doit être versé avant que cette chronologie soit établie.",
+        ],
+      },
+      {
+        heading: "Prime CEE et reste à charge : ce que le devis doit montrer",
+        paragraphs: [
+          "Un devis chiffre les travaux : prix des fournitures et de la pose, en HT, TVA et TTC. La prime CEE, elle, vient en déduction ou en versement selon l’offre choisie, et son montant dépend de la fiche d’opération, des caractéristiques du geste et de l’offre du signataire de CEE. Il n’existe donc pas de prix unique d’un chantier CEE : deux logements identiques peuvent afficher des restes à charge différents selon les offres mobilisées.",
+          "Ce que le devis doit rendre lisible, c’est la frontière : le coût des travaux d’un côté, la prime de l’autre. Un devis qui fond les deux dans un seul chiffre « tout compris » empêche de savoir ce qui reste réellement à payer, et rend le rapprochement avec la facture plus fragile.",
+        ],
+      },
+      {
+        heading: "Méfiance sur le « reste à charge nul »",
+        paragraphs: [
+          "Les offres qui promettent un reste à charge quasi nul ou une somme symbolique sont à examiner de près : les conditions d’accès ont été resserrées au fil des périodes CEE, et un tel argument sert parfois de porte d’entrée à du démarchage agressif. Une prime n’est valable que si l’offre a réellement précédé la décision de travaux ; un « c’est gratuit, signez ici » qui court-circuite cette chronologie fabrique le motif de rejet qu’il prétend éviter.",
+          "Le bon réflexe est de revenir au devis détaillé : quel est le coût des travaux, quelle offre CEE, engagée à quelle date. Un montant final crédible se reconstruit à partir de ces éléments, pas d’un slogan.",
+        ],
+      },
+      {
+        heading: "Comparer deux devis CEE sans se tromper",
+        paragraphs: [
+          "Comparer deux devis n’a de sens qu’à périmètre égal : mêmes surfaces, mêmes performances visées, mêmes fiches d’opération. Un prix plus bas qui repose sur une résistance thermique moindre, une surface réduite ou une ligne qui ne correspond pas à la fiche n’est pas une bonne affaire : il expose à un refus, et un dossier refusé coûte bien plus que l’écart de prix initial.",
+          "Mettez donc les deux devis en regard ligne à ligne avant de regarder le total. Le devis le plus intéressant est celui qui reste conforme et vérifiable, pas seulement le moins cher.",
+        ],
+      },
+    ],
+    checklist: [
+      { title: "Gratuité et conditions", text: "Le devis est en principe gratuit ; toute facturation d’étude ou de déplacement doit être annoncée avant, jamais découverte après." },
+      { title: "Travaux et prime séparés", text: "Le coût des travaux (HT, TVA, TTC) apparaît distinctement du montant de la prime CEE, pour savoir ce qui reste réellement à payer." },
+      { title: "Taux de TVA cohérent", text: "Vérifiez que le taux de TVA réduit applicable à la rénovation énergétique est correctement appliqué au bon poste de travaux." },
+      { title: "Périmètre comparable", text: "Pour comparer deux devis, alignez surfaces, performances et fiches visées ; sinon les prix ne sont pas comparables." },
+      { title: "Pas d’acompte prématuré", text: "Aucun acompte engageant avant que l’offre CEE soit engagée et la chronologie du rôle incitatif établie." },
+    ],
+    errors: [
+      "Le devis fond le coût des travaux et le montant de la prime en un seul chiffre « tout compris ».",
+      "Un « reste à charge nul » est mis en avant sans que l’offre CEE ait précédé l’acceptation du devis.",
+      "Deux devis sont comparés à surfaces ou performances différentes.",
+      "Un devis annoncé gratuit se double d’un diagnostic payant non prévu.",
+      "Un acompte est réclamé avant que la chronologie du rôle incitatif soit établie.",
+    ],
+    example: {
+      before: "Isolation des combles — reste à charge 1 €, tout compris",
+      after: "Coût des travaux détaillé (HT, TVA, TTC) et prime CEE indiquée à part, offre engagée avant l’acceptation du devis.",
+    },
+    faq: [
+      {
+        question: "Un devis CEE est-il gratuit ?",
+        answer:
+          "En principe oui : établir un devis est gratuit et sans engagement tant qu’il n’est pas signé. Un professionnel peut toutefois facturer un devis nécessitant une étude ou un déplacement, à condition de l’annoncer au préalable. Un devis gratuit qui se transforme en diagnostic payant non prévu doit alerter.",
+      },
+      {
+        question: "Combien coûte un chantier CEE au final ?",
+        answer:
+          "Il n’y a pas de prix unique. Le devis chiffre les travaux ; la prime CEE, qui dépend de la fiche, du geste et de l’offre du signataire, vient ensuite réduire le reste à charge. Deux logements identiques peuvent aboutir à des restes à charge différents selon l’offre mobilisée.",
+      },
+      {
+        question: "Le devis affiche-t-il le montant de la prime CEE ?",
+        answer:
+          "Le devis chiffre d’abord les travaux. Le montant de la prime relève de l’offre CEE et de ses conditions ; l’essentiel est que le devis distingue clairement le coût des travaux de la prime, pour que le reste à charge soit lisible.",
+      },
+      {
+        question: "Un reste à charge à 1 € ou nul est-il fiable ?",
+        answer:
+          "À examiner avec prudence. Les conditions se sont resserrées au fil des périodes CEE et ce type d’argument accompagne parfois du démarchage agressif. Vérifiez toujours le devis détaillé et que l’offre CEE a bien précédé la décision de travaux, sans quoi le dossier peut être rejeté.",
+      },
+      {
+        question: "Pourquoi deux devis CEE affichent-ils des prix très différents ?",
+        answer:
+          "Souvent parce qu’ils ne portent pas sur le même périmètre : surfaces, performances visées ou fiches d’opération différentes. Comparez ligne à ligne, à périmètre égal, avant de regarder le total. Un prix bas obtenu au prix d’une moindre performance expose à un refus.",
+      },
+    ],
+    sources: [
+      { label: "Questions-réponses officielles sur le dispositif CEE", href: questionsCee },
+      { label: "Catalogue officiel des fiches d’opérations standardisées CEE", href: catalogueCee },
+      { label: "Mentions obligatoires d’une facture — Service Public", href: mentionsFacture },
     ],
   },
   mentions: {
