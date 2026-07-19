@@ -233,6 +233,11 @@ de focus). À harmoniser :
   l'impression**, l'ombre ne tient pas (React-PDF, lecture N/B) : les cartes restent
   **bordées**, sémantique portée par la bordure. Cette divergence web↔PDF est
   **assumée et voulue** (cf. §1). Migration web à faire (§8).
+- **Parti d'exécution de l'espace artisan : « cartes flottantes »** (2026-07-19).
+  Contenu réparti en **cartes distinctes** posées sur le crème, coins bien arrondis
+  (~16px), ombre douce **généreuse** (`--shadow-lg` à introduire, ~`0 14px 34px -12px`),
+  grille aérée, **sans bandeau lourd**. Look dashboard moderne. Le PDF, lui, reste
+  bordé et sobre.
 - **Badges contournés** : bordure + texte colorés, fond transparent.
 - **Cachet (tampon)** : élément signature bleu, sur les livrables de contrôle.
 
@@ -406,7 +411,9 @@ vérité, partagée entre les supports.
 - [x] Polices : **conservées** (Unbounded / Inter / Source Serif).
 - [x] Relief des cartes : **ombre douce sur le web**, **bordure conservée en PDF / impression** (§5).
 - [x] Déclinaison PDF : **inchangée** (rafraîchissement) ; les cartes PDF restent bordées.
+- [x] Parti d'exécution de l'espace artisan : **cartes flottantes** (§5, 2026-07-19).
 - [ ] Migrer les cartes web de la bordure vers l'ombre douce, sur toutes les surfaces (§5).
+- [ ] Introduire `--shadow-lg` (ombre des cartes flottantes) dans `globals.css` (§4).
 - [ ] Échelle typographique et échelle d'espacement figées.
 - [ ] Largeurs de conteneur rationalisées (aujourd'hui de `max-w-md` à `max-w-7xl`, §4).
 - [ ] Déclinaison e-mail (§1) : réaligner le fond `#E7E2D6` sur `papier-fonce`, et
@@ -469,3 +476,4 @@ Deux lignes par décision, datées, pour ne pas re-débattre le passé.
 | 2026-07-08 | Palette encre / gris / crème / **bleu** (`#35507f`), polices Unbounded + Inter + Source Serif. | Alignement sur le kit logo. L'accent passe du terracotta au bleu ; le token `terre-cuite` n'est pas renommé (dette assumée, cf. §2). |
 | 2026-07-19 | `DESIGN.md` devient la source de vérité ; `tokens.ts` source machine des couleurs + test de miroir ; règle inscrite dans `AGENTS.md`. | Coordonner landing → vitrine → espace artisan → PDF et empêcher la dérive des tokens par machine, pas par discipline. |
 | 2026-07-19 | Refonte = **rafraîchissement** : identité et polices conservées, accent bleu (token `terre-cuite` → `accent`), **cartes en ombre douce sur le web** (bordure conservée en PDF / impression). | Moderniser l'écran sans casser la lisibilité N/B du papier ni une identité récente. Deux traitements de carte selon la cible, choix produit assumé. |
+| 2026-07-19 | Espace artisan : parti **« cartes flottantes »** (arrondis marqués, ombre douce généreuse `--shadow-lg`, grille aérée, sans bandeau lourd). | Choisi parmi 5 pistes maquettées. Assume la décision ombre douce, look dashboard moderne, cohérent avec l'accent bleu. |
