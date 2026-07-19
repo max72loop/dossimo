@@ -1,4 +1,5 @@
 import type { SyntheseDossier } from "@/lib/dossier/synthese";
+import { CARTE } from "@/components/ui/cartes";
 
 /**
  * Ce qu'il reste à faire, pas ce qui menace. Les contrôles automatiques déjà
@@ -11,7 +12,7 @@ export function ActionsRestantes({ synthese }: { synthese: SyntheseDossier }) {
   const href = prochaine?.id === "controles" ? "#controle-detail" : prochaine?.id === "depot" ? "#parcours" : "#pieces";
 
   return (
-    <section className="mb-6 rounded-lg border-2 border-encre bg-blanc-casse p-5 shadow-[5px_5px_0_#e2ddd1]">
+    <section className={`mb-6 ${CARTE}`}>
       {prochaine && (
         <div className="mb-5 border-b border-filigrane pb-5">
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-tampon">À faire maintenant</p>

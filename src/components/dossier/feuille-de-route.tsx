@@ -1,4 +1,5 @@
 import { BTN_SECONDAIRE_SM } from "@/components/ui/boutons";
+import { CARTE, CARTE_INTERNE } from "@/components/ui/cartes";
 import type { FeuilleRoute, Urgence } from "@/lib/dossier/feuille-route";
 
 const dateFr = (s: string | null) =>
@@ -41,7 +42,7 @@ export function FeuilleDeRoute({
     feuille.dispositif === "maprimerenov" ? "MaPrimeRénov'" : "CEE";
 
   return (
-    <section className="mb-6 rounded-lg border-2 border-encre bg-blanc-casse p-5 shadow-[5px_5px_0_#e2ddd1]">
+    <section className={`mb-6 ${CARTE}`}>
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="font-serif text-xl font-semibold text-encre">
           Feuille de route de dépôt
@@ -51,7 +52,7 @@ export function FeuilleDeRoute({
 
       {/* Prochaine action + échéance */}
       {feuille.prochaine && (
-        <div className="mt-4 rounded border border-filigrane bg-papier/40 p-4">
+        <div className={`mt-4 ${CARTE_INTERNE}`}>
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-tampon">
             À faire maintenant
           </p>
@@ -108,7 +109,7 @@ export function FeuilleDeRoute({
 
       {/* Destinataire + pièces + téléchargement */}
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
-        <div className="rounded border border-filigrane bg-papier/40 p-4">
+        <div className={CARTE_INTERNE}>
           <p className="text-xs font-semibold uppercase tracking-[0.08em] text-ardoise">
             À transmettre à
           </p>
@@ -117,7 +118,7 @@ export function FeuilleDeRoute({
             {feuille.destinataireDetail}
           </p>
         </div>
-        <div className="rounded border border-filigrane bg-papier/40 p-4">
+        <div className={CARTE_INTERNE}>
           <p className="text-xs font-semibold uppercase tracking-[0.08em] text-ardoise">
             Pièces réunies
           </p>
