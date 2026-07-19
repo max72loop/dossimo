@@ -4,6 +4,7 @@ import { useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 
 import { BTN_PRINCIPAL, BTN_SECONDAIRE_SM } from "@/components/ui/boutons";
+import { CARTE } from "@/components/ui/cartes";
 import { creerLienDepot, revoquerLienDepot } from "@/lib/depot/actions";
 import type { PieceAttendue } from "@/lib/depot/pieces-attendues";
 
@@ -67,7 +68,7 @@ export function LienDepot({
   }
 
   return (
-    <section className="rounded-lg border border-encre/12 bg-blanc-casse p-5">
+    <section className={CARTE}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="font-display text-base font-semibold text-encre">

@@ -414,7 +414,8 @@ vérité, partagée entre les supports.
 - [x] Relief des cartes : **ombre douce sur le web**, **bordure conservée en PDF / impression** (§5).
 - [x] Déclinaison PDF : **inchangée** (rafraîchissement) ; les cartes PDF restent bordées.
 - [x] Parti d'exécution de l'espace artisan : **cartes flottantes** (§5, 2026-07-19).
-- [ ] Migrer les cartes web de la bordure vers l'ombre douce, sur toutes les surfaces (§5).
+- [x] Migrer l'**espace artisan** vers les cartes flottantes (page dossier, liste, profil, factures) — 2026-07-19.
+- [ ] Migrer la **vitrine** et l'**admin** vers les cartes flottantes (§5).
 - [ ] Introduire `--shadow-lg` (ombre des cartes flottantes) dans `globals.css` (§4).
 - [ ] Échelle typographique et échelle d'espacement figées.
 - [ ] Largeurs de conteneur rationalisées (aujourd'hui de `max-w-md` à `max-w-7xl`, §4).

@@ -24,7 +24,7 @@ export function Carte({
     <section
       id={id}
       aria-labelledby={`${id}-titre`}
-      className="scroll-mt-24 rounded-md border border-filigrane bg-blanc-casse shadow-sm"
+      className="scroll-mt-24 rounded-2xl bg-blanc-casse shadow-lg"
     >
       <header className="border-b border-filigrane px-5 py-4 sm:px-6">
         <h2 id={`${id}-titre`} className="font-serif text-lg font-semibold text-encre">

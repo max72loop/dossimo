@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
 
 import { BTN_SECONDAIRE } from "@/components/ui/boutons";
+import { CARTE_INTERNE } from "@/components/ui/cartes";
 import { uploadPiece, deletePiece } from "@/lib/piece/actions";
 import type { PieceAvecEcarts } from "@/lib/piece/get";
 import type { Comparaison } from "@/lib/piece/compare";
@@ -172,7 +173,7 @@ function PieceCard({
   }
 
   return (
-    <div className="rounded border border-filigrane bg-papier p-4">
+    <div className={CARTE_INTERNE}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex items-center gap-2">

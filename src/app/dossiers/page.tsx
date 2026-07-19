@@ -237,7 +237,7 @@ export default async function DossiersPage() {
       )}
 
       {rows.length === 0 ? (
-        <div className="mt-10 flex flex-col items-center justify-center rounded border border-dashed border-filigrane bg-blanc-casse px-6 py-16 text-center">
+        <div className="mt-10 flex flex-col items-center justify-center rounded-2xl bg-blanc-casse px-6 py-16 shadow-lg text-center">
           <FolderOpen className="h-8 w-8 text-encre-claire" strokeWidth={1.5} />
           <p className="mt-4 font-serif text-lg font-semibold text-encre">
             Aucun dossier pour l&rsquo;instant
@@ -253,7 +253,7 @@ export default async function DossiersPage() {
           </Link>
         </div>
       ) : (
-        <details className="mt-10 rounded-md border border-filigrane bg-blanc-casse">
+        <details className="mt-10 overflow-hidden rounded-2xl bg-blanc-casse shadow-lg">
           <summary className="cursor-pointer px-5 py-5 font-serif text-xl font-semibold text-encre transition hover:bg-papier-fonce/50 sm:px-6">
             Toute mon activité
             <span className="ml-3 font-sans text-sm font-normal text-ardoise">Statistiques, prix et historique des dossiers</span>
@@ -268,7 +268,7 @@ export default async function DossiersPage() {
             const ctrl = controleParDossier.get(d.id);
             const suivi = suiviParDossier.get(d.id);
             return (
-              <Link key={d.id} href={`/dossiers/${d.id}`} className="block rounded-lg border border-filigrane bg-blanc-casse p-4 shadow-sm transition active:bg-papier">
+              <Link key={d.id} href={`/dossiers/${d.id}`} className="block rounded-2xl bg-blanc-casse p-4 shadow-md transition active:bg-papier">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="font-serif text-lg font-semibold text-encre">{b ? `${b.prenom ?? ""} ${b.nom ?? ""}`.trim() || "Bénéficiaire" : "Bénéficiaire"}</p>
@@ -288,7 +288,7 @@ export default async function DossiersPage() {
             );
           })}
         </div>
-        <div className="mt-8 hidden overflow-hidden rounded border border-filigrane bg-blanc-casse shadow-sm md:block">
+        <div className="mt-8 hidden overflow-hidden rounded-2xl bg-blanc-casse shadow-lg md:block">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead className="border-b border-filigrane bg-papier-fonce text-xs text-ardoise">

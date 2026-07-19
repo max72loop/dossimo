@@ -34,7 +34,7 @@ export default async function FacturesPage() {
       )}
 
       {factures.length === 0 ? (
-        <div className="mt-10 flex flex-col items-center justify-center rounded border border-dashed border-filigrane bg-blanc-casse px-6 py-16 text-center">
+        <div className="mt-10 flex flex-col items-center justify-center rounded-2xl bg-blanc-casse px-6 py-16 shadow-lg text-center">
           <ReceiptText className="h-8 w-8 text-encre-claire" strokeWidth={1.5} />
           <p className="mt-4 font-serif text-lg font-semibold text-encre">
             Aucune facture
@@ -44,7 +44,7 @@ export default async function FacturesPage() {
           </p>
         </div>
       ) : (
-        <ul className="mt-8 divide-y divide-filigrane rounded border border-filigrane bg-blanc-casse">
+        <ul className="mt-8 divide-y divide-filigrane overflow-hidden rounded-2xl bg-blanc-casse shadow-lg">
           {factures.map((f) => (
             <li key={f.id} className="flex items-center justify-between gap-4 px-4 py-3">
               <div className="min-w-0">
