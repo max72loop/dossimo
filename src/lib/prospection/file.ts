@@ -8,7 +8,11 @@ import type {
   StatutMessageProspection,
 } from "@/lib/database.types";
 import { dansLaFenetre, jourParis, plafondDuJour } from "@/lib/prospection/cadence";
-import { corpsPourProspect, lienDesinscription } from "@/lib/prospection/message";
+import {
+  corpsHtmlPourProspect,
+  corpsPourProspect,
+  lienDesinscription,
+} from "@/lib/prospection/message";
 import { envoyerMessage } from "@/lib/prospection/envoi";
 
 /**
@@ -251,7 +255,7 @@ export async function envoyerProchain(
   // fermée) rattrape aujourd'hui, sous le plafond du jour.
   const { data: candidat } = await supabase
     .from("prospection_messages")
-    .select("*, prospects(email, unsubscribe_token)")
+    .select("*, prospects(email, unsubscribe_token, prenom, source)")
     .eq("campagne_id", campagne.id)
     .eq("statut", "valide")
     .lte("scheduled_on", jour)
@@ -262,7 +266,12 @@ export async function envoyerProchain(
   if (!candidat) return { envoye: false, motif: "file vide" };
 
   const message = candidat as MessageProspection & {
-    prospects: { email: string; unsubscribe_token: string } | null;
+    prospects: {
+      email: string;
+      unsubscribe_token: string;
+      prenom: string | null;
+      source: string;
+    } | null;
   };
   const prospect = message.prospects;
   if (!prospect) return { envoye: false, motif: "prospect introuvable" };
@@ -282,6 +291,7 @@ export async function envoyerProchain(
     to: prospect.email,
     objet: message.objet,
     corps: message.corps,
+    corpsHtml: corpsHtmlPourProspect(prospect),
     lienDesinscription: lienDesinscription(prospect.unsubscribe_token),
   });
 

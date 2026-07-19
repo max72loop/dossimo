@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  corpsHtmlPourProspect,
   corpsPourProspect,
   nettoyerPrenom,
   rendre,
@@ -62,5 +63,36 @@ describe("corpsPourProspect", () => {
     // LCEN art. 6 : l'expéditeur doit être identifiable.
     expect(corps).toContain("Max Landry (EI)");
     expect(corps).toContain("non affilié à l'Anah");
+  });
+});
+
+describe("corpsHtmlPourProspect — version HTML à la marque", () => {
+  const prospect = {
+    prenom: "jean",
+    source: "annuaire public des professionnels RGE",
+    unsubscribe_token: "tok-123",
+  };
+
+  it("rend un HTML complet avec le bouton et le lien de désinscription", () => {
+    const html = corpsHtmlPourProspect(prospect);
+
+    expect(html).toContain("Bonjour Jean,");
+    // Le lien démo doit être dans un href cliquable, pas en URL nue.
+    expect(html).toContain('href="');
+    expect(html).toContain("/demo?p=tok-123");
+    expect(html).toContain("/desinscription/tok-123");
+    expect(html).toContain("Tester en 2 minutes");
+    expect(html).toContain(prospect.source);
+    // Aucune variable de gabarit ne doit subsister.
+    expect(html).not.toMatch(/\{\{\s*\w+\s*\}\}/);
+  });
+
+  it("échappe le HTML des valeurs variables (pas d'injection via la source)", () => {
+    const html = corpsHtmlPourProspect({
+      ...prospect,
+      source: 'annuaire <script>alert(1)</script>',
+    });
+    expect(html).not.toContain("<script>alert(1)</script>");
+    expect(html).toContain("&lt;script&gt;");
   });
 });

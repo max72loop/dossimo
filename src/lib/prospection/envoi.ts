@@ -9,9 +9,9 @@ import "server-only";
  * d'application, aucun SMTP, aucune dépendance de plus, et l'envoi est signé
  * DKIM par Google dès que le domaine est authentifié dans la console Admin.
  *
- * Le message part en `text/plain`. Pas de HTML, pas de pixel de suivi : ce qui
- * distingue un envoi 1:1 d'un publipostage aux yeux d'un filtre anti-spam, c'est
- * exactement ça.
+ * Le message part en multipart : une version HTML (design à la marque) et son
+ * repli `text/plain`. Le texte reste la source qui compte pour un filtre anti-spam
+ * (et le seul rendu si le HTML est absent) ; pas de pixel de suivi, jamais.
  */
 
 export type ResultatEnvoi = { ok: true } | { ok: false; erreur: string };
@@ -20,6 +20,8 @@ export async function envoyerMessage(params: {
   to: string;
   objet: string;
   corps: string;
+  /** Version HTML (optionnelle). Sans elle, l'envoi reste en texte seul. */
+  corpsHtml?: string;
   /** Alimente l'en-tête List-Unsubscribe : le bouton natif « Se désabonner » de Gmail. */
   lienDesinscription: string;
 }): Promise<ResultatEnvoi> {
@@ -39,6 +41,7 @@ export async function envoyerMessage(params: {
         to: params.to,
         subject: params.objet,
         body: params.corps,
+        html: params.corpsHtml,
         unsubscribeUrl: params.lienDesinscription,
       }),
       cache: "no-store",
