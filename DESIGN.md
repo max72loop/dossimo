@@ -41,6 +41,34 @@ le test refuse la dérive. Les polices et les rayons restent des miroirs manuels
 > dans les PDF, qui n'ont que Helvetica. La *cohérence de marque* dans les PDF passe
 > par la couleur, la mise en page et le cachet, pas par la police.
 
+### Le troisième support : l'e-mail
+
+Il n'y a pas deux cibles de rendu mais **trois** : web, PDF, et **e-mail**. L'e-mail
+a ses propres contraintes dures, incompatibles avec les deux autres :
+
+- CSS **inline** obligatoire, mise en page en **tables**, largeur **600px**.
+- **Pas de webfont** (comme le PDF) : pile système
+  `-apple-system, 'Segoe UI', Roboto, Helvetica, Arial`. Unbounded absent.
+- Les **clients sombres** peuvent réinverser les couleurs ; Gmail **rogne** les
+  e-mails trop lourds.
+
+État actuel : le gabarit de marque vit dans
+[`src/lib/prospection/message.ts`](src/lib/prospection/message.ts) (`GABARIT_HTML`) :
+bandeau encre + logo nuit (`/brand/dossimo-logo-nuit.png`), accent bleu, 3 étapes,
+encadré offre, bouton, pied légal.
+
+Deux dettes à connaître, non encore sous garde-fou :
+
+- **Couleurs en hex brut**, non miroitées depuis `tokens.ts` (l'e-mail ne peut pas
+  importer le TS). Pire : le fond extérieur `#E7E2D6` **n'est même pas un token**,
+  c'est une troisième crème parasite, à réaligner sur `papier-fonce` (`#eae6dc`).
+- **Copie en double source** : le HTML (`GABARIT_HTML`) et le texte
+  (`prospection_campagnes.corps`, en base). Toute modif de fond (offre, prix,
+  DOSSIMO50) se répercute **aux deux**.
+
+Pied légal **obligatoire** (LCEN art. 6 + lien de désinscription) via
+`mentionsLegales()` : c'est ce qui rend l'envoi licite, pas de la décoration.
+
 ---
 
 ## 2. Palette
@@ -86,16 +114,80 @@ Quatre familles, câblées dans `layout.tsx` puis exposées en tokens `@theme` :
 | `--font-sans` | Inter | Corps de texte, UI |
 | `--font-mono` | Geist Mono | Données : références, dates, montants (avec `tabular-nums`) |
 
----
+### Contenu éditorial long (guides, articles)
 
-## 4. Formes, espacement, mouvement
+La surface `/guides`
+([`SeoGuidePage`](src/components/seo/guide-page.tsx)) est de la **prose longue**, au
+besoin typographique distinct de l'app :
+
+- Largeur : coquille `max-w-4xl`, mais **texte `max-w-3xl`** (lecture confortable,
+  viser ~65 caractères par ligne).
+- Titres en **serif** (Source Serif), sur-titre en capitales espacées (`tampon`), fil
+  d'Ariane, mention « Vérifié le … ».
+- Données structurées (JSON-LD Article + BreadcrumbList) : le SEO fait partie du
+  design de la page.
+- À figer (§8) : échelle de titres de la prose (h2/h3/h4), style des liens dans le
+  corps, sommaire pour les guides longs.
+
+### Système spatial
+
+C'est le troisième pilier, à égalité avec la couleur et la typo : c'est lui qui
+fait qu'une landing et une page dossier « se ressemblent » ou non, même palette
+identique.
+
+- **Unité de base** : l'échelle Tailwind (multiples de 4px). On **reste sur
+  l'échelle** ; pas de valeur arbitraire (`p-[13px]`, `mt-[7px]`).
+- **Largeurs de conteneur** : aujourd'hui **dispersées** de `max-w-md` à `max-w-7xl`,
+  à rationaliser (cf. §8). État de facto observé, par surface :
+  - Auth / dépôt bénéficiaire : `max-w-md`
+  - Contenu éditorial (landing, guides) : `max-w-2xl` / `max-w-3xl` (texte lisible,
+    viser ~65 caractères par ligne)
+  - Formulaires artisan : `max-w-5xl`
+  - Page dossier (dense) : `max-w-6xl`
+- **Mobile-first** : le bénéficiaire dépose au téléphone, l'artisan photographie
+  depuis le chantier. Toute vue se conçoit d'abord en étroit ; points de rupture
+  Tailwind (`sm/md/lg/xl`) par-dessus, jamais l'inverse.
+- **Rythme vertical** : espacement inter-sections cohérent (échelle à figer, §8).
+
+### Formes
 
 - **Rayons** : `--radius-sm 6px`, `--radius 8px`, `--radius-md 12px`. Arrondis doux,
   alignés sur l'icône.
 - **Ombres** : `--shadow-sm` (0 1px 2px) et `--shadow-md` (0 6px 16px), très
   discrètes. Le relief vient surtout des bordures, pas des ombres.
-- **Mouvement** : sobre. `stepIn` (fondu montant 0.25s) pour l'apparition d'étapes.
-  Toute animation respecte `prefers-reduced-motion: reduce`.
+
+### Élévation et surfaces flottantes
+
+Échelle de z-index **de facto**, à respecter (posée à la main aujourd'hui, à
+formaliser en §8) :
+
+| Niveau | z | Exemples |
+|---|---|---|
+| Contenu superposé | `z-10` | badges, tooltip d'aide (`oblige-suivi.tsx`) |
+| En-tête / barre collante | `z-40` | header app et vitrine, barre CTA mobile |
+| Overlay / menu / flottant | `z-50` | `overlay-progression`, menu mobile, aide flottante |
+| Skip-link | `60` | toujours au-dessus de tout (`globals.css`) |
+
+Règle : plus une surface est haute, plus son ombre est marquée. L'en-tête collant est
+translucide + `backdrop-blur`, filet en bas. Aucune valeur de z hors de cette échelle.
+
+### Mouvement
+
+- Sobre. `stepIn` (fondu montant 0.25s) pour l'apparition d'étapes. Toute animation
+  respecte `prefers-reduced-motion: reduce`.
+
+### Responsive et tactile
+
+Dossimo est un produit **terrain** : le bénéficiaire photographie ses pièces au
+téléphone (page de dépôt `max-w-md`, bouton « Choisir un fichier ou photographier »),
+l'artisan saisit depuis le chantier.
+
+- **Cibles tactiles** : zone cliquable confortable au doigt (les actions visent déjà
+  `h-11`) ; ne pas descendre en dessous sur mobile.
+- **Patterns mobiles assumés** : menu plein écran (`site-menu.tsx`), barre CTA
+  collante en bas sur la vitrine (`md:hidden`).
+- **Tables et formulaires** doivent tenir en étroit : stratégie de repli des tables
+  encore à figer (§8, §5).
 
 ---
 
@@ -109,6 +201,98 @@ Quatre familles, câblées dans `layout.tsx` puis exposées en tokens `@theme` :
   direction des PDF (`pdf-theme.ts`) comme de l'espace artisan.
 - **Badges contournés** : bordure + texte colorés, fond transparent.
 - **Cachet (tampon)** : élément signature bleu, sur les livrables de contrôle.
+
+### Champs et formulaires
+
+Le cœur du produit (la saisie unique) a **déjà un système de champs**, à utiliser tel
+quel : [`src/components/dossier/fields.tsx`](src/components/dossier/fields.tsx) —
+`TextField`, `SelectField`, `FieldShell`, `Section`.
+
+- Anatomie d'un champ : label + astérisque si requis, puis le contrôle, puis **soit**
+  une aide (`hintClass`) **soit** une erreur (`errorClass`), jamais les deux.
+- États de l'input : repos, focus (`focus:border-tampon` + ring), invalide
+  (`aria-[invalid=true]:border-erreur`), désactivé (`disabled:bg-papier-fonce`).
+- Motif « valeur assistée » : un champ pré-rempli confirmé s'affiche en encadré
+  succès avec un bouton « Modifier ».
+
+**Règle : passer par ces composants, ne jamais réécrire un input à la main.** Deux
+contournements existent déjà et sont à résorber (un `const input = "…"` recopié dans
+`oblige-suivi.tsx` et `issue-dossier.tsx`) : ils divergent en hauteur, focus et états.
+
+### États (vide, chargement, erreur)
+
+- **Chargement** : [`Spinner`](src/components/ui/spinner.tsx), indéterminé, hérite de
+  `currentColor`, `motion-reduce` géré. Progression connue : `overlay-progression`.
+- **Vide** et **erreur** : pas encore de convention (à trancher, §8). Principe posé :
+  un vide n'est jamais un blanc (message + une action de sortie) ; une erreur se dit
+  et propose une reprise. C'est la traduction visuelle de « les erreurs ne sont jamais
+  avalées en silence » (`AGENTS.md`).
+
+### Logo et actifs de marque
+
+Fichiers dans [`public/brand/`](public/brand/). Deux variantes de mot-signe, **une par
+fond** :
+
+- `dossimo-logo-nuit.png` : version claire, **sur fond encre** (bandeau PDF via
+  [`logo.ts`](src/lib/pack/logo.ts), en-tête e-mail).
+- `dossimo-logo-encre.png` / `.svg` : version sombre, **sur fond crème** (web).
+- Icônes : `dossimo-icon.png` / `dossimo-icon-clair.png`. Favicon, apple-icon et
+  images sociales : `src/app/icon.png`, `apple-icon.png`, `opengraph-image.tsx`,
+  `twitter-image.tsx`.
+
+**Règle : jamais le mauvais logo sur le mauvais fond** (nuit sur clair, encre sur
+sombre). Zone de protection et taille minimale : à figer (§8).
+
+### Iconographie et emoji
+
+Jeu **unique** : `lucide-react` (déjà dans ~28 fichiers, c'est le standard de fait).
+
+- Une icône décorative est `aria-hidden` ; sinon elle porte un intitulé accessible.
+- Taille alignée sur le texte (`h-4 w-4` par défaut), même épaisseur de trait.
+- **Pas d'emoji dans l'UI produit.** Les emoji posés en dur sont une dette à résorber
+  (« 🔒 » et « ↓ » dans la page dossier, « › » dans `ParcoursSelector`).
+- **En PDF, lucide (SVG) n'existe pas** : les repères y sont dessinés (pastilles,
+  cachet), jamais des emoji.
+
+### Structure de page (shells, en-tête, navigation, pied)
+
+Plusieurs coquilles : vitrine, espace artisan
+([`espace-artisan-shell.tsx`](src/components/dossier/espace-artisan-shell.tsx)),
+auth (`(auth)/layout.tsx`, centré `max-w-md`), admin, legal.
+
+- **En-tête** : collant (`sticky top-0 z-40`), translucide + `backdrop-blur`, filet
+  en bas. **Deux traitements assumés** : app plus sobre (`border-filigrane`), vitrine
+  plus affirmée (`border-b-2 border-encre`, [`site-header.tsx`](src/components/landing/site-header.tsx)).
+- **Navigation mobile** : menu plein écran ([`site-menu.tsx`](src/components/landing/site-menu.tsx),
+  `role="dialog"`), et une barre CTA collante en bas sur la vitrine mobile.
+- **Pied** : porte la mention légale obligatoire (aujourd'hui répétée, à centraliser).
+- **CTA vitrine ≠ actions app** : la vitrine a ses propres boutons (plus hauts, plus
+  arrondis), l'app utilise `boutons.ts`. Divergence assumée, à garder explicite.
+
+### Tables et densité de données
+
+Grande partie du produit, dense et tabulaire : listes dossiers / factures, admin
+(pilotage, prospection, données). Conventions à tenir :
+
+- **Alignement** : texte à gauche, **nombres à droite en `tabular-nums`**.
+- En-tête discret, ligne active / survol légère, densité constante.
+- **Responsive** : une table ne tient pas sur un téléphone. Stratégie à figer (§8) :
+  cartes empilées, colonnes prioritaires, ou scroll horizontal maîtrisé.
+
+### Retours d'action (messages et bandeaux)
+
+Pas de système de toast : tout est **inline**, au plus près de l'action. Convention de
+facto à tenir :
+
+- **Succès / info** : message `role="status"` sous l'action (`issue-dossier.tsx`,
+  `oblige-suivi.tsx`).
+- **Erreur** : `role="alert"` (`lead-form.tsx`).
+- **Bandeau de page** : encart coloré en tête pour un événement de navigation
+  (« Paiement confirmé… », « Code parrain… »), avec la sémantique du §2.
+- Chargement d'une action : le [`Spinner`](src/components/ui/spinner.tsx) maison,
+  **pas** `Loader2` de lucide (un doublon traîne dans `demo-guide.tsx`, à résorber).
+
+À trancher (§8) : quand un toast se justifie plutôt qu'un inline, et son placement.
 
 ---
 
@@ -124,6 +308,20 @@ Quatre familles, câblées dans `layout.tsx` puis exposées en tokens `@theme` :
   indépendant d'aide à la préparation de dossier, non affilié à l'Anah ni à France
   Rénov'. » (CLAUDE.md §2).
 - Ponctuation naturelle : éviter les tirets cadratins dans la copie.
+
+### Formats de données
+
+Le format d'un montant ou d'une date **est** une décision de design : une seule
+vérité, partagée entre les supports.
+
+- **Euro** : `formatEuros` ([`src/lib/format/montant.ts`](src/lib/format/montant.ts))
+  = « 1 200,00 € » (séparateur insécable, deux décimales toujours). En PDF,
+  `formatEurosPdf` : mêmes valeurs, espaces insécables normalisées (sinon Helvetica
+  les rend « / »). Une source, deux rendus.
+- **Valeur inconnue** : `"—"`, jamais un chiffre inventé (`AGENTS.md`).
+- **Chiffres en colonne** : `tabular-nums` (dates, montants, compteurs).
+- **Date** : format à unifier. L'écran pose « 05/05/2026 », mais les PDF récents
+  posent « 05.05.2026 » en mono. Divergence à trancher (§8).
 
 ---
 
@@ -145,8 +343,23 @@ Quatre familles, câblées dans `layout.tsx` puis exposées en tokens `@theme` :
 - [ ] Palette cible (et sort de l'alias `terre-cuite`).
 - [ ] Couple de polices cible (display + corps).
 - [ ] Échelle typographique et échelle d'espacement figées.
+- [ ] Largeurs de conteneur rationalisées (aujourd'hui de `max-w-md` à `max-w-7xl`, §4).
 - [ ] Traitement des cartes / du relief (bordure vs ombre).
 - [ ] Déclinaison PDF de la nouvelle direction (dans les contraintes du §1).
+- [ ] Déclinaison e-mail (§1) : réaligner le fond `#E7E2D6` sur `papier-fonce`, et
+      décider si un garde-fou vérifie que ses hex appartiennent bien à la palette.
+- [ ] Format de date unifié web / PDF (« 05/05/2026 » vs « 05.05.2026 », §6).
+- [ ] Convention des états vide / erreur (§5).
+- [ ] Résorber les inputs écrits à la main hors de `fields.tsx` (§5).
+- [ ] Logo : zone de protection et taille minimale (§5).
+- [ ] Formaliser l'échelle de z-index (§4).
+- [ ] Éliminer les emoji de l'UI produit au profit de lucide (§5).
+- [ ] Centraliser la mention légale du pied de page (§5).
+- [ ] Stratégie responsive des tables (§5).
+- [ ] Convention toast vs message inline, et son placement (§5).
+- [ ] Résorber le doublon de spinner (`Spinner` maison vs `Loader2`, §5).
+- [ ] Cibles tactiles minimales sur mobile (§4).
+- [ ] Échelle de titres et style de liens de la prose éditoriale (§3).
 
 ---
 
