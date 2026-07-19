@@ -418,7 +418,8 @@ vérité, partagée entre les supports.
 - [x] Migrer l'**espace artisan** vers les cartes flottantes (page dossier, liste, profil, factures) — 2026-07-19.
 - [x] Migrer l'**admin** et les pages **guides** vers les cartes flottantes — 2026-07-19.
 - [x] **Landing** : direction « bandeau encre » choisie parmi 4 pistes (hero fond encre, accent clair, carte rapport flottante) ; hero implémenté 2026-07-19.
-- [ ] Décliner le parti « bandeau encre » sur les sections suivantes de la home (§5).
+- [x] Décliner le parti sur les sections de la home (comparaison, garanties, tarifs, contact) — 2026-07-19.
+- [ ] Consolider la redondance de tokens : `tampon` et `accent` valent tous deux `#35507f` (et `info`). Fusionner vers `accent`.
 - [ ] Introduire `--shadow-lg` (ombre des cartes flottantes) dans `globals.css` (§4).
 - [ ] Échelle typographique et échelle d'espacement figées.
 - [ ] Largeurs de conteneur rationalisées (aujourd'hui de `max-w-md` à `max-w-7xl`, §4).

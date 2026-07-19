@@ -378,7 +378,7 @@ function Difference() {
         </div>
 
         <div className="mt-12 grid gap-5 md:grid-cols-2">
-          <div className="border border-filigrane bg-blanc-casse p-7">
+          <div className="rounded-2xl bg-blanc-casse p-7 shadow-lg">
             <h3 className="label text-ardoise">Avec un mandataire</h3>
             <ul className="mt-5 space-y-3">
               {mandataire.map((m) => (
@@ -389,7 +389,7 @@ function Difference() {
               ))}
             </ul>
           </div>
-          <div className="border border-filigrane border-l-4 border-l-accent bg-blanc-casse p-7 shadow-sm">
+          <div className="rounded-2xl border-l-4 border-l-accent bg-blanc-casse p-7 shadow-lg">
             <h3 className="label flex items-center gap-2 text-accent">
               <Stamp className="h-4 w-4" strokeWidth={1.5} />
               Avec Dossimo
@@ -464,7 +464,7 @@ function Etapes() {
             </div>
           ))}
         </div>
-        <div className="mt-8 flex flex-col items-start justify-between gap-4 border-l-4 border-l-tampon bg-info-bg px-5 py-4 sm:flex-row sm:items-center">
+        <div className="mt-8 flex flex-col items-start justify-between gap-4 rounded-xl border-l-4 border-l-accent bg-info-bg px-5 py-4 sm:flex-row sm:items-center">
           <p className="text-sm leading-relaxed text-encre">
             <span className="font-semibold">Votre seul effort :</span> relire le rapport, puis déposer vous-même le dossier avec votre client.
           </p>
@@ -625,7 +625,7 @@ function Reassurance() {
           </div>
           <div className="grid gap-4 sm:grid-cols-3">
             {garanties.map((garantie) => (
-              <div key={garantie.title} className="border border-filigrane bg-blanc-casse p-5">
+              <div key={garantie.title} className="rounded-2xl bg-blanc-casse p-5 shadow-md">
                 <garantie.icon className="h-5 w-5 text-tampon" strokeWidth={1.5} />
                 <h3 className="mt-3 font-serif text-lg font-semibold text-encre">{garantie.title}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-ardoise">{garantie.body}</p>
@@ -676,10 +676,10 @@ function Pricing({ grille }: { grille: GrilleAffichee | null }) {
   return (
     <section id="tarifs" className="py-16 sm:py-20">
       <Shell>
-        <div className="border border-encre bg-encre px-6 py-12 sm:px-14 sm:py-14">
+        <div className="rounded-2xl bg-encre px-6 py-12 shadow-lg sm:px-14 sm:py-14">
           <div>
             <div className="max-w-3xl">
-              <p className="label text-papier/70">Tarification transparente</p>
+              <p className="label text-accent-clair">Tarification transparente</p>
               <h2 className="mt-5 font-serif text-3xl font-semibold tracking-tight text-papier sm:text-[2.25rem] sm:leading-tight">
                 Un paiement fixé à l&rsquo;avance,{" "}
                 <span className="text-blanc-casse">
@@ -693,7 +693,7 @@ function Pricing({ grille }: { grille: GrilleAffichee | null }) {
                 prime de votre client : elle lui revient entière, là où un mandataire
                 s&apos;intercale et en capte une partie.
               </p>
-              <p className="mt-5 inline-flex flex-wrap items-center gap-2 border border-papier/30 bg-papier/10 px-4 py-3 text-sm font-semibold text-papier">
+              <p className="mt-5 inline-flex flex-wrap items-center gap-2 rounded-lg border border-papier/30 bg-papier/10 px-4 py-3 text-sm font-semibold text-papier">
                 Offre de lancement : code <span className="font-mono text-blanc-casse">DOSSIMO50</span>
                 · 50 % sur le premier dossier
                 {grille ? ` · dès ${prixLancement(grille)} au lieu de ${grille.minLabel}` : ""}
@@ -710,7 +710,7 @@ function Pricing({ grille }: { grille: GrilleAffichee | null }) {
                   {grille.lignes.map((ligne) => (
                     <li
                       key={`${ligne.name}-${ligne.priceLabel}`}
-                      className="border border-papier/25 bg-papier/[0.06] p-5"
+                      className="rounded-xl border border-papier/25 bg-papier/[0.06] p-5"
                     >
                       <p className="text-sm font-medium text-papier/70">{ligne.name}</p>
                       <p className="mt-3 font-mono text-3xl font-semibold text-blanc-casse">
@@ -812,7 +812,7 @@ function Contact() {
             </a>
           </p>
         </div>
-        <div className="border border-filigrane border-t-2 border-t-encre bg-blanc-casse p-6 shadow-sm sm:p-7">
+        <div className="rounded-2xl bg-blanc-casse p-6 shadow-lg sm:p-7">
           <LeadForm />
         </div>
       </div>
