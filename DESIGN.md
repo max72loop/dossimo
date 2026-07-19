@@ -97,8 +97,9 @@ actions. Sobre, net.
 |---|---|---|
 | `encre` | `#16202b` | Texte principal, aplats sombres (bandeaux) |
 | `tampon` | `#35507f` | Bleu de marque : liens, accents, cachet |
-| `terre-cuite` → `accent` | `#35507f` | **Décidé (2026-07-19)** : l'accent reste le bleu, on renomme le token `terre-cuite` en `accent` partout (`tokens.ts`, `globals.css`, `boutons.ts`, `fields.tsx`). Tâche mécanique à faire, §8. |
-| `terre-cuite-hover` | `#2a3f65` | Survol de l'action principale |
+| `accent` | `#35507f` | Bleu de marque : liens, actions, cachet (ex-token `terre-cuite`, renommé le 2026-07-19). |
+| `accent-hover` | `#2a3f65` | Survol de l'action principale. |
+| `accent-clair` | `#9db0cf` | Accent **lisible sur fond encre** (le bleu foncé y manque de contraste). Sur-titre PDF, e-mail, hero du landing. |
 | `papier` | `#f3f0e9` | Fond de page (crème) |
 | `blanc-casse` | `#fbf9f3` | Fond de carte |
 | `papier-fonce` | `#eae6dc` | Fond neutre secondaire, survols |
@@ -416,7 +417,8 @@ vérité, partagée entre les supports.
 - [x] Parti d'exécution de l'espace artisan : **cartes flottantes** (§5, 2026-07-19).
 - [x] Migrer l'**espace artisan** vers les cartes flottantes (page dossier, liste, profil, factures) — 2026-07-19.
 - [x] Migrer l'**admin** et les pages **guides** vers les cartes flottantes — 2026-07-19.
-- [ ] **Landing** : à traiter dans une passe design dédiée, pas un simple swap de cartes (ses encarts à filet d'accent et à bordure d'emphase sont des choix de hiérarchie délibérés) — §5.
+- [x] **Landing** : direction « bandeau encre » choisie parmi 4 pistes (hero fond encre, accent clair, carte rapport flottante) ; hero implémenté 2026-07-19.
+- [ ] Décliner le parti « bandeau encre » sur les sections suivantes de la home (§5).
 - [ ] Introduire `--shadow-lg` (ombre des cartes flottantes) dans `globals.css` (§4).
 - [ ] Échelle typographique et échelle d'espacement figées.
 - [ ] Largeurs de conteneur rationalisées (aujourd'hui de `max-w-md` à `max-w-7xl`, §4).
@@ -481,3 +483,4 @@ Deux lignes par décision, datées, pour ne pas re-débattre le passé.
 | 2026-07-19 | `DESIGN.md` devient la source de vérité ; `tokens.ts` source machine des couleurs + test de miroir ; règle inscrite dans `AGENTS.md`. | Coordonner landing → vitrine → espace artisan → PDF et empêcher la dérive des tokens par machine, pas par discipline. |
 | 2026-07-19 | Refonte = **rafraîchissement** : identité et polices conservées, accent bleu (token `terre-cuite` → `accent`), **cartes en ombre douce sur le web** (bordure conservée en PDF / impression). | Moderniser l'écran sans casser la lisibilité N/B du papier ni une identité récente. Deux traitements de carte selon la cible, choix produit assumé. |
 | 2026-07-19 | Espace artisan : parti **« cartes flottantes »** (arrondis marqués, ombre douce généreuse `--shadow-lg`, grille aérée, sans bandeau lourd). | Choisi parmi 5 pistes maquettées. Assume la décision ombre douce, look dashboard moderne, cohérent avec l'accent bleu. |
+| 2026-07-19 | Landing : parti **« bandeau encre »** (hero fond encre, titre clair, accent en bleu clair, carte rapport flottante) ; nouveau token `accent-clair` (#9db0cf) pour l'accent lisible sur encre. | Choisi parmi 4 pistes. Ancre le landing dans l'identité encre partagée avec le PDF et l'e-mail ; le token solde un bleu clair qui traînait en dur à trois endroits. |

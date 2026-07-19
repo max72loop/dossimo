@@ -21,6 +21,9 @@ export const TOKENS = {
   // bleu. `accent-hover` est le survol de l'action principale.
   accent: "#35507f",
   "accent-hover": "#2a3f65",
+  // Accent lisible SUR fond encre (le bleu foncé y manque de contraste). Déjà en
+  // usage dans le PDF (sur-titre) et l'e-mail ; promu en token le 2026-07-19.
+  "accent-clair": "#9db0cf",
   papier: "#f3f0e9",
   "blanc-casse": "#fbf9f3",
   ardoise: "#5b636d",

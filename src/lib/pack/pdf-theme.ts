@@ -22,7 +22,7 @@ export const COLORS = {
   card: TOKENS["blanc-casse"], // fond de carte
   brand: TOKENS.encre,
   onInk: "#ffffff", // spécifique PDF : texte sur bandeau encre
-  eyebrow: "#9db0cf", // spécifique PDF : sur-titre clair sur encre
+  eyebrow: TOKENS["accent-clair"], // sur-titre clair sur encre (accent lisible sur foncé)
   accent: TOKENS.tampon, // filet et liens (bleu de marque)
   tampon: TOKENS.tampon,
   tamponSoft: TOKENS["info-bg"],

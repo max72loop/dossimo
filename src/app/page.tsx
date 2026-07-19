@@ -100,38 +100,34 @@ function Shell({ children }: { children: React.ReactNode }) {
 /* ------------------------------------------------------------------ Hero */
 function Hero() {
   return (
-    <section className="relative overflow-hidden border-b border-filigrane bg-blanc-casse">
-      <div className="pointer-events-none absolute inset-0 opacity-[0.55] [background-image:linear-gradient(to_right,rgba(226,221,209,0.9)_1px,transparent_1px),linear-gradient(to_bottom,rgba(226,221,209,0.9)_1px,transparent_1px)] [background-size:48px_48px]" />
-      <div className="relative mx-auto grid max-w-[1280px] items-center gap-9 px-5 py-10 sm:px-8 sm:py-12 lg:grid-cols-[1fr_0.9fr] lg:py-14">
+    <section className="relative bg-encre">
+      <div className="relative mx-auto grid max-w-[1280px] items-center gap-9 px-5 py-14 sm:px-8 sm:py-16 lg:grid-cols-[1fr_0.9fr]">
         <div>
-          <p className="inline-flex items-center gap-2 border-y border-encre py-2 font-mono text-[11px] uppercase tracking-[0.16em] text-encre">
-            <span className="h-2 w-2 rounded-full bg-accent" />
+          <p className="inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.16em] text-accent-clair">
+            <span className="h-2 w-2 rounded-full bg-accent-clair" />
             MaPrimeRénov&rsquo; & CEE · pour les artisans RGE
           </p>
 
-          <h1 className="mt-6 max-w-3xl font-serif text-[2.65rem] font-semibold leading-[1.02] tracking-tight text-encre sm:text-[3.65rem] lg:text-[4.1rem]">
+          <h1 className="mt-6 max-w-3xl font-serif text-[2.65rem] font-semibold leading-[1.02] tracking-tight text-blanc-casse sm:text-[3.65rem] lg:text-[4.1rem]">
             Un dossier de prime, c&rsquo;est des heures de paperasse.{" "}
-            <span className="relative text-tampon">
-              Dossimo le monte à votre place.
-              <span className="absolute -bottom-2 left-0 h-1 w-full bg-accent" />
-            </span>
+            <span className="text-accent-clair">Dossimo le monte à votre place.</span>
           </h1>
 
-          <p className="mt-6 max-w-xl text-lg leading-relaxed text-ardoise">
+          <p className="mt-6 max-w-xl text-lg leading-relaxed text-papier/70">
             Envoyez votre devis, ou prenez-le en photo depuis le chantier. Dossimo
             recopie le client, les montants et les données techniques, contrôle les
             mentions obligatoires, la chronologie et la validité RGE, puis vous sort
             le pack complet prêt à déposer.
           </p>
 
-          <p className="mt-4 max-w-xl text-lg font-medium leading-relaxed text-encre">
+          <p className="mt-4 max-w-xl text-lg font-medium leading-relaxed text-blanc-casse">
             Votre seul effort : relire et déposer.
           </p>
 
           <ul className="mt-6 grid max-w-xl gap-2 sm:grid-cols-2" aria-label="Ce que Dossimo vous remet">
             {["Récapitulatif client prérempli", "Checklist des pièces", "Rapport de contrôle avant dépôt", "Monté en minutes, pas en heures"].map((point) => (
-              <li key={point} className="flex items-center gap-2 text-sm font-medium text-encre">
-                <CheckCircle2 className="h-4 w-4 shrink-0 text-succes" strokeWidth={1.5} />
+              <li key={point} className="flex items-center gap-2 text-sm font-medium text-papier">
+                <CheckCircle2 className="h-4 w-4 shrink-0 text-accent-clair" strokeWidth={1.5} />
                 {point}
               </li>
             ))}
@@ -140,43 +136,39 @@ function Hero() {
           <div className="mt-7">
             <Link
               href="/demo"
-              className={`group inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-accent px-6 py-3 text-sm font-semibold text-blanc-casse shadow-md transition-colors hover:bg-accent-hover sm:w-auto ${FOCUS}`}
+              className="group inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-accent px-6 py-3 text-sm font-semibold text-blanc-casse shadow-md transition-colors hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-clair sm:w-auto"
             >
               {CTA_DEMO}
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </Link>
           </div>
 
-          <p className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-ardoise">
-            <CheckCircle2 className="h-4 w-4 text-succes" strokeWidth={1.5} />
+          <p className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-papier/60">
+            <CheckCircle2 className="h-4 w-4 text-accent-clair" strokeWidth={1.5} />
             Deux minutes suffisent
-            <span className="text-filigrane">·</span>
+            <span className="text-papier/25">·</span>
             aucun paiement aujourd&rsquo;hui
-            <span className="text-filigrane">·</span>
+            <span className="text-papier/25">·</span>
             sans engagement
           </p>
         </div>
 
         <HeroVisual />
       </div>
+      <div className="h-1 bg-accent" />
     </section>
   );
 }
 
 function HeroVisual() {
   return (
-    <div className="relative border border-encre bg-encre p-3 shadow-[10px_10px_0_#35507f] lg:mr-3">
-      <div className="border border-papier/25 p-5 sm:p-7">
-        <div className="mb-6 flex items-center justify-between border-b border-papier/25 pb-4 font-mono text-[11px] uppercase tracking-[0.13em] text-papier/65">
-          <span>Contrôle avant dépôt</span><span>DOS-2026-0148</span>
-        </div>
-        <ReportCard />
-      </div>
-      <div className="absolute -bottom-7 -left-4 hidden border border-encre bg-accent px-5 py-3 text-blanc-casse shadow-sm sm:block">
+    <div className="relative lg:mr-3">
+      <ReportCard />
+      <div className="absolute -bottom-6 -left-4 hidden rounded-xl bg-accent px-5 py-3 text-blanc-casse shadow-lg sm:block">
         <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-blanc-casse/70">Statut du dossier</p>
         <p className="mt-1 font-serif text-lg font-semibold">Corrections ciblées</p>
       </div>
-      <div className="absolute -right-3 top-8 hidden border border-filigrane bg-blanc-casse px-3 py-2 shadow-sm xl:block">
+      <div className="absolute -right-3 top-8 hidden rounded-xl bg-blanc-casse px-3 py-2 shadow-lg xl:block">
         <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-ardoise">Avant envoi</p>
         <p className="mt-0.5 text-xs font-medium text-erreur">2 alertes lisibles</p>
       </div>
@@ -192,7 +184,7 @@ function ReportCard() {
     { label: "Montant différent entre devis et facture", ok: false },
   ];
   return (
-    <div className="border border-papier/40 bg-blanc-casse p-5 shadow-md">
+    <div className="rounded-2xl bg-blanc-casse p-6 shadow-[0_24px_60px_-16px_rgba(22,32,43,0.55)]">
       <div className="flex items-center justify-between border-b border-filigrane pb-3">
         <div>
           <p className="font-serif text-base font-semibold text-encre">
