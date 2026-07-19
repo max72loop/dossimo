@@ -67,7 +67,7 @@ function AdresseFacturation({ onEnregistre }: { onEnregistre: () => void }) {
       <button
         type="submit"
         disabled={busy}
-        className="mt-3 inline-flex h-10 items-center gap-2 rounded bg-terre-cuite px-4 text-sm font-semibold text-blanc-casse transition-colors hover:bg-terre-cuite-hover disabled:cursor-not-allowed disabled:opacity-60"
+        className="mt-3 inline-flex h-10 items-center gap-2 rounded bg-accent px-4 text-sm font-semibold text-blanc-casse transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60"
       >
         {busy && <Spinner />}
         {busy ? "Enregistrement…" : "Enregistrer et continuer"}
@@ -109,8 +109,8 @@ export function PaywallCta({
   );
 
   const cls = compact
-    ? "inline-flex h-8 items-center gap-1.5 rounded bg-terre-cuite px-3 text-xs font-semibold text-blanc-casse transition-colors hover:bg-terre-cuite-hover disabled:cursor-not-allowed disabled:opacity-60"
-    : "inline-flex h-11 items-center gap-2 rounded bg-terre-cuite px-5 text-sm font-semibold text-blanc-casse transition-colors hover:bg-terre-cuite-hover disabled:cursor-not-allowed disabled:opacity-60";
+    ? "inline-flex h-8 items-center gap-1.5 rounded bg-accent px-3 text-xs font-semibold text-blanc-casse transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60"
+    : "inline-flex h-11 items-center gap-2 rounded bg-accent px-5 text-sm font-semibold text-blanc-casse transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60";
 
   return (
     <div>

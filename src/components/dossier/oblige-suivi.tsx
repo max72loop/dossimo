@@ -79,7 +79,7 @@ export function ObligeSuivi({
         </select>
         {statut === "refuse" && <input className={input} value={motif} onChange={(e) => setMotif(e.target.value)} placeholder="Motif de refus (ex. mention manquante)" />}
         <textarea className={input} rows={2} value={detail} onChange={(e) => setDetail(e.target.value)} placeholder="Commentaire facultatif ou retour de l’organisme" />
-        <button type="button" onClick={saveRetour} disabled={saving} className="mt-3 rounded bg-terre-cuite px-4 py-2 text-sm font-medium text-blanc-casse disabled:opacity-60">Enregistrer le résultat</button>
+        <button type="button" onClick={saveRetour} disabled={saving} className="mt-3 rounded bg-accent px-4 py-2 text-sm font-medium text-blanc-casse disabled:opacity-60">Enregistrer le résultat</button>
       </div>
       {message && <p className="mt-3 text-sm text-ardoise" role="status">{message}</p>}
     </section>

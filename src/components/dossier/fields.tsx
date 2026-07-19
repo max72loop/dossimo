@@ -36,7 +36,7 @@ function FieldShell({
     <label className="block">
       <span className={labelClass}>
         {label}
-        {required && <span className="text-terre-cuite"> *</span>}
+        {required && <span className="text-accent"> *</span>}
       </span>
       {children}
       {hint && !error && <p className={hintClass}>{hint}</p>}

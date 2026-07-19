@@ -122,7 +122,7 @@ export function SiteMenu({
           <Link
             href={connecte ? "/dossiers/nouveau" : "/demo"}
             onClick={fermer}
-            className={`inline-flex h-12 w-full items-center justify-center gap-2 rounded bg-terre-cuite px-5 text-sm font-semibold text-blanc-casse transition-colors hover:bg-terre-cuite-hover ${FOCUS}`}
+            className={`inline-flex h-12 w-full items-center justify-center gap-2 rounded bg-accent px-5 text-sm font-semibold text-blanc-casse transition-colors hover:bg-accent-hover ${FOCUS}`}
           >
             {connecte ? "Créer un dossier" : CTA_DEMO}
             <ArrowRight className="h-4 w-4" aria-hidden="true" />

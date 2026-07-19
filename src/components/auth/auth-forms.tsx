@@ -28,7 +28,7 @@ function SubmitButton({ loading, children }: { loading: boolean; children: strin
     <button
       type="submit"
       disabled={loading}
-      className="mt-2 inline-flex h-11 w-full items-center justify-center gap-2 rounded bg-terre-cuite px-5 text-sm font-medium text-blanc-casse transition-colors hover:bg-terre-cuite-hover disabled:opacity-60"
+      className="mt-2 inline-flex h-11 w-full items-center justify-center gap-2 rounded bg-accent px-5 text-sm font-medium text-blanc-casse transition-colors hover:bg-accent-hover disabled:opacity-60"
     >
       {loading && <Loader2 className="h-4 w-4 animate-spin" />}
       {children}

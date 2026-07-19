@@ -68,7 +68,7 @@ export async function SiteHeader() {
           </Link>
           <Link
             href={user ? "/dossiers/nouveau" : "/demo"}
-            className={`hidden h-10 items-center rounded bg-terre-cuite px-5 text-sm font-medium text-blanc-casse transition-colors hover:bg-terre-cuite-hover md:inline-flex ${FOCUS}`}
+            className={`hidden h-10 items-center rounded bg-accent px-5 text-sm font-medium text-blanc-casse transition-colors hover:bg-accent-hover md:inline-flex ${FOCUS}`}
           >
             {user ? "Nouveau dossier" : CTA_DEMO}
           </Link>

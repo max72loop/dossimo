@@ -17,7 +17,7 @@ export function ActionsRestantes({ synthese }: { synthese: SyntheseDossier }) {
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-tampon">À faire maintenant</p>
           <h2 className="mt-1 font-serif text-xl font-semibold text-encre">{prochaine.label}</h2>
           <p className="mt-1 text-sm leading-relaxed text-ardoise">{prochaine.detail}</p>
-          <a href={href} className="mt-4 inline-flex h-11 items-center rounded bg-terre-cuite px-5 text-sm font-semibold text-blanc-casse transition hover:bg-terre-cuite-hover">
+          <a href={href} className="mt-4 inline-flex h-11 items-center rounded bg-accent px-5 text-sm font-semibold text-blanc-casse transition hover:bg-accent-hover">
             Faire cette étape
           </a>
         </div>

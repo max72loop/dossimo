@@ -24,6 +24,6 @@ export function QuoteTemplateEditor({ gestures }: { gestures: Gesture[] }) {
     <label className="mt-4 block text-sm font-medium text-encre">Checklist des mentions (JSON)<textarea required name="mentionsJson" rows={4} defaultValue={'["Désignation complète", "Marque et référence", "Performance", "Qualification RGE"]'} className={`${input} font-mono text-xs`} /></label>
     <label className="mt-4 block text-sm font-medium text-encre">Notes de revue<textarea name="notes" rows={2} className={input} /></label>
     <label className="mt-4 flex items-start gap-2 text-sm text-encre"><input name="reviewed" type="checkbox" className="mt-1" /> <span>Je confirme avoir comparé ce contenu à la source officielle et validé sa publication.</span></label>
-    <button className="mt-5 rounded bg-terre-cuite px-4 py-2 text-sm font-medium text-blanc-casse">Publier la nouvelle version</button>{message && <p className="mt-3 text-sm text-ardoise" role="status">{message}</p>}
+    <button className="mt-5 rounded bg-accent px-4 py-2 text-sm font-medium text-blanc-casse">Publier la nouvelle version</button>{message && <p className="mt-3 text-sm text-ardoise" role="status">{message}</p>}
   </form>;
 }

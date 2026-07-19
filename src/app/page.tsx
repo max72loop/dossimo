@@ -105,7 +105,7 @@ function Hero() {
       <div className="relative mx-auto grid max-w-[1280px] items-center gap-9 px-5 py-10 sm:px-8 sm:py-12 lg:grid-cols-[1fr_0.9fr] lg:py-14">
         <div>
           <p className="inline-flex items-center gap-2 border-y border-encre py-2 font-mono text-[11px] uppercase tracking-[0.16em] text-encre">
-            <span className="h-2 w-2 rounded-full bg-terre-cuite" />
+            <span className="h-2 w-2 rounded-full bg-accent" />
             MaPrimeRénov&rsquo; & CEE · pour les artisans RGE
           </p>
 
@@ -113,7 +113,7 @@ function Hero() {
             Un dossier de prime, c&rsquo;est des heures de paperasse.{" "}
             <span className="relative text-tampon">
               Dossimo le monte à votre place.
-              <span className="absolute -bottom-2 left-0 h-1 w-full bg-terre-cuite" />
+              <span className="absolute -bottom-2 left-0 h-1 w-full bg-accent" />
             </span>
           </h1>
 
@@ -140,7 +140,7 @@ function Hero() {
           <div className="mt-7">
             <Link
               href="/demo"
-              className={`group inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-terre-cuite px-6 py-3 text-sm font-semibold text-blanc-casse shadow-md transition-colors hover:bg-terre-cuite-hover sm:w-auto ${FOCUS}`}
+              className={`group inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-accent px-6 py-3 text-sm font-semibold text-blanc-casse shadow-md transition-colors hover:bg-accent-hover sm:w-auto ${FOCUS}`}
             >
               {CTA_DEMO}
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
@@ -172,7 +172,7 @@ function HeroVisual() {
         </div>
         <ReportCard />
       </div>
-      <div className="absolute -bottom-7 -left-4 hidden border border-encre bg-terre-cuite px-5 py-3 text-blanc-casse shadow-sm sm:block">
+      <div className="absolute -bottom-7 -left-4 hidden border border-encre bg-accent px-5 py-3 text-blanc-casse shadow-sm sm:block">
         <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-blanc-casse/70">Statut du dossier</p>
         <p className="mt-1 font-serif text-lg font-semibold">Corrections ciblées</p>
       </div>
@@ -397,8 +397,8 @@ function Difference() {
               ))}
             </ul>
           </div>
-          <div className="border border-filigrane border-l-4 border-l-terre-cuite bg-blanc-casse p-7 shadow-sm">
-            <h3 className="label flex items-center gap-2 text-terre-cuite">
+          <div className="border border-filigrane border-l-4 border-l-accent bg-blanc-casse p-7 shadow-sm">
+            <h3 className="label flex items-center gap-2 text-accent">
               <Stamp className="h-4 w-4" strokeWidth={1.5} />
               Avec Dossimo
             </h3>
@@ -786,7 +786,7 @@ function MobileConversionBar() {
     <div className="fixed inset-x-0 bottom-0 z-40 border-t border-encre/15 bg-blanc-casse/95 p-3 shadow-[0_-8px_24px_rgba(22,32,43,0.12)] backdrop-blur md:hidden">
       <Link
         href="/demo"
-        className={`flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-terre-cuite px-5 py-3 text-center text-sm font-semibold text-blanc-casse ${FOCUS}`}
+        className={`flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-accent px-5 py-3 text-center text-sm font-semibold text-blanc-casse ${FOCUS}`}
       >
         {CTA_DEMO}
         <ArrowRight className="h-4 w-4" />

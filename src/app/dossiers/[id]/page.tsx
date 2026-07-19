@@ -312,7 +312,7 @@ export default async function DossierPage({
       {/* Paywall : quand le dossier est verrouillé, le déblocage est l'action
           principale de l'écran (seul bouton plein). */}
       {!acces.debloque && (
-        <section className="mb-6 rounded-md border border-terre-cuite/30 bg-terre-cuite/5 p-5 shadow-sm">
+        <section className="mb-6 rounded-md border border-accent/30 bg-accent/5 p-5 shadow-sm">
           <h2 className="font-serif text-base font-semibold text-encre">
             Débloquez ce dossier pour accéder au pack
           </h2>
@@ -414,7 +414,7 @@ export default async function DossierPage({
               <p className="mt-1 text-xs text-ardoise">Barème appliqué : {prime.base}</p>
             </div>
             <div className="shrink-0 text-right">
-              <p className="font-serif text-2xl font-semibold text-terre-cuite">
+              <p className="font-serif text-2xl font-semibold text-accent">
                 {formatEuros(primeRetenue)}
               </p>
               <p className="mt-0.5 text-xs text-ardoise">

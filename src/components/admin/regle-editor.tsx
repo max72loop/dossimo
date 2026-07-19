@@ -213,7 +213,7 @@ export function RegleEditor({ row }: { row: RegleRow }) {
       <div className="mt-3 flex items-center gap-3">
         <button
           type="submit"
-          className="inline-flex h-9 items-center rounded bg-terre-cuite px-4 text-sm font-medium text-blanc-casse transition-colors hover:bg-terre-cuite-hover"
+          className="inline-flex h-9 items-center rounded bg-accent px-4 text-sm font-medium text-blanc-casse transition-colors hover:bg-accent-hover"
         >
           Enregistrer
         </button>

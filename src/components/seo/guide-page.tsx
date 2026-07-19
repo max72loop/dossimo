@@ -141,7 +141,7 @@ export function SeoGuidePage({ guide }: { guide: SeoGuide }) {
               <p className="text-xs font-semibold uppercase tracking-[0.14em] text-papier/70">Contrôle Dossimo</p>
               <h2 className="mt-3 font-serif text-3xl font-semibold">Vérifiez votre propre devis gratuitement.</h2>
               <p className="mt-4 max-w-2xl leading-relaxed text-papier/80">Ajoutez le PDF ou une photo : Dossimo relève les informations lisibles et vous montre le premier point à confirmer avant le dépôt.</p>
-              <Link href="/demo" className="mt-7 inline-flex items-center gap-2 rounded bg-terre-cuite px-5 py-3 font-medium text-blanc-casse transition hover:bg-terre-cuite-hover">
+              <Link href="/demo" className="mt-7 inline-flex items-center gap-2 rounded bg-accent px-5 py-3 font-medium text-blanc-casse transition hover:bg-accent-hover">
                 Analyser mon devis <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </Link>
             </aside>

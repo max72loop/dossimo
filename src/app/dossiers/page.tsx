@@ -247,7 +247,7 @@ export default async function DossiersPage() {
           </p>
           <Link
             href="/dossiers/nouveau"
-            className="mt-6 inline-flex h-11 items-center rounded bg-terre-cuite px-5 text-sm font-medium text-blanc-casse transition-colors hover:bg-terre-cuite-hover"
+            className="mt-6 inline-flex h-11 items-center rounded bg-accent px-5 text-sm font-medium text-blanc-casse transition-colors hover:bg-accent-hover"
           >
             Déposer mon premier devis
           </Link>

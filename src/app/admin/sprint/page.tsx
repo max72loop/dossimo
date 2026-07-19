@@ -50,7 +50,7 @@ export default async function SprintPage({
 
   const ongletClass = (actif: boolean) =>
     `rounded px-4 py-2 text-sm font-medium transition ${
-      actif ? "bg-terre-cuite text-blanc-casse" : "border border-filigrane bg-blanc-casse text-ardoise hover:border-tampon"
+      actif ? "bg-accent text-blanc-casse" : "border border-filigrane bg-blanc-casse text-ardoise hover:border-tampon"
     }`;
   const modeClass = (actif: boolean) =>
     `rounded-full px-3 py-1.5 text-xs font-medium transition ${

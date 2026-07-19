@@ -120,7 +120,7 @@ export function ChecklistPieces({
                 {e.label}
               </span>
               {e.obligatoire && !e.deposee && (
-                <span className="ml-2 text-[10px] font-semibold uppercase text-terre-cuite">
+                <span className="ml-2 text-[10px] font-semibold uppercase text-accent">
                   obligatoire
                 </span>
               )}

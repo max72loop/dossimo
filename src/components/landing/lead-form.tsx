@@ -121,7 +121,7 @@ export function LeadForm() {
       <button
         type="submit"
         disabled={status === "loading"}
-        className={`mt-1 inline-flex h-11 items-center justify-center gap-2 rounded bg-terre-cuite px-5 text-sm font-medium text-blanc-casse transition-colors hover:bg-terre-cuite-hover disabled:opacity-60 ${FOCUS}`}
+        className={`mt-1 inline-flex h-11 items-center justify-center gap-2 rounded bg-accent px-5 text-sm font-medium text-blanc-casse transition-colors hover:bg-accent-hover disabled:opacity-60 ${FOCUS}`}
       >
         {status === "loading" && <Loader2 className="h-4 w-4 animate-spin" />}
         Être recontacté

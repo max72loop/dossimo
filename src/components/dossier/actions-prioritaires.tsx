@@ -14,7 +14,7 @@ const CATEGORIES = [
     titre: "À faire aujourd’hui",
     vide: "Rien à faire de votre côté pour le moment.",
     icon: ListTodo,
-    accent: "bg-terre-cuite",
+    accent: "bg-accent",
   },
   {
     id: "client" as const,
@@ -58,7 +58,7 @@ export function ActionsPrioritaires({ actions }: { actions: ActionPrioritaire[] 
                     </p>
                     <Link
                       href={`/dossiers/${action.dossierId}`}
-                      className="mt-4 inline-flex h-9 items-center rounded bg-terre-cuite px-4 text-xs font-semibold text-blanc-casse transition hover:bg-terre-cuite-hover"
+                      className="mt-4 inline-flex h-9 items-center rounded bg-accent px-4 text-xs font-semibold text-blanc-casse transition hover:bg-accent-hover"
                     >
                       Continuer
                     </Link>

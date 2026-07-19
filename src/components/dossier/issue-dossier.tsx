@@ -118,7 +118,7 @@ export function IssueDossier({
         type="button"
         onClick={save}
         disabled={pending}
-        className="mt-4 rounded bg-terre-cuite px-4 py-2 text-sm font-medium text-blanc-casse transition hover:bg-terre-cuite-hover disabled:opacity-60"
+        className="mt-4 rounded bg-accent px-4 py-2 text-sm font-medium text-blanc-casse transition hover:bg-accent-hover disabled:opacity-60"
       >
         {pending ? "Enregistrement…" : "Enregistrer l'issue"}
       </button>

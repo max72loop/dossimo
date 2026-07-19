@@ -136,7 +136,7 @@ export default function GuidesHubPage() {
             </p>
             <Link
               href="/demo"
-              className="mt-7 inline-flex items-center gap-2 rounded bg-terre-cuite px-5 py-3 font-medium text-blanc-casse transition hover:bg-terre-cuite-hover"
+              className="mt-7 inline-flex items-center gap-2 rounded bg-accent px-5 py-3 font-medium text-blanc-casse transition hover:bg-accent-hover"
             >
               Analyser mon devis <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </Link>

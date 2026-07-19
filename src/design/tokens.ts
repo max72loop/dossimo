@@ -17,10 +17,10 @@ export const TOKENS = {
   // Couleurs de marque
   encre: "#16202b",
   tampon: "#35507f",
-  // Dette : alias historique du bleu (l'accent fut terracotta). À renommer
-  // `accent` lors de la refonte — voir DESIGN.md §2 et §8.
-  "terre-cuite": "#35507f",
-  "terre-cuite-hover": "#2a3f65",
+  // Accent de marque (ex-token `terre-cuite`, renommé le 2026-07-19) : c'est le
+  // bleu. `accent-hover` est le survol de l'action principale.
+  accent: "#35507f",
+  "accent-hover": "#2a3f65",
   papier: "#f3f0e9",
   "blanc-casse": "#fbf9f3",
   ardoise: "#5b636d",

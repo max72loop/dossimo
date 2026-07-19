@@ -133,7 +133,7 @@ export default async function AdminProspectionPage({
           <button
             type="submit"
             disabled={enAttente.length === 0}
-            className="h-10 rounded bg-terre-cuite px-4 text-sm font-semibold text-blanc-casse transition-colors hover:bg-terre-cuite-hover disabled:opacity-40"
+            className="h-10 rounded bg-accent px-4 text-sm font-semibold text-blanc-casse transition-colors hover:bg-accent-hover disabled:opacity-40"
           >
             Valider les {enAttente.length} messages relus
           </button>

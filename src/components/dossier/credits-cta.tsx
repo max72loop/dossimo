@@ -44,7 +44,7 @@ export function CreditsCta({
       <button
         onClick={appliquer}
         disabled={busy}
-        className="inline-flex h-11 items-center rounded border border-terre-cuite px-5 text-sm font-semibold text-terre-cuite transition-colors hover:bg-terre-cuite hover:text-blanc-casse disabled:cursor-not-allowed disabled:opacity-60"
+        className="inline-flex h-11 items-center rounded border border-accent px-5 text-sm font-semibold text-accent transition-colors hover:bg-accent hover:text-blanc-casse disabled:cursor-not-allowed disabled:opacity-60"
       >
         {busy ? "Application…" : `Utiliser mes crédits · solde ${soldeLabel}`}
       </button>

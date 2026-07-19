@@ -87,7 +87,7 @@ export function DemoGuide() {
       {!result ? (
         <>
           <div className="grid gap-3 sm:grid-cols-2">
-            <button type="button" disabled={loading} onClick={() => photoRef.current?.click()} className="flex min-h-28 flex-col items-center justify-center rounded-lg bg-terre-cuite px-5 text-center font-semibold text-blanc-casse shadow-sm transition hover:bg-terre-cuite-hover disabled:opacity-60">
+            <button type="button" disabled={loading} onClick={() => photoRef.current?.click()} className="flex min-h-28 flex-col items-center justify-center rounded-lg bg-accent px-5 text-center font-semibold text-blanc-casse shadow-sm transition hover:bg-accent-hover disabled:opacity-60">
               <Camera className="mb-2 h-7 w-7" />Prendre une photo
             </button>
             <button type="button" disabled={loading} onClick={() => pdfRef.current?.click()} className="flex min-h-28 flex-col items-center justify-center rounded-lg border-2 border-filigrane bg-papier/50 px-5 text-center font-semibold text-encre transition hover:border-tampon disabled:opacity-60">

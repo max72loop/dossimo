@@ -25,7 +25,7 @@ export default function NotFound() {
 
       <main className="flex flex-1 items-center justify-center px-6 py-16">
         <div className="w-full max-w-lg text-center">
-          <p className="font-mono text-sm font-semibold uppercase tracking-[0.18em] text-terre-cuite">
+          <p className="font-mono text-sm font-semibold uppercase tracking-[0.18em] text-accent">
             Erreur 404
           </p>
           <h1 className="mt-3 font-serif text-3xl font-semibold tracking-tight text-encre sm:text-4xl">

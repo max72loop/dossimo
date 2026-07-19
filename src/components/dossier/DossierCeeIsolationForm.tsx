@@ -699,7 +699,7 @@ export function DossierCeeIsolationForm({
           <button
             type="submit"
             disabled={enCours}
-            className="inline-flex h-11 items-center gap-2 rounded bg-terre-cuite px-6 text-sm font-medium text-blanc-casse transition-colors hover:bg-terre-cuite-hover disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex h-11 items-center gap-2 rounded bg-accent px-6 text-sm font-medium text-blanc-casse transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60"
           >
             {enCours && <Spinner />}
             {enCours ? "Création en cours…" : "Créer le dossier"}
@@ -708,7 +708,7 @@ export function DossierCeeIsolationForm({
           <button
             type="button"
             onClick={suivant}
-            className="inline-flex h-11 items-center rounded bg-terre-cuite px-6 text-sm font-medium text-blanc-casse transition-colors hover:bg-terre-cuite-hover"
+            className="inline-flex h-11 items-center rounded bg-accent px-6 text-sm font-medium text-blanc-casse transition-colors hover:bg-accent-hover"
           >
             Suivant →
           </button>

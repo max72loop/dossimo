@@ -74,7 +74,7 @@ function Lisible({ texte }: { texte: string }) {
               href={url}
               target="_blank"
               rel="noreferrer"
-              className="text-tampon underline underline-offset-2 hover:text-terre-cuite"
+              className="text-tampon underline underline-offset-2 hover:text-accent"
             >
               {url}
             </a>
@@ -154,7 +154,7 @@ function Carte({ c, canal, mode }: { c: Contact; canal: "whatsapp" | "email"; mo
             <input type="hidden" name="mode" value={mode} />
             <button
               type="submit"
-              className="inline-flex items-center gap-1.5 rounded bg-terre-cuite px-3 py-1.5 text-xs font-medium text-blanc-casse transition hover:bg-terre-cuite-hover"
+              className="inline-flex items-center gap-1.5 rounded bg-accent px-3 py-1.5 text-xs font-medium text-blanc-casse transition hover:bg-accent-hover"
             >
               <Send className="h-3.5 w-3.5" />
               {LIBELLE_MARQUAGE[mode]}

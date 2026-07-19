@@ -173,7 +173,7 @@ export function DemarrageAssiste({
           type="button"
           disabled={loading}
           onClick={analyser}
-          className="inline-flex h-12 items-center justify-center gap-2 rounded bg-terre-cuite px-6 text-sm font-semibold text-blanc-casse transition hover:bg-terre-cuite-hover disabled:opacity-60"
+          className="inline-flex h-12 items-center justify-center gap-2 rounded bg-accent px-6 text-sm font-semibold text-blanc-casse transition hover:bg-accent-hover disabled:opacity-60"
         >
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
           {loading ? "Lecture du devis…" : "Lire mon devis et préremplir"}

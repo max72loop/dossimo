@@ -8,8 +8,8 @@
   /* Couleurs de marque */
   --color-encre: #16202b;
   --color-tampon: #35507f;
-  --color-terre-cuite: #35507f;
-  --color-terre-cuite-hover: #2a3f65;
+  --color-accent: #35507f;
+  --color-accent-hover: #2a3f65;
   --color-papier: #f3f0e9;
   --color-blanc-casse: #fbf9f3;
   --color-ardoise: #5b636d;
@@ -40,9 +40,10 @@
   --radius: 8px;
   --radius-md: 12px;
 
-  /* Ombres très discrètes */
+  /* Ombres : discrètes pour le repos, marquée pour les cartes flottantes */
   --shadow-sm: 0 1px 2px rgba(22, 32, 43, 0.05);
   --shadow-md: 0 6px 16px rgba(22, 32, 43, 0.08);
+  --shadow-lg: 0 14px 34px -12px rgba(22, 32, 43, 0.2);
 }
 
 html {

@@ -21,7 +21,7 @@ export function EspaceArtisanShell({
           <nav className="flex items-center gap-3 sm:gap-5" aria-label="Espace artisan">
             <Link
               href="/dossiers/nouveau"
-              className="inline-flex h-10 items-center gap-1.5 rounded bg-terre-cuite px-3 text-sm font-medium text-blanc-casse transition-colors hover:bg-terre-cuite-hover sm:px-4"
+              className="inline-flex h-10 items-center gap-1.5 rounded bg-accent px-3 text-sm font-medium text-blanc-casse transition-colors hover:bg-accent-hover sm:px-4"
             >
               <Plus className="h-4 w-4" strokeWidth={2} />
               <span className="hidden sm:inline">Nouveau dossier</span>
