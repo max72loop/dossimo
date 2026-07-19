@@ -24,6 +24,18 @@ The short version, if you read nothing else:
 5. **A fix applies everywhere, not in one place.** This codebase's recurring
    defect is a good idea applied to exactly one table. `grep` for the twins.
 
+# Touching the design? Read `DESIGN.md` first
+
+Same rule as the database: every design decision (colour, font, spacing,
+component shape, tone of any user-facing text) is taken in `DESIGN.md` first,
+then mirrored into the implementation files it names. Never decide design ad hoc
+inside a component.
+
+The trap it exists to prevent: tokens live in **two** mirrors that must stay
+identical — `src/app/globals.css` (`@theme`, web) and `src/lib/pack/pdf-theme.ts`
+(React-PDF). A palette change touches both in the same commit, or the site and
+the PDFs drift apart. Landing, vitrine, espace artisan and PDF are one system.
+
 # Business rules live in data, not in components
 
 Thresholds, prices and eligibility conditions belong in `regles_metier` or

@@ -1,30 +1,37 @@
 import { StyleSheet } from "@react-pdf/renderer";
 
+import { TOKENS } from "@/design/tokens";
+
 /**
  * Palette et styles partagés des documents du pack. Direction : bandeau encre
  * pleine largeur + filet d'accent, cartes BORDÉES (jamais de bloc plein d'une
  * seule couleur), badges contournés, sémantique portée par la bordure.
  * (React-PDF n'utilise que les polices standard : Helvetica ici.)
+ *
+ * Les couleurs viennent de `@/design/tokens` (source unique, cf. DESIGN.md §1) :
+ * ce fichier ne recopie plus les hex à la main. Seules `onInk` et `eyebrow` sont
+ * propres au PDF (texte et sur-titre sur le bandeau encre) et n'existent pas dans
+ * la palette web.
  */
 export const COLORS = {
-  ink: "#16202b", // encre
-  muted: "#5b636d", // ardoise
-  faint: "#9aa1a9", // encre claire
-  line: "#e2ddd1", // filigrane
-  paper: "#f3f0e9", // crème
-  card: "#fbf9f3", // blanc cassé (fond de carte)
-  brand: "#16202b",
-  onInk: "#ffffff", // texte sur bandeau encre
-  eyebrow: "#9db0cf", // sur-titre clair sur encre
-  accent: "#35507f", // filet et liens (bleu de marque)
-  tampon: "#35507f",
-  tamponSoft: "#e9edf4",
-  ok: "#2d6a4f",
-  okSoft: "#e7f1ea",
-  danger: "#9b2c2c",
-  dangerSoft: "#f6e9e6",
-  warn: "#a8730b",
-  warnSoft: "#f6eed6",
+  ink: TOKENS.encre,
+  muted: TOKENS.ardoise,
+  faint: TOKENS["encre-claire"],
+  line: TOKENS.filigrane,
+  paper: TOKENS.papier,
+  card: TOKENS["blanc-casse"], // fond de carte
+  brand: TOKENS.encre,
+  onInk: "#ffffff", // spécifique PDF : texte sur bandeau encre
+  eyebrow: "#9db0cf", // spécifique PDF : sur-titre clair sur encre
+  accent: TOKENS.tampon, // filet et liens (bleu de marque)
+  tampon: TOKENS.tampon,
+  tamponSoft: TOKENS["info-bg"],
+  ok: TOKENS.succes,
+  okSoft: TOKENS["succes-bg"],
+  danger: TOKENS.erreur,
+  dangerSoft: TOKENS["erreur-bg"],
+  warn: TOKENS.avertissement,
+  warnSoft: TOKENS["avertissement-bg"],
 };
 
 // Marges de page : le bandeau et le filet « débordent » via des marges

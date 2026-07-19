@@ -1,0 +1,44 @@
+/**
+ * Source machine unique de la palette Dossimo.
+ *
+ * Les décisions se prennent dans `DESIGN.md` ; ce fichier est leur implémentation
+ * canonique. Deux miroirs en dérivent :
+ *
+ *  - `src/app/globals.css` (`@theme`, web) doit être IDENTIQUE à cet objet.
+ *    L'égalité est vérifiée par `src/design/tokens.test.ts` : toute dérive casse
+ *    le test, plus un oubli possible.
+ *  - `src/lib/pack/pdf-theme.ts` (PDF) IMPORTE ces valeurs directement — aucune
+ *    recopie à la main.
+ *
+ * L'ordre des clés suit celui du bloc `@theme` de `globals.css`, pour comparer les
+ * deux à l'œil sans friction.
+ */
+export const TOKENS = {
+  // Couleurs de marque
+  encre: "#16202b",
+  tampon: "#35507f",
+  // Dette : alias historique du bleu (l'accent fut terracotta). À renommer
+  // `accent` lors de la refonte — voir DESIGN.md §2 et §8.
+  "terre-cuite": "#35507f",
+  "terre-cuite-hover": "#2a3f65",
+  papier: "#f3f0e9",
+  "blanc-casse": "#fbf9f3",
+  ardoise: "#5b636d",
+  filigrane: "#e2ddd1",
+  "encre-claire": "#9aa1a9",
+
+  // Fonds neutres utilitaires
+  "papier-fonce": "#eae6dc",
+
+  // Couleurs sémantiques
+  succes: "#2d6a4f",
+  "succes-bg": "#e7f1ea",
+  erreur: "#9b2c2c",
+  "erreur-bg": "#f6e9e6",
+  avertissement: "#a8730b",
+  "avertissement-bg": "#f6eed6",
+  info: "#35507f",
+  "info-bg": "#e9edf4",
+} as const;
+
+export type TokenName = keyof typeof TOKENS;
