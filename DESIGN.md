@@ -97,7 +97,7 @@ actions. Sobre, net.
 |---|---|---|
 | `encre` | `#16202b` | Texte principal, aplats sombres (bandeaux) |
 | `tampon` | `#35507f` | Bleu de marque : liens, accents, cachet |
-| `terre-cuite` | `#35507f` | **Dette** : alias historique du bleu (l'accent fut terracotta). À renommer `accent` lors de la refonte. Encore utilisé dans `boutons.ts`. |
+| `terre-cuite` → `accent` | `#35507f` | **Décidé (2026-07-19)** : l'accent reste le bleu, on renomme le token `terre-cuite` en `accent` partout (`tokens.ts`, `globals.css`, `boutons.ts`, `fields.tsx`). Tâche mécanique à faire, §8. |
 | `terre-cuite-hover` | `#2a3f65` | Survol de l'action principale |
 | `papier` | `#f3f0e9` | Fond de page (crème) |
 | `blanc-casse` | `#fbf9f3` | Fond de carte |
@@ -226,9 +226,13 @@ de focus). À harmoniser :
 - **Hiérarchie d'action** ([`boutons.ts`](src/components/ui/boutons.ts)) : **un seul
   bouton plein par écran** (l'action principale contextuelle), tout le reste en
   outline. Anneau de focus `FOCUS` obligatoire sur tout élément navigable.
-- **Cartes bordées, jamais d'aplat plein saturé.** La sémantique est portée par la
-  **bordure** (filet gauche coloré), pas par un fond de couleur pleine. C'est la
-  direction des PDF (`pdf-theme.ts`) comme de l'espace artisan.
+- **Cartes : ombre douce sur le web, bordure sur le papier.** Décision 2026-07-19.
+  Sur le **web**, le relief est porté par une **ombre douce** (`--shadow-md`), coins un
+  peu plus arrondis, sans filet ; la sémantique passe par le badge et, si besoin, un
+  fond teinté léger (ex. `succes-bg`), jamais un aplat plein saturé. En **PDF et à
+  l'impression**, l'ombre ne tient pas (React-PDF, lecture N/B) : les cartes restent
+  **bordées**, sémantique portée par la bordure. Cette divergence web↔PDF est
+  **assumée et voulue** (cf. §1). Migration web à faire (§8).
 - **Badges contournés** : bordure + texte colorés, fond transparent.
 - **Cachet (tampon)** : élément signature bleu, sur les livrables de contrôle.
 
@@ -397,13 +401,14 @@ vérité, partagée entre les supports.
 > Cette section se remplit AVANT de coder la refonte. Tant qu'une ligne est vide,
 > la décision n'est pas prise : ne pas l'improviser dans un composant.
 
-- [ ] Direction : rafraîchissement de l'identité actuelle, ou nouvelle direction ?
-- [ ] Palette cible (et sort de l'alias `terre-cuite`).
-- [ ] Couple de polices cible (display + corps).
+- [x] Direction : **rafraîchissement** de l'identité actuelle (2026-07-19).
+- [x] Palette : **conservée** ; renommer le token `terre-cuite` → `accent` (mécanique, à faire).
+- [x] Polices : **conservées** (Unbounded / Inter / Source Serif).
+- [x] Relief des cartes : **ombre douce sur le web**, **bordure conservée en PDF / impression** (§5).
+- [x] Déclinaison PDF : **inchangée** (rafraîchissement) ; les cartes PDF restent bordées.
+- [ ] Migrer les cartes web de la bordure vers l'ombre douce, sur toutes les surfaces (§5).
 - [ ] Échelle typographique et échelle d'espacement figées.
 - [ ] Largeurs de conteneur rationalisées (aujourd'hui de `max-w-md` à `max-w-7xl`, §4).
-- [ ] Traitement des cartes / du relief (bordure vs ombre).
-- [ ] Déclinaison PDF de la nouvelle direction (dans les contraintes du §1).
 - [ ] Déclinaison e-mail (§1) : réaligner le fond `#E7E2D6` sur `papier-fonce`, et
       décider si un garde-fou vérifie que ses hex appartiennent bien à la palette.
 - [ ] Format de date unifié web / PDF (« 05/05/2026 » vs « 05.05.2026 », §6).
@@ -463,3 +468,4 @@ Deux lignes par décision, datées, pour ne pas re-débattre le passé.
 |---|---|---|
 | 2026-07-08 | Palette encre / gris / crème / **bleu** (`#35507f`), polices Unbounded + Inter + Source Serif. | Alignement sur le kit logo. L'accent passe du terracotta au bleu ; le token `terre-cuite` n'est pas renommé (dette assumée, cf. §2). |
 | 2026-07-19 | `DESIGN.md` devient la source de vérité ; `tokens.ts` source machine des couleurs + test de miroir ; règle inscrite dans `AGENTS.md`. | Coordonner landing → vitrine → espace artisan → PDF et empêcher la dérive des tokens par machine, pas par discipline. |
+| 2026-07-19 | Refonte = **rafraîchissement** : identité et polices conservées, accent bleu (token `terre-cuite` → `accent`), **cartes en ombre douce sur le web** (bordure conservée en PDF / impression). | Moderniser l'écran sans casser la lisibilité N/B du papier ni une identité récente. Deux traitements de carte selon la cible, choix produit assumé. |
