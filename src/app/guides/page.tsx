@@ -100,7 +100,7 @@ export default function GuidesHubPage() {
                   <Link
                     key={guide.slug}
                     href={`/${guide.slug}`}
-                    className="group flex flex-col rounded border border-filigrane bg-blanc-casse p-6 transition hover:border-encre"
+                    className="group flex flex-col rounded-2xl bg-blanc-casse p-6 shadow-md transition hover:shadow-lg"
                   >
                     <p className="text-xs font-semibold uppercase tracking-[0.14em] text-tampon">
                       {guide.eyebrow}

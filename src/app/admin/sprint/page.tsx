@@ -105,7 +105,7 @@ export default async function SprintPage({
           { l: "Envoyés aujourd'hui", v: `${comptes.envoyesAujourdhui} / ${comptes.plafond}` },
           { l: "Désinscrits (STOP)", v: comptes.optOut },
         ].map((k) => (
-          <div key={k.l} className="rounded border border-filigrane bg-blanc-casse p-3">
+          <div key={k.l} className="rounded-xl bg-papier/50 p-3">
             <dt className="text-[0.7rem] uppercase tracking-wide text-encre-claire">{k.l}</dt>
             <dd className="mt-1 font-mono text-lg font-semibold text-encre">{k.v}</dd>
           </div>

@@ -256,7 +256,7 @@ export function RegleCreator() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="rounded border border-filigrane bg-blanc-casse p-4">
+    <form onSubmit={onSubmit} className="rounded-2xl bg-blanc-casse p-4 shadow-lg">
       <h3 className="font-serif text-sm font-semibold text-encre">Nouveau couple / version</h3>
       <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
         <div>

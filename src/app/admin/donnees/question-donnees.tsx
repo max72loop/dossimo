@@ -27,7 +27,7 @@ export function QuestionDonnees() {
   }
 
   return (
-    <section className="mt-8 rounded border border-filigrane bg-blanc-casse p-5">
+    <section className="mt-8 rounded-2xl bg-blanc-casse p-5 shadow-lg">
       <h2 className="flex items-center gap-2 font-serif text-lg font-semibold text-encre">
         <Sparkles className="h-5 w-5 text-tampon" />
         Poser une question

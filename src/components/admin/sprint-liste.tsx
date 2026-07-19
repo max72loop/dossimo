@@ -88,7 +88,7 @@ function Lisible({ texte }: { texte: string }) {
 
 function Carte({ c, canal, mode }: { c: Contact; canal: "whatsapp" | "email"; mode: Mode }) {
   return (
-    <li className="rounded border border-filigrane bg-blanc-casse p-4">
+    <li className="rounded-2xl bg-blanc-casse p-4 shadow-md">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
           <p className="text-sm font-semibold text-encre">{c.name || c.denomination || "Sans nom"}</p>
@@ -208,7 +208,7 @@ export function SprintListe({
   mode?: Mode;
 }) {
   if (contacts.length === 0) {
-    return <p className="rounded border border-filigrane bg-papier/40 p-6 text-sm text-ardoise">{VIDE[mode]}</p>;
+    return <p className="rounded-2xl bg-papier/50 p-6 text-sm text-ardoise">{VIDE[mode]}</p>;
   }
   return (
     <ul className="space-y-3">

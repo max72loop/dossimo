@@ -106,7 +106,7 @@ export function TableNettoyage({ dossiers }: { dossiers: DossierInventaire[] }) 
         </p>
       )}
 
-      <div className="overflow-x-auto rounded border border-filigrane bg-blanc-casse">
+      <div className="overflow-x-auto rounded-2xl bg-blanc-casse shadow-lg">
         <table className="w-full border-collapse text-sm">
           <thead>
             <tr className="border-b border-filigrane text-left text-xs uppercase tracking-wide text-ardoise">

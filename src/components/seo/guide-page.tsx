@@ -69,7 +69,7 @@ export function SeoGuidePage({ guide }: { guide: SeoGuide }) {
               <h2 id="checklist" className="mt-2 font-serif text-3xl font-semibold text-encre">La checklist de relecture</h2>
               <div className="mt-8 grid gap-4 sm:grid-cols-2">
                 {guide.checklist.map((item, index) => (
-                  <div key={item.title} className="rounded border border-filigrane bg-blanc-casse p-5">
+                  <div key={item.title} className="rounded-2xl bg-blanc-casse p-5 shadow-md">
                     <div className="flex items-start gap-3">
                       <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-succes-bg font-mono text-xs font-semibold text-encre">{index + 1}</span>
                       <div>
@@ -129,7 +129,7 @@ export function SeoGuidePage({ guide }: { guide: SeoGuide }) {
               <h2 id="autres-guides" className="font-serif text-3xl font-semibold text-encre">Poursuivre la vérification</h2>
               <div className="mt-6 grid gap-3 sm:grid-cols-2">
                 {guideList.filter((item) => item.slug !== guide.slug).map((item) => (
-                  <Link key={item.slug} href={`/${item.slug}`} className="group rounded border border-filigrane bg-blanc-casse p-5 transition hover:border-encre">
+                  <Link key={item.slug} href={`/${item.slug}`} className="group rounded-2xl bg-blanc-casse p-5 shadow-md transition hover:shadow-lg">
                     <span className="font-semibold text-encre group-hover:text-tampon">{item.title}</span>
                     <span className="mt-2 block text-sm leading-relaxed text-ardoise">{item.description}</span>
                   </Link>

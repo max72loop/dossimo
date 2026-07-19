@@ -79,7 +79,7 @@ function Carte({ s }: { s: Section }) {
   return (
     <Link
       href={s.href}
-      className="group flex gap-3 rounded border border-filigrane bg-blanc-casse p-4 transition hover:border-tampon"
+      className="group flex gap-3 rounded-2xl bg-blanc-casse p-4 shadow-md transition hover:shadow-lg"
     >
       <Icone className="mt-0.5 h-5 w-5 shrink-0 text-tampon" />
       <div>

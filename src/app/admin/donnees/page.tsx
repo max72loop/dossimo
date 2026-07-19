@@ -55,7 +55,7 @@ export default async function DonneesPage() {
 
 function Metric({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="rounded border border-filigrane bg-papier/40 p-4">
+    <div className="rounded-xl bg-papier/50 p-4">
       <p className="text-xs text-ardoise">{label}</p>
       <p className="mt-1 font-serif text-2xl font-semibold text-encre">{value}</p>
     </div>
@@ -64,7 +64,7 @@ function Metric({ label, value }: { label: string; value: string | number }) {
 
 function Repartition({ titre, items }: { titre: string; items: [string, number][] }) {
   return (
-    <section className="rounded border border-filigrane bg-blanc-casse p-5">
+    <section className="rounded-2xl bg-blanc-casse p-5 shadow-lg">
       <h2 className="font-serif text-lg font-semibold text-encre">{titre}</h2>
       {items.length ? (
         <ul className="mt-3 divide-y divide-filigrane">

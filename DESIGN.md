@@ -415,7 +415,8 @@ vérité, partagée entre les supports.
 - [x] Déclinaison PDF : **inchangée** (rafraîchissement) ; les cartes PDF restent bordées.
 - [x] Parti d'exécution de l'espace artisan : **cartes flottantes** (§5, 2026-07-19).
 - [x] Migrer l'**espace artisan** vers les cartes flottantes (page dossier, liste, profil, factures) — 2026-07-19.
-- [ ] Migrer la **vitrine** et l'**admin** vers les cartes flottantes (§5).
+- [x] Migrer l'**admin** et les pages **guides** vers les cartes flottantes — 2026-07-19.
+- [ ] **Landing** : à traiter dans une passe design dédiée, pas un simple swap de cartes (ses encarts à filet d'accent et à bordure d'emphase sont des choix de hiérarchie délibérés) — §5.
 - [ ] Introduire `--shadow-lg` (ombre des cartes flottantes) dans `globals.css` (§4).
 - [ ] Échelle typographique et échelle d'espacement figées.
 - [ ] Largeurs de conteneur rationalisées (aujourd'hui de `max-w-md` à `max-w-7xl`, §4).

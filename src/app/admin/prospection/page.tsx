@@ -291,7 +291,7 @@ function Compteur({
   note: string;
 }) {
   return (
-    <div className="border border-filigrane bg-blanc-casse p-4">
+    <div className="rounded-2xl bg-blanc-casse p-4 shadow-lg">
       <p className="text-xs font-medium uppercase tracking-wide text-ardoise">{label}</p>
       <p className="mt-2 font-mono text-2xl font-semibold text-encre">{valeur}</p>
       <p className="mt-1 text-xs text-encre-claire">{note}</p>
