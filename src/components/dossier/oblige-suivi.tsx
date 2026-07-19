@@ -4,6 +4,7 @@ import { CircleHelp } from "lucide-react";
 import { useState } from "react";
 
 import { choisirOblige, enregistrerRetourDepot, type RetourStatut } from "@/lib/dossier/oblige-actions";
+import { CARTE } from "@/components/ui/cartes";
 
 export function ObligeSuivi({
   dossierId,
@@ -39,7 +40,7 @@ export function ObligeSuivi({
 
   const input = "mt-1 w-full rounded border border-filigrane bg-blanc-casse px-3 py-2 text-sm text-encre";
   return (
-    <section className="rounded border border-filigrane bg-papier/40 p-5">
+    <section className={CARTE}>
       <h2 className="font-serif text-lg font-semibold text-encre">Après le dépôt du dossier</h2>
       <p className="mt-1 text-sm text-ardoise">Notez l’organisme choisi et le résultat reçu après l’envoi du dossier.</p>
       <div className="mt-4 flex items-center gap-1.5 text-sm font-medium text-encre">

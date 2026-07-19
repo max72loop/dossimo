@@ -28,6 +28,7 @@ import { MetriquesValeur } from "@/components/dossier/metriques-valeur";
 import { SectionRepliable } from "@/components/ui/section-repliable";
 import { FindingAssistance } from "@/components/dossier/finding-assistance";
 import { BTN_SECONDAIRE_SM } from "@/components/ui/boutons";
+import { CARTE, CARTE_INTERNE } from "@/components/ui/cartes";
 import { accesDossier } from "@/lib/dossier/acces";
 import { createClient } from "@/lib/supabase/server";
 import { prixPack, getActiveTiers, labelEuros } from "@/lib/pricing";
@@ -118,7 +119,7 @@ function FindingRow({ f }: { f: Finding }) {
 /** Carte de données du récapitulatif (repliée par défaut, poids visuel léger). */
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="rounded border border-filigrane bg-papier/40 p-5">
+    <section className={CARTE_INTERNE}>
       <h3 className="mb-3 font-serif text-base font-semibold text-encre">{title}</h3>
       <dl>{children}</dl>
     </section>
@@ -295,7 +296,7 @@ export default async function DossierPage({
         debloque={acces.debloque}
       />
 
-      <details className="mb-6 rounded border border-filigrane bg-blanc-casse">
+      <details className="mb-6 overflow-hidden rounded-2xl bg-blanc-casse shadow-lg">
         <summary className="cursor-pointer px-5 py-4 text-sm font-semibold text-tampon">
           Voir l'état général, la prime et les contrôles déjà passés
         </summary>
@@ -312,7 +313,7 @@ export default async function DossierPage({
       {/* Paywall : quand le dossier est verrouillé, le déblocage est l'action
           principale de l'écran (seul bouton plein). */}
       {!acces.debloque && (
-        <section className="mb-6 rounded-md border border-accent/30 bg-accent/5 p-5 shadow-sm">
+        <section className="mb-6 rounded-2xl bg-accent/5 p-6 shadow-lg">
           <h2 className="font-serif text-base font-semibold text-encre">
             Débloquez ce dossier pour accéder au pack
           </h2>
@@ -391,7 +392,7 @@ export default async function DossierPage({
           </div>
         </>
       ) : (
-        <section className="mb-6 rounded border border-filigrane bg-blanc-casse p-5 shadow-sm">
+        <section className={`mb-6 ${CARTE}`}>
           <h2 className="font-serif text-base font-semibold text-encre">
             Contrôle des pièces réelles
           </h2>
@@ -405,7 +406,7 @@ export default async function DossierPage({
 
       {/* Prime · le montant retenu d'abord, l'écart en note secondaire */}
       {prime && (
-        <section className="mb-6 rounded border border-filigrane bg-blanc-casse p-5 shadow-sm">
+        <section className={`mb-6 ${CARTE}`}>
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
               <h2 className="font-serif text-base font-semibold text-encre">

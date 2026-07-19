@@ -7,6 +7,7 @@ import {
   enregistrerRetourDepot,
   type RetourStatut,
 } from "@/lib/dossier/oblige-actions";
+import { CARTE } from "@/components/ui/cartes";
 
 /**
  * Capture de l'issue d'un dossier après dépôt, pour MaPrimeRénov'.
@@ -55,7 +56,7 @@ export function IssueDossier({
     "mt-1 w-full rounded border border-filigrane bg-blanc-casse px-3 py-2 text-sm text-encre";
 
   return (
-    <section className="rounded border border-filigrane bg-papier/40 p-5">
+    <section className={CARTE}>
       <h2 className="font-serif text-lg font-semibold text-encre">
         Après le dépôt du dossier
       </h2>

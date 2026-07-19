@@ -20,7 +20,7 @@ export function SectionRepliable({
     <details
       id={id}
       open={ouvertParDefaut}
-      className="group mb-3 rounded border border-filigrane bg-blanc-casse shadow-sm"
+      className="group mb-3 overflow-hidden rounded-2xl bg-blanc-casse shadow-lg"
     >
       <summary className="flex cursor-pointer list-none items-center justify-between gap-4 rounded px-5 py-4 hover:bg-papier/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-encre [&::-webkit-details-marker]:hidden">
         <div>

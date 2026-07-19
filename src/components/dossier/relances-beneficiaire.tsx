@@ -9,6 +9,7 @@ import {
   revoirPieceBeneficiaire,
 } from "@/lib/reminders/actions";
 import type { PieceAttendue } from "@/lib/depot/pieces-attendues";
+import { CARTE } from "@/components/ui/cartes";
 
 type Upload = { id: string; type: string; nom_fichier: string | null; validation_status: "submitted" | "approved" | "rejected" | null; rejection_reason: string | null };
 type EtatRelance = { active: boolean; desinscrit: boolean; envoyees: number; plafond: number; due: boolean };
@@ -63,7 +64,7 @@ export function RelancesBeneficiaire({ dossierId, attendues, uploads, etat }: { 
           ? { ton: "text-ardoise", texte: "Toutes les relances prévues ont été envoyées." }
           : { ton: "text-succes", texte: `À jour. ${etat.envoyees}/${etat.plafond} relance${etat.envoyees > 1 ? "s" : ""} envoyée${etat.envoyees > 1 ? "s" : ""}.` };
 
-  return <section className="mb-6 rounded border border-filigrane bg-blanc-casse p-5 shadow-sm">
+  return <section className={`mb-6 ${CARTE}`}>
     <div className="flex flex-wrap items-start justify-between gap-3">
       <div>
         <h2 className="font-serif text-base font-semibold text-encre">Relances de pièces</h2>

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 
 import { changerStatutDossier } from "@/lib/dossier/parcours-actions";
 import { PARCOURS, indexEtape } from "@/lib/dossier/parcours";
+import { CARTE } from "@/components/ui/cartes";
 import type { StatutDossier } from "@/lib/database.types";
 
 /**
@@ -41,7 +42,7 @@ export function ParcoursSelector({
   }
 
   return (
-    <section className="mb-6 rounded border border-filigrane bg-blanc-casse p-5 shadow-sm">
+    <section className={`mb-6 ${CARTE}`}>
       <h2 className="font-serif text-base font-semibold text-encre">Parcours du dossier</h2>
       <p className="mt-1 text-xs text-ardoise">
         Suivez où en est le dossier. Cliquez une étape pour l&apos;y placer.

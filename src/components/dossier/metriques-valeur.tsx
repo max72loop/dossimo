@@ -1,4 +1,5 @@
 import { formatDuree, RISQUE_LABEL, type SyntheseDossier } from "@/lib/dossier/synthese";
+import { CARTE_INTERNE } from "@/components/ui/cartes";
 
 const RISQUE_STYLE: Record<SyntheseDossier["risque"], string> = {
   faible: "text-succes",
@@ -18,7 +19,7 @@ function Metrique({
   ton?: string;
 }) {
   return (
-    <div className="rounded border border-filigrane bg-blanc-casse p-4 shadow-sm">
+    <div className={CARTE_INTERNE}>
       <p className={`font-serif text-2xl font-semibold ${ton ?? "text-encre"}`}>
         {valeur}
       </p>

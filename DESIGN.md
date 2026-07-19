@@ -237,7 +237,9 @@ de focus). À harmoniser :
   Contenu réparti en **cartes distinctes** posées sur le crème, coins bien arrondis
   (~16px), ombre douce **généreuse** (`--shadow-lg` à introduire, ~`0 14px 34px -12px`),
   grille aérée, **sans bandeau lourd**. Look dashboard moderne. Le PDF, lui, reste
-  bordé et sobre.
+  bordé et sobre. **Source unique** :
+  [`src/components/ui/cartes.ts`](src/components/ui/cartes.ts) (`CARTE`, `CARTE_SM`,
+  `CARTE_INTERNE`), comme `boutons.ts` pour les actions.
 - **Badges contournés** : bordure + texte colorés, fond transparent.
 - **Cachet (tampon)** : élément signature bleu, sur les livrables de contrôle.
 
