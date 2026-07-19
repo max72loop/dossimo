@@ -69,6 +69,23 @@ Deux dettes à connaître, non encore sous garde-fou :
 Pied légal **obligatoire** (LCEN art. 6 + lien de désinscription) via
 `mentionsLegales()` : c'est ce qui rend l'envoi licite, pas de la décoration.
 
+### Impression et papier
+
+Le PDF n'est pas qu'un fichier écran, c'est un **objet imprimé** : l'artisan imprime
+l'attestation sur l'honneur pour la faire **signer à la main**, souvent en **noir et
+blanc**. Contraintes propres au papier :
+
+- Format **A4**, marges fixes ([`pdf-theme.ts`](src/lib/pack/pdf-theme.ts) :
+  `PAD_X 44`, `PAD_TOP 40`, bas 56).
+- **Sauts de page** maîtrisés : un bloc réglementaire ne se coupe pas en deux
+  (`wrap={false}` sur les sections et les constats) ; le pied légal est `fixed`.
+- **Lisible en N/B** : la sémantique ne repose jamais sur la seule couleur (bordures +
+  libellé explicite, cf. §5). Une pastille verte doit rester compréhensible en gris.
+- Zones de **signature** manuscrite (bénéficiaire + professionnel), avec la note
+  « aucune rature ».
+
+À figer (§8) : quelles **pages web** sont aussi pensées pour l'impression.
+
 ---
 
 ## 2. Palette
@@ -189,6 +206,19 @@ l'artisan saisit depuis le chantier.
 - **Tables et formulaires** doivent tenir en étroit : stratégie de repli des tables
   encore à figer (§8, §5).
 
+### Micro-interactions et transitions
+
+Le mouvement d'**entrée** est cadré (`stepIn`), mais pas les micro-interactions du
+quotidien, aujourd'hui posées au cas par cas (`transition-colors`, `hover:bg-*`, rings
+de focus). À harmoniser :
+
+- Un jeu **réduit de durées** (ex. ~150ms pour l'UI, ~250ms pour les surfaces) et une
+  courbe standard, au lieu d'un choix par composant.
+- États codifiés : `hover`, `focus-visible` (l'anneau `FOCUS`), `active`, `disabled`.
+- `prefers-reduced-motion` étendu à **tout** ce qui bouge, pas qu'aux entrées.
+
+(Valeurs exactes à figer, §8.)
+
 ---
 
 ## 5. Composants et motifs
@@ -294,6 +324,34 @@ facto à tenir :
 
 À trancher (§8) : quand un toast se justifie plutôt qu'un inline, et son placement.
 
+### Aide contextuelle et pédagogie
+
+Le produit **explique** (c'est sa valeur anti-refus). L'aide existe déjà sous **trois
+formes**, à conventionner :
+
+- **Aide inline** courte sous un champ (`hintClass`, `fields.tsx`).
+- **Tooltip** ponctuel sur un terme (`CircleHelp`, `oblige-suivi.tsx`).
+- **Panneau flottant** pour l'explication longue et le contact
+  ([`aide-dossimo.tsx`](src/components/dossier/aide-dossimo.tsx) : bouton « Je suis
+  bloqué » en bas-droite `z-50`, dont l'accordéon « Expliquez-moi les couleurs »).
+
+Règle : inline pour une précision, tooltip pour un mot, panneau pour « je suis
+bloqué ». Ton **pédagogique** : expliquer le motif de refus sans jargon. Rien ne part
+sans action de l'utilisateur (la messagerie s'ouvre d'abord).
+
+### Onboarding et première expérience
+
+Distinct des « états » (données vides) : ici on **guide un premier usage** et on donne
+confiance avant le premier paiement.
+
+- **Document-first** : le démarrage assisté
+  ([`demarrage-assiste.tsx`](src/components/dossier/demarrage-assiste.tsx)) part d'une
+  **photo du devis**, lit les champs, puis pré-remplit le formulaire.
+- **Valeur assistée** comme patron (déjà dans `fields.tsx`) : champ pré-rempli en
+  encadré succès + « Modifier ». À réutiliser partout où l'on pré-remplit.
+- **Essai sans compte** (la démo) : le premier écran ne doit pas intimider et doit
+  tenir la promesse de la vitrine (cohérence vitrine → première minute dans l'app).
+
 ---
 
 ## 6. Ton et copie (le texte est du design)
@@ -360,6 +418,10 @@ vérité, partagée entre les supports.
 - [ ] Résorber le doublon de spinner (`Spinner` maison vs `Loader2`, §5).
 - [ ] Cibles tactiles minimales sur mobile (§4).
 - [ ] Échelle de titres et style de liens de la prose éditoriale (§3).
+- [ ] Impression : quelles pages web sont pensées pour le papier (§1).
+- [ ] Durées et courbes de transition harmonisées (§4).
+- [ ] Convention des trois niveaux d'aide (inline / tooltip / panneau) (§5).
+- [ ] Cohérence onboarding : promesse vitrine → première minute app (§5).
 
 ---
 
