@@ -99,6 +99,34 @@ export function plafondDuJour(params: {
   return Math.min(palier, capMax);
 }
 
+/** Décalage de Paris sur UTC, en minutes, à un instant donné (120 en été, 60 en hiver). */
+function decalageParisMinutes(instant: Date): number {
+  const nom = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Europe/Paris",
+    timeZoneName: "longOffset",
+  })
+    .formatToParts(instant)
+    .find((p) => p.type === "timeZoneName")?.value;
+  const m = /GMT([+-])(\d{2}):(\d{2})/.exec(nom ?? "");
+  if (!m) return 0;
+  return (m[1] === "-" ? -1 : 1) * (Number(m[2]) * 60 + Number(m[3]));
+}
+
+/**
+ * Instant UTC de minuit à Paris, pour la journée parisienne qui contient
+ * `maintenant`. Sert à compter ce qui est réellement sorti aujourd'hui.
+ *
+ * Le décalage est relu sur le candidat obtenu au premier passage : les deux jours
+ * de changement d'heure, l'offset à minuit UTC n'est pas celui de minuit à Paris,
+ * et une borne fausse d'une heure décale le comptage du plafond.
+ */
+export function debutJourParis(maintenant: Date): Date {
+  const [annee, mois, jour] = jourParis(maintenant).split("-").map(Number);
+  const minuitUtc = Date.UTC(annee, mois - 1, jour);
+  const premier = minuitUtc - decalageParisMinutes(new Date(minuitUtc)) * 60_000;
+  return new Date(minuitUtc - decalageParisMinutes(new Date(premier)) * 60_000);
+}
+
 /** Vrai si l'instant tombe dans la fenêtre horaire d'envoi (tous les jours). */
 export function dansLaFenetre(maintenant: Date): boolean {
   const minutes = minutesParis(maintenant);
