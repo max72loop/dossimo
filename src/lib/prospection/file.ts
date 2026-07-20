@@ -7,7 +7,12 @@ import type {
   Prospect,
   StatutMessageProspection,
 } from "@/lib/database.types";
-import { dansLaFenetre, jourParis, plafondDuJour } from "@/lib/prospection/cadence";
+import {
+  dansLaFenetre,
+  debutJourParis,
+  jourParis,
+  plafondDuJour,
+} from "@/lib/prospection/cadence";
 import {
   corpsHtmlPourProspect,
   corpsPourProspect,
@@ -240,11 +245,18 @@ export async function envoyerProchain(
   });
   if (plafond === 0) return { envoye: false, motif: "jour non couvert" };
 
+  // Compté sur `sent_at`, pas sur `scheduled_on` : le sélecteur ci-dessous
+  // rattrape les jours précédents (`lte`) sans réécrire `scheduled_on`, si bien
+  // qu'un compteur indexé sur le jour prévu ne voyait AUCUN message de
+  // rattrapage. Le 2026-07-20, 10 messages étaient sortis pendant que le
+  // compteur affichait 0 : la rampe autorisait 35, la file en aurait passé 56.
+  // Le plafond doit borner ce qui sort de la boîte aujourd'hui, pas ce qui était
+  // prévu pour aujourd'hui.
   const { count: envoyesAujourdhui } = await supabase
     .from("prospection_messages")
     .select("id", { count: "exact", head: true })
     .eq("campagne_id", campagne.id)
-    .eq("scheduled_on", jour)
+    .gte("sent_at", debutJourParis(maintenant).toISOString())
     .eq("statut", "envoye");
 
   if ((envoyesAujourdhui ?? 0) >= plafond) {

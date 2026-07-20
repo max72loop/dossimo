@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   dansLaFenetre,
+  debutJourParis,
   joursEntre,
   jourParis,
   minutesParis,
@@ -79,5 +80,33 @@ describe("joursEntre — jours calendaires bornes incluses", () => {
 
   it("traverse un changement de mois", () => {
     expect(joursEntre("2026-07-30", "2026-08-02")).toBe(4);
+  });
+});
+
+describe("debutJourParis — borne de comptage du plafond", () => {
+  it("renvoie minuit à Paris, soit 22h UTC la veille en été", () => {
+    const t = new Date("2026-07-20T10:14:00Z"); // 12h14 à Paris
+    expect(debutJourParis(t).toISOString()).toBe("2026-07-19T22:00:00.000Z");
+  });
+
+  it("borne la journée parisienne, pas la journée UTC", () => {
+    // 23h30 UTC le 19 = 01h30 le 20 à Paris : la journée à compter est celle du
+    // 20, pas celle du 19. Une borne UTC laisserait le compteur repartir de zéro
+    // en plein milieu de la soirée parisienne.
+    const t = new Date("2026-07-19T23:30:00Z");
+    expect(debutJourParis(t).toISOString()).toBe("2026-07-19T22:00:00.000Z");
+  });
+
+  it("suit l'heure d'hiver (UTC+1)", () => {
+    const t = new Date("2026-12-10T12:00:00Z");
+    expect(debutJourParis(t).toISOString()).toBe("2026-12-09T23:00:00.000Z");
+  });
+
+  it("tient au passage à l'heure d'hiver", () => {
+    // Le 2026-10-25 Paris passe de UTC+2 à UTC+1 à 03h locale. Minuit à Paris ce
+    // jour-là est donc encore à UTC+2 : 2026-10-24T22:00Z. Un offset relu sur
+    // minuit UTC (déjà en UTC+1) donnerait 23h et fausserait le comptage.
+    const t = new Date("2026-10-25T12:00:00Z");
+    expect(debutJourParis(t).toISOString()).toBe("2026-10-24T22:00:00.000Z");
   });
 });
