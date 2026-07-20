@@ -6,6 +6,7 @@ import type {
   MessageProspection,
   Prospect,
   StatutMessageProspection,
+  TypeEvenementProspection,
 } from "@/lib/database.types";
 import {
   dansLaFenetre,
@@ -150,7 +151,7 @@ export interface StatsEngagement {
 export async function statsEngagement(): Promise<StatsEngagement> {
   const supabase = createAdminClient();
 
-  const compte = async (type: string) => {
+  const compte = async (type: NonNullable<TypeEvenementProspection>) => {
     const { count, error } = await supabase
       .from("prospection_evenements")
       .select("id", { count: "exact", head: true })
