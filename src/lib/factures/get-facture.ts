@@ -47,20 +47,26 @@ function decoder(facture: Facture): FactureComplete {
  */
 export async function getFacture(id: string): Promise<FactureComplete | null> {
   const supabase = await createClient();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("factures")
     .select("*")
     .eq("id", id)
     .maybeSingle();
+  // Une panne de lecture n'est PAS une facture inexistante : la confondre avec
+  // `null` répond « Facture introuvable » pour un document fiscal qui existe.
+  if (error) throw new Error(`Lecture de la facture ${id} impossible : ${error.message}`);
   return data ? decoder(data as Facture) : null;
 }
 
 /** Factures de l'artisan connecté, la plus récente d'abord. */
 export async function listerFactures(): Promise<Facture[]> {
   const supabase = await createClient();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("factures")
     .select("*")
     .order("emise_le", { ascending: false });
+  // Même raison : un `?? []` silencieux affiche « Aucune facture » à un artisan
+  // qui en a, et le laisse croire qu'aucun paiement n'a été encaissé.
+  if (error) throw new Error(`Lecture des factures impossible : ${error.message}`);
   return (data ?? []) as Facture[];
 }

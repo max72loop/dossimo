@@ -16,3 +16,11 @@ export const CARTE_SM = "rounded-2xl bg-blanc-casse p-5 shadow-md";
 
 /** Bloc imbriqué DANS une carte flottante : pas d'ombre, fond légèrement teinté. */
 export const CARTE_INTERNE = "rounded-xl bg-papier/50 p-4";
+
+/**
+ * Carte flottante qui contient une liste ou une table : même relief que `CARTE`
+ * mais SANS padding (les lignes portent le leur, pour que le survol et les
+ * séparateurs aillent d'un bord à l'autre) et `overflow-hidden` pour que le fond
+ * des lignes ne déborde pas des coins arrondis.
+ */
+export const CARTE_LISTE = "overflow-hidden rounded-2xl bg-blanc-casse shadow-lg";

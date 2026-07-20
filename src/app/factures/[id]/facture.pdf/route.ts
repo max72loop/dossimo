@@ -10,8 +10,15 @@ export async function GET(
 ) {
   const { id } = await params;
 
-  // Auth-scopé : la RLS renvoie null pour la facture d'un autre artisan.
-  const data = await getFacture(id);
+  // Auth-scopé : la RLS renvoie null pour la facture d'un autre artisan. Une
+  // panne de lecture, elle, remonte en 500 : répondre 404 ferait croire que la
+  // facture n'existe pas.
+  let data;
+  try {
+    data = await getFacture(id);
+  } catch {
+    return new Response("Facture temporairement indisponible.", { status: 500 });
+  }
   if (!data) return new Response("Facture introuvable", { status: 404 });
 
   // Sans identité d'émetteur (raison sociale, SIRET, adresse), le PDF porterait
