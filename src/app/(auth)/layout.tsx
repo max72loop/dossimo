@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { Logo } from "@/components/landing/site-header";
+import { Logo } from "@/components/ui/logo";
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false, nocache: true },

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { LogOut, Plus } from "lucide-react";
 
-import { Logo } from "@/components/landing/site-header";
+import { Logo } from "@/components/ui/logo";
 import { AideDossimo } from "@/components/dossier/aide-dossimo";
 import { signOut } from "@/lib/auth/actions";
 import type { Artisan } from "@/lib/database.types";

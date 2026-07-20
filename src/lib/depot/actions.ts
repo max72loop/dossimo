@@ -106,6 +106,14 @@ export interface PieceDeposee {
   type: TypePiece;
   nomFichier: string | null;
   createdAt: string;
+  /**
+   * Verdict de l'artisan. Exposé au bénéficiaire pour qu'un rejet ne reste pas un
+   * secret entre l'artisan et la base : sans lui, le client voit sa pièce « bien
+   * reçue », attend, et ne comprend pas la relance qui lui redemande le même
+   * document.
+   */
+  validationStatus: "submitted" | "approved" | "rejected" | null;
+  rejectionReason: string | null;
 }
 
 export type DepotResult =
@@ -218,23 +226,32 @@ export async function deposerPiece(
       type,
       nomFichier: file.name,
       createdAt: new Date().toISOString(),
+      validationStatus: "submitted",
+      rejectionReason: null,
     },
   };
 }
 
-/** Retire une pièce que le bénéficiaire vient de déposer (erreur de fichier). */
+/**
+ * Retire un fichier que le bénéficiaire vient de déposer (mauvaise page, photo floue).
+ *
+ * Renvoie un motif d'échec, et ne renvoie `ok` que si la suppression a bien eu lieu :
+ * un retrait avalé en silence laisse une carte affichée comme retirée alors que le
+ * document est toujours là, chez l'artisan comme dans le bucket. C'est exactement le
+ * cas que l'AGENTS.md interdit de traiter silencieusement.
+ */
 export async function retirerPiece(
   token: string,
   pieceId: string,
-): Promise<{ ok: boolean }> {
+): Promise<{ ok: true } | { ok: false; error: string }> {
   const lien = await resoudreLien(token);
-  if (!lien) return { ok: false };
+  if (!lien) return { ok: false, error: "Ce lien n'est plus valide." };
 
   const admin = createAdminClient();
 
   // Le bénéficiaire ne peut retirer que SES pièces, et seulement dans SON dossier :
   // il ne touche jamais au devis ni à la facture de l'artisan.
-  const { data: piece } = await admin
+  const { data: piece, error: lectureErr } = await admin
     .from("pieces_justificatives")
     .select("id, storage_path")
     .eq("id", pieceId)
@@ -242,12 +259,31 @@ export async function retirerPiece(
     .eq("deposant", "beneficiaire")
     .maybeSingle();
 
-  if (!piece) return { ok: false };
-
-  if (piece.storage_path) {
-    await admin.storage.from("pieces").remove([piece.storage_path]);
+  if (lectureErr) {
+    console.error("[depot] retrait/lecture:", lectureErr.message);
+    return { ok: false, error: "Suppression impossible pour l'instant. Réessayez." };
   }
-  await admin.from("pieces_justificatives").delete().eq("id", piece.id);
+  if (!piece) return { ok: false, error: "Ce document n'existe plus." };
+
+  // Le fichier d'abord, la ligne ensuite : l'inverse laisserait un objet orphelin
+  // dans le bucket, invisible et jamais purgé.
+  if (piece.storage_path) {
+    const { error: storageErr } = await admin.storage
+      .from("pieces")
+      .remove([piece.storage_path]);
+    if (storageErr) {
+      console.error("[depot] retrait/storage:", storageErr.message);
+      return { ok: false, error: "Suppression impossible pour l'instant. Réessayez." };
+    }
+  }
+  const { error: delErr } = await admin
+    .from("pieces_justificatives")
+    .delete()
+    .eq("id", piece.id);
+  if (delErr) {
+    console.error("[depot] retrait/delete:", delErr.message);
+    return { ok: false, error: "Suppression impossible pour l'instant. Réessayez." };
+  }
 
   revalidatePath(`/dossiers/${lien.dossierId}`);
   return { ok: true };
@@ -262,7 +298,7 @@ export async function piecesDuBeneficiaire(
   const admin = createAdminClient();
   const { data } = await admin
     .from("pieces_justificatives")
-    .select("id, type, nom_fichier, created_at")
+    .select("id, type, nom_fichier, created_at, validation_status, rejection_reason")
     .eq("dossier_id", lien.dossierId)
     .eq("deposant", "beneficiaire")
     .order("created_at", { ascending: true });
@@ -272,5 +308,7 @@ export async function piecesDuBeneficiaire(
     type: p.type,
     nomFichier: p.nom_fichier,
     createdAt: p.created_at,
+    validationStatus: p.validation_status,
+    rejectionReason: p.rejection_reason,
   }));
 }

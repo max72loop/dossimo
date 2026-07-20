@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { CheckCircle2 } from "lucide-react";
 
-import { Logo } from "@/components/landing/site-header";
+import { Logo } from "@/components/ui/logo";
 import { FOCUS } from "@/components/ui/boutons";
 import { desinscrire } from "@/lib/prospection/file";
 import { editeur } from "@/lib/legal/editeur";

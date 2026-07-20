@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 import { DemoGuide } from "@/components/landing/demo-guide";
-import { Logo } from "@/components/landing/site-header";
+import { Logo } from "@/components/ui/logo";
 import { enregistrerClic } from "@/lib/prospection/file";
 import { publicMetadata } from "@/lib/seo/site";
 

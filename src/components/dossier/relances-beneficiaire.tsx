@@ -9,9 +9,10 @@ import {
   revoirPieceBeneficiaire,
 } from "@/lib/reminders/actions";
 import type { PieceAttendue } from "@/lib/depot/pieces-attendues";
+import { etatDesPieces } from "@/lib/depot/etat-pieces";
 import { CARTE } from "@/components/ui/cartes";
 
-type Upload = { id: string; type: string; nom_fichier: string | null; validation_status: "submitted" | "approved" | "rejected" | null; rejection_reason: string | null };
+type Upload = { id: string; type: string; nom_fichier: string | null; validation_status: "submitted" | "approved" | "rejected" | null; rejection_reason: string | null; created_at: string };
 type EtatRelance = { active: boolean; desinscrit: boolean; envoyees: number; plafond: number; due: boolean };
 
 export function RelancesBeneficiaire({ dossierId, attendues, uploads, etat }: { dossierId: string; attendues: PieceAttendue[]; uploads: Upload[]; etat: EtatRelance }) {
@@ -53,6 +54,15 @@ export function RelancesBeneficiaire({ dossierId, attendues, uploads, etat }: { 
 
   if (!attendues.length) return null;
 
+  const etats = etatDesPieces(attendues, uploads.map((u) => ({
+    id: u.id,
+    type: u.type,
+    nomFichier: u.nom_fichier,
+    validationStatus: u.validation_status,
+    rejectionReason: u.rejection_reason,
+    createdAt: u.created_at,
+  })));
+
   // Statut de cadence, en clair. La désinscription prime : le client a dit non.
   const statut = etat.desinscrit
     ? { ton: "text-ardoise", texte: "Le client s'est désinscrit des relances." }
@@ -75,7 +85,30 @@ export function RelancesBeneficiaire({ dossierId, attendues, uploads, etat }: { 
         : <button type="button" disabled={busy} onClick={() => basculer(true)} className="rounded bg-accent px-3 py-1.5 text-xs font-medium text-blanc-casse">Activer les relances</button>)}
     </div>
 
-    <ul className="mt-4 divide-y divide-filigrane">{attendues.map((expected) => { const upload = uploads.find((item) => item.type === expected.type); const status = upload?.validation_status; return <li key={expected.type} className="py-3"><div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-sm font-medium text-encre">{expected.titre}</p><p className="text-xs text-ardoise">{upload ? upload.nom_fichier ?? "Document déposé" : "Document manquant"}{status === "rejected" && upload?.rejection_reason ? ` · Rejeté : ${upload.rejection_reason}` : ""}</p></div><div className="flex items-center gap-2 text-xs">{!upload ? <span className="text-avertissement">À demander</span> : status === "approved" ? <span className="text-succes">Validée</span> : <><button type="button" disabled={busy} onClick={() => review(upload.id, "approved")} className="rounded border border-succes/30 px-2 py-1 text-succes">Valider</button><button type="button" disabled={busy} onClick={() => { setRejecting(upload.id); setReason(""); }} className="rounded border border-erreur/30 px-2 py-1 text-erreur">Rejeter</button></>}</div></div>{rejecting === upload?.id && <div className="mt-3 flex gap-2"><input value={reason} onChange={(event) => setReason(event.target.value)} placeholder="Motif du rejet" className="min-w-0 flex-1 rounded border border-filigrane px-2 py-1 text-sm"/><button type="button" disabled={busy} onClick={() => review(upload.id, "rejected")} className="rounded bg-erreur px-2 py-1 text-sm text-blanc-casse">Confirmer</button></div>}</li>; })}</ul>
+    {/* Une entrée par pièce ATTENDUE, et à l'intérieur un fichier par ligne. Le
+        `.find()` d'avant n'exposait qu'un seul fichier par type : le recto d'une
+        carte d'identité restait invisible et donc invalidable à jamais. */}
+    <ul className="mt-4 divide-y divide-filigrane">{etats.map((etat) => <li key={etat.attendue.type} className="py-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm font-medium text-encre">{etat.attendue.titre}</p>
+        {etat.statut === "manquante" ? <span className="text-xs text-avertissement">À demander</span>
+          : etat.statut === "validee" ? <span className="text-xs text-succes">Validée</span>
+          : etat.statut === "a_revoir" ? <span className="text-xs text-erreur">À redemander</span>
+          : <span className="text-xs text-ardoise">{etat.fichiers.length} fichier{etat.fichiers.length > 1 ? "s" : ""} à revoir</span>}
+      </div>
+
+      {etat.fichiers.length === 0 ? <p className="mt-1 text-xs text-ardoise">Document manquant</p> : <ul className="mt-2 grid gap-2">{etat.fichiers.map((f) => <li key={f.id} className="rounded bg-papier/50 px-3 py-2">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="min-w-0 flex-1 truncate text-xs text-ardoise">{f.nomFichier ?? "Document déposé"}{f.validationStatus === "rejected" && f.rejectionReason ? ` · Rejeté : ${f.rejectionReason}` : ""}</p>
+          <div className="flex shrink-0 items-center gap-2 text-xs">
+            {f.validationStatus === "approved"
+              ? <span className="text-succes">Validé</span>
+              : <><button type="button" disabled={busy} onClick={() => review(f.id, "approved")} className="rounded border border-succes/30 px-2 py-1 text-succes">Valider</button><button type="button" disabled={busy} onClick={() => { setRejecting(f.id); setReason(""); }} className="rounded border border-erreur/30 px-2 py-1 text-erreur">{f.validationStatus === "rejected" ? "Changer le motif" : "Rejeter"}</button></>}
+          </div>
+        </div>
+        {rejecting === f.id && <div className="mt-2 flex gap-2"><input value={reason} onChange={(event) => setReason(event.target.value)} placeholder="Motif du rejet" className="min-w-0 flex-1 rounded border border-filigrane px-2 py-1 text-sm"/><button type="button" disabled={busy} onClick={() => review(f.id, "rejected")} className="rounded bg-erreur px-2 py-1 text-sm text-blanc-casse">Confirmer</button></div>}
+      </li>)}</ul>}
+    </li>)}</ul>
 
     {error && <p className="mt-3 text-sm text-erreur">{error}</p>}
 

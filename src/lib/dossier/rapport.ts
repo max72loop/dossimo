@@ -71,12 +71,18 @@ function findingsAvis(
   pieces: readonly PieceAvecEcarts[],
   plafonds: readonly PlafondRessources[],
 ): Finding[] {
-  const avis = pieces.find(
+  // Le DERNIER avis lisible et non rejeté, pas le premier. `getDossierPieces` trie
+  // par `created_at` croissant : un `.find()` retenait donc le plus ANCIEN, et le
+  // contrôle continuait de juger l'avis périmé même après que le client en a déposé
+  // un corrigé. Un avis rejeté par l'artisan ne fait plus foi non plus.
+  const lisibles = pieces.filter(
     (p) =>
       p.piece.type === "avis_imposition" &&
       p.piece.extraction_statut === "ok" &&
-      p.piece.extraction_json,
+      p.piece.extraction_json &&
+      p.piece.validation_status !== "rejected",
   );
+  const avis = lisibles[lisibles.length - 1];
   if (!avis) return [];
 
   return controlerAvisImposition({

@@ -42,13 +42,20 @@ export function suivrePieces(
   );
 
   // Jamais ouvert depuis que les pièces existent : tout est nouveau. C'est le bon
-  // défaut — mieux vaut signaler une pièce déjà vue que taire celle qui bloque.
+  // défaut, mieux vaut signaler une pièce déjà vue que taire celle qui bloque.
   const seuil = vuesAt ? new Date(vuesAt).getTime() : 0;
-  const nouvelles = duClient.filter(
-    (p) => new Date(p.created_at).getTime() > seuil,
-  ).length;
 
-  // Une pièce par type attendu : deux avis d'imposition ne font pas deux pièces.
+  // `nouvelles` et `recues` se comptent dans la MÊME unité, la pièce attendue, sinon
+  // l'artisan lit « 2 nouvelles » sur « 1 sur 1 reçue » dès qu'un client envoie le
+  // recto et le verso de sa carte d'identité.
+  const nouvelles = new Set(
+    duClient
+      .filter((p) => new Date(p.created_at).getTime() > seuil)
+      .map((p) => p.type),
+  ).size;
+
+  // Une pièce par type attendu : deux fichiers pour un même document ne font pas
+  // deux pièces reçues (une carte d'identité recto-verso reste une carte d'identité).
   const recues = new Set(duClient.map((p) => p.type)).size;
 
   return {

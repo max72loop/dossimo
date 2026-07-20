@@ -3,12 +3,42 @@
 import { revalidatePath } from "next/cache";
 import { getDossier } from "@/lib/dossier/get-dossier";
 import { piecesAttendues } from "@/lib/depot/pieces-attendues";
+import {
+  etatDesPieces,
+  motifDeRejet,
+  piecesARelancer,
+  type FichierDepose,
+} from "@/lib/depot/etat-pieces";
 import { emettreLien } from "@/lib/depot/lien";
 import { resoudreLien } from "@/lib/depot/lien";
 import { formatReminderMessage } from "@/lib/reminders/message";
 import { chargerEtatRelance } from "@/lib/reminders/get";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+
+/**
+ * Ligne SQL → fichier déposé. Non exporté : un module « use server » ne peut
+ * exposer que des fonctions asynchrones.
+ */
+type LigneUpload = {
+  id: string;
+  type: string;
+  nom_fichier: string | null;
+  validation_status: "submitted" | "approved" | "rejected" | null;
+  rejection_reason: string | null;
+  created_at: string;
+};
+
+function versFichiers(lignes: LigneUpload[] | null): FichierDepose[] {
+  return (lignes ?? []).map((l) => ({
+    id: l.id,
+    type: l.type,
+    nomFichier: l.nom_fichier,
+    validationStatus: l.validation_status,
+    rejectionReason: l.rejection_reason,
+    createdAt: l.created_at,
+  }));
+}
 
 export async function configurerRelances(dossierId: string, enabled: boolean) {
   if (!(await getDossier(dossierId))) return { ok: false as const, error: "Dossier introuvable." };
@@ -43,13 +73,13 @@ export async function preparerRelanceManuelle(dossierId: string) {
   const data = await getDossier(dossierId);
   if (!data) return { ok: false as const, error: "Dossier introuvable." };
   const supabase = await createClient();
-  const { data: uploads } = await supabase.from("pieces_justificatives")
-    .select("type,validation_status,rejection_reason")
-    .eq("dossier_id", dossierId).eq("deposant", "beneficiaire").order("created_at", { ascending: false });
-  const documents = piecesAttendues(data).flatMap((expected) => {
-    const upload = (uploads ?? []).find((item) => item.type === expected.type);
-    return upload?.validation_status === "approved" ? [] : [{ label: expected.titre, reason: upload?.validation_status === "rejected" ? upload.rejection_reason : null }];
-  });
+  const { data: uploads, error } = await supabase.from("pieces_justificatives")
+    .select("id,type,nom_fichier,validation_status,rejection_reason,created_at")
+    .eq("dossier_id", dossierId).eq("deposant", "beneficiaire").order("created_at", { ascending: true });
+  if (error) return { ok: false as const, error: "Lecture des pièces impossible." };
+  const documents = piecesARelancer(
+    etatDesPieces(piecesAttendues(data), versFichiers(uploads)),
+  ).map((etat) => ({ label: etat.attendue.titre, reason: motifDeRejet(etat) }));
   if (!documents.length) return { ok: false as const, error: "Toutes les pièces attendues sont validées." };
   const token = await emettreLien(dossierId);
   const base = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ?? "";
@@ -76,15 +106,16 @@ export async function enregistrerRelanceEnvoyee(dossierId: string) {
   if (!etat.due) return { ok: false as const, error: "Aucune relance n'est due pour l'instant." };
 
   const supabase = await createClient();
-  const { data: uploads } = await supabase
+  const { data: uploads, error: lectureErr } = await supabase
     .from("pieces_justificatives")
-    .select("type,validation_status")
+    .select("id,type,nom_fichier,validation_status,rejection_reason,created_at")
     .eq("dossier_id", dossierId)
-    .eq("deposant", "beneficiaire");
-  const manquants = piecesAttendues(data).flatMap((expected) => {
-    const upload = (uploads ?? []).find((item) => item.type === expected.type);
-    return upload?.validation_status === "approved" ? [] : [expected.type];
-  });
+    .eq("deposant", "beneficiaire")
+    .order("created_at", { ascending: true });
+  if (lectureErr) return { ok: false as const, error: "Lecture des pièces impossible." };
+  const manquants = piecesARelancer(
+    etatDesPieces(piecesAttendues(data), versFichiers(uploads)),
+  ).map((etat) => etat.attendue.type);
   if (!manquants.length) return { ok: false as const, error: "Toutes les pièces attendues sont validées." };
 
   const { error } = await supabase.from("reminder_logs").upsert(

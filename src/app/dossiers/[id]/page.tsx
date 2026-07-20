@@ -194,7 +194,9 @@ export default async function DossierPage({
   const [{ data: obliges }, { data: retourDepot }, { data: beneficiaryUploads }, tokenDepotActif, etatRelance] = await Promise.all([
     supabase.from("obliges").select("id, nom").eq("actif", true).order("nom"),
     supabase.from("retours_depot").select("statut, motif, detail").eq("dossier_id", dossier.id).maybeSingle(),
-    supabase.from("pieces_justificatives").select("id,type,nom_fichier,validation_status,rejection_reason").eq("dossier_id", dossier.id).eq("deposant", "beneficiaire").order("created_at", { ascending: false }),
+    // Ordre CROISSANT : une pièce peut tenir en plusieurs fichiers (recto/verso,
+    // pages d'un avis), et l'écran de revue les présente dans l'ordre d'envoi.
+    supabase.from("pieces_justificatives").select("id,type,nom_fichier,validation_status,rejection_reason,created_at").eq("dossier_id", dossier.id).eq("deposant", "beneficiaire").order("created_at", { ascending: true }),
     retrouverLienActif(dossier.id),
     chargerEtatRelance(dossier.id),
   ]);

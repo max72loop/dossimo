@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 
-import { Logo } from "@/components/landing/site-header";
+import { Logo } from "@/components/ui/logo";
 import { BTN_PRINCIPAL, BTN_SECONDAIRE } from "@/components/ui/boutons";
 
 export const metadata: Metadata = {

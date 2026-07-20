@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { getCurrentUser } from "@/lib/auth/get-artisan";
 import { SiteMenu } from "@/components/landing/site-menu";
+import { Logo } from "@/components/ui/logo";
 import { FOCUS } from "@/components/ui/boutons";
 import { CTA_DEMO } from "@/lib/landing/copy";
 import { guideList } from "@/lib/seo/guides";
@@ -18,27 +19,9 @@ const NAV = [
   { href: "/#faq", label: "Questions" },
 ] as const;
 
-/* Logo Dossimo : mot-signe « dossimo » (Unbounded), deux « o » en gris.
-   Rendu typographique (net et responsive), fidèle au kit de marque. */
-export function Logo({
-  className = "",
-  variant = "encre",
-}: {
-  className?: string;
-  variant?: "encre" | "nuit";
-}) {
-  const ink = variant === "nuit" ? "text-blanc-casse" : "text-encre";
-  const grey = variant === "nuit" ? "text-[#79828d]" : "text-encre-claire";
-  return (
-    <Link href="/" className={`inline-flex items-center ${className}`} aria-label="Dossimo">
-      <span
-        className={`font-display text-[1.4rem] font-bold lowercase leading-none tracking-[-0.02em] ${ink}`}
-      >
-        d<span className={grey}>o</span>ssim<span className={grey}>o</span>
-      </span>
-    </Link>
-  );
-}
+// Le mot-signe vit dans `@/components/ui/logo` : ce fichier importe `getCurrentUser`
+// (server-only), et tout composant client qui voulait juste afficher le logo faisait
+// entrer ce code dans son bundle, ce qui mettait la page en 500.
 
 export async function SiteHeader() {
   const user = await getCurrentUser();
