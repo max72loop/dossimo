@@ -2,6 +2,12 @@
 
 import { z } from "zod";
 
+import { estimerAidePublique } from "@/lib/landing/estimation";
+import {
+  estimationSchema,
+  type ResultatEstimation,
+} from "@/lib/landing/estimation-refs";
+
 /**
  * Capture de lead depuis le formulaire de la landing (CLAUDE.md §11, tâche 6).
  *
@@ -146,5 +152,35 @@ async function notifyGoogleAppsScript(lead: {
     }
   } catch (err) {
     console.error("[leads] Webhook Google Apps Script échoué:", err);
+  }
+}
+
+/**
+ * Estimation publique du montant d'aide (simulateur de la vitrine).
+ *
+ * Server Action volontairement SANS effet de bord : aucune écriture, aucun
+ * lead capté, aucune trace nominative. C'est une calculatrice, pas un
+ * formulaire déguisé — demander un email pour rendre un chiffre casserait la
+ * marche d'entrée que ce simulateur existe précisément pour abaisser.
+ *
+ * Les erreurs de saisie remontent en clair ; toute autre panne renvoie un
+ * message neutre sans détail d'implémentation.
+ */
+export async function estimerAide(
+  input: unknown,
+): Promise<{ ok: true; resultat: ResultatEstimation } | { ok: false; error: string }> {
+  const parsed = estimationSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0]?.message ?? "Saisie invalide." };
+  }
+
+  try {
+    return { ok: true, resultat: await estimerAidePublique(parsed.data) };
+  } catch (err) {
+    console.error("[estimation] échec:", err);
+    return {
+      ok: false,
+      error: "Estimation indisponible pour le moment. Réessayez dans un instant.",
+    };
   }
 }

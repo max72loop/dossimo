@@ -30,6 +30,17 @@ const nextConfig: NextConfig = {
           { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
         ],
       },
+      {
+        // Le pack d'exemple est prévisualisé dans un `<object>` sur /exemple.
+        // Le `X-Frame-Options: DENY` global bloque cet affichage, y compris en
+        // même origine, sur les navigateurs qui traitent le PDF comme un
+        // document embarqué. On desserre à SAMEORIGIN pour ce seul fichier :
+        // il est public, fictif et sans donnée personnelle, donc rien à
+        // protéger contre le clickjacking. Toutes les autres routes, dont les
+        // PDF de dossiers réels, gardent DENY.
+        source: "/exemple/pack.pdf",
+        headers: [{ key: "X-Frame-Options", value: "SAMEORIGIN" }],
+      },
     ];
   },
   // Pin the workspace root to this project. A stray lockfile exists in the

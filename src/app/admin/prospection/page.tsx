@@ -4,7 +4,7 @@ import { AlertTriangle, CheckCircle2, Pause, Play } from "lucide-react";
 
 import { getAdminEmail } from "@/lib/auth/is-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { etatFile } from "@/lib/prospection/file";
+import { etatFile, statsEngagement } from "@/lib/prospection/file";
 import {
   basculerPause,
   ecarterMessage,
@@ -33,7 +33,7 @@ export default async function AdminProspectionPage({
   if (!admin) notFound();
 
   const { ok, erreur } = await searchParams;
-  const etat = await etatFile();
+  const [etat, engagement] = await Promise.all([etatFile(), statsEngagement()]);
   const supabase = createAdminClient();
 
   const { data: file } = etat.campagne
@@ -109,6 +109,55 @@ export default async function AdminProspectionPage({
           valeur={String(etat.prospectsDisponibles)}
           note={etat.echecs > 0 ? `${etat.echecs} échec(s) aujourd’hui` : "jamais contactés"}
         />
+      </section>
+
+      {/* --- Engagement cumulé (hors jour courant : un clic arrive rarement le jour de l'envoi) --- */}
+      <section className="mt-6">
+        <h2 className="font-serif text-xl font-semibold text-encre">
+          Engagement depuis le début
+        </h2>
+        <p className="mt-1 text-sm text-ardoise">
+          Seuls les clics sur le lien de démo sont mesurés. Les ouvertures ne le
+          sont pas : la campagne ne pose aucun pixel de suivi, et n’en posera pas.
+        </p>
+        <div className="mt-4 grid gap-3 sm:grid-cols-4">
+          <Compteur
+            label="Messages partis"
+            valeur={String(engagement.envois)}
+            note="toutes journées confondues"
+          />
+          <Compteur
+            label="Ont cliqué"
+            valeur={String(engagement.cliqueurs)}
+            note={
+              engagement.clicsBruts > engagement.cliqueurs
+                ? `${engagement.clicsBruts} visites au total`
+                : "prospects distincts"
+            }
+          />
+          <Compteur
+            label="Taux de clic"
+            valeur={
+              engagement.envois === 0
+                ? "—"
+                : `${((engagement.cliqueurs / engagement.envois) * 100).toFixed(1)} %`
+            }
+            note={
+              engagement.envois < 200
+                ? `trop peu d’envois pour conclure (${engagement.envois}/200)`
+                : "sur les messages partis"
+            }
+          />
+          <Compteur
+            label="Désinscriptions"
+            valeur={String(engagement.desinscriptions)}
+            note={
+              engagement.dernierClic
+                ? `dernier clic le ${new Date(engagement.dernierClic).toLocaleDateString("fr-FR")}`
+                : "aucun clic à ce jour"
+            }
+          />
+        </div>
       </section>
 
       {etat.campagne?.en_pause && (

@@ -6,6 +6,7 @@ import type {
   MessageProspection,
   Prospect,
   StatutMessageProspection,
+  TypeEvenementProspection,
 } from "@/lib/database.types";
 import {
   dansLaFenetre,
@@ -86,6 +87,21 @@ export async function etatFile(maintenant = new Date()): Promise<EtatFile> {
     return count ?? 0;
   };
 
+  // Les envois se comptent sur `sent_at`, comme le plafond dans `envoyerProchain`
+  // — et NON sur `scheduled_on` comme les trois autres compteurs. Un message
+  // validé hier et parti aujourd'hui en rattrapage (`lte("scheduled_on", jour)`)
+  // consomme le plafond du jour sans porter la date du jour : indexé sur le jour
+  // prévu, l'écran affichait « 0 / 35 » pendant que la file en passait dix.
+  // L'admin voyait de la marge là où il n'y en avait plus. Les compteurs de file
+  // ci-dessous restent sur `scheduled_on` à dessein : eux décrivent la file du
+  // jour, pas ce qui sort de la boîte.
+  const { count: partisAujourdhui } = await supabase
+    .from("prospection_messages")
+    .select("id", { count: "exact", head: true })
+    .eq("campagne_id", campagne.id)
+    .gte("sent_at", debutJourParis(maintenant).toISOString())
+    .eq("statut", "envoye");
+
   const { count: disponibles } = await supabase
     .from("prospects")
     .select("id", { count: "exact", head: true })
@@ -100,11 +116,69 @@ export async function etatFile(maintenant = new Date()): Promise<EtatFile> {
       jour,
       capMax: campagne.daily_cap_max,
     }),
-    envoyes: await compte("envoye"),
+    envoyes: partisAujourdhui ?? 0,
     enAttente: await compte("en_attente"),
     valides: await compte("valide"),
     echecs: await compte("echec"),
     prospectsDisponibles: disponibles ?? 0,
+  };
+}
+
+export interface StatsEngagement {
+  envois: number;
+  /** Prospects distincts ayant cliqué. C'est CE chiffre qui veut dire quelque chose. */
+  cliqueurs: number;
+  /** Lignes `clic` brutes, rechargements compris. Toujours >= `cliqueurs`. */
+  clicsBruts: number;
+  desinscriptions: number;
+  /** ISO du clic le plus récent, `null` si personne n'a jamais cliqué. */
+  dernierClic: string | null;
+}
+
+/**
+ * Engagement cumulé de la prospection, depuis le premier envoi.
+ *
+ * Volontairement hors du jour courant, contrairement aux compteurs de file : un
+ * clic arrive rarement le jour de l'envoi, et une lecture quotidienne afficherait
+ * zéro en permanence pour une campagne qui marche.
+ *
+ * `enregistrerClic` insère une ligne à CHAQUE passage sur `/demo?p=…`, sans
+ * déduplication : un prospect qui recharge la page en produit trois. Le taux de
+ * clic se calcule donc sur `cliqueurs` (prospects distincts), jamais sur
+ * `clicsBruts` — les deux sont exposés pour que l'écart reste lisible plutôt
+ * qu'invisible.
+ */
+export async function statsEngagement(): Promise<StatsEngagement> {
+  const supabase = createAdminClient();
+
+  const compte = async (type: NonNullable<TypeEvenementProspection>) => {
+    const { count, error } = await supabase
+      .from("prospection_evenements")
+      .select("id", { count: "exact", head: true })
+      .eq("type", type);
+    if (error) throw new Error(`Lecture des événements (${type}) : ${error.message}`);
+    return count ?? 0;
+  };
+
+  const [envois, desinscriptions] = await Promise.all([
+    compte("envoi"),
+    compte("desinscription"),
+  ]);
+
+  const { data: clics, error } = await supabase
+    .from("prospection_evenements")
+    .select("prospect_id, created_at")
+    .eq("type", "clic")
+    .order("created_at", { ascending: false });
+  if (error) throw new Error(`Lecture des clics : ${error.message}`);
+
+  const lignes = clics ?? [];
+  return {
+    envois,
+    cliqueurs: new Set(lignes.map((c) => c.prospect_id)).size,
+    clicsBruts: lignes.length,
+    desinscriptions,
+    dernierClic: lignes[0]?.created_at ?? null,
   };
 }
 

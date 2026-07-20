@@ -118,12 +118,39 @@ async function tenterChat(
   return content;
 }
 
+/**
+ * Politique de données imposée à OpenRouter, appliquée à TOUS les appels.
+ *
+ * `data_collection: "deny"` écarte de l'acheminement tout fournisseur qui
+ * conserve les requêtes ou s'en sert pour entraîner ses modèles. Ce n'est pas
+ * un réglage de confort : ce qui transite ici, ce sont les devis, les factures
+ * et les avis d'imposition des bénéficiaires, c'est-à-dire les données les plus
+ * sensibles du produit (`AGENTS.md`). Sans ce garde-fou, la promesse faite sur
+ * la vitrine (« vos documents ne servent à entraîner aucun modèle ») serait
+ * fausse, et une promesse de confidentialité fausse est pire que pas de
+ * promesse du tout.
+ *
+ * Conséquence assumée : si aucun fournisseur conforme n'est disponible pour le
+ * modèle demandé, l'appel échoue au lieu de partir chez un fournisseur qui
+ * conserve. C'est le comportement voulu.
+ */
+const POLITIQUE_DONNEES = { data_collection: "deny" } as const;
+
 async function postChat(
   body: Record<string, unknown>,
   opts: { signal?: AbortSignal; timeoutMs?: number } = {},
 ): Promise<string> {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) throw new Error("OPENROUTER_API_KEY manquant.");
+
+  // Appliquée ici, et pas chez les appelants : un seul point de passage pour
+  // TOUS les appels (chat et vision), donc aucun moyen d'en oublier un. Les
+  // options `provider` d'un appelant sont conservées, la politique de données
+  // est imposée par-dessus.
+  const corps = {
+    ...body,
+    provider: { ...(body.provider as object | undefined), ...POLITIQUE_DONNEES },
+  };
 
   const budget = opts.timeoutMs ?? BUDGET_CHAT_MS;
   const echeance = Date.now() + budget;
@@ -135,7 +162,7 @@ async function postChat(
     if (restant <= 0) break;
 
     try {
-      return await tenterChat(body, apiKey, restant, opts.signal);
+      return await tenterChat(corps, apiKey, restant, opts.signal);
     } catch (err) {
       // Seul le transitoire se reprend. Le reste remonte immédiatement.
       if (!(err instanceof LlmIndisponibleError)) throw err;

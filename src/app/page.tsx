@@ -9,7 +9,9 @@ import {
   FileText,
   FolderCheck,
   Lock,
+  Mail,
   ScanSearch,
+  Server,
   ShieldCheck,
   Stamp,
   XCircle,
@@ -18,6 +20,7 @@ import {
 import { SiteHeader } from "@/components/landing/site-header";
 import { SiteFooter } from "@/components/landing/site-footer";
 import { LeadForm } from "@/components/landing/lead-form";
+import { Estimateur } from "@/components/landing/estimateur";
 import { FOCUS } from "@/components/ui/boutons";
 import { CTA_DEMO } from "@/lib/landing/copy";
 import { grillePublique } from "@/lib/landing/grille-publique";
@@ -71,6 +74,8 @@ export default async function Home() {
         <Etapes />
         <Relecture />
         <Difference />
+        <Confiance />
+        <Estimation />
         <Pricing grille={grille} />
         <Reassurance />
         <Faq />
@@ -133,13 +138,23 @@ function Hero() {
             ))}
           </ul>
 
-          <div className="mt-7">
+          {/* Deux marches, pas une. Le CTA principal demande le devis d'un client
+              réel : c'est beaucoup pour un visiteur arrivé d'un guide il y a
+              trente secondes. Le lien secondaire lui laisse voir le livrable
+              avant de confier quoi que ce soit. */}
+          <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
             <Link
               href="/demo"
               className="group inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-accent px-6 py-3 text-sm font-semibold text-blanc-casse shadow-md transition-colors hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-clair sm:w-auto"
             >
               {CTA_DEMO}
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+            </Link>
+            <Link
+              href="/exemple"
+              className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg border border-papier/30 px-6 py-3 text-sm font-medium text-papier transition-colors hover:bg-papier/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-papier sm:w-auto"
+            >
+              Voir un pack d&rsquo;exemple
             </Link>
           </div>
 
@@ -409,6 +424,159 @@ function Difference() {
   );
 }
 
+/* -------------------------------------------------------------- Confiance */
+/**
+ * La preuve, posée juste avant le prix.
+ *
+ * Dossimo n'a pas encore de clients, donc pas de preuve sociale : un témoignage
+ * inventé serait une faute, pas un raccourci. La parade est la **preuve de
+ * personne** — un éditeur identifiable, immatriculé, joignable — doublée de la
+ * **preuve de traitement** : où vont les documents, qui les lit, ce qui ne leur
+ * arrive jamais.
+ *
+ * Toutes les valeurs viennent d'`editeur` (source unique des mentions légales) :
+ * le SIREN affiché ici est celui des factures et des mentions, jamais une
+ * recopie. Aucune affirmation de ce bloc n'est décorative — chacune est tenue
+ * quelque part dans le code ou dans la politique de confidentialité :
+ *
+ * - « écarte les fournisseurs qui conservent » → `POLITIQUE_DONNEES`
+ *   (`src/lib/llm/openrouter.ts`), `data_collection: "deny"` sur tout appel.
+ * - « hors UE, encadré par les clauses types » → l'hébergeur est américain
+ *   (`editeur.hebergeur`). On ne prétend PAS héberger en France : ce serait faux.
+ * - « ne dépose jamais, ne touche jamais la prime » → CLAUDE.md §2.
+ */
+function Confiance() {
+  const traitement = [
+    {
+      icon: ScanSearch,
+      titre: "Qui lit vos documents",
+      corps:
+        "Un modèle d'analyse en extrait les informations du devis et de la facture, rien d'autre. Dossimo écarte les fournisseurs qui conservent les documents ou s'en servent pour entraîner leurs modèles.",
+    },
+    {
+      icon: Server,
+      titre: "Où ils sont stockés",
+      corps: `Base et documents chez ${editeur.baseDeDonnees.nom.split(" (")[0]}, site hébergé par ${editeur.hebergeur.nom.replace(" Inc.", "")}. Certains traitements ont lieu hors Union européenne, encadrés par les clauses contractuelles types.`,
+    },
+    {
+      icon: Lock,
+      titre: "Ce qui n'arrive jamais",
+      corps:
+        "Vos données ne sont jamais vendues. Dossimo ne dépose aucun dossier à votre place et ne perçoit rien sur la prime de votre client.",
+    },
+  ];
+
+  return (
+    <section id="confiance" className="border-y border-filigrane bg-papier-fonce/60 py-16 sm:py-20">
+      <Shell>
+        <div className="grid gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:gap-14">
+          <div>
+            <SectionLabel>Qui est derrière Dossimo</SectionLabel>
+            <h2 className="mt-5 font-serif text-3xl font-semibold tracking-tight text-encre sm:text-[2.25rem] sm:leading-tight">
+              Un éditeur, un nom, une adresse.
+            </h2>
+            <p className="mt-4 text-lg leading-relaxed text-ardoise">
+              Vous allez confier le devis d&rsquo;un client réel à un outil que vous
+              découvrez. Vous avez le droit de savoir à qui.
+            </p>
+
+            <div className="mt-8 rounded-2xl bg-blanc-casse p-6 shadow-lg">
+              <div className="flex items-center gap-4">
+                {/* Pas de portrait dans `public/brand/` aujourd'hui : on affiche les
+                    initiales plutôt qu'un visage d'illustration acheté, qui ruinerait
+                    exactement la confiance que ce bloc cherche à établir. Déposer le
+                    portrait en `public/brand/max-landry.jpg` et remplacer ce bloc par
+                    un `next/image` le jour où la photo existe. */}
+                <span
+                  aria-hidden="true"
+                  className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-encre font-serif text-xl font-semibold text-blanc-casse"
+                >
+                  ML
+                </span>
+                <div>
+                  <p className="font-serif text-lg font-semibold text-encre">
+                    {editeur.directeurPublication}
+                  </p>
+                  <p className="text-sm text-ardoise">
+                    Fondateur, et la personne qui vous répondra
+                  </p>
+                </div>
+              </div>
+
+              <p className="mt-5 text-[0.95rem] leading-relaxed text-ardoise">
+                J&rsquo;ai construit Dossimo après avoir vu des artisans perdre une
+                prime entière sur une mention manquante, et d&rsquo;autres céder leur
+                dossier à un mandataire faute de temps pour le monter. Ces deux
+                situations ont la même cause : personne n&rsquo;a le temps de relire un
+                dossier ligne à ligne le soir.
+              </p>
+
+              <dl className="mt-6 grid gap-x-6 gap-y-3 border-t border-filigrane pt-5 text-sm sm:grid-cols-2">
+                <div>
+                  <dt className="label text-tampon">Éditeur</dt>
+                  <dd className="mt-1 text-encre">{editeur.raisonSociale}</dd>
+                </div>
+                <div>
+                  <dt className="label text-tampon">SIREN</dt>
+                  <dd className="mt-1 font-mono tabular-nums text-encre">{editeur.siren}</dd>
+                </div>
+                <div className="sm:col-span-2">
+                  <dt className="label text-tampon">Adresse</dt>
+                  <dd className="mt-1 text-encre">{editeur.adresse}</dd>
+                </div>
+              </dl>
+
+              <a
+                href={`mailto:${editeur.emailContact}?subject=Question%20avant%20mon%20premier%20dossier`}
+                className={`mt-6 inline-flex items-center gap-2 text-sm font-semibold text-tampon underline underline-offset-4 ${FOCUS}`}
+              >
+                <Mail className="h-4 w-4" strokeWidth={1.5} />
+                {editeur.emailContact}
+              </a>
+              <p className="mt-2 text-xs leading-relaxed text-ardoise">
+                Écrivez avant votre premier dossier si quoi que ce soit vous retient.
+                C&rsquo;est moi qui lis, et je réponds.
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <SectionLabel>Vos documents</SectionLabel>
+            <h2 className="mt-5 font-serif text-3xl font-semibold tracking-tight text-encre sm:text-[2.25rem] sm:leading-tight">
+              Ce qu&rsquo;ils deviennent, sans détour.
+            </h2>
+            <p className="mt-4 text-lg leading-relaxed text-ardoise">
+              Un devis porte le nom, l&rsquo;adresse et le chantier de votre client.
+              Voici précisément ce qui lui arrive.
+            </p>
+
+            <ul className="mt-8 space-y-4">
+              {traitement.map((t) => (
+                <li key={t.titre} className="flex items-start gap-4 rounded-2xl bg-blanc-casse p-5 shadow-md">
+                  <t.icon className="mt-0.5 h-5 w-5 shrink-0 text-tampon" strokeWidth={1.5} />
+                  <div>
+                    <p className="font-serif text-lg font-semibold text-encre">{t.titre}</p>
+                    <p className="mt-1.5 text-sm leading-relaxed text-ardoise">{t.corps}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+
+            <p className="mt-5 text-sm leading-relaxed text-ardoise">
+              Le détail complet, y compris vos droits d&rsquo;accès et
+              d&rsquo;effacement, est dans la{" "}
+              <Link href="/confidentialite" className={`font-semibold text-tampon underline underline-offset-4 ${FOCUS}`}>
+                politique de confidentialité
+              </Link>
+              .
+            </p>
+          </div>
+        </div>
+      </Shell>
+    </section>
+  );
+}
+
 /* ---------------------------------------------------------------- Etapes */
 function Etapes() {
   const steps = [
@@ -668,6 +836,65 @@ function Preparation() {
         </div>
       </Shell>
     </aside>
+  );
+}
+
+/* ------------------------------------------------------------- Estimation */
+/**
+ * Le simulateur, posé JUSTE avant la tarification.
+ *
+ * L'ordre n'est pas cosmétique : la page annonçait 49 / 149 / 249 € sans que
+ * rien, nulle part, ne dise à quoi ces montants se comparent. En lisant
+ * d'abord « 1 235 € d'aide en jeu », l'artisan aborde la grille suivante avec
+ * un ordre de grandeur en tête, et le prix devient un pourcentage plutôt qu'une
+ * dépense sèche.
+ *
+ * Les montants viennent de `regles_metier` via une Server Action : la vitrine
+ * ne connaît aucun barème (AGENTS.md).
+ */
+function Estimation() {
+  return (
+    <section id="estimation" className="py-16 sm:py-20">
+      <Shell>
+        <div className="grid items-start gap-10 lg:grid-cols-[1fr_0.85fr] lg:gap-14">
+          <div>
+            <SectionLabel>Combien est en jeu</SectionLabel>
+            <h2 className="mt-5 font-serif text-3xl font-semibold tracking-tight text-encre sm:text-[2.25rem] sm:leading-tight">
+              Avant de parler de notre prix,{" "}
+              <span className="text-tampon">parlons du sien</span>.
+            </h2>
+            <p className="mt-5 text-lg leading-relaxed text-ardoise">
+              Un dossier refusé, ce n&rsquo;est pas une formalité perdue :
+              c&rsquo;est l&rsquo;aide entière qui saute, et le montage à
+              recommencer. Voici l&rsquo;ordre de grandeur de ce que porte un
+              chantier, calculé sur les barèmes que Dossimo applique réellement.
+            </p>
+
+            <ul className="mt-8 space-y-3">
+              {[
+                "Les mêmes barèmes que ceux du moteur, pas une table de communication.",
+                "Les quatre profils de revenus de l'Anah, sans les confondre.",
+                "Ce qui n'est pas estimable est affiché comme tel, jamais arrondi à zéro.",
+              ].map((p) => (
+                <li key={p} className="flex items-start gap-3 text-[0.95rem] leading-relaxed text-encre">
+                  <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-succes" strokeWidth={1.5} />
+                  {p}
+                </li>
+              ))}
+            </ul>
+
+            <p className="mt-6 text-sm leading-relaxed text-ardoise">
+              Dossimo est un service indépendant d&rsquo;aide à la préparation de
+              dossier, non affilié à l&rsquo;Anah ni à France Rénov&rsquo;. Cette
+              estimation n&rsquo;engage aucun organisme et ne vaut pas décision
+              d&rsquo;attribution.
+            </p>
+          </div>
+
+          <Estimateur />
+        </div>
+      </Shell>
+    </section>
   );
 }
 
