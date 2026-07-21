@@ -10,12 +10,14 @@ import { estimationSchema, gesteAuM2 } from "@/lib/landing/estimation-refs";
  * « je ne sais pas » en « 0 € ». Les deux sont couvertes ici.
  */
 
+// CEE : le violet et le rose partagent le même tarif (le CEE ne les distingue pas).
 const BAREME_M2 = {
-  par_m2: { grande_precarite: 13, precaire: 11, classique: 7 },
+  par_m2: { grande_precarite: 13, precaire: 11, intermediaire: 7, superieur: 7 },
 };
 
+// MaPrimeRénov' : le violet (intermediaire) a un forfait, le rose (superieur) non.
 const BAREME_FORFAIT = {
-  forfait: { grande_precarite: 5000, precaire: 4000, classique: 3000 },
+  forfait: { grande_precarite: 5000, precaire: 4000, intermediaire: 3000 },
 };
 
 const ligne = (r: ReturnType<typeof composerEstimation>, d: "cee" | "maprimerenov") =>
@@ -47,10 +49,10 @@ describe("estimation publique — barème au m²", () => {
 
 describe("estimation publique — profil rose (la règle qui protège)", () => {
   /**
-   * Le modèle interne n'a que trois profils et son `classique` recouvre le
-   * violet (éligible) ET le rose (non éligible). Sans cette règle, un ménage
-   * aux revenus supérieurs lirait le montant du violet : une prime à laquelle
-   * il n'a pas droit, affichée par l'outil qui promet d'éviter les refus.
+   * Le modèle interne distingue désormais le violet (`intermediaire`, éligible) du
+   * rose (`superieur`, non éligible). La garde reste : `mprEligible` à `false` pour
+   * le rose, pour qu'aucun montant MaPrimeRénov' ne s'affiche à un ménage qui n'y a
+   * pas droit — la prime que l'outil promet d'éviter en refus.
    */
   it("cas de refus : le rose n'obtient AUCUN montant MaPrimeRénov'", () => {
     const r = composerEstimation(BAREME_M2, BAREME_FORFAIT, "rose", 95);
@@ -58,7 +60,7 @@ describe("estimation publique — profil rose (la règle qui protège)", () => {
     expect(ligne(r, "maprimerenov").base).toContain("revenus supérieurs");
   });
 
-  it("le violet, lui, obtient bien le montant du profil classique", () => {
+  it("le violet, lui, obtient bien le montant du profil intermédiaire", () => {
     const r = composerEstimation(BAREME_M2, BAREME_FORFAIT, "violet", 95);
     expect(ligne(r, "maprimerenov").montant).toBe(3000);
   });

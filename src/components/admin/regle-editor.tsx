@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Check } from "lucide-react";
 
 import {
   updateRegle,
@@ -44,13 +45,15 @@ const SEUIL_PAR_FAMILLE: Record<
 function gabaritPrime(famille: Famille): { hint: string; exemple: string } {
   if (famille === "isolation") {
     return {
-      hint: "{ par_m2: { classique, precaire, grande_precarite }, plafond }",
-      exemple: '{ "par_m2": { "classique": 10, "precaire": 15, "grande_precarite": 20 } }',
+      hint: "{ par_m2: { grande_precarite, precaire, intermediaire, superieur }, plafond }",
+      exemple:
+        '{ "par_m2": { "grande_precarite": 20, "precaire": 15, "intermediaire": 10 } }',
     };
   }
   return {
-    hint: "{ forfait: { classique, precaire, grande_precarite } }",
-    exemple: '{ "forfait": { "classique": 2500, "precaire": 3500, "grande_precarite": 4500 } }',
+    hint: "{ forfait: { grande_precarite, precaire, intermediaire, superieur } }",
+    exemple:
+      '{ "forfait": { "grande_precarite": 4500, "precaire": 3500, "intermediaire": 2500 } }',
   };
 }
 
@@ -64,7 +67,7 @@ function Status({ res }: { res: RegleActionResult | "saving" | null }) {
   if (res === null) return null;
   if (res === "saving") return <span className="text-xs text-ardoise">Enregistrement…</span>;
   return res.ok ? (
-    <span className="text-xs text-succes">Enregistré ✓</span>
+    <span className="inline-flex items-center gap-1 text-xs text-succes">Enregistré<Check className="h-3.5 w-3.5" strokeWidth={2.5} aria-hidden="true" /></span>
   ) : (
     <span className="text-xs text-erreur">{res.error}</span>
   );

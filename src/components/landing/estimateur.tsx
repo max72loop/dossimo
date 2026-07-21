@@ -5,6 +5,7 @@ import { AlertCircle, ArrowRight } from "lucide-react";
 import Link from "next/link";
 
 import { FOCUS } from "@/components/ui/boutons";
+import { CHAMP_INPUT, CHAMP_LABEL } from "@/components/ui/champs";
 import { Spinner } from "@/components/ui/spinner";
 import { estimerAide } from "@/lib/landing/actions";
 import {
@@ -75,9 +76,8 @@ export function Estimateur() {
     }
   }
 
-  const labelClass = "block text-sm font-medium text-ardoise";
-  const controlClass =
-    "mt-1.5 h-11 w-full rounded border border-filigrane bg-blanc-casse px-3.5 text-sm text-encre outline-none transition focus:border-tampon focus:ring-2 focus:ring-tampon/15";
+  const labelClass = CHAMP_LABEL;
+  const controlClass = `mt-1.5 ${CHAMP_INPUT}`;
 
   return (
     <div className="rounded-2xl bg-blanc-casse p-6 shadow-lg sm:p-7">

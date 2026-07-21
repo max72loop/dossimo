@@ -1,3 +1,5 @@
+import { AlertTriangle, Check } from "lucide-react";
+
 import { BarreCompletude } from "@/components/dossier/barre-completude";
 import { formatEuros } from "@/lib/format/montant";
 import type { SyntheseDossier } from "@/lib/dossier/synthese";
@@ -24,10 +26,8 @@ export function VerdictHero({
   return (
     <section
       aria-labelledby="verdict-titre"
-      className={`mb-6 rounded-md border p-6 shadow-sm ${
-        conforme
-          ? "border-succes/30 bg-succes-bg"
-          : "border-avertissement/40 bg-avertissement-bg"
+      className={`mb-6 rounded-2xl p-6 shadow-lg ${
+        conforme ? "bg-succes-bg" : "bg-avertissement-bg"
       }`}
     >
       <div className="flex flex-wrap items-start justify-between gap-6">
@@ -35,11 +35,15 @@ export function VerdictHero({
           <div className="flex items-center gap-2.5">
             <span
               aria-hidden
-              className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm font-bold text-blanc-casse ${
+              className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-blanc-casse ${
                 conforme ? "bg-succes" : "bg-avertissement"
               }`}
             >
-              {conforme ? "✓" : "!"}
+              {conforme ? (
+                <Check className="h-4 w-4" strokeWidth={3} />
+              ) : (
+                <AlertTriangle className="h-4 w-4" strokeWidth={2.5} />
+              )}
             </span>
             <h2
               id="verdict-titre"

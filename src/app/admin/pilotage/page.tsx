@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 
 import { getAdminEmail } from "@/lib/auth/is-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -29,7 +30,7 @@ export default async function PilotagePage() {
     parOblige.set(nom, (parOblige.get(nom) ?? 0) + 1);
   }
   return <main className="mx-auto max-w-4xl px-8 py-10">
-    <Link href="/admin/regles" className="text-sm text-tampon underline-offset-4 hover:underline">← Règles métier</Link>
+    <Link href="/admin/regles" className="inline-flex items-center gap-1 text-sm text-tampon underline-offset-4 hover:underline"><ArrowLeft className="h-4 w-4" strokeWidth={1.8} aria-hidden="true" />Règles métier</Link>
     <h1 className="mt-4 font-serif text-3xl font-semibold text-encre">Pilotage terrain</h1>
     <p className="mt-2 text-sm text-ardoise">Données déclarées après dépôt. Elles orientent les revues de règles ; elles ne prouvent pas seules une exigence réglementaire.</p>
     <div className="mt-6 grid gap-4 sm:grid-cols-3"><Metric label="Dossiers créés" value={dossierRows.length} /><Metric label="Obligé renseigné" value={`${avecOblige}/${dossierRows.length}`} /><Metric label="Retours reçus" value={retourRows.length} /></div>

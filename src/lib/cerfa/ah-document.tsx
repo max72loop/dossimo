@@ -7,9 +7,9 @@ import { LOGEMENT_TYPES, posteLabel } from "@/lib/dossier/cee-isolation";
 import { lignesTechniques } from "@/lib/dossier/geste-technique";
 import { dateFr, euro } from "@/lib/pack/format";
 import { COLORS, styles } from "@/lib/pack/pdf-theme";
+import { DISCLAIMER_DOSSIMO } from "@/lib/legal/mentions";
 
-const DISCLAIMER =
-  "Dossimo — service indépendant d'aide à la préparation de dossier, non affilié à l'Anah ni à France Rénov'. Reproduction fidèle du modèle réglementaire, à faire signer avant dépôt.";
+const DISCLAIMER = `${DISCLAIMER_DOSSIMO} Reproduction fidèle du modèle réglementaire, à faire signer avant dépôt.`;
 
 /**
  * Reproduction fidèle du modèle réglementaire de l'attestation sur l'honneur CEE

@@ -5,6 +5,7 @@ import { AlertCircle, CheckCircle2 } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 
 import { FOCUS } from "@/components/ui/boutons";
+import { CHAMP_INPUT, CHAMP_LABEL } from "@/components/ui/champs";
 import { submitLead } from "@/lib/landing/actions";
 
 export function LeadForm() {
@@ -46,9 +47,8 @@ export function LeadForm() {
     );
   }
 
-  const labelClass = "block text-sm font-medium text-ardoise";
-  const inputClass =
-    "mt-1.5 h-11 w-full rounded border border-filigrane bg-blanc-casse px-3.5 text-sm text-encre placeholder:text-encre-claire outline-none transition focus:border-tampon focus:ring-2 focus:ring-tampon/15";
+  const labelClass = CHAMP_LABEL;
+  const inputClass = `mt-1.5 ${CHAMP_INPUT}`;
 
   return (
     <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4" aria-busy={status === "loading"}>

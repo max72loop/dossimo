@@ -19,7 +19,7 @@ function dossier(opts: {
     dates: {},
     regle:
       opts.prime === undefined
-        ? { condition: { prime: { par_m2: { classique: 5, precaire: 8, grande_precarite: 10 } } } }
+        ? { condition: { prime: { par_m2: { intermediaire: 5, precaire: 8, grande_precarite: 10 } } } }
         : opts.prime === null
           ? null
           : { condition: { prime: opts.prime } },
@@ -49,8 +49,45 @@ describe("estimerPrime", () => {
   });
 
   it("renvoie null si la catégorie n'a pas de taux", () => {
-    const e = estimerPrime(dossier({ precarite: "classique", prime: { par_m2: { precaire: 8 } } }));
+    const e = estimerPrime(dossier({ precarite: "intermediaire", prime: { par_m2: { precaire: 8 } } }));
     expect(e).toBeNull();
+  });
+
+  it("rose (superieur) en MaPrimeRénov' : aucun forfait, donc non estimable", () => {
+    // Le barème MPR ne porte pas de clé `superieur` : le rose n'est pas éligible au
+    // parcours par geste. On ne doit pas afficher la prime du violet à un rose.
+    const e = estimerPrime(
+      dossier({
+        dispositif: "maprimerenov",
+        precarite: "superieur",
+        prime: { forfait: { grande_precarite: 4000, precaire: 3000, intermediaire: 2000 } },
+      }),
+    );
+    expect(e).toBeNull();
+  });
+
+  it("violet (intermediaire) : estime au forfait de sa bande (CESI 2000)", () => {
+    const e = estimerPrime(
+      dossier({
+        dispositif: "maprimerenov",
+        precarite: "intermediaire",
+        surface: 0,
+        prime: { forfait: { grande_precarite: 4000, precaire: 3000, intermediaire: 2000 } },
+      }),
+    );
+    expect(e?.montant).toBe(2000);
+  });
+
+  it("rose (superieur) en CEE : estimé, car le CEE ignore violet et rose", () => {
+    const e = estimerPrime(
+      dossier({
+        dispositif: "cee",
+        precarite: "superieur",
+        surface: 100,
+        prime: { par_m2: { grande_precarite: 13, precaire: 11, intermediaire: 7, superieur: 7 } },
+      }),
+    );
+    expect(e?.montant).toBe(700);
   });
 
   it("le dispositif est reporté dans le résultat", () => {
@@ -58,14 +95,14 @@ describe("estimerPrime", () => {
   });
 
   it("forfait : montant fixe selon le profil, indépendant de la surface (PAC)", () => {
-    const forfait = { forfait: { classique: 2500, precaire: 3500, grande_precarite: 4500 } };
+    const forfait = { forfait: { intermediaire: 2500, precaire: 3500, grande_precarite: 4500 } };
     const e = estimerPrime(dossier({ precarite: "grande_precarite", surface: 0, prime: forfait }));
     expect(e?.montant).toBe(4500);
     expect(e?.base).toMatch(/forfait/);
   });
 
   it("forfait : renvoie null si le profil n'a pas de montant", () => {
-    const e = estimerPrime(dossier({ precarite: "classique", prime: { forfait: { precaire: 3500 } } }));
+    const e = estimerPrime(dossier({ precarite: "superieur", prime: { forfait: { precaire: 3500 } } }));
     expect(e).toBeNull();
   });
 });

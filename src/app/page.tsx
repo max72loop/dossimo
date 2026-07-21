@@ -17,6 +17,7 @@ import {
   XCircle,
 } from "lucide-react";
 
+import { Badge } from "@/components/ui/badge";
 import { SiteHeader } from "@/components/landing/site-header";
 import { SiteFooter } from "@/components/landing/site-footer";
 import { LeadForm } from "@/components/landing/lead-form";
@@ -209,7 +210,7 @@ function ReportCard() {
             DOS-2026-0148
           </p>
         </div>
-        <StatusBadge tone="erreur">2 points trouvés</StatusBadge>
+        <Badge ton="erreur" dot>2 points trouvés</Badge>
       </div>
       <ul className="mt-4 space-y-2.5">
         {checks.map((c) => (
@@ -227,36 +228,6 @@ function ReportCard() {
         Pourquoi : sans cette valeur, le dossier d’isolation risque d’être refusé.
       </div>
     </div>
-  );
-}
-
-/* ------------------------------------------------------------- Status UI */
-function StatusBadge({
-  tone,
-  children,
-}: {
-  tone: "succes" | "avertissement" | "erreur" | "brouillon";
-  children: React.ReactNode;
-}) {
-  const map = {
-    succes: "bg-succes-bg text-succes",
-    avertissement: "bg-avertissement-bg text-avertissement",
-    erreur: "bg-erreur-bg text-erreur",
-    brouillon: "bg-papier-fonce text-ardoise",
-  } as const;
-  const dot = {
-    succes: "bg-succes",
-    avertissement: "bg-avertissement",
-    erreur: "bg-erreur",
-    brouillon: "bg-encre-claire",
-  } as const;
-  return (
-    <span
-      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${map[tone]}`}
-    >
-      <span className={`h-1.5 w-1.5 rounded-full ${dot[tone]}`} />
-      {children}
-    </span>
   );
 }
 
@@ -727,7 +698,7 @@ function RelectureCard() {
               devis-combles.pdf
             </p>
           </div>
-          <StatusBadge tone="erreur">2 à corriger</StatusBadge>
+          <Badge ton="erreur" dot>2 à corriger</Badge>
         </div>
 
         <ul className="mt-4 space-y-2">

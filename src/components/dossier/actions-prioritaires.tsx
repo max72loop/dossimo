@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { CheckCircle2, Clock3, ListTodo } from "lucide-react";
 
+import { CARTE_LISTE } from "@/components/ui/cartes";
+
 export type ActionPrioritaire = {
   dossierId: string;
   beneficiaire: string;
@@ -39,9 +41,9 @@ export function ActionsPrioritaires({ actions }: { actions: ActionPrioritaire[] 
         const taches = actions.filter((action) => action.categorie === categorie.id);
         const Icon = categorie.icon;
         return (
-          <div key={categorie.id} className="overflow-hidden rounded-md border border-filigrane bg-blanc-casse shadow-sm">
+          <div key={categorie.id} className={CARTE_LISTE}>
             <div className="flex items-center gap-3 border-b border-filigrane px-5 py-4">
-              <span className={`flex h-8 w-8 items-center justify-center rounded-full text-white ${categorie.accent}`}>
+              <span className={`flex h-8 w-8 items-center justify-center rounded-full text-blanc-casse ${categorie.accent}`}>
                 <Icon className="h-4 w-4" strokeWidth={2} />
               </span>
               <h2 className="font-serif text-lg font-semibold text-encre">{categorie.titre}</h2>

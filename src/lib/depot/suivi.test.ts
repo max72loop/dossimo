@@ -25,7 +25,7 @@ const mpr = {
   regle: null,
 } as unknown as DossierComplet;
 
-/** Dossier CEE, ménage classique : rien à réclamer au client. */
+/** Dossier CEE, ménage intermédiaire : rien à réclamer au client. */
 const cee = {
   dossier: { dispositif: "cee" },
   caracteristiques: {
@@ -36,7 +36,7 @@ const cee = {
       prenom: "Claire",
       code_postal: "33000",
       occupation: "proprietaire_occupant",
-      precarite: "classique",
+      precarite: "intermediaire",
     },
     travaux: { fiche: "BAR-EN-101", surface_isolee_m2: 95, resistance_thermique_r: 7.5 },
   },

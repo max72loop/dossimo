@@ -4,12 +4,12 @@ import { euro, dateFr } from "@/lib/pack/format";
 import { logoNuit } from "@/lib/pack/logo";
 import { COLORS, styles } from "@/lib/pack/pdf-theme";
 import { editeur } from "@/lib/legal/editeur";
+import { DISCLAIMER_DOSSIMO } from "@/lib/legal/mentions";
 import type { FactureComplete } from "@/lib/factures/get-facture";
 
 const cents = (c: number) => euro(c / 100);
 
-const DISCLAIMER =
-  "Dossimo — service indépendant d'aide à la préparation de dossier, non affilié à l'Anah ni à France Rénov'.";
+const DISCLAIMER = DISCLAIMER_DOSSIMO;
 
 function Partie({
   titre,

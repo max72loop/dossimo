@@ -491,3 +491,38 @@ describe("controlerDossier — chauffe-eau solaire individuel (BAR-TH-101)", () 
     expect(cs.some((c) => c.startsWith("technique_rendement"))).toBe(false);
   });
 });
+
+describe("controlerDossier — non-cumul CEE PAC / solaire thermique (2026)", () => {
+  const nonCumul = (d: DossierComplet) =>
+    controlerDossier(d, AUJ).findings.find((f) => f.code === "eligibilite_non_cumul_solaire");
+
+  it("alerte (sans bloquer) sur un dossier CEE de PAC air/eau, en citant le solaire", () => {
+    const d = dossierPac();
+    const f = nonCumul(d);
+    expect(f?.severite).toBe("avertissement");
+    expect(f?.detail).toContain("BAR-TH-101");
+    // Non détectable automatiquement (règle inter-dossiers) : on alerte, on ne bloque
+    // pas. Le dossier reste déposable.
+    expect(controlerDossier(d, AUJ).conforme).toBe(true);
+  });
+
+  it("alerte sur un dossier CEE de chauffe-eau solaire, en citant la PAC", () => {
+    const f = nonCumul(dossierSolaire());
+    expect(f?.severite).toBe("avertissement");
+    expect(f?.detail).toContain("BAR-TH-171");
+  });
+
+  it("ne s'applique pas aux gestes hors PAC / solaire (isolation, CET, bois)", () => {
+    expect(nonCumul(dossier())).toBeUndefined(); // CEE combles isolation
+    expect(nonCumul(dossierCet())).toBeUndefined();
+    expect(nonCumul(dossierBois())).toBeUndefined();
+  });
+
+  it("ne s'applique pas en MaPrimeRénov' : ce non-cumul régit la seule valorisation CEE", () => {
+    const mprPac = {
+      ...dossierPac(),
+      dossier: { dispositif: "maprimerenov", created_at: "2026-06-01" },
+    } as unknown as DossierComplet;
+    expect(nonCumul(mprPac)).toBeUndefined();
+  });
+});

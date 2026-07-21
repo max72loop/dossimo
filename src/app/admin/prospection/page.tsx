@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { AlertTriangle, CheckCircle2, Pause, Play } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ArrowRight, CheckCircle2, Pause, Play } from "lucide-react";
 
 import { getAdminEmail } from "@/lib/auth/is-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -59,11 +59,13 @@ export default async function AdminProspectionPage({
   return (
     <main className="mx-auto max-w-4xl px-8 py-10">
       <div className="flex flex-wrap gap-4 text-sm">
-        <Link href="/admin/regles" className="text-tampon underline-offset-4 hover:underline">
-          ← Règles métier
+        <Link href="/admin/regles" className="inline-flex items-center gap-1 text-tampon underline-offset-4 hover:underline">
+          <ArrowLeft className="h-4 w-4" strokeWidth={1.8} aria-hidden="true" />
+          Règles métier
         </Link>
-        <Link href="/admin/pilotage" className="text-tampon underline-offset-4 hover:underline">
-          Pilotage terrain →
+        <Link href="/admin/pilotage" className="inline-flex items-center gap-1 text-tampon underline-offset-4 hover:underline">
+          Pilotage terrain
+          <ArrowRight className="h-4 w-4" strokeWidth={1.8} aria-hidden="true" />
         </Link>
       </div>
 

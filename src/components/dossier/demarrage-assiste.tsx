@@ -5,12 +5,12 @@ import { Camera, CheckCircle2, FileText, Sparkles } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 
 import { DossierCeeIsolationForm } from "@/components/dossier/DossierCeeIsolationForm";
+import { CHAMP_INPUT } from "@/components/ui/champs";
 import { analyserDevisInitial } from "@/lib/dossier/document-first-actions";
 import { loadGuestDraft } from "@/lib/dossier/guest-draft";
 import type { CeeIsolationInput, Famille } from "@/lib/dossier/cee-isolation";
 
-const inputClass =
-  "mt-1.5 h-11 w-full rounded border border-filigrane bg-blanc-casse px-3.5 text-sm text-encre outline-none transition focus:border-tampon focus:ring-2 focus:ring-tampon/15";
+const inputClass = `mt-1.5 ${CHAMP_INPUT}`;
 
 export function DemarrageAssiste({
   initialValues,

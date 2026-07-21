@@ -183,11 +183,23 @@ export async function getDossier(id: string): Promise<DossierComplet | null> {
     dossier.type_travaux,
   );
 
+  const caracteristiques =
+    dossier.caracteristiques_techniques_json as unknown as CeeIsolationCaracteristiques;
+
+  // Point de normalisation unique : un dossier antérieur au portage des quatre
+  // profils stocke `precarite: "classique"` (modèle à trois bandes). On le lit
+  // comme `intermediaire` (le violet, bande éligible qu'il recouvrait de fait pour
+  // l'estimation) — sans quoi `PRECARITES["classique"]` serait `undefined` partout
+  // (labels PDF/UI vides, barème introuvable). La migration 0046 corrige les lignes
+  // en base ; ceci protège tout ce qui échapperait encore.
+  if ((caracteristiques.beneficiaire?.precarite as string) === "classique") {
+    caracteristiques.beneficiaire.precarite = "intermediaire";
+  }
+
   return {
     dossier,
     artisan,
-    caracteristiques:
-      dossier.caracteristiques_techniques_json as unknown as CeeIsolationCaracteristiques,
+    caracteristiques,
     dates: dossier.dates_json as unknown as DossierDates,
     regle,
   };

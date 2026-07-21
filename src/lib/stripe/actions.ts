@@ -3,7 +3,7 @@
 import { getDossier } from "@/lib/dossier/get-dossier";
 import { CODE_LANCEMENT, FIN_LANCEMENT_EPOCH, REMISE_LANCEMENT } from "@/lib/lancement";
 import { accesDossier } from "@/lib/dossier/acces";
-import { estimerPrime } from "@/lib/dossier/prime";
+import { estimerPrime, raisonNonEstimable } from "@/lib/dossier/prime";
 import { getStripe, isStripeConfigured } from "@/lib/stripe/client";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -16,14 +16,17 @@ import {
 } from "@/lib/pricing";
 import { redirect } from "next/navigation";
 
+/** Codes que le client sait traiter autrement qu'en simple message d'erreur. */
+export type PaiementCode = "adresse_manquante" | "aide_non_estimable";
+
 export type PaiementResult =
   | { ok: true; url: string }
   /** `code` permet au client de réagir (ex. afficher le formulaire d'adresse). */
-  | { ok: false; error: string; code?: "adresse_manquante" };
+  | { ok: false; error: string; code?: PaiementCode };
 
 export type PaiementFormState =
   | { error: null; code: null }
-  | { error: string; code: "adresse_manquante" | null };
+  | { error: string; code: PaiementCode | null };
 
 function siteUrl(): string {
   return (
@@ -98,10 +101,18 @@ export async function creerSessionPaiementDossier(
   // un montant fourni par le client). Sans barème estimable, pas de tarif fiable.
   const aide = estimerPrime(data);
   if (!aide) {
+    // Deux causes, un seul geste (déblocage manuel), mais un message distinct :
+    // « surface » est réparable côté artisan, « structurel » est une dette de
+    // barème (profil MPR « classique », couple sans barème). Le client rend un
+    // bloc de reprise avec un contact, jamais un cul-de-sac technique.
+    const raison = raisonNonEstimable(data);
     return {
       ok: false,
+      code: "aide_non_estimable",
       error:
-        "Montant d'aide non estimable pour ce dossier : impossible de déterminer le palier. Complétez le dossier (surface, profil de revenus) ou le barème.",
+        raison === "surface"
+          ? "La surface isolée n'a pas été renseignée à la création, donc l'aide et le palier ne peuvent pas être calculés."
+          : "On ne peut pas estimer l'aide sur ce profil pour l'instant, donc aucun palier de prix ne peut être fixé automatiquement.",
     };
   }
   const aidCents = Math.round(aide.montant * 100);

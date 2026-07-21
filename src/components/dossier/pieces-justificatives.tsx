@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
+import { Check, X } from "lucide-react";
 
 import { BTN_SECONDAIRE } from "@/components/ui/boutons";
 import { CARTE_INTERNE } from "@/components/ui/cartes";
@@ -56,7 +57,7 @@ function EcartsTable({ comps }: { comps: Comparaison[] }) {
                 {c.piece}
               </td>
               <td className="py-1.5">
-                {c.statut === "ok" && <span className="text-succes">✓</span>}
+                {c.statut === "ok" && <Check className="h-4 w-4 text-succes" strokeWidth={2.5} aria-hidden="true" />}
                 {c.statut === "ecart" && (
                   <span className="font-semibold text-erreur">≠ écart</span>
                 )}
@@ -98,20 +99,16 @@ function MentionsTable({ mentions }: { mentions: MentionVerifiee[] }) {
           >
             <div className="flex items-start gap-2">
               <span className="shrink-0 pt-px">
-                {m.statut === "presente" && <span className="text-succes">✓</span>}
+                {m.statut === "presente" && <Check className="h-4 w-4 text-succes" strokeWidth={2.5} aria-hidden="true" />}
                 {m.statut === "divergente" && (
                   <span className="font-semibold text-erreur">≠</span>
                 )}
                 {m.statut === "absente" && (
-                  <span
-                    className={
-                      douteuse
-                        ? "font-semibold text-avertissement"
-                        : "font-semibold text-erreur"
-                    }
-                  >
-                    ✗
-                  </span>
+                  <X
+                    className={`h-4 w-4 ${douteuse ? "text-avertissement" : "text-erreur"}`}
+                    strokeWidth={2.5}
+                    aria-hidden="true"
+                  />
                 )}
               </span>
               <div className="min-w-0">
@@ -189,7 +186,10 @@ function PieceCard({
                   {ecarts} écart{ecarts > 1 ? "s" : ""} avec la saisie
                 </span>
               ) : (
-                <span className="text-succes">Cohérent avec la saisie ✓</span>
+                <span className="inline-flex items-center gap-1 text-succes">
+                  Cohérent avec la saisie
+                  <Check className="h-3.5 w-3.5" strokeWidth={2.5} aria-hidden="true" />
+                </span>
               )}
               {mentions !== null && (
                 <>
@@ -200,8 +200,9 @@ function PieceCard({
                       {mentionsKo > 1 ? "s" : ""} en défaut
                     </span>
                   ) : (
-                    <span className="text-succes">
-                      {mentions.length} mentions obligatoires présentes ✓
+                    <span className="inline-flex items-center gap-1 text-succes">
+                      {mentions.length} mentions obligatoires présentes
+                      <Check className="h-3.5 w-3.5" strokeWidth={2.5} aria-hidden="true" />
                     </span>
                   )}
                 </>

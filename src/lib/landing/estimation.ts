@@ -113,9 +113,9 @@ export function composerEstimation(
   const profil = PROFILS_PUBLICS[profilPublic];
   const cee = appliquer(primeCee ?? undefined, profil.interne, surface);
 
-  // Le profil rose ne reçoit AUCUN montant MaPrimeRénov', même si le barème en
-  // porte un pour `classique` : ce montant est celui du violet, et l'afficher
-  // au rose reviendrait à annoncer une prime à un ménage non éligible.
+  // Le profil rose (`superieur`) ne reçoit AUCUN montant MaPrimeRénov' : le barème
+  // MPR ne porte pas sa clé (rose non éligible par geste), et cette garde explicite
+  // s'assure qu'aucun montant du violet ne lui soit affiché par erreur.
   const mpr = profil.mprEligible
     ? appliquer(primeMpr ?? undefined, profil.interne, surface)
     : null;

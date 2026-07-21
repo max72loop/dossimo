@@ -294,8 +294,13 @@ export function piecesCeeIsolation(data: DossierComplet): PieceRequise[] {
   }
 
   // Avis d'imposition : toujours pour MaPrimeRénov' (détermine le profil de
-  // revenus et le montant), sinon côté CEE seulement en cas de bonification.
-  if (isMpr || beneficiaire.precarite !== "classique") {
+  // revenus et le montant), sinon côté CEE seulement en cas de bonification, que
+  // seules les deux bandes précaires ouvrent. L'intermédiaire (violet) et le
+  // supérieur (rose) n'ouvrent aucune bonification CEE : rien à réclamer.
+  const beneficieBonificationCee =
+    beneficiaire.precarite === "grande_precarite" ||
+    beneficiaire.precarite === "precaire";
+  if (isMpr || beneficieBonificationCee) {
     pieces.push({
       id: "avis_imposition",
       label: "Avis d'imposition du ménage",

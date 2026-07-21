@@ -53,8 +53,16 @@ const SEUIL_KEYS = [
   "anciennete_min_ans",
 ] as const;
 
+// Quatre profils Anah. `classique` reste accepté en clé DÉPRÉCIÉE, le temps que
+// tout barème seedé migre vers `intermediaire` / `superieur` (voir migration 0046).
 const profilMontants = z
-  .object({ classique: z.number(), precaire: z.number(), grande_precarite: z.number() })
+  .object({
+    grande_precarite: z.number(),
+    precaire: z.number(),
+    intermediaire: z.number(),
+    superieur: z.number(),
+    classique: z.number(),
+  })
   .partial();
 const primeSchema = z.object({
   // Isolation : montant au m² (× surface). Chauffage : forfait fixe par profil.
@@ -93,7 +101,7 @@ export function parsePrime(raw: string): ParseResult<unknown | undefined> {
     return {
       ok: false,
       error:
-        "Barème prime : format attendu { par_m2: { classique, precaire, grande_precarite }, plafond } ou { forfait: { classique, precaire, grande_precarite } }.",
+        "Barème prime : format attendu { par_m2: { grande_precarite, precaire, intermediaire, superieur }, plafond } ou { forfait: { grande_precarite, precaire, intermediaire, superieur } }.",
     };
   }
   return { ok: true, value: parsed.data };

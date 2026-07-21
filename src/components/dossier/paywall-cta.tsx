@@ -2,9 +2,11 @@
 
 import { useActionState, useRef, useState } from "react";
 import Link from "next/link";
+import { Mail } from "lucide-react";
 
 import { ouvrirPaiementDossier, type PaiementFormState } from "@/lib/stripe/actions";
 import { updateAdresseFacturation } from "@/lib/artisan/facturation-actions";
+import { editeur } from "@/lib/legal/editeur";
 import { Spinner } from "@/components/ui/spinner";
 
 const CHAMP =
@@ -88,8 +90,14 @@ export function PaywallCta({
   dossierId,
   prix,
   compact = false,
+  reference,
 }: {
   dossierId: string;
+  /**
+   * Référence lisible du dossier (ex. « DOS-2026-0148 »), reprise dans l'e-mail
+   * de demande de déblocage manuel. À défaut, on retombe sur l'identifiant.
+   */
+  reference?: string;
   /**
    * Prix à annoncer, déjà formaté (`prixPack().label`). `null` quand la grille
    * ne permet pas de le déterminer : le bouton tait alors le montant au lieu
@@ -155,9 +163,60 @@ export function PaywallCta({
         />
       )}
 
-      {state.error && state.code !== "adresse_manquante" && (
-        <p className="mt-1.5 text-xs text-erreur">{state.error}</p>
-      )}
+      {/* Aide non estimable (profil sans barème, ou surface non renseignée à la
+          création) : plutôt qu'un cul-de-sac technique, on explique et on ouvre
+          une voie de déblocage manuel. Aucun prix n'est inventé (AGENTS.md). En
+          liste (compact), un simple renvoi vers le dossier suffit. */}
+      {state.code === "aide_non_estimable" &&
+        (compact ? (
+          <p className="mt-1 text-[0.65rem] leading-snug text-ardoise">
+            Prix non calculable. Ouvrez le dossier pour demander le déblocage.
+          </p>
+        ) : (
+          <DeblocageManuel message={state.error} reference={reference ?? dossierId} />
+        ))}
+
+      {state.error &&
+        state.code !== "adresse_manquante" &&
+        state.code !== "aide_non_estimable" && (
+          <p className="mt-1.5 text-xs text-erreur">{state.error}</p>
+        )}
+    </div>
+  );
+}
+
+/**
+ * Voie de sortie quand l'aide n'est pas estimable : on dit pourquoi, et on
+ * propose un déblocage manuel par e-mail (la messagerie s'ouvre pré-remplie,
+ * rien n'est envoyé sans action — même principe que le panneau « Je suis
+ * bloqué »). C'est la traduction de « une erreur se dit et propose une reprise »
+ * (DESIGN.md §5).
+ */
+function DeblocageManuel({
+  message,
+  reference,
+}: {
+  message: string;
+  reference: string;
+}) {
+  const sujet = `Déblocage manuel du dossier ${reference}`;
+  const corps = `Bonjour,\n\nMerci de débloquer manuellement le dossier ${reference} : l'aide n'a pas pu être estimée automatiquement.\n\n`;
+  const mailto = `mailto:${editeur.emailContact}?subject=${encodeURIComponent(sujet)}&body=${encodeURIComponent(corps)}`;
+
+  return (
+    <div className="mt-3 max-w-md rounded border border-filigrane bg-papier/50 p-4">
+      <p className="text-sm font-medium text-encre">Déblocage à faire à la main</p>
+      <p className="mt-1 text-xs leading-relaxed text-ardoise">
+        {message} Rien n&rsquo;est perdu : écrivez-nous et on débloque ce dossier
+        manuellement, en général sous 24&nbsp;h ouvrées.
+      </p>
+      <a
+        href={mailto}
+        className="mt-3 inline-flex h-10 items-center gap-2 rounded bg-accent px-4 text-sm font-semibold text-blanc-casse transition-colors hover:bg-accent-hover"
+      >
+        <Mail className="h-4 w-4" strokeWidth={1.8} aria-hidden="true" />
+        Demander le déblocage
+      </a>
     </div>
   );
 }
