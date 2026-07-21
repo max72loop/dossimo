@@ -26,9 +26,9 @@ import {
   type Severite,
 } from "@/lib/rules/types";
 import type { PointVigilance } from "@/lib/llm/vigilance";
+import { DISCLAIMER_DOSSIMO_COMPLET } from "@/lib/legal/mentions";
 
-const DISCLAIMER =
-  "Dossimo — service indépendant d'aide à la préparation de dossier, non affilié à l'Anah ni à France Rénov'. Dossimo ne dépose pas le dossier et ne perçoit pas la prime.";
+const DISCLAIMER = DISCLAIMER_DOSSIMO_COMPLET;
 
 /** Libellé court du dispositif pour les sur-titres. */
 function dispoLabel(data: DossierComplet): string {

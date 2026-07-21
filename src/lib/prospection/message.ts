@@ -13,6 +13,7 @@
  */
 
 import { editeur } from "@/lib/legal/editeur";
+import { MENTION_INDEPENDANCE_PHRASE } from "@/lib/legal/mentions";
 
 /** Mots qui trahissent une raison sociale glissée dans la colonne prénom. */
 const FORMES_JURIDIQUES =
@@ -53,7 +54,7 @@ export function salutation(prenom: string | null | undefined): string {
  * pratique, transforme un « signaler comme spam » en simple désinscription.
  */
 export function mentionsLegales(): string {
-  return `Dossimo, ${editeur.raisonSociale}, ${editeur.adresse}. Service indépendant d'aide à la préparation de dossier, non affilié à l'Anah ni à France Rénov'.`;
+  return `Dossimo, ${editeur.raisonSociale}, ${editeur.adresse}. ${MENTION_INDEPENDANCE_PHRASE}`;
 }
 
 function siteUrl(): string {
