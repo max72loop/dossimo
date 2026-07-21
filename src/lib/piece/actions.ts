@@ -172,16 +172,44 @@ export async function deletePiece(
   if (!data) return { ok: false };
   const supabase = await createClient();
 
-  const { data: piece } = await supabase
+  // Ces pièces sont les données les plus sensibles du produit (avis
+  // d'imposition, RIB, pièce d'identité). Un échec silencieux de suppression
+  // laisserait l'UI afficher « supprimé » alors que le fichier PII persiste :
+  // on lit CHAQUE erreur et on échoue bruyamment (AGENTS.md « Errors are never
+  // ignored silently »). Même patron que retirerPiece côté dépôt bénéficiaire.
+  const { data: piece, error: lectureErr } = await supabase
     .from("pieces_justificatives")
     .select("storage_path")
     .eq("id", pieceId)
     .eq("dossier_id", dossierId)
     .maybeSingle();
 
-  if (piece?.storage_path) {
-    await supabase.storage.from("pieces").remove([piece.storage_path]);
+  if (lectureErr) {
+    console.error("[piece] suppression/lecture:", lectureErr.message);
+    return { ok: false };
   }
-  await supabase.from("pieces_justificatives").delete().eq("id", pieceId);
+  if (!piece) return { ok: false };
+
+  // Le fichier d'abord, la ligne ensuite : l'inverse laisserait un objet
+  // orphelin dans le bucket, invisible et jamais purgé.
+  if (piece.storage_path) {
+    const { error: storageErr } = await supabase.storage
+      .from("pieces")
+      .remove([piece.storage_path]);
+    if (storageErr) {
+      console.error("[piece] suppression/storage:", storageErr.message);
+      return { ok: false };
+    }
+  }
+
+  const { error: delErr } = await supabase
+    .from("pieces_justificatives")
+    .delete()
+    .eq("id", pieceId);
+  if (delErr) {
+    console.error("[piece] suppression/delete:", delErr.message);
+    return { ok: false };
+  }
+
   return { ok: true };
 }

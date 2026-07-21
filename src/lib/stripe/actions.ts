@@ -32,6 +32,16 @@ function siteUrl(): string {
   );
 }
 
+// Mention de non-affiliation affichée sur la page Stripe Checkout, sous le
+// bouton de paiement. Reprend mot pour mot le pied de page (site-footer.tsx) :
+// même positionnement, même engagement juridique, partout où le client paie
+// (CLAUDE.md §2). Stripe plafonne custom_text à 1200 caractères.
+const MENTION_INDEPENDANCE =
+  "Dossimo est un service indépendant d'aide à la préparation de dossier, " +
+  "non affilié à l'Anah ni à France Rénov'. Dossimo ne dépose jamais le " +
+  "dossier et ne perçoit jamais la prime : vous et votre client déposez " +
+  "vous-mêmes et conservez l'intégralité de la prime.";
+
 async function garantirCodeLancement(stripe: ReturnType<typeof getStripe>) {
   if (Math.floor(Date.now() / 1000) > FIN_LANCEMENT_EPOCH) return;
   const existants = await stripe.promotionCodes.list({ code: CODE_LANCEMENT, active: true, limit: 1 });
@@ -164,7 +174,21 @@ export async function creerSessionPaiementDossier(
     await garantirCodeLancement(stripe);
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
+      // Force la page Checkout en français quel que soit le navigateur du client.
+      locale: "fr",
       allow_promotion_codes: Math.floor(Date.now() / 1000) <= FIN_LANCEMENT_EPOCH,
+      // Case à cocher CGV obligatoire avant paiement. REQUIERT que l'URL des
+      // CGV soit renseignée dans le Dashboard Stripe (Réglages > Informations
+      // publiques > Conditions générales), EN TEST ET EN LIVE : sans elle,
+      // Stripe rejette la création de session. URL attendue : dossimo.app/cgv.
+      consent_collection: { terms_of_service: "required" },
+      custom_text: {
+        submit: { message: MENTION_INDEPENDANCE },
+        terms_of_service_acceptance: {
+          message:
+            "En réglant, vous acceptez les conditions générales de vente de Dossimo.",
+        },
+      },
       line_items: [
         {
           quantity: 1,

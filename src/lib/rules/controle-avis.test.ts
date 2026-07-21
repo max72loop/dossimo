@@ -1,7 +1,12 @@
 import { describe, it, expect } from "vitest";
 
 import { controlerAvisImposition } from "@/lib/rules/controle-avis";
-import { categoriePour, plafondPour, zoneDeCodePostal } from "@/lib/rules/plafonds";
+import {
+  categoriePour,
+  estProfilSuperieur,
+  plafondPour,
+  zoneDeCodePostal,
+} from "@/lib/rules/plafonds";
 import type { CeeIsolationCaracteristiques } from "@/lib/dossier/get-dossier";
 import type { AvisImposition } from "@/lib/piece/avis-imposition";
 import type { Finding } from "@/lib/rules/types";
@@ -13,6 +18,7 @@ const ligne = (
   personnes: number,
   grande: number,
   precaire: number,
+  intermediaire: number | null = null,
 ): PlafondRessources =>
   ({
     id: `${zone}-${personnes}`,
@@ -21,16 +27,17 @@ const ligne = (
     personnes,
     plafond_grande_precarite: grande,
     plafond_precaire: precaire,
+    plafond_intermediaire: intermediaire,
     actif: true,
     created_at: "2026-01-01T00:00:00Z",
   }) as PlafondRessources;
 
 const PLAFONDS: PlafondRessources[] = [
-  ligne("hors_idf", 1, 17363, 22259),
-  ligne("hors_idf", 4, 35676, 45735),
-  ligne("hors_idf", 5, 40835, 52348),
-  ligne("hors_idf", 0, 5151, 6598), // par personne supplémentaire
-  ligne("idf", 4, 49455, 60208),
+  ligne("hors_idf", 1, 17363, 22259, 31185),
+  ligne("hors_idf", 4, 35676, 45735, 64550),
+  ligne("hors_idf", 5, 40835, 52348, 73907),
+  ligne("hors_idf", 0, 5151, 6598, 9357), // par personne supplémentaire
+  ligne("idf", 4, 49455, 60208, 84562),
 ];
 
 const carac = (
@@ -60,12 +67,14 @@ const juger = (
   precarite: CeeIsolationCaracteristiques["beneficiaire"]["precarite"],
   a: Partial<AvisImposition> = {},
   codePostal = "33000",
+  dispositif: "cee" | "maprimerenov" = "cee",
 ): Finding[] =>
   controlerAvisImposition({
     caracteristiques: carac(precarite, codePostal),
     avis: avis(a),
     plafonds: PLAFONDS,
     anneeCourante: 2026,
+    dispositif,
   });
 
 const code = (fs: Finding[], c: string) => fs.find((f) => f.code === c);
@@ -83,6 +92,29 @@ describe("plafonds de ressources", () => {
     const p = plafondPour(PLAFONDS, "hors_idf", 7);
     expect(p?.grande_precarite).toBe(40835 + 2 * 5151);
     expect(p?.precaire).toBe(52348 + 2 * 6598);
+    // Le plafond intermédiaire (violet) s'étend par le même incrément.
+    expect(p?.intermediaire).toBe(73907 + 2 * 9357);
+  });
+
+  it("expose le plafond intermédiaire pour une taille de foyer tabulée", () => {
+    expect(plafondPour(PLAFONDS, "hors_idf", 4)?.intermediaire).toBe(64550);
+    expect(plafondPour(PLAFONDS, "idf", 4)?.intermediaire).toBe(84562);
+  });
+
+  it("laisse le plafond intermédiaire à null quand la colonne est absente (barème pré-0044)", () => {
+    // Barème ancien : grande_precarite / precaire connus, intermédiaire jamais renseigné.
+    const ancien = [ligne("hors_idf", 4, 35676, 45735, null)];
+    const p = plafondPour(ancien, "hors_idf", 4);
+    expect(p?.grande_precarite).toBe(35676);
+    expect(p?.intermediaire).toBeNull();
+  });
+
+  it("détecte le profil supérieur (rose) au-dessus du plafond intermédiaire", () => {
+    const p = { grande_precarite: 35676, precaire: 45735, intermediaire: 64550 };
+    expect(estProfilSuperieur(64550, p)).toBe(false); // borne incluse = violet
+    expect(estProfilSuperieur(70000, p)).toBe(true); // au-dessus = rose
+    // Plafond inconnu : on ne conclut pas.
+    expect(estProfilSuperieur(70000, { ...p, intermediaire: null })).toBeNull();
   });
 
   it("ne conclut pas quand le barème ne couvre pas le cas", () => {
@@ -93,7 +125,7 @@ describe("plafonds de ressources", () => {
   });
 
   it("classe le RFR dans la bonne catégorie", () => {
-    const p = { grande_precarite: 35676, precaire: 45735 };
+    const p = { grande_precarite: 35676, precaire: 45735, intermediaire: 64550 };
     expect(categoriePour(30000, p)).toBe("grande_precarite");
     expect(categoriePour(35676, p)).toBe("grande_precarite"); // borne incluse
     expect(categoriePour(40000, p)).toBe("precaire");
@@ -181,5 +213,50 @@ describe("contrôle de l'avis d'imposition", () => {
       anneeCourante: 2026,
     });
     expect(code(fs, "avis_bareme_absent")?.severite).toBe("avertissement");
+  });
+});
+
+describe("éligibilité MaPrimeRénov' : profil supérieur (rose)", () => {
+  it("BLOQUE un dossier MPR dont l'avis place le ménage au-dessus du plafond intermédiaire", () => {
+    // 70 000 € pour 4 personnes hors IDF : au-dessus du plafond violet (64 550 €) =
+    // profil rose, non éligible au parcours par geste 2026. Le modèle à trois bandes
+    // le range en « classique » ; sans cette règle, il passait pour un dossier valide.
+    const f = code(
+      juger("classique", { revenu_fiscal_reference: 70000 }, "33000", "maprimerenov"),
+      "avis_mpr_revenus_superieurs",
+    )!;
+    expect(f.severite).toBe("bloquant");
+    expect(f.titre).toContain("non éligible");
+    expect(f.detail).toContain("profil rose");
+  });
+
+  it("ne bloque pas un dossier MPR d'un ménage intermédiaire (violet, éligible)", () => {
+    // 60 000 € pour 4 personnes hors IDF : au-dessus du plafond modeste (45 735 €)
+    // mais sous le plafond violet (64 550 €). Éligible : aucune alerte de revenus.
+    const fs = juger("classique", { revenu_fiscal_reference: 60000 }, "33000", "maprimerenov");
+    expect(code(fs, "avis_mpr_revenus_superieurs")).toBeUndefined();
+    // Le contrôle de cohérence classique reprend, et « classique » est confirmé.
+    expect(code(fs, "avis_revenus")?.severite).toBe("ok");
+  });
+
+  it("n'applique PAS la règle en CEE : les revenus supérieurs y sont éligibles", () => {
+    // Même ménage rose (70 000 €), mais dossier CEE : le CEE ignore la distinction
+    // violet / rose. Aucune alerte d'inéligibilité, seulement la cohérence classique.
+    const fs = juger("classique", { revenu_fiscal_reference: 70000 }, "33000", "cee");
+    expect(code(fs, "avis_mpr_revenus_superieurs")).toBeUndefined();
+    expect(code(fs, "avis_revenus")?.severite).toBe("ok");
+  });
+
+  it("ne conclut pas à l'inéligibilité MPR si le plafond intermédiaire est inconnu", () => {
+    // Barème pré-0044 (colonne intermédiaire nulle) : on ne bloque pas sur un plafond
+    // manquant, on retombe sur le seul contrôle de cohérence de catégorie.
+    const fs = controlerAvisImposition({
+      caracteristiques: carac("classique"),
+      avis: avis({ revenu_fiscal_reference: 70000 }),
+      plafonds: [ligne("hors_idf", 4, 35676, 45735, null)],
+      anneeCourante: 2026,
+      dispositif: "maprimerenov",
+    });
+    expect(code(fs, "avis_mpr_revenus_superieurs")).toBeUndefined();
   });
 });

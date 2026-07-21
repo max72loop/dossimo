@@ -192,9 +192,11 @@ Tant qu'on maintient à la main : le faire, sérieusement.
 
 À prendre au sérieux, ce n'est pas une liste de souhaits.
 
-- **Aucune purge des pièces justificatives.** Avis d'imposition, RIB et pièces
-  d'identité s'accumulent sans limite dans le bucket `pieces` et dans
-  `extraction_json`. Art. 5.1.e RGPD. **C'est le point le plus lourd du projet.**
+- **Purge des pièces justificatives : faite** (cron `/api/cron/purge-pieces`,
+  logique `src/lib/piece/retention.ts`). La purge passe par le service-role, pas
+  par une migration : le SQL de Supabase ne peut pas supprimer un objet du bucket
+  `pieces`, donc un `delete` en base laisserait le fichier orphelin. Fenêtres de
+  rétention (90 j après livraison, plafond 180 j) **à faire valider juridiquement**.
 - **Le bénéficiaire n'a aucun droit exerçable** : il dépose ses pièces via une
   URL et n'existe pas en base. Ni accès, ni rectification, ni effacement.
 - **Son nom est figé à vie** dans `factures.lignes_json`, que le trigger

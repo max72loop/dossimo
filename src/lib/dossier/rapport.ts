@@ -90,6 +90,7 @@ function findingsAvis(
     avis: avis.piece.extraction_json as unknown as AvisImposition,
     plafonds,
     anneeCourante: new Date().getFullYear(),
+    dispositif: data.dossier.dispositif,
   });
 }
 

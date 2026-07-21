@@ -176,15 +176,17 @@ templates/cerfa/      # modèles maîtres Cerfa versionnés (+ archive/)
 
 **Dette back-end prioritaire (issue de l'audit)**
 
-- [ ] **Purger les pièces justificatives.** Avis d'imposition, RIB et pièces
-      d'identité s'accumulent sans limite (art. 5.1.e RGPD). Point le plus lourd
-      du projet, sur les données les plus sensibles.
+- [x] **Purger les pièces justificatives.** Cron quotidien
+      `/api/cron/purge-pieces` + logique dans `src/lib/piece/retention.ts`
+      (fichier Storage + ligne, fail loud). Les deux fenêtres de rétention
+      (`RETENTION_APRES_LIVRAISON_JOURS` = 90, `RETENTION_MAX_JOURS` = 180)
+      restent **à faire valider juridiquement**.
 - [ ] Donner au bénéficiaire un droit exerçable (accès / rectification /
       effacement) : il dépose ses pièces via une URL et n'existe pas en base.
-- [ ] Borner par colonne le `grant update` sur `dossiers`, comme `0031` l'a fait
-      pour `artisans`.
-- [ ] Câbler `expire_old_credits` à un cron : sans lui `credit_balance_cents`
-      dérive dès qu'un crédit expire.
+- [x] Borner par colonne le `grant update` sur `dossiers`, comme `0031` l'a fait
+      pour `artisans`. Fait en `0045` (7 colonnes ouvertes, le reste verrouillé).
+- [x] Câbler `expire_old_credits` à un cron : fait (`vercel.json` →
+      `/api/cron/expire-credits`, protégé par `CRON_SECRET`).
 - [ ] Purger `leads`, `prospects` et `auth_rate_limits` (CNIL : ~3 ans après le
       dernier contact en prospection B2B).
 
