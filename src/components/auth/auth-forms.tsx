@@ -9,10 +9,11 @@ import { Spinner } from "@/components/ui/spinner";
 import { requestPasswordReset, signIn, signUp, updatePassword, type AuthResult } from "@/lib/auth/actions";
 import { destinationApresAuth } from "@/lib/auth/redirect";
 import { readSource } from "@/lib/tracking/source";
+import { CHAMP_INPUT, CHAMP_LABEL } from "@/components/ui/champs";
 
-const inputClass =
-  "mt-1.5 h-11 w-full rounded border border-filigrane bg-blanc-casse px-3.5 text-sm text-encre placeholder:text-encre-claire outline-none transition focus:border-tampon focus:ring-2 focus:ring-tampon/15";
-const labelClass = "block text-sm font-medium text-ardoise";
+// `mt-1.5` : le libellé n'a pas de marge basse, l'écart vient d'ici (patron vitrine).
+const inputClass = `mt-1.5 ${CHAMP_INPUT}`;
+const labelClass = CHAMP_LABEL;
 
 function FieldError({ messages }: { messages?: string[] }) {
   if (!messages?.[0]) return null;

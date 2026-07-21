@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 
 import { createDossierCeeIsolation } from "@/lib/dossier/actions";
 import { verifierSiretRge } from "@/lib/dossier/verification-actions";
@@ -363,7 +364,7 @@ export function DossierCeeIsolationForm({
                     actif ? "bg-papier text-encre" : fait ? "bg-succes text-blanc-casse" : "bg-papier-fonce text-ardoise"
                   }`}
                 >
-                  {fait ? "✓" : i + 1}
+                  {fait ? <Check className="h-3 w-3" strokeWidth={3} /> : i + 1}
                 </span>
                 <span className="truncate">{s.titre}</span>
               </button>
@@ -690,9 +691,10 @@ export function DossierCeeIsolationForm({
           type="button"
           onClick={() => setEtape((e) => Math.max(0, e - 1))}
           disabled={etape === 0 || enCours}
-          className="inline-flex h-11 items-center rounded border border-filigrane bg-blanc-casse px-4 text-sm font-medium text-encre transition-colors hover:bg-papier disabled:cursor-not-allowed disabled:opacity-40"
+          className="inline-flex h-11 items-center gap-1.5 rounded border border-filigrane bg-blanc-casse px-4 text-sm font-medium text-encre transition-colors hover:bg-papier disabled:cursor-not-allowed disabled:opacity-40"
         >
-          ← Précédent
+          <ArrowLeft className="h-4 w-4" strokeWidth={1.8} aria-hidden="true" />
+          Précédent
         </button>
 
         {dernier ? (
@@ -708,9 +710,10 @@ export function DossierCeeIsolationForm({
           <button
             type="button"
             onClick={suivant}
-            className="inline-flex h-11 items-center rounded bg-accent px-6 text-sm font-medium text-blanc-casse transition-colors hover:bg-accent-hover"
+            className="inline-flex h-11 items-center gap-1.5 rounded bg-accent px-6 text-sm font-medium text-blanc-casse transition-colors hover:bg-accent-hover"
           >
-            Suivant →
+            Suivant
+            <ArrowRight className="h-4 w-4" strokeWidth={1.8} aria-hidden="true" />
           </button>
         )}
       </div>

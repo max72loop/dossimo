@@ -1,3 +1,5 @@
+import { Download, Lock } from "lucide-react";
+
 import { BTN_SECONDAIRE_SM } from "@/components/ui/boutons";
 import { CARTE, CARTE_INTERNE } from "@/components/ui/cartes";
 import type { FeuilleRoute, Urgence } from "@/lib/dossier/feuille-route";
@@ -144,13 +146,15 @@ export function FeuilleDeRoute({
           href={`/dossiers/${dossierId}/feuille-route.pdf`}
           target="_blank"
           rel="noopener"
-          className={`mt-4 ${BTN_SECONDAIRE_SM}`}
+          className={`mt-4 gap-1.5 ${BTN_SECONDAIRE_SM}`}
         >
-          ↓ Feuille de route (PDF)
+          <Download className="h-4 w-4" strokeWidth={1.8} aria-hidden="true" />
+          Feuille de route (PDF)
         </a>
       ) : (
-        <p className="mt-4 text-xs text-ardoise">
-          🔒 Débloquez le dossier pour télécharger la feuille de route et le pack.
+        <p className="mt-4 flex items-center gap-1.5 text-xs text-ardoise">
+          <Lock className="h-3.5 w-3.5 shrink-0" strokeWidth={1.8} aria-hidden="true" />
+          Débloquez le dossier pour télécharger la feuille de route et le pack.
         </p>
       )}
     </section>

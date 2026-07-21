@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import Link from "next/link";
-import { AlertTriangle, Camera, CheckCircle2, FileText, PlayCircle } from "lucide-react";
+import { AlertTriangle, ArrowRight, Camera, CheckCircle2, FileText, PlayCircle } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 
 import { analyserDevisInitial } from "@/lib/dossier/document-first-actions";
@@ -119,7 +119,7 @@ export function DemoGuide() {
             <p className="flex items-center gap-2 text-sm font-semibold text-avertissement"><AlertTriangle className="h-4 w-4" />À confirmer pour terminer le dossier</p>
             {manquants.length ? <ul className="mt-2 space-y-1 text-sm text-encre">{manquants.slice(0, 3).map((item) => <li key={item.key}>· {item.label}</li>)}</ul> : <p className="mt-2 text-sm text-encre">Les informations essentielles sont lisibles. Dossimo vous demandera seulement les compléments réglementaires.</p>}
           </div>
-          <Link href="/inscription?next=%2Fdossiers%2Fnouveau%3Freprise%3Dessai" className="mt-5 inline-flex h-12 items-center rounded bg-encre px-6 text-sm font-semibold text-papier hover:bg-encre/90">Enregistrer et terminer mon dossier →</Link>
+          <Link href="/inscription?next=%2Fdossiers%2Fnouveau%3Freprise%3Dessai" className="mt-5 inline-flex h-12 items-center gap-2 rounded bg-encre px-6 text-sm font-semibold text-papier hover:bg-encre/90">Enregistrer et terminer mon dossier<ArrowRight className="h-4 w-4" strokeWidth={1.8} aria-hidden="true" /></Link>
         </div>
       )}
     </div>

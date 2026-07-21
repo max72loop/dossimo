@@ -1,6 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "motion/react";
+import { Check } from "lucide-react";
 
 import { Spinner } from "@/components/ui/spinner";
 
@@ -18,9 +19,9 @@ function Puce({ etat }: { etat: EtatEtape }) {
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         transition={{ type: "spring", stiffness: 500, damping: 22 }}
-        className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-succes text-[11px] text-blanc-casse"
+        className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-succes text-blanc-casse"
       >
-        ✓
+        <Check className="h-3 w-3" strokeWidth={3} aria-hidden="true" />
       </motion.span>
     );
   }

@@ -1,5 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ArrowLeft, Download, Lock } from "lucide-react";
+
+import { Badge } from "@/components/ui/badge";
 
 import { getDossier } from "@/lib/dossier/get-dossier";
 import { rapportComplet } from "@/lib/dossier/rapport";
@@ -239,9 +242,10 @@ export default async function DossierPage({
     <main className="mx-auto max-w-6xl px-8 py-10 xl:px-10">
       <Link
         href="/dossiers/nouveau"
-        className="text-sm text-tampon underline-offset-4 transition hover:underline"
+        className="inline-flex items-center gap-1 text-sm text-tampon underline-offset-4 transition hover:underline"
       >
-        ← Nouveau dossier
+        <ArrowLeft className="h-4 w-4" strokeWidth={1.8} aria-hidden="true" />
+        Nouveau dossier
       </Link>
 
       {/* 1. En-tête */}
@@ -257,14 +261,12 @@ export default async function DossierPage({
           </p>
         </div>
         {acces.paye ? (
-          <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-succes-bg px-3 py-1 text-xs font-medium text-succes">
-            <span className="h-1.5 w-1.5 rounded-full bg-succes" />
-            Pack débloqué
-          </span>
+          <Badge ton="succes" dot>Pack débloqué</Badge>
         ) : (
-          <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-avertissement-bg px-3 py-1 text-xs font-medium text-avertissement">
-            🔒 Verrouillé
-          </span>
+          <Badge ton="avertissement">
+            <Lock className="h-3 w-3" strokeWidth={2} aria-hidden="true" />
+            Verrouillé
+          </Badge>
         )}
       </div>
 
@@ -387,9 +389,10 @@ export default async function DossierPage({
               href={`/dossiers/${id}/fiche-client.pdf`}
               target="_blank"
               rel="noopener"
-              className={`mt-3 ${BTN_SECONDAIRE_SM}`}
+              className={`mt-3 gap-1.5 ${BTN_SECONDAIRE_SM}`}
             >
-              ↓ Fiche client (à remettre au bénéficiaire)
+              <Download className="h-4 w-4" strokeWidth={1.8} aria-hidden="true" />
+              Fiche client (à remettre au bénéficiaire)
             </a>
           </div>
         </>
@@ -398,10 +401,13 @@ export default async function DossierPage({
           <h2 className="font-serif text-base font-semibold text-encre">
             Contrôle des pièces réelles
           </h2>
-          <p className="mt-1 text-sm text-ardoise">
-            🔒 Débloquez le dossier pour téléverser le devis et la facture : Dossimo
-            les relit et vérifie les {mentionsDevis.length} mentions obligatoires
-            face à votre saisie.
+          <p className="mt-1 flex items-start gap-1.5 text-sm text-ardoise">
+            <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0" strokeWidth={1.8} aria-hidden="true" />
+            <span>
+              Débloquez le dossier pour téléverser le devis et la facture : Dossimo
+              les relit et vérifie les {mentionsDevis.length} mentions obligatoires
+              face à votre saisie.
+            </span>
           </p>
         </section>
       )}
@@ -486,24 +492,29 @@ export default async function DossierPage({
                 href={`/dossiers/${id}/rapport.pdf`}
                 target="_blank"
                 rel="noopener"
-                className={BTN_SECONDAIRE_SM}
+                className={`gap-1.5 ${BTN_SECONDAIRE_SM}`}
               >
-                ↓ Rapport PDF
+                <Download className="h-4 w-4" strokeWidth={1.8} aria-hidden="true" />
+                Rapport PDF
               </a>
               <a
                 href={`/dossiers/${id}/attestation.pdf`}
                 target="_blank"
                 rel="noopener"
-                className={BTN_SECONDAIRE_SM}
+                className={`gap-1.5 ${BTN_SECONDAIRE_SM}`}
               >
-                ↓ Attestation de pré-contrôle
+                <Download className="h-4 w-4" strokeWidth={1.8} aria-hidden="true" />
+                Attestation de pré-contrôle
               </a>
             </div>
           </>
         ) : (
-          <p className="text-sm text-ardoise">
-            🔒 Le détail des points de contrôle est verrouillé. Débloquez le dossier
-            pour voir chaque point et sa correction.
+          <p className="flex items-start gap-1.5 text-sm text-ardoise">
+            <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0" strokeWidth={1.8} aria-hidden="true" />
+            <span>
+              Le détail des points de contrôle est verrouillé. Débloquez le dossier
+              pour voir chaque point et sa correction.
+            </span>
           </p>
         )}
         </SectionRepliable>
@@ -602,9 +613,10 @@ export default async function DossierPage({
               href={`/dossiers/${id}/pack.pdf`}
               target="_blank"
               rel="noopener"
-              className={BTN_SECONDAIRE_SM}
+              className={`gap-1.5 ${BTN_SECONDAIRE_SM}`}
             >
-              ↓ Pack complet (PDF unique)
+              <Download className="h-4 w-4" strokeWidth={1.8} aria-hidden="true" />
+              Pack complet (PDF unique)
             </a>
             <a
               href={`/dossiers/${id}/recap.pdf`}
@@ -624,9 +636,12 @@ export default async function DossierPage({
             </a>
           </div>
         ) : (
-          <p className="mt-3 text-sm text-ardoise">
-            🔒 Téléchargements verrouillés. Débloquez le dossier pour obtenir le pack
-            complet et chaque document.
+          <p className="mt-3 flex items-start gap-1.5 text-sm text-ardoise">
+            <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0" strokeWidth={1.8} aria-hidden="true" />
+            <span>
+              Téléchargements verrouillés. Débloquez le dossier pour obtenir le pack
+              complet et chaque document.
+            </span>
           </p>
         )}
       </SectionRepliable>
@@ -678,14 +693,18 @@ export default async function DossierPage({
                 href={`/dossiers/${id}/cerfa.pdf`}
                 target="_blank"
                 rel="noopener"
-                className={`mt-4 ${BTN_SECONDAIRE_SM}`}
+                className={`mt-4 gap-1.5 ${BTN_SECONDAIRE_SM}`}
               >
-                ↓ Formulaire officiel pré-rempli (PDF)
+                <Download className="h-4 w-4" strokeWidth={1.8} aria-hidden="true" />
+                Formulaire officiel pré-rempli (PDF)
               </a>
             ) : (
-              <p className="mt-4 text-sm text-ardoise">
-                🔒 Débloquez le dossier pour télécharger l&apos;attestation
-                pré-remplie.
+              <p className="mt-4 flex items-start gap-1.5 text-sm text-ardoise">
+                <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0" strokeWidth={1.8} aria-hidden="true" />
+                <span>
+                  Débloquez le dossier pour télécharger l&apos;attestation
+                  pré-remplie.
+                </span>
               </p>
             )}
 

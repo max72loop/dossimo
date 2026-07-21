@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 
 import { getAdminEmail } from "@/lib/auth/is-admin";
 import { chargerInventaire } from "@/lib/admin/inventaire";
@@ -23,8 +24,9 @@ export default async function DonneesPage() {
 
   return (
     <main className="mx-auto max-w-[1280px] px-5 py-10 sm:px-8">
-      <Link href="/admin/regles" className="text-sm text-tampon underline-offset-4 hover:underline">
-        ← Règles métier
+      <Link href="/admin/regles" className="inline-flex items-center gap-1 text-sm text-tampon underline-offset-4 hover:underline">
+        <ArrowLeft className="h-4 w-4" strokeWidth={1.8} aria-hidden="true" />
+        Règles métier
       </Link>
       <h1 className="mt-4 font-serif text-3xl font-semibold text-encre">Nettoyage des données</h1>
       <p className="mt-2 max-w-2xl text-sm text-ardoise">

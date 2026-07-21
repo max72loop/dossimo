@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { ChevronRight } from "lucide-react";
 
 import { changerStatutDossier } from "@/lib/dossier/parcours-actions";
 import { PARCOURS, indexEtape } from "@/lib/dossier/parcours";
@@ -73,9 +74,11 @@ export function ParcoursSelector({
                 {etape.label}
               </button>
               {i < PARCOURS.length - 1 && (
-                <span className="text-encre-claire" aria-hidden>
-                  ›
-                </span>
+                <ChevronRight
+                  className="h-4 w-4 text-encre-claire"
+                  strokeWidth={1.8}
+                  aria-hidden="true"
+                />
               )}
             </li>
           );

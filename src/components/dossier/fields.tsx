@@ -3,6 +3,8 @@
 import type { UseFormRegisterReturn } from "react-hook-form";
 import { createContext, useContext, useState, type ReactNode } from "react";
 
+import { CHAMP_ERREUR, CHAMP_HINT, CHAMP_INPUT, CHAMP_LABEL } from "@/components/ui/champs";
+
 const AssistedValuesContext = createContext<{ values: Record<string, string>; hideConfirmed: boolean } | null>(null);
 
 export function AssistedFieldsProvider({ values, hideConfirmed = false, children }: { values: Record<string, string>; hideConfirmed?: boolean; children: ReactNode }) {
@@ -12,12 +14,11 @@ export function AssistedFieldsProvider({ values, hideConfirmed = false, children
 /** Only the `message` is consumed, so accept any RHF error shape. */
 type FieldErrorLike = { message?: string };
 
-const inputClass =
-  "h-11 w-full rounded border border-filigrane bg-blanc-casse px-3.5 text-sm text-encre placeholder:text-encre-claire outline-none transition focus:border-tampon focus:ring-2 focus:ring-tampon/15 disabled:bg-papier-fonce aria-[invalid=true]:border-erreur";
+const inputClass = CHAMP_INPUT;
 
-const labelClass = "mb-1.5 block text-sm font-medium text-ardoise";
-const errorClass = "mt-1 text-xs text-erreur";
-const hintClass = "mt-1 text-xs text-encre-claire";
+const labelClass = `mb-1.5 ${CHAMP_LABEL}`;
+const errorClass = CHAMP_ERREUR;
+const hintClass = CHAMP_HINT;
 
 function FieldShell({
   label,

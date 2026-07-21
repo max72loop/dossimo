@@ -2,6 +2,7 @@
 
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { Check } from "lucide-react";
 
 import { uploadPiece } from "@/lib/piece/actions";
 import type { EntreeChecklist } from "@/lib/piece/checklist";
@@ -108,7 +109,7 @@ export function ChecklistPieces({
               }`}
               aria-hidden="true"
             >
-              {e.deposee ? "✓" : ""}
+              {e.deposee ? <Check className="h-3 w-3" strokeWidth={3} /> : ""}
             </span>
 
             <span className="min-w-0 flex-1">

@@ -1,3 +1,5 @@
+import { Check } from "lucide-react";
+
 import type { SyntheseDossier } from "@/lib/dossier/synthese";
 import { CARTE } from "@/components/ui/cartes";
 
@@ -52,7 +54,7 @@ export function ActionsRestantes({ synthese }: { synthese: SyntheseDossier }) {
                       : "border-filigrane"
                 }`}
               >
-                {a.fait ? "✓" : ""}
+                {a.fait ? <Check className="h-3 w-3" strokeWidth={3} /> : ""}
               </span>
               <span>
                 <span

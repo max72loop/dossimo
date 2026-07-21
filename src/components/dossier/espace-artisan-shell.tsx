@@ -3,6 +3,7 @@ import { LogOut, Plus } from "lucide-react";
 
 import { Logo } from "@/components/ui/logo";
 import { AideDossimo } from "@/components/dossier/aide-dossimo";
+import { EspaceArtisanMenu } from "@/components/dossier/espace-artisan-menu";
 import { signOut } from "@/lib/auth/actions";
 import type { Artisan } from "@/lib/database.types";
 
@@ -43,7 +44,8 @@ export function EspaceArtisanShell({
             >
               {artisan.entreprise}
             </Link>
-            <form action={signOut}>
+            {/* Déconnexion directe sur desktop ; sur mobile elle vit dans le menu. */}
+            <form action={signOut} className="hidden md:block">
               <button
                 type="submit"
                 className="inline-flex items-center gap-1.5 text-sm text-ardoise transition-colors hover:text-encre"
@@ -53,6 +55,9 @@ export function EspaceArtisanShell({
                 <span className="hidden lg:inline">Déconnexion</span>
               </button>
             </form>
+
+            {/* Navigation mobile : les liens ci-dessus sont masqués sous `md`. */}
+            <EspaceArtisanMenu entreprise={artisan.entreprise} />
           </nav>
         </div>
       </header>

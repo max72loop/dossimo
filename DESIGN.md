@@ -25,6 +25,7 @@ et des miroirs qui en dérivent :
 | Polices | [`src/app/layout.tsx`](src/app/layout.tsx) (next/font) + `@theme` `--font-*`. PDF : Helvetica seulement. |
 | Rayons / ombres | `globals.css` (`--radius-*`, `--shadow-*`) ; PDF : `pdf-theme.ts` (`styles`). |
 | Boutons / actions | [`src/components/ui/boutons.ts`](src/components/ui/boutons.ts). |
+| Champs / formulaires | [`src/components/ui/champs.ts`](src/components/ui/champs.ts) (`CHAMP_INPUT`, `CHAMP_LABEL`, `CHAMP_ERREUR`, `CHAMP_HINT`), importé par `fields.tsx` et les formulaires vitrine / auth. |
 
 ```
 Décision (DESIGN.md)
@@ -265,10 +266,17 @@ contournements existent déjà et sont à résorber (un `const input = "…"` re
 
 - **Chargement** : [`Spinner`](src/components/ui/spinner.tsx), indéterminé, hérite de
   `currentColor`, `motion-reduce` géré. Progression connue : `overlay-progression`.
-- **Vide** et **erreur** : pas encore de convention (à trancher, §8). Principe posé :
-  un vide n'est jamais un blanc (message + une action de sortie) ; une erreur se dit
-  et propose une reprise. C'est la traduction visuelle de « les erreurs ne sont jamais
-  avalées en silence » (`AGENTS.md`).
+- **Vide** : pas encore de composant partagé (à trancher, §8). Principe posé :
+  un vide n'est jamais un blanc (message + une action de sortie).
+- **Erreur** : une exception non gérée est désormais rattrapée par des *error
+  boundaries* Next à la marque, jamais l'écran par défaut. Trois niveaux :
+  [`src/app/error.tsx`](src/app/error.tsx) (application, dans le layout racine),
+  [`src/app/dossiers/error.tsx`](src/app/dossiers/error.tsx) (espace artisan, DANS
+  le shell : l'artisan garde sa navigation) et
+  [`src/app/global-error.tsx`](src/app/global-error.tsx) (dernier filet, layout
+  racine en échec : autonome, styles inline). Chacun dit ce qui s'est passé et
+  propose une reprise (`unstable_retry`) + une sortie. C'est la traduction visuelle
+  de « les erreurs ne sont jamais avalées en silence » (`AGENTS.md`).
 
 ### Logo et actifs de marque
 
@@ -426,11 +434,21 @@ vérité, partagée entre les supports.
 - [ ] Déclinaison e-mail (§1) : réaligner le fond `#E7E2D6` sur `papier-fonce`, et
       décider si un garde-fou vérifie que ses hex appartiennent bien à la palette.
 - [ ] Format de date unifié web / PDF (« 05/05/2026 » vs « 05.05.2026 », §6).
-- [ ] Convention des états vide / erreur (§5).
-- [ ] Résorber les inputs écrits à la main hors de `fields.tsx` (§5).
+- [~] Convention des états vide / erreur (§5) : **erreur faite** (error boundaries
+      Next à la marque, 3 niveaux) ; état **vide** encore sans composant partagé.
+- [~] Résorber les inputs écrits à la main hors de `fields.tsx` (§5) : classes
+      **centralisées** dans `champs.ts` (fin des 5 copies divergentes de
+      `inputClass`/`labelClass`) ; restent les `<input>` bruts recopiés dans
+      `oblige-suivi.tsx` et `issue-dossier.tsx`, à faire passer par `TextField`.
 - [ ] Logo : zone de protection et taille minimale (§5).
 - [ ] Formaliser l'échelle de z-index (§4).
-- [ ] Éliminer les emoji de l'UI produit au profit de lucide (§5).
+- [x] Éliminer les emoji de l'UI produit au profit de lucide (§5) : emoji et
+      glyphes de statut (`🔒`→`Lock`, `✓`→`Check`, `✗`→`X`, `↓`→`Download`,
+      `›`→`ChevronRight`) ET flèches de navigation (`←`/`→`→`ArrowLeft`/`ArrowRight`)
+      remplacés dans **tout l'espace artisan / dossier, la démo, les devis et
+      l'admin**. Ne restent que : les flèches **décoratives déjà `aria-hidden`** des
+      CTA de la vitrine (traitement propre à la landing, §5) et les flèches en
+      commentaires de code. `≠` (« ≠ écart ») conservé (typographie, cf. journal).
 - [ ] Centraliser la mention légale du pied de page (§5).
 - [ ] Stratégie responsive des tables (§5).
 - [ ] Convention toast vs message inline, et son placement (§5).
@@ -486,3 +504,6 @@ Deux lignes par décision, datées, pour ne pas re-débattre le passé.
 | 2026-07-19 | Espace artisan : parti **« cartes flottantes »** (arrondis marqués, ombre douce généreuse `--shadow-lg`, grille aérée, sans bandeau lourd). | Choisi parmi 5 pistes maquettées. Assume la décision ombre douce, look dashboard moderne, cohérent avec l'accent bleu. |
 | 2026-07-20 | Landing : trois surfaces de **preuve** ajoutées, sans nouveau token ni nouvelle couleur. (1) Section « Confiance » (éditeur identifié + traitement des documents) posée juste avant les tarifs. (2) Section « Estimation » (simulateur d'aide) posée juste avant les tarifs, pour donner un ordre de grandeur au prix. (3) Page **`/exemple`** montrant le pack réel, en second CTA du hero et dans le sommaire. | La vitrine ne portait aucune preuve : ni éditeur identifiable, ni montant de référence, ni livrable visible. Le CTA unique (« envoyer un devis client réel ») était trop haut pour du trafic SEO froid. Les trois blocs réutilisent les motifs existants (cartes en ombre douce §5, `SectionLabel`, palette inchangée) : aucune décision visuelle nouvelle n'est prise ici. |
 | 2026-07-19 | Landing : parti **« bandeau encre »** (hero fond encre, titre clair, accent en bleu clair, carte rapport flottante) ; nouveau token `accent-clair` (#9db0cf) pour l'accent lisible sur encre. | Choisi parmi 4 pistes. Ancre le landing dans l'identité encre partagée avec le PDF et l'e-mail ; le token solde un bleu clair qui traînait en dur à trois endroits. |
+| 2026-07-21 | Nettoyage des glyphes : tous les emoji, symboles de statut et flèches de navigation passent en **icônes lucide** (`Lock`, `Check`, `X`, `Download`, `ChevronRight`, `ArrowLeft`, `ArrowRight`) dans l'espace artisan / dossier, la démo, les devis ET l'admin ; le statut « Verrouillé / Pack débloqué » adopte `Badge`. Le symbole `≠` (« ≠ écart ») est **conservé** : typographie porteuse de sens, sans équivalent lucide propre. Ne restent que les flèches décoratives déjà `aria-hidden` des CTA de la vitrine. | Applique la règle « pas d'emoji / de glyphe dans l'UI » (§5) de bout en bout. |
+| 2026-07-21 | Cohérence de l'espace artisan : les deux blocs les plus vus, restés en cartes bordées `shadow-sm`, passent au parti **cartes flottantes** (`VerdictHero` et `ActionsPrioritaires` via `CARTE_LISTE`). Glyphes `✓`/`!` du verdict remplacés par des icônes **lucide** (`Check`/`AlertTriangle`), `text-white` ramené sur `text-blanc-casse`. Deux composants partagés amorcent la **boîte à composants** : `EmptyState` (`ui/empty-state.tsx`, adopté dans la liste des dossiers) et `Badge` (`ui/badge.tsx`, pastille sémantique par ton, qui remplace le `StatusBadge` local de la landing et les pills recopiées de la liste). | Suite de l'audit UX : achève une migration `2026-07-19` qui avait sauté ces deux blocs, et amorce la boîte à composants (§8). |
+| 2026-07-21 | Audit UX : trois briques posées. (1) **Error boundaries** à la marque (`error.tsx`, `dossiers/error.tsx`, `global-error.tsx`) — Next 16 : récupération via `unstable_retry`, pas `reset`. (2) **Navigation mobile de l'espace artisan** (`espace-artisan-menu.tsx`) sur le patron de `site-menu.tsx` : les liens Dossiers/Factures/Devis/Compte, masqués sous `md:`, étaient inatteignables au téléphone. (3) **`champs.ts`** : source unique des classes de champ, fin des 5 copies divergentes (les formulaires vitrine/auth n'avaient ni état désactivé ni `aria-[invalid]`). | Audit produit / UX. Ces trois trous contredisaient des principes déjà écrits (erreur qui se dit §5, produit terrain mobile §4, source unique §1). Aucun nouveau token ni couleur. |

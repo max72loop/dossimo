@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { FolderOpen } from "lucide-react";
+import { ArrowRight, FolderOpen } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentArtisan } from "@/lib/auth/get-artisan";
@@ -18,6 +18,9 @@ import type { DossierComplet } from "@/lib/dossier/get-dossier";
 import type { PieceJustificative } from "@/lib/database.types";
 import { TableauDeBord, type StatsTableau } from "@/components/dossier/tableau-de-bord";
 import { ActionsPrioritaires, type ActionPrioritaire } from "@/components/dossier/actions-prioritaires";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Badge } from "@/components/ui/badge";
+import { BTN_PRINCIPAL } from "@/components/ui/boutons";
 
 export const metadata = { title: "Mes dossiers"};
 
@@ -237,20 +240,17 @@ export default async function DossiersPage() {
       )}
 
       {rows.length === 0 ? (
-        <div className="mt-10 flex flex-col items-center justify-center rounded-2xl bg-blanc-casse px-6 py-16 shadow-lg text-center">
-          <FolderOpen className="h-8 w-8 text-encre-claire" strokeWidth={1.5} />
-          <p className="mt-4 font-serif text-lg font-semibold text-encre">
-            Aucun dossier pour l&rsquo;instant
-          </p>
-          <p className="mt-1 max-w-sm text-sm text-ardoise">
-            Ajoutez simplement votre devis. Dossimo préremplit le dossier et vous guide jusqu’au dépôt.
-          </p>
-          <Link
-            href="/dossiers/nouveau"
-            className="mt-6 inline-flex h-11 items-center rounded bg-accent px-5 text-sm font-medium text-blanc-casse transition-colors hover:bg-accent-hover"
-          >
-            Déposer mon premier devis
-          </Link>
+        <div className="mt-10">
+          <EmptyState
+            icon={FolderOpen}
+            titre="Aucun dossier pour l'instant"
+            description="Ajoutez simplement votre devis. Dossimo préremplit le dossier et vous guide jusqu’au dépôt."
+            action={
+              <Link href="/dossiers/nouveau" className={BTN_PRINCIPAL}>
+                Déposer mon premier devis
+              </Link>
+            }
+          />
         </div>
       ) : (
         <details className="mt-10 overflow-hidden rounded-2xl bg-blanc-casse shadow-lg">
@@ -278,12 +278,12 @@ export default async function DossiersPage() {
                     <span className={`h-1.5 w-1.5 rounded-full ${st.dot}`} />{st.label}
                   </span>
                 </div>
-                <div className="mt-4 flex flex-wrap gap-2 text-xs">
-                  {ctrl && ctrl.nbBloquants > 0 && <span className="rounded-full bg-erreur-bg px-2.5 py-1 font-medium text-erreur">{ctrl.nbBloquants} point{ctrl.nbBloquants > 1 ? "s" : ""} à corriger</span>}
-                  {suivi && suivi.nouvelles > 0 && <span className="rounded-full bg-info-bg px-2.5 py-1 font-medium text-info">{suivi.nouvelles} nouvelle{suivi.nouvelles > 1 ? "s" : ""} pièce{suivi.nouvelles > 1 ? "s" : ""}</span>}
-                  {ctrl?.conforme && <span className="rounded-full bg-succes-bg px-2.5 py-1 font-medium text-succes">Aucun blocage</span>}
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {ctrl && ctrl.nbBloquants > 0 && <Badge ton="erreur">{ctrl.nbBloquants} point{ctrl.nbBloquants > 1 ? "s" : ""} à corriger</Badge>}
+                  {suivi && suivi.nouvelles > 0 && <Badge ton="info">{suivi.nouvelles} nouvelle{suivi.nouvelles > 1 ? "s" : ""} pièce{suivi.nouvelles > 1 ? "s" : ""}</Badge>}
+                  {ctrl?.conforme && <Badge ton="succes">Aucun blocage</Badge>}
                 </div>
-                <p className="mt-4 text-sm font-semibold text-tampon">Ouvrir et voir la prochaine action →</p>
+                <p className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-tampon">Ouvrir et voir la prochaine action<ArrowRight className="h-4 w-4" strokeWidth={1.8} aria-hidden="true" /></p>
               </Link>
             );
           })}
@@ -381,10 +381,7 @@ export default async function DossiersPage() {
                       </td>
                       <td className="px-5 py-3">
                         {acces(d.id) === "paye" ? (
-                          <span className="inline-flex items-center gap-1.5 rounded-full bg-succes-bg px-2.5 py-1 text-xs font-medium text-succes">
-                            <span className="h-1.5 w-1.5 rounded-full bg-succes" />
-                            Débloqué
-                          </span>
+                          <Badge ton="succes" dot>Débloqué</Badge>
                         ) : (
                           // relative z-10 : le CTA de paiement reste cliquable au-dessus
                           // de l'overlay qui rend toute la ligne cliquable.

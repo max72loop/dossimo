@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 
 import { DemarrageAssiste } from "@/components/dossier/demarrage-assiste";
 import { getCurrentArtisan } from "@/lib/auth/get-artisan";
@@ -53,9 +54,10 @@ export default async function NouveauDossierPage({
       <div className="mb-8">
         <Link
           href="/dossiers"
-          className="text-sm text-tampon underline-offset-4 transition hover:underline"
+          className="inline-flex items-center gap-1 text-sm text-tampon underline-offset-4 transition hover:underline"
         >
-          ← Mes dossiers
+          <ArrowLeft className="h-4 w-4" strokeWidth={1.8} aria-hidden="true" />
+          Mes dossiers
         </Link>
         <h1 className="mt-4 font-serif text-3xl font-semibold tracking-tight text-encre">
           Nouveau dossier

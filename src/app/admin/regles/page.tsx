@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 
 import { getAdminEmail } from "@/lib/auth/is-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -46,18 +47,20 @@ export default async function AdminReglesPage() {
     <main className="mx-auto max-w-4xl px-8 py-10">
       <Link
         href="/dossiers"
-        className="text-sm text-tampon underline-offset-4 transition hover:underline"
+        className="inline-flex items-center gap-1 text-sm text-tampon underline-offset-4 transition hover:underline"
       >
-        ← Mes dossiers
+        <ArrowLeft className="h-4 w-4" strokeWidth={1.8} aria-hidden="true" />
+        Mes dossiers
       </Link>
-      <Link href="/admin/devis" className="ml-4 text-sm text-tampon underline-offset-4 transition hover:underline">Modèles de devis →</Link>
+      <Link href="/admin/devis" className="ml-4 inline-flex items-center gap-1 text-sm text-tampon underline-offset-4 transition hover:underline">Modèles de devis<ArrowRight className="h-4 w-4" strokeWidth={1.8} aria-hidden="true" /></Link>
       <Link
         href="/admin/pilotage"
-        className="ml-4 text-sm text-tampon underline-offset-4 transition hover:underline"
+        className="ml-4 inline-flex items-center gap-1 text-sm text-tampon underline-offset-4 transition hover:underline"
       >
-        Pilotage terrain →
+        Pilotage terrain
+        <ArrowRight className="h-4 w-4" strokeWidth={1.8} aria-hidden="true" />
       </Link>
-      <Link href="/admin/donnees" className="ml-4 text-sm text-tampon underline-offset-4 transition hover:underline">Nettoyage des données →</Link>
+      <Link href="/admin/donnees" className="ml-4 inline-flex items-center gap-1 text-sm text-tampon underline-offset-4 transition hover:underline">Nettoyage des données<ArrowRight className="h-4 w-4" strokeWidth={1.8} aria-hidden="true" /></Link>
 
       <div className="mt-4 mb-2">
         <h1 className="font-serif text-3xl font-semibold tracking-tight text-encre">

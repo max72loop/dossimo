@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Check } from "lucide-react";
 
 import {
   updateRegle,
@@ -64,7 +65,7 @@ function Status({ res }: { res: RegleActionResult | "saving" | null }) {
   if (res === null) return null;
   if (res === "saving") return <span className="text-xs text-ardoise">Enregistrement…</span>;
   return res.ok ? (
-    <span className="text-xs text-succes">Enregistré ✓</span>
+    <span className="inline-flex items-center gap-1 text-xs text-succes">Enregistré<Check className="h-3.5 w-3.5" strokeWidth={2.5} aria-hidden="true" /></span>
   ) : (
     <span className="text-xs text-erreur">{res.error}</span>
   );
