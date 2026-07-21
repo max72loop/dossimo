@@ -352,6 +352,10 @@ export const ceeIsolationSchema = z.object({
   solaire_reference: z.string().optional().default(""),
 
   // --- Chronologie (dates_json) — clé du contrôle anti-refus ---
+  // Engagement de l'offre CEE (rôle actif et incitatif). Optionnel au schéma,
+  // car sans objet en MaPrimeRénov' ; en CEE, son absence ou sa postériorité au
+  // devis est un bloquant relevé par le moteur (`controlerDossier`).
+  date_offre_cee: dateISOOptionnelle,
   date_visite_technique: dateISOOptionnelle,
   date_devis: dateISO,
   date_debut_travaux: dateISOOptionnelle,
@@ -490,6 +494,7 @@ export const ceeIsolationDefaults: CeeIsolationInput = {
     | "equivalence",
   solaire_marque: "",
   solaire_reference: "",
+  date_offre_cee: "",
   date_visite_technique: "",
   date_devis: "",
   date_debut_travaux: "",

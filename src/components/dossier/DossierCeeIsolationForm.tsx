@@ -660,6 +660,15 @@ export function DossierCeeIsolationForm({
               title="Chronologie"
               description="L'ordre des dates conditionne l'éligibilité, cœur du contrôle anti-refus."
             >
+              {dispositif === "cee" && (
+                <TextField
+                  label="Date d'engagement de l'offre CEE"
+                  type="date"
+                  hint="Le « coup de pouce », matérialisé par le cadre de contribution. Doit être daté AVANT le devis : c'est le rôle actif et incitatif, motif de refus n° 1."
+                  error={errors.date_offre_cee}
+                  register={register("date_offre_cee")}
+                />
+              )}
               <TextField label="Date de visite technique" type="date" error={errors.date_visite_technique} register={register("date_visite_technique")} />
               <TextField label="Date du devis signé" required type="date" hint="Doit précéder le début des travaux." error={errors.date_devis} register={register("date_devis")} />
               <TextField label="Date de début des travaux" type="date" error={errors.date_debut_travaux} register={register("date_debut_travaux")} />

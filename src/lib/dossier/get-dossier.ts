@@ -130,6 +130,14 @@ export interface CeeIsolationCaracteristiques {
 }
 
 export interface DossierDates {
+  /**
+   * Date d'engagement de l'offre CEE (le « coup de pouce », matérialisée par le
+   * cadre de contribution). Doit être ANTÉRIEURE au devis : c'est le rôle actif
+   * et incitatif, motif de refus CEE n° 1 et le seul irrattrapable. Sans objet en
+   * MaPrimeRénov'. Absente des dossiers antérieurs à l'introduction du contrôle
+   * (le moteur signale alors la date manquante en CEE).
+   */
+  offre_cee: string | null;
   visite_technique: string | null;
   devis: string;
   debut_travaux: string | null;

@@ -106,6 +106,7 @@ export function controlerDossier(
   }
 
   const dDevis = parseDate(dates.devis);
+  const dOffreCee = parseDate(dates.offre_cee);
   const dVisite = parseDate(dates.visite_technique);
   const dDebut = parseDate(dates.debut_travaux);
   const dFin = parseDate(dates.fin_travaux);
@@ -116,6 +117,42 @@ export function controlerDossier(
   // ---------------------------------------------------------------------
   // Chronologie
   // ---------------------------------------------------------------------
+
+  // Rôle actif et incitatif (CEE) : l'offre CEE doit être engagée AVANT le devis.
+  // C'est le motif de refus CEE n° 1, et le seul irrattrapable — aucune pièce
+  // produite après coup ne rétablit une antériorité manquante. Sans objet en
+  // MaPrimeRénov'. Sans date d'offre, l'antériorité est invérifiable : le dossier
+  // sera refusé, donc bloquant plutôt qu'avertissement.
+  if (dispositif === "cee") {
+    if (!dOffreCee) {
+      add({
+        code: "chrono_offre_cee",
+        categorie: "chronologie",
+        severite: "bloquant",
+        titre: "Date d'engagement de l'offre CEE manquante",
+        detail:
+          "Le rôle actif et incitatif exige que l'offre CEE (le « coup de pouce », matérialisée par le cadre de contribution) ait été proposée AVANT la signature du devis. Sans date d'engagement, l'antériorité ne peut pas être prouvée : c'est le premier motif de refus CEE, et il est irrattrapable.",
+      });
+    } else if (dDevis && dOffreCee > dDevis) {
+      add({
+        code: "chrono_offre_cee",
+        categorie: "chronologie",
+        severite: "bloquant",
+        titre: "Offre CEE engagée après le devis",
+        detail: `L'offre CEE est datée du ${dateFr(dates.offre_cee)}, après le devis du ${dateFr(dates.devis)}. Le rôle actif et incitatif impose que l'offre précède le devis : une offre postérieure est un motif de refus irrattrapable.`,
+      });
+    } else {
+      add({
+        code: "chrono_offre_cee",
+        categorie: "chronologie",
+        severite: "ok",
+        titre: "Antériorité de l'offre CEE confirmée",
+        detail:
+          "L'offre CEE a bien été engagée avant le devis : le rôle actif et incitatif est respecté.",
+      });
+    }
+  }
+
   if (dVisite && dDevis && dVisite > dDevis) {
     add({
       code: "chrono_visite_devis",
