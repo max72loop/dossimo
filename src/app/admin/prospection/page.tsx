@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { AlertTriangle, ArrowLeft, ArrowRight, CheckCircle2, Pause, Play } from "lucide-react";
 
+import { Badge } from "@/components/ui/badge";
+import { CARTE } from "@/components/ui/cartes";
 import { getAdminEmail } from "@/lib/auth/is-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { etatFile, statsEngagement } from "@/lib/prospection/file";
@@ -56,6 +58,14 @@ export default async function AdminProspectionPage({
   const messages = (file ?? []) as unknown as LigneFile[];
   const enAttente = messages.filter((m) => m.statut === "en_attente");
 
+  // Entonnoir d'engagement : chaque étape rapportée aux messages partis. Sous 200
+  // envois, les taux sont montrés mais signalés comme non concluants.
+  const tauxOuverture =
+    engagement.envois === 0 ? null : (engagement.ouvreurs / engagement.envois) * 100;
+  const tauxClic =
+    engagement.envois === 0 ? null : (engagement.cliqueurs / engagement.envois) * 100;
+  const peuDeDonnees = engagement.envois > 0 && engagement.envois < 200;
+
   return (
     <main className="mx-auto max-w-4xl px-8 py-10">
       <div className="flex flex-wrap gap-4 text-sm">
@@ -96,6 +106,7 @@ export default async function AdminProspectionPage({
         <Compteur
           label="Envoyés aujourd’hui"
           valeur={`${etat.envoyes} / ${etat.plafond}`}
+          ratio={etat.plafond > 0 ? etat.envoyes / etat.plafond : undefined}
           note={
             etat.plafond === 0
               ? "hors fenêtre"
@@ -113,52 +124,72 @@ export default async function AdminProspectionPage({
         />
       </section>
 
-      {/* --- Engagement cumulé (hors jour courant : un clic arrive rarement le jour de l'envoi) --- */}
-      <section className="mt-6">
-        <h2 className="font-serif text-xl font-semibold text-encre">
-          Engagement depuis le début
-        </h2>
-        <p className="mt-1 text-sm text-ardoise">
-          Seuls les clics sur le lien de démo sont mesurés. Les ouvertures ne le
-          sont pas : la campagne ne pose aucun pixel de suivi, et n’en posera pas.
+      {/* --- Engagement cumulé : entonnoir partis → ouverts → cliqués --- */}
+      <section className="mt-8">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+          <h2 className="font-serif text-xl font-semibold text-encre">
+            Engagement depuis le début
+          </h2>
+          {peuDeDonnees && (
+            <Badge ton="avertissement" dot>
+              Trop peu d’envois pour conclure · {engagement.envois}/200
+            </Badge>
+          )}
+        </div>
+        <p className="mt-1 max-w-2xl text-sm text-ardoise">
+          Deux signaux, à lire en relatif plus qu’en absolu. Le taux d’ouverture
+          vient d’un pixel : il est <strong>surévalué</strong> par le préchargement
+          d’images de Gmail et Apple Mail, sous-évalué chez qui bloque les images.
+          Le clic, lui, est gonflé par les scanners de sécurité des messageries
+          d’entreprise. Aucun des deux n’est une vérité.
         </p>
-        <div className="mt-4 grid gap-3 sm:grid-cols-4">
-          <Compteur
-            label="Messages partis"
-            valeur={String(engagement.envois)}
-            note="toutes journées confondues"
-          />
-          <Compteur
-            label="Ont cliqué"
-            valeur={String(engagement.cliqueurs)}
-            note={
-              engagement.clicsBruts > engagement.cliqueurs
-                ? `${engagement.clicsBruts} visites au total`
-                : "prospects distincts"
-            }
-          />
-          <Compteur
-            label="Taux de clic"
-            valeur={
-              engagement.envois === 0
-                ? "—"
-                : `${((engagement.cliqueurs / engagement.envois) * 100).toFixed(1)} %`
-            }
-            note={
-              engagement.envois < 200
-                ? `trop peu d’envois pour conclure (${engagement.envois}/200)`
-                : "sur les messages partis"
-            }
-          />
-          <Compteur
-            label="Désinscriptions"
-            valeur={String(engagement.desinscriptions)}
-            note={
-              engagement.dernierClic
+
+        <div className={`mt-4 ${CARTE}`}>
+          <div className="space-y-5">
+            <LigneEntonnoir
+              label="Messages partis"
+              detail="toutes journées confondues"
+              valeur={engagement.envois}
+              pct={engagement.envois === 0 ? 0 : 100}
+              ton="encre"
+            />
+            <LigneEntonnoir
+              label="Ont ouvert"
+              detail={
+                engagement.ouverturesBrutes > engagement.ouvreurs
+                  ? `${engagement.ouverturesBrutes} ouvertures en tout`
+                  : "prospects distincts"
+              }
+              valeur={engagement.ouvreurs}
+              pct={tauxOuverture}
+              ton="info"
+              tauxEnTete
+            />
+            <LigneEntonnoir
+              label="Ont cliqué"
+              detail={
+                engagement.clicsBruts > engagement.cliqueurs
+                  ? `${engagement.clicsBruts} visites en tout`
+                  : "prospects distincts"
+              }
+              valeur={engagement.cliqueurs}
+              pct={tauxClic}
+              ton="succes"
+              tauxEnTete
+            />
+          </div>
+
+          <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-filigrane pt-4">
+            <Badge ton={engagement.desinscriptions > 0 ? "erreur" : "neutre"} dot>
+              {engagement.desinscriptions} désinscription
+              {engagement.desinscriptions === 1 ? "" : "s"}
+            </Badge>
+            <span className="font-mono text-xs tabular-nums text-encre-claire">
+              {engagement.dernierClic
                 ? `dernier clic le ${new Date(engagement.dernierClic).toLocaleDateString("fr-FR")}`
-                : "aucun clic à ce jour"
-            }
-          />
+                : "aucun clic à ce jour"}
+            </span>
+          </div>
         </div>
       </section>
 
@@ -336,16 +367,88 @@ function Compteur({
   label,
   valeur,
   note,
+  ratio,
 }: {
   label: string;
   valeur: string;
   note: string;
+  /** Si fourni (0–1), affiche une jauge sous le chiffre : avancement vers un plafond. */
+  ratio?: number;
 }) {
   return (
     <div className="rounded-2xl bg-blanc-casse p-4 shadow-lg">
       <p className="text-xs font-medium uppercase tracking-wide text-ardoise">{label}</p>
-      <p className="mt-2 font-mono text-2xl font-semibold text-encre">{valeur}</p>
+      <p className="mt-2 font-mono text-2xl font-semibold tabular-nums text-encre">{valeur}</p>
+      {ratio !== undefined && (
+        <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-papier-fonce">
+          <div
+            className="h-full rounded-full bg-tampon"
+            style={{ width: `${Math.min(Math.max(ratio, 0), 1) * 100}%` }}
+          />
+        </div>
+      )}
       <p className="mt-1 text-xs text-encre-claire">{note}</p>
+    </div>
+  );
+}
+
+/** Tons de remplissage de l'entonnoir (DESIGN.md §2) : ouvert = info, cliqué = succès. */
+const METER_FILL: Record<"encre" | "info" | "succes", string> = {
+  encre: "bg-encre",
+  info: "bg-tampon",
+  succes: "bg-succes",
+};
+
+/**
+ * Une étape de l'entonnoir : libellé + chiffre de tête (le taux pour les étapes
+ * d'engagement, le volume brut pour « messages partis ») et une barre dont la
+ * largeur encode ce taux, sur la même base que les messages partis (100 %).
+ */
+function LigneEntonnoir({
+  label,
+  detail,
+  valeur,
+  pct,
+  ton,
+  tauxEnTete = false,
+}: {
+  label: string;
+  detail: string;
+  valeur: number;
+  pct: number | null;
+  ton: "encre" | "info" | "succes";
+  tauxEnTete?: boolean;
+}) {
+  const actif = valeur > 0;
+  const largeur = actif ? Math.min(Math.max(pct ?? 0, 0), 100) : 0;
+  return (
+    <div>
+      <div className="flex items-end justify-between gap-4">
+        <div className="min-w-0">
+          <p className="text-sm font-medium text-encre">{label}</p>
+          <p className="text-xs text-encre-claire">{detail}</p>
+        </div>
+        <div className="shrink-0 text-right">
+          <p className="font-mono text-2xl font-semibold leading-none tabular-nums text-encre">
+            {tauxEnTete
+              ? pct === null
+                ? "—"
+                : `${pct.toFixed(1)} %`
+              : valeur.toLocaleString("fr-FR")}
+          </p>
+          {tauxEnTete && (
+            <p className="mt-1 font-mono text-xs tabular-nums text-ardoise">
+              {valeur.toLocaleString("fr-FR")} prospect{valeur === 1 ? "" : "s"}
+            </p>
+          )}
+        </div>
+      </div>
+      <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-papier-fonce">
+        <div
+          className={`h-full rounded-full ${METER_FILL[ton]}`}
+          style={{ width: `${largeur}%`, minWidth: actif ? "0.375rem" : undefined }}
+        />
+      </div>
     </div>
   );
 }

@@ -79,7 +79,8 @@ export type TypeEvenementProspection =
   | "clic"
   | "desinscription"
   | "bounce"
-  | "reponse";
+  | "reponse"
+  | "ouverture";
 
 export type Json =
   | string

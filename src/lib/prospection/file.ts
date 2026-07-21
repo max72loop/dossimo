@@ -126,6 +126,10 @@ export async function etatFile(maintenant = new Date()): Promise<EtatFile> {
 
 export interface StatsEngagement {
   envois: number;
+  /** Prospects distincts ayant ouvert (pixel). Surévalué par le préchargement d'images. */
+  ouvreurs: number;
+  /** Lignes `ouverture` brutes, rechargements d'image compris. Toujours >= `ouvreurs`. */
+  ouverturesBrutes: number;
   /** Prospects distincts ayant cliqué. C'est CE chiffre qui veut dire quelque chose. */
   cliqueurs: number;
   /** Lignes `clic` brutes, rechargements compris. Toujours >= `cliqueurs`. */
@@ -172,9 +176,21 @@ export async function statsEngagement(): Promise<StatsEngagement> {
     .order("created_at", { ascending: false });
   if (error) throw new Error(`Lecture des clics : ${error.message}`);
 
+  // Les ouvertures se comptent en prospects distincts, comme les clics : un même
+  // message rouvert (ou dont l'image se recharge) produit plusieurs lignes.
+  const { data: ouvertures, error: erreurOuvertures } = await supabase
+    .from("prospection_evenements")
+    .select("prospect_id")
+    .eq("type", "ouverture");
+  if (erreurOuvertures)
+    throw new Error(`Lecture des ouvertures : ${erreurOuvertures.message}`);
+
   const lignes = clics ?? [];
+  const lignesOuvertures = ouvertures ?? [];
   return {
     envois,
+    ouvreurs: new Set(lignesOuvertures.map((o) => o.prospect_id)).size,
+    ouverturesBrutes: lignesOuvertures.length,
     cliqueurs: new Set(lignes.map((c) => c.prospect_id)).size,
     clicsBruts: lignes.length,
     desinscriptions,
@@ -406,7 +422,7 @@ export async function envoyerProchain(
   return { envoye: true, messageId: message.id, destinataire: prospect.email };
 }
 
-/** Journalise un clic sur le lien du message, sans mouchard ni pixel. */
+/** Journalise un clic sur le lien de démo du message, attribué par le jeton. */
 export async function enregistrerClic(token: string): Promise<void> {
   const supabase = createAdminClient();
   const { data: prospect } = await supabase
@@ -419,6 +435,28 @@ export async function enregistrerClic(token: string): Promise<void> {
   await supabase.from("prospection_evenements").insert({
     prospect_id: prospect.id,
     type: "clic",
+    payload: {},
+  });
+}
+
+/**
+ * Journalise l'ouverture d'un message, déclenchée par le pixel de suivi. Comme le
+ * clic, une ouverture peut se répéter : on stocke chaque ligne, le décompte des
+ * prospects distincts se fait à la lecture (`statsEngagement`). Le jeton inconnu
+ * (lien recopié, image relayée) est simplement ignoré.
+ */
+export async function enregistrerOuverture(token: string): Promise<void> {
+  const supabase = createAdminClient();
+  const { data: prospect } = await supabase
+    .from("prospects")
+    .select("id")
+    .eq("unsubscribe_token", token)
+    .maybeSingle();
+  if (!prospect) return;
+
+  await supabase.from("prospection_evenements").insert({
+    prospect_id: prospect.id,
+    type: "ouverture",
     payload: {},
   });
 }

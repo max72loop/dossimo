@@ -11,7 +11,8 @@ import "server-only";
  *
  * Le message part en multipart : une version HTML (design à la marque) et son
  * repli `text/plain`. Le texte reste la source qui compte pour un filtre anti-spam
- * (et le seul rendu si le HTML est absent) ; pas de pixel de suivi, jamais.
+ * (et le seul rendu si le HTML est absent). La version HTML porte un pixel de
+ * suivi d'ouverture (`corpsHtmlPourProspect`) ; le texte, lui, ne trace rien.
  */
 
 export type ResultatEnvoi = { ok: true } | { ok: false; erreur: string };
