@@ -343,7 +343,7 @@ export default async function DossierPage({
             </p>
           )}
           <div className="mt-4 flex flex-wrap items-start gap-3">
-            <PaywallCta dossierId={id} prix={netLabel} />
+            <PaywallCta dossierId={id} prix={netCents != null ? netLabel : null} reference={c.fiche} />
             {soldeCredits > 0 && creditApplied === 0 && (netCents ?? 0) > 0 && (
               <CreditsCta dossierId={id} soldeLabel={labelEuros(soldeCredits)} />
             )}
