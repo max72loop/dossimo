@@ -362,6 +362,31 @@ export function controlerDossier(
   // Performance technique (seuil piloté par la règle métier, selon le geste)
   // ---------------------------------------------------------------------
   const geste = c.geste ?? "isolation";
+
+  // Non-cumul CEE du solaire thermique (depuis 2026). Les opérations de PAC air/eau
+  // et eau/eau (BAR-TH-171 / 172) ne sont plus cumulables, pour un même logement,
+  // avec le chauffe-eau solaire, le système solaire combiné et le solaire sur
+  // appoint séparé (BAR-TH-101 / 143 / 168). C'est une règle INTER-dossiers, et
+  // Dossimo ne voit qu'un dossier à la fois — le bénéficiaire n'existe même pas en
+  // base : impossible de la vérifier ici. On ne bloque donc pas, on alerte, et on
+  // demande à l'artisan de confirmer qu'il ne mène pas l'autre geste chez ce client.
+  // Sans objet en MaPrimeRénov' : ce non-cumul régit la seule valorisation CEE.
+  if (
+    dispositif === "cee" &&
+    (geste === "pac_air_eau" || geste === "solaire_thermique")
+  ) {
+    const estPac = geste === "pac_air_eau";
+    add({
+      code: "eligibilite_non_cumul_solaire",
+      categorie: "eligibilite",
+      severite: "avertissement",
+      titre: "Non-cumul CEE PAC / solaire thermique à vérifier",
+      detail: estPac
+        ? "Depuis 2026, une PAC air/eau (BAR-TH-171) n'est plus cumulable en CEE, pour un même logement, avec un chauffe-eau solaire ou un système solaire (BAR-TH-101, 143 ou 168). Confirmez qu'aucune de ces opérations solaires n'est menée pour ce client : sinon l'une des deux primes CEE sera refusée."
+        : "Depuis 2026, un chauffe-eau solaire individuel (BAR-TH-101) n'est plus cumulable en CEE, pour un même logement, avec une PAC air/eau ou eau/eau (BAR-TH-171 ou 172). Confirmez qu'aucune de ces pompes à chaleur n'est menée pour ce client : sinon l'une des deux primes CEE sera refusée.",
+    });
+  }
+
   if (geste === "bois") {
     // Appareil de chauffage au bois : rendement énergétique. Seuil selon le
     // combustible (granulés ~80 %, bûches ~75 %), surchargeable par la règle
