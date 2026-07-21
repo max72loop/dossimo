@@ -1,0 +1,72 @@
+<svg width="460" height="380" viewBox="0 0 460 380" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="titre-coherence">
+  <title id="titre-coherence">Contrôle de cohérence entre le devis et la facture : une ligne diverge et est signalée</title>
+  <defs>
+    <filter id="ombre-carte" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#16202b" flood-opacity="0.10"/>
+    </filter>
+  </defs>
+
+  <!-- Panneau de fond (crème légèrement plus foncé que l'en-tête) -->
+  <rect x="0" y="0" width="460" height="380" rx="18" fill="#f3f0e9"/>
+
+  <!-- Bandeau titre du contrôle -->
+  <g>
+    <rect x="150" y="24" width="160" height="30" rx="15" fill="#e9edf4"/>
+    <circle cx="171" cy="39" r="6.5" fill="#35507f"/>
+    <path d="M167.8 39l2.2 2.2 4-4.4" stroke="#fbf9f3" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="186" y="43" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="600" letter-spacing="0.4" fill="#35507f">Contrôle de cohérence</text>
+  </g>
+
+  <!-- Carte DEVIS -->
+  <g filter="url(#ombre-carte)">
+    <rect x="32" y="74" width="182" height="272" rx="12" fill="#fbf9f3" stroke="#e2ddd1" stroke-width="1"/>
+  </g>
+  <text x="52" y="106" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="700" letter-spacing="1.5" fill="#35507f">DEVIS</text>
+  <rect x="52" y="116" width="60" height="4" rx="2" fill="#e2ddd1"/>
+
+  <!-- Carte FACTURE -->
+  <g filter="url(#ombre-carte)">
+    <rect x="246" y="74" width="182" height="272" rx="12" fill="#fbf9f3" stroke="#e2ddd1" stroke-width="1"/>
+  </g>
+  <text x="266" y="106" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="700" letter-spacing="1.5" fill="#35507f">FACTURE</text>
+  <rect x="266" y="116" width="60" height="4" rx="2" fill="#e2ddd1"/>
+
+  <!-- Ligne 1 : cohérente -->
+  <rect x="52" y="146" width="46" height="6" rx="3" fill="#c9ced4"/>
+  <rect x="52" y="158" width="122" height="6" rx="3" fill="#e2ddd1"/>
+  <rect x="266" y="146" width="46" height="6" rx="3" fill="#c9ced4"/>
+  <rect x="266" y="158" width="122" height="6" rx="3" fill="#e2ddd1"/>
+  <circle cx="230" cy="156" r="11" fill="#e7f1ea"/>
+  <path d="M225.5 156l3 3 5.5-6" stroke="#2d6a4f" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Ligne 2 : cohérente -->
+  <rect x="52" y="188" width="60" height="6" rx="3" fill="#c9ced4"/>
+  <rect x="52" y="200" width="108" height="6" rx="3" fill="#e2ddd1"/>
+  <rect x="266" y="188" width="60" height="6" rx="3" fill="#c9ced4"/>
+  <rect x="266" y="200" width="108" height="6" rx="3" fill="#e2ddd1"/>
+  <circle cx="230" cy="198" r="11" fill="#e7f1ea"/>
+  <path d="M225.5 198l3 3 5.5-6" stroke="#2d6a4f" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Ligne 3 : DIVERGENCE (surface) -->
+  <rect x="40" y="224" width="166" height="40" rx="7" fill="#f6e9e6"/>
+  <rect x="254" y="224" width="166" height="40" rx="7" fill="#f6e9e6"/>
+  <rect x="52" y="234" width="52" height="6" rx="3" fill="#b98a86"/>
+  <text x="52" y="257" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="700" fill="#9b2c2c">95 m²</text>
+  <rect x="266" y="234" width="52" height="6" rx="3" fill="#b98a86"/>
+  <text x="266" y="257" font-family="'Segoe UI', Arial, sans-serif" font-size="14" font-weight="700" fill="#9b2c2c">80 m²</text>
+  <circle cx="230" cy="244" r="12" fill="#9b2c2c"/>
+  <path d="M224.5 240.5h11M224.5 247.5h11" stroke="#fbf9f3" stroke-width="1.8" stroke-linecap="round"/>
+
+  <!-- Ligne 4 : cohérente -->
+  <rect x="52" y="288" width="54" height="6" rx="3" fill="#c9ced4"/>
+  <rect x="52" y="300" width="116" height="6" rx="3" fill="#e2ddd1"/>
+  <rect x="266" y="288" width="54" height="6" rx="3" fill="#c9ced4"/>
+  <rect x="266" y="300" width="116" height="6" rx="3" fill="#e2ddd1"/>
+  <circle cx="230" cy="298" r="11" fill="#e7f1ea"/>
+  <path d="M225.5 298l3 3 5.5-6" stroke="#2d6a4f" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Pied : mention du point signalé -->
+  <circle cx="52" cy="326" r="4" fill="#9b2c2c"/>
+  <rect x="62" y="323" width="150" height="6" rx="3" fill="#e2ddd1"/>
+  <rect x="266" y="323" width="120" height="6" rx="3" fill="#e2ddd1"/>
+</svg>

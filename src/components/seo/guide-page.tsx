@@ -67,12 +67,20 @@ export function SeoGuidePage({ guide }: { guide: SeoGuide }) {
                 <span aria-hidden="true"> / </span>
                 <span className="text-encre-claire">{guide.category}</span>
               </nav>
-              <p className="mt-8 text-xs font-semibold uppercase tracking-[0.14em] text-tampon">{guide.eyebrow}</p>
-              <h1 className="mt-3 max-w-3xl font-serif text-4xl font-semibold tracking-tight text-encre sm:text-5xl">{guide.title}</h1>
-              <p className="mt-5 max-w-3xl text-lg leading-relaxed text-ardoise">{guide.intro}</p>
-              <div className="mt-7 flex flex-wrap gap-x-6 gap-y-2 text-sm text-encre-claire">
-                <span>Vérifié le {dateVerification}</span>
-                <span>Relecture éditoriale : équipe Dossimo</span>
+              <div className={guide.hero ? "mt-8 grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_360px]" : "mt-8"}>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-tampon">{guide.eyebrow}</p>
+                  <h1 className="mt-3 max-w-3xl font-serif text-4xl font-semibold tracking-tight text-encre sm:text-5xl">{guide.title}</h1>
+                  <p className="mt-5 max-w-3xl text-lg leading-relaxed text-ardoise">{guide.intro}</p>
+                  <div className="mt-7 flex flex-wrap gap-x-6 gap-y-2 text-sm text-encre-claire">
+                    <span>Vérifié le {dateVerification}</span>
+                    <span>Relecture éditoriale : équipe Dossimo</span>
+                  </div>
+                </div>
+                {guide.hero ? (
+                  // eslint-disable-next-line @next/next/no-img-element -- SVG statique de marque, rien à optimiser (cf. depot-client.tsx)
+                  <img src={guide.hero.src} alt={guide.hero.alt} width={460} height={380} className="mx-auto mt-4 h-auto w-full max-w-xs sm:max-w-sm lg:mx-0 lg:mt-0 lg:max-w-md" loading="eager" />
+                ) : null}
               </div>
             </div>
           </header>
