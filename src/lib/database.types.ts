@@ -550,6 +550,12 @@ export interface Database {
           personnes: number;
           plafond_grande_precarite: number;
           plafond_precaire: number;
+          /**
+           * Plafond du profil « intermédiaire » (violet). Sa borne haute sépare le
+           * violet (éligible MPR par geste) du rose (non éligible en 2026). `null`
+           * pour un barème antérieur à la migration 0044. Ne concerne que MPR.
+           */
+          plafond_intermediaire: number | null;
           actif: boolean;
           created_at: string;
         };

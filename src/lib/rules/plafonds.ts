@@ -35,6 +35,13 @@ export function zoneDeCodePostal(codePostal: string): Zone {
 export interface Plafond {
   grande_precarite: number;
   precaire: number;
+  /**
+   * Plafond du profil « intermédiaire » (violet). Sa borne haute sépare le violet
+   * (éligible MaPrimeRénov' par geste) du rose (supérieur, non éligible en 2026).
+   * `null` = inconnu (barème antérieur à 0044, ou zone non couverte) : on ne conclut
+   * alors pas à l'inéligibilité. Sans objet en CEE, qui ignore cette distinction.
+   */
+  intermediaire: number | null;
 }
 
 /**
@@ -59,6 +66,7 @@ export function plafondPour(
     return {
       grande_precarite: exacte.plafond_grande_precarite,
       precaire: exacte.plafond_precaire,
+      intermediaire: exacte.plafond_intermediaire ?? null,
     };
   }
 
@@ -67,10 +75,18 @@ export function plafondPour(
   if (!base || !increment || personnes <= 5) return null;
 
   const sup = personnes - 5;
+  // Le plafond intermédiaire s'étend par le même incrément — mais seulement si les
+  // deux lignes le portent. Un barème pré-0044 (colonne nulle) reste « inconnu »
+  // plutôt que d'extrapoler à partir de rien.
+  const intermediaire =
+    base.plafond_intermediaire != null && increment.plafond_intermediaire != null
+      ? base.plafond_intermediaire + sup * increment.plafond_intermediaire
+      : null;
   return {
     grande_precarite:
       base.plafond_grande_precarite + sup * increment.plafond_grande_precarite,
     precaire: base.plafond_precaire + sup * increment.plafond_precaire,
+    intermediaire,
   };
 }
 
@@ -79,4 +95,19 @@ export function categoriePour(rfr: number, plafond: Plafond): CategorieRevenus {
   if (rfr <= plafond.grande_precarite) return "grande_precarite";
   if (rfr <= plafond.precaire) return "precaire";
   return "classique";
+}
+
+/**
+ * Le RFR place-t-il le ménage AU-DESSUS du plafond intermédiaire, c'est-à-dire dans
+ * le profil rose (revenus supérieurs) ? Ce profil n'ouvre PAS droit à MaPrimeRénov'
+ * par geste en 2026 : le détecter est le seul moyen d'éviter qu'un dossier MPR voué
+ * au refus soit validé (le modèle à trois bandes range ce ménage en « classique »,
+ * comme le violet éligible — rien d'autre ne les distingue).
+ *
+ * Renvoie `null` quand le plafond intermédiaire est inconnu : on ne conclut pas à
+ * l'inéligibilité sur un plafond manquant, même prudence que `plafondPour`.
+ */
+export function estProfilSuperieur(rfr: number, plafond: Plafond): boolean | null {
+  if (plafond.intermediaire == null) return null;
+  return rfr > plafond.intermediaire;
 }

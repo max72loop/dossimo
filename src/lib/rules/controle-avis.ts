@@ -3,11 +3,12 @@ import type { CeeIsolationCaracteristiques } from "@/lib/dossier/get-dossier";
 import type { AvisImposition } from "@/lib/piece/avis-imposition";
 import {
   categoriePour,
+  estProfilSuperieur,
   plafondPour,
   zoneDeCodePostal,
   type CategorieRevenus,
 } from "@/lib/rules/plafonds";
-import type { PlafondRessources } from "@/lib/database.types";
+import type { Dossier, PlafondRessources } from "@/lib/database.types";
 import type { Finding } from "@/lib/rules/types";
 
 /**
@@ -59,8 +60,15 @@ export function controlerAvisImposition(params: {
   plafonds: readonly PlafondRessources[];
   /** Année de la demande — sert à juger l'ancienneté de l'avis. */
   anneeCourante: number;
+  /**
+   * Dispositif du dossier. Il commande une règle propre à MaPrimeRénov' : les
+   * revenus « supérieurs » (rose) n'y sont pas éligibles par geste, alors qu'en CEE
+   * ils passent sans réserve. Défaut `cee` : le comportement historique.
+   */
+  dispositif?: Dossier["dispositif"];
 }): Finding[] {
   const { caracteristiques: c, avis, plafonds, anneeCourante } = params;
+  const dispositif = params.dispositif ?? "cee";
   const out: Finding[] = [];
 
   if (avis.hors_sujet) {
@@ -140,6 +148,28 @@ export function controlerAvisImposition(params: {
       titre: "Barème de ressources indisponible",
       detail:
         "Les plafonds de ressources en vigueur n'ont pas pu être chargés. La catégorie de revenus du dossier n'a pas été vérifiée contre l'avis.",
+    });
+    return out;
+  }
+
+  // MaPrimeRénov' 2026 : le parcours par geste n'est pas ouvert aux revenus
+  // « supérieurs » (profil rose de l'Anah), au-dessus du plafond intermédiaire. Le
+  // modèle interne à trois bandes range pourtant ce ménage en « classique », comme le
+  // violet éligible : rien dans la saisie ne les sépare, seul l'avis tranche. Ce motif
+  // prime sur la simple cohérence de catégorie — inutile de comparer au-delà.
+  // Côté CEE, aucune distinction violet / rose : la règle ne s'y applique pas.
+  const seuilSuperieur = plafond.intermediaire;
+  if (
+    dispositif === "maprimerenov" &&
+    estProfilSuperieur(rfr, plafond) &&
+    seuilSuperieur != null
+  ) {
+    out.push({
+      code: "avis_mpr_revenus_superieurs",
+      categorie: "pieces",
+      severite: "bloquant",
+      titre: "Revenus supérieurs : ménage non éligible à MaPrimeRénov'",
+      detail: `L'avis (${eur(rfr)} pour ${personnes} personne${personnes > 1 ? "s" : ""}, ${zone === "idf" ? "Île-de-France" : "hors Île-de-France"}) dépasse le plafond « intermédiaire » de ${eur(seuilSuperieur)}. En 2026, MaPrimeRénov' par geste ne finance pas les revenus supérieurs (profil rose de l'Anah) : ce dossier serait refusé. Orientez le client vers un financement CEE, ouvert à tous les revenus, ou vers la rénovation d'ampleur.`,
     });
     return out;
   }
