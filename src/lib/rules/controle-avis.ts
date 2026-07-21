@@ -30,7 +30,22 @@ const ANCIENNETE_MAX_ANS = 2;
 const LABEL: Record<CategorieRevenus, string> = {
   grande_precarite: PRECARITES.grande_precarite,
   precaire: PRECARITES.precaire,
-  classique: PRECARITES.classique,
+  intermediaire: PRECARITES.intermediaire,
+  superieur: PRECARITES.superieur,
+};
+
+/**
+ * Rang de générosité de l'aide, du plus au moins aidé. Le violet et le rose
+ * partagent le même rang à dessein : le CEE ne les distingue pas (même barème), et
+ * l'inéligibilité MaPrimeRénov' du rose est déjà tranchée en amont (bloc
+ * `avis_mpr_revenus_superieurs`). Pour la simple cohérence de catégorie, les
+ * confondre évite un faux « trop prudente » quand ils ne changent aucun montant.
+ */
+const RANG: Record<CategorieRevenus, number> = {
+  grande_precarite: 0,
+  precaire: 1,
+  intermediaire: 2,
+  superieur: 2,
 };
 
 const eur = (n: number) =>
@@ -177,7 +192,10 @@ export function controlerAvisImposition(params: {
   const reelle = categoriePour(rfr, plafond);
   const declaree = c.beneficiaire.precarite;
 
-  if (reelle === declaree) {
+  // Comparaison au rang, pas au token : le violet et le rose sont au même rang
+  // (voir `RANG`), donc un dossier « intermédiaire » que l'avis situe « supérieur »
+  // (ou l'inverse) est traité comme confirmé — aucune aide ne change entre eux.
+  if (RANG[reelle] === RANG[declaree]) {
     out.push({
       code: "avis_revenus",
       categorie: "pieces",
@@ -190,10 +208,9 @@ export function controlerAvisImposition(params: {
 
   // Les deux sens sont graves, mais pas pour la même raison : trop généreux, la prime
   // sera recalculée à la baisse ; trop prudent, le client perd de l'argent auquel il a
-  // droit — et personne ne le lui dira.
-  const surestime =
-    (declaree === "grande_precarite" && reelle !== "grande_precarite") ||
-    (declaree === "precaire" && reelle === "classique");
+  // droit — et personne ne le lui dira. Déclarer un profil plus aidé (rang plus bas)
+  // que la réalité, c'est surestimer.
+  const surestime = RANG[declaree] < RANG[reelle];
 
   out.push({
     code: "avis_revenus",

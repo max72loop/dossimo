@@ -129,7 +129,15 @@ describe("plafonds de ressources", () => {
     expect(categoriePour(30000, p)).toBe("grande_precarite");
     expect(categoriePour(35676, p)).toBe("grande_precarite"); // borne incluse
     expect(categoriePour(40000, p)).toBe("precaire");
-    expect(categoriePour(45736, p)).toBe("classique");
+    expect(categoriePour(45736, p)).toBe("intermediaire"); // au-dessus du précaire, sous le violet
+    expect(categoriePour(70000, p)).toBe("superieur"); // au-dessus du plafond intermédiaire (rose)
+  });
+
+  it("retombe sur intermediaire quand le plafond intermédiaire est inconnu", () => {
+    // Barème pré-0044 (colonne nulle) : on ne conclut pas au rose sur un plafond
+    // manquant, on retient la bande bénigne et éligible.
+    const p = { grande_precarite: 35676, precaire: 45735, intermediaire: null };
+    expect(categoriePour(70000, p)).toBe("intermediaire");
   });
 });
 
@@ -150,9 +158,9 @@ describe("contrôle de l'avis d'imposition", () => {
   });
 
   it("AVERTIT d'une précarité sous-estimée : le client perd de l'argent", () => {
-    // 30 000 € pour 4 personnes = très modeste. Le dossier déclare « classique » :
+    // 30 000 € pour 4 personnes = très modeste. Le dossier déclare « intermédiaire » :
     // personne ne le refusera, mais le client touchera moins que son dû.
-    const f = code(juger("classique"), "avis_revenus")!;
+    const f = code(juger("intermediaire"), "avis_revenus")!;
     expect(f.severite).toBe("avertissement");
     expect(f.titre).toContain("trop prudente");
   });
@@ -219,10 +227,10 @@ describe("contrôle de l'avis d'imposition", () => {
 describe("éligibilité MaPrimeRénov' : profil supérieur (rose)", () => {
   it("BLOQUE un dossier MPR dont l'avis place le ménage au-dessus du plafond intermédiaire", () => {
     // 70 000 € pour 4 personnes hors IDF : au-dessus du plafond violet (64 550 €) =
-    // profil rose, non éligible au parcours par geste 2026. Le modèle à trois bandes
-    // le range en « classique » ; sans cette règle, il passait pour un dossier valide.
+    // profil rose, non éligible au parcours par geste 2026. Même si l'artisan déclare
+    // « intermédiaire », l'avis le situe rose : sans cette règle il passait valide.
     const f = code(
-      juger("classique", { revenu_fiscal_reference: 70000 }, "33000", "maprimerenov"),
+      juger("intermediaire", { revenu_fiscal_reference: 70000 }, "33000", "maprimerenov"),
       "avis_mpr_revenus_superieurs",
     )!;
     expect(f.severite).toBe("bloquant");
@@ -233,16 +241,17 @@ describe("éligibilité MaPrimeRénov' : profil supérieur (rose)", () => {
   it("ne bloque pas un dossier MPR d'un ménage intermédiaire (violet, éligible)", () => {
     // 60 000 € pour 4 personnes hors IDF : au-dessus du plafond modeste (45 735 €)
     // mais sous le plafond violet (64 550 €). Éligible : aucune alerte de revenus.
-    const fs = juger("classique", { revenu_fiscal_reference: 60000 }, "33000", "maprimerenov");
+    const fs = juger("intermediaire", { revenu_fiscal_reference: 60000 }, "33000", "maprimerenov");
     expect(code(fs, "avis_mpr_revenus_superieurs")).toBeUndefined();
-    // Le contrôle de cohérence classique reprend, et « classique » est confirmé.
+    // Le contrôle de cohérence reprend, et « intermédiaire » est confirmé par l'avis.
     expect(code(fs, "avis_revenus")?.severite).toBe("ok");
   });
 
   it("n'applique PAS la règle en CEE : les revenus supérieurs y sont éligibles", () => {
     // Même ménage rose (70 000 €), mais dossier CEE : le CEE ignore la distinction
-    // violet / rose. Aucune alerte d'inéligibilité, seulement la cohérence classique.
-    const fs = juger("classique", { revenu_fiscal_reference: 70000 }, "33000", "cee");
+    // violet / rose. Aucune alerte d'inéligibilité ; l'avis situe le ménage
+    // « supérieur », que le contrôle traite au même rang que « intermédiaire » déclaré.
+    const fs = juger("intermediaire", { revenu_fiscal_reference: 70000 }, "33000", "cee");
     expect(code(fs, "avis_mpr_revenus_superieurs")).toBeUndefined();
     expect(code(fs, "avis_revenus")?.severite).toBe("ok");
   });
@@ -251,7 +260,7 @@ describe("éligibilité MaPrimeRénov' : profil supérieur (rose)", () => {
     // Barème pré-0044 (colonne intermédiaire nulle) : on ne bloque pas sur un plafond
     // manquant, on retombe sur le seul contrôle de cohérence de catégorie.
     const fs = controlerAvisImposition({
-      caracteristiques: carac("classique"),
+      caracteristiques: carac("intermediaire"),
       avis: avis({ revenu_fiscal_reference: 70000 }),
       plafonds: [ligne("hors_idf", 4, 35676, 45735, null)],
       anneeCourante: 2026,

@@ -15,7 +15,7 @@ const dossier = (dispositif: "cee" | "maprimerenov"): DossierComplet =>
         prenom: "Claire",
         code_postal: "33000",
         occupation: "proprietaire_occupant",
-        precarite: "classique",
+        precarite: "intermediaire",
       },
       travaux: {
         fiche: "BAR-EN-101",

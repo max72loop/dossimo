@@ -191,10 +191,15 @@ export const OCCUPATIONS = {
   locataire: "Locataire",
 } as const;
 
+// Les quatre profils de revenus de l'Anah, dans l'ordre croissant affiché au
+// select. Le CEE ne distingue pas l'intermédiaire (violet) du supérieur (rose) ;
+// MaPrimeRénov' par geste, si : le rose n'y est pas éligible en 2026. Voir
+// `CategorieRevenus` (`src/lib/rules/plafonds.ts`).
 export const PRECARITES = {
-  classique: "Revenus classiques (standard)",
-  precaire: "Ménage modeste (précaire)",
-  grande_precarite: "Ménage très modeste (grande précarité)",
+  grande_precarite: "Ménage très modeste (bleu)",
+  precaire: "Ménage modeste (jaune)",
+  intermediaire: "Revenus intermédiaires (violet)",
+  superieur: "Revenus supérieurs (rose)",
 } as const;
 
 export const LOGEMENT_TYPES = {

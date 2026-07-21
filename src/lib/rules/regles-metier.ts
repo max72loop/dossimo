@@ -19,8 +19,17 @@ import type { Database, Dispositif } from "@/lib/database.types";
  *  - `par_m2` : montant €/m² par catégorie de revenus (isolation).
  *  - `forfait` : montant fixe € par catégorie (chauffage, ex. PAC).
  */
+// Quatre profils Anah. `classique` reste toléré en clé DÉPRÉCIÉE tant qu'un barème
+// seedé n'a pas migré vers `intermediaire` / `superieur` (migration 0046). Miroir
+// de `profilMontants` dans `src/lib/regles/condition.ts` : les deux ensemble.
 const montantsParProfil = z
-  .object({ classique: z.number(), precaire: z.number(), grande_precarite: z.number() })
+  .object({
+    grande_precarite: z.number(),
+    precaire: z.number(),
+    intermediaire: z.number(),
+    superieur: z.number(),
+    classique: z.number(),
+  })
   .partial();
 
 const primeSchema = z

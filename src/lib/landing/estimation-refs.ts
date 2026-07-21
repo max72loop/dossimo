@@ -15,23 +15,16 @@ import { FAMILLES, TYPES_ISOLATION } from "@/lib/dossier/cee-isolation";
 /**
  * Les QUATRE profils de revenus de l'Anah, exposés au public.
  *
- * Le modèle interne n'en connaît que trois (`grande_precarite` / `precaire` /
- * `classique`, calqués sur le découpage CEE) et son `classique` confond le
- * violet — intermédiaire, éligible — et le rose — supérieur, non éligible aux
- * gestes isolés (CLAUDE.md §13, migration 0042).
+ * Le modèle interne porte désormais les mêmes quatre bandes (`grande_precarite` /
+ * `precaire` / `intermediaire` / `superieur`, voir `CategorieRevenus`) : `interne`
+ * pointe donc directement la bande réelle, sans plus confondre le violet
+ * (intermédiaire, éligible) et le rose (supérieur, non éligible aux gestes isolés).
  *
- * Plutôt que d'attendre la migration qui portera le modèle à quatre profils, on
- * rend la confusion IMPOSSIBLE à la surface publique : le visiteur choisit
- * parmi les quatre couleurs réelles, et le rose n'obtient jamais de montant
- * MaPrimeRénov'. Annoncer une prime à un ménage non éligible, ce serait
- * fabriquer exactement le motif de refus que Dossimo prétend éviter.
- *
- * Côté CEE en revanche, le découpage à trois bandes est le bon : les CEE
- * ignorent la distinction violet / rose et s'adressent à tous les ménages. Le
- * rose relève donc bien de `classique` en CEE.
- *
- * Quand le modèle passera à quatre profils, c'est `interne` qui changera ici,
- * et rien d'autre dans le simulateur.
+ * Le rose n'obtient jamais de montant MaPrimeRénov' (`mprEligible: false`) :
+ * annoncer une prime à un ménage non éligible, ce serait fabriquer exactement le
+ * motif de refus que Dossimo prétend éviter. Côté CEE, la distinction violet / rose
+ * n'existe pas : le barème CEE porte la même valeur pour `intermediaire` et
+ * `superieur` (migration 0046), donc le rose y est bien estimé.
  */
 export const PROFILS_PUBLICS = {
   bleu: {
@@ -50,13 +43,13 @@ export const PROFILS_PUBLICS = {
   violet: {
     label: "Intermédiaire",
     aide: "Profil « violet » de l'Anah",
-    interne: "classique",
+    interne: "intermediaire",
     mprEligible: true,
   },
   rose: {
     label: "Supérieur",
     aide: "Profil « rose » de l'Anah",
-    interne: "classique",
+    interne: "superieur",
     mprEligible: false,
   },
 } as const;

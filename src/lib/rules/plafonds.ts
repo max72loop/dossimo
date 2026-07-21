@@ -14,7 +14,19 @@ import type { PlafondRessources } from "@/lib/database.types";
  */
 
 export type Zone = "idf" | "hors_idf";
-export type CategorieRevenus = "grande_precarite" | "precaire" | "classique";
+/**
+ * Les quatre profils de revenus de l'Anah : bleu (`grande_precarite`), jaune
+ * (`precaire`), violet (`intermediaire`, éligible MaPrimeRénov' par geste) et rose
+ * (`superieur`, NON éligible par geste en 2026). Le CEE ignore la distinction
+ * violet / rose : ses barèmes portent la même valeur pour `intermediaire` et
+ * `superieur`. Le token `classique` du modèle à trois bandes est déprécié ; il est
+ * normalisé en `intermediaire` à la lecture (`get-dossier.ts`).
+ */
+export type CategorieRevenus =
+  | "grande_precarite"
+  | "precaire"
+  | "intermediaire"
+  | "superieur";
 
 /** Départements d'Île-de-France : les plafonds y sont plus élevés. */
 const DEPARTEMENTS_IDF = new Set([
@@ -94,7 +106,13 @@ export function plafondPour(
 export function categoriePour(rfr: number, plafond: Plafond): CategorieRevenus {
   if (rfr <= plafond.grande_precarite) return "grande_precarite";
   if (rfr <= plafond.precaire) return "precaire";
-  return "classique";
+  // Au-delà du précaire, deux profils : le violet (intermédiaire) et le rose
+  // (supérieur), que seul le plafond intermédiaire sépare. Plafond inconnu (barème
+  // antérieur à 0044, ou zone non couverte) → on retombe sur `intermediaire`, la
+  // bande bénigne et éligible : ne pas conclure à l'inéligibilité sur un plafond
+  // manquant, même prudence que `estProfilSuperieur`.
+  if (plafond.intermediaire == null) return "intermediaire";
+  return rfr <= plafond.intermediaire ? "intermediaire" : "superieur";
 }
 
 /**

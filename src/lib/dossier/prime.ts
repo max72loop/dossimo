@@ -50,9 +50,10 @@ export function estimerPrime(data: DossierComplet): EstimationPrime | null {
 /**
  * Pourquoi `estimerPrime` renvoie null, quand c'est le cas. Sert à distinguer un
  * dossier RÉPARABLE par l'artisan (il manque la surface isolée) d'un blocage
- * STRUCTUREL (aucun barème pour ce profil, ex. MaPrimeRénov' « classique », ou
- * couple geste/dispositif sans barème). Les deux mènent au même geste
- * (déblocage manuel), mais pas au même message.
+ * STRUCTUREL (aucun barème pour ce profil, ex. MaPrimeRénov' pour un ménage
+ * `superieur` — le rose de l'Anah, non éligible par geste —, ou couple
+ * geste/dispositif sans barème). Les deux mènent au même geste (déblocage manuel),
+ * mais pas au même message.
  *
  * Reflète exactement les branches `return null` d'`estimerPrime` : garder les
  * deux fonctions alignées si le barème évolue.
