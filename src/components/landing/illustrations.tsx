@@ -30,24 +30,24 @@ export function WaveDivider({
   return (
     <div aria-hidden="true" className={`${bandClass} leading-[0]`}>
       <svg
-        viewBox="0 0 1440 60"
+        viewBox="0 0 1440 80"
         preserveAspectRatio="none"
-        className={`block h-8 w-full sm:h-12 ${fillClass}`}
+        className={`block h-10 w-full sm:h-16 ${fillClass}`}
         role="presentation"
       >
-        {/* L'aplat déverse la couleur du haut sur celle du bas. Entre deux crèmes
-            très proches il est presque invisible : c'est le fin trait filigrane
-            sur la crête, lui, qui rend la vague perceptible. */}
+        {/* L'aplat déverse la couleur du haut sur celle du bas ; entre deux crèmes
+            proches il reste discret, c'est le liseré filigrane sur la crête qui
+            dessine la vague et la rend franchement lisible. */}
         <path
           fill="currentColor"
-          d="M0 0 H1440 V32 C1140 54 1020 12 720 32 C420 52 300 10 0 32 Z"
+          d="M0 0 H1440 V42 C1150 72 1010 14 720 42 C430 70 290 12 0 42 Z"
         />
         <path
           fill="none"
-          stroke="#e2ddd1"
-          strokeWidth="2"
+          stroke="#d9d2c3"
+          strokeWidth="2.5"
           vectorEffect="non-scaling-stroke"
-          d="M0 32 C300 10 420 52 720 32 C1020 12 1140 54 1440 32"
+          d="M0 42 C290 12 430 70 720 42 C1010 14 1150 72 1440 42"
         />
       </svg>
     </div>
@@ -122,13 +122,15 @@ export function EtapePicto({
   name: "devis" | "recopie" | "controle" | "pack";
   className?: string;
 }) {
+  // Aplats en bleu pâle (info-bg) + détails accent : les pictos doivent LIRE
+  // comme des dessins, pas se confondre avec de simples icônes au trait.
   const commun = {
     viewBox: "0 0 48 48",
     className,
     "aria-hidden": true,
     fill: "none" as const,
     stroke: "#16202b",
-    strokeWidth: 2.4,
+    strokeWidth: 2.2,
     strokeLinecap: "round" as const,
     strokeLinejoin: "round" as const,
     xmlns: "http://www.w3.org/2000/svg",
@@ -137,10 +139,10 @@ export function EtapePicto({
   if (name === "devis") {
     return (
       <svg {...commun}>
-        {/* Feuille de devis, coin corné */}
-        <path d="M14 8 h14 l8 8 v24 a2 2 0 0 1-2 2 H14 a2 2 0 0 1-2-2 V10 a2 2 0 0 1 2-2 Z" fill="#fbf9f3" />
-        <path d="M28 8 v8 h8" />
-        <path d="M18 24 h12 M18 30 h12 M18 36 h8" stroke="#9db0cf" />
+        {/* Feuille de devis, coin corné, avec flèche d'envoi */}
+        <path d="M12 9 h15 l9 9 v21 a2 2 0 0 1-2 2 H12 a2 2 0 0 1-2-2 V11 a2 2 0 0 1 2-2 Z" fill="#e9edf4" />
+        <path d="M27 9 v9 h9" fill="#9db0cf" />
+        <path d="M17 26 h11 M17 31 h14 M17 36 h8" stroke="#35507f" />
       </svg>
     );
   }
@@ -148,9 +150,9 @@ export function EtapePicto({
     return (
       <svg {...commun}>
         {/* Deux feuilles : recopie d'une pièce vers le dossier */}
-        <rect x="10" y="12" width="20" height="26" rx="2" fill="#e9edf4" />
-        <rect x="18" y="18" width="20" height="26" rx="2" fill="#fbf9f3" />
-        <path d="M23 30 l4 4 7-8" stroke="#35507f" />
+        <rect x="9" y="11" width="21" height="27" rx="2.5" fill="#9db0cf" />
+        <rect x="18" y="17" width="21" height="27" rx="2.5" fill="#e9edf4" />
+        <path d="M23 30 l4 4 8-9" stroke="#35507f" />
       </svg>
     );
   }
@@ -158,11 +160,10 @@ export function EtapePicto({
     return (
       <svg {...commun}>
         {/* Loupe sur une feuille : le contrôle */}
-        <path d="M12 8 h16 l6 6 v14" fill="#fbf9f3" />
-        <path d="M12 8 a2 2 0 0 0-2 2 v28 a2 2 0 0 0 2 2 h9" fill="#fbf9f3" />
-        <path d="M28 8 v6 h6" />
-        <circle cx="30" cy="32" r="7" fill="#e9edf4" stroke="#35507f" />
-        <path d="M35 37 l5 5" stroke="#35507f" />
+        <path d="M12 8 h15 l7 7 v13 M32 40 H12 a2 2 0 0 1-2-2 V10 a2 2 0 0 1 2-2" fill="#e9edf4" />
+        <path d="M27 8 v7 h7" fill="#9db0cf" />
+        <circle cx="29" cy="31" r="8" fill="#fbf9f3" stroke="#35507f" />
+        <path d="M35 37 l6 6" stroke="#35507f" strokeWidth="2.8" />
       </svg>
     );
   }
@@ -170,8 +171,9 @@ export function EtapePicto({
   return (
     <svg {...commun}>
       {/* Chemise cartonnée cochée : le pack livré */}
-      <path d="M8 16 a2 2 0 0 1 2-2 h9 l4 4 h17 a2 2 0 0 1 2 2 v18 a2 2 0 0 1-2 2 H10 a2 2 0 0 1-2-2 Z" fill="#fbf9f3" />
-      <path d="M20 30 l4 4 8-9" stroke="#2d6a4f" />
+      <path d="M7 16 a2 2 0 0 1 2-2 h9 l4 4 h18 a2 2 0 0 1 2 2 v18 a2 2 0 0 1-2 2 H9 a2 2 0 0 1-2-2 Z" fill="#e9edf4" />
+      <path d="M8 22 h32" stroke="#9db0cf" />
+      <path d="M19 32 l4 4 8-9" stroke="#2d6a4f" strokeWidth="2.8" />
     </svg>
   );
 }

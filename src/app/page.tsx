@@ -621,7 +621,7 @@ function Etapes() {
             <div key={s.title} className="relative border-encre px-0 py-7 sm:px-6 sm:[&:nth-child(odd)]:border-r lg:border-r lg:last:border-r-0">
               <div className="flex items-center justify-between">
                 <span className="font-mono text-sm text-tampon">ÉTAPE 0{i + 1}</span>
-                <EtapePicto name={s.picto} className="h-9 w-9" />
+                <EtapePicto name={s.picto} className="h-11 w-11" />
               </div>
               <h3 className="mt-8 font-serif text-xl font-semibold text-encre">
                 {s.title}
