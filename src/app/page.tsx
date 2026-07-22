@@ -16,6 +16,7 @@ import {
   Layers,
   Lock,
   Mail,
+  Quote,
   ScanSearch,
   Server,
   ShieldCheck,
@@ -86,6 +87,7 @@ export default async function Home() {
         <Difference />
         <Confiance />
         <Estimation />
+        <Temoignages />
         <Pricing grille={grille} />
         <Reassurance />
         <Faq />
@@ -978,6 +980,71 @@ function Estimation() {
 
           <Estimateur />
         </div>
+      </Shell>
+    </section>
+  );
+}
+
+/* ----------------------------------------------------------- Témoignages */
+/**
+ * Emplacements de témoignages, posés juste avant les tarifs.
+ *
+ * Dossimo n'a pas encore de clients (cf. section `Confiance`) : inventer une
+ * citation serait une faute, pas un raccourci. On affiche donc deux places
+ * RÉSERVÉES, présentées comme telles, plutôt qu'un faux avis. Le jour où un vrai
+ * retour existe, on remplit l'entrée correspondante ci-dessous (`citation` non
+ * nulle) et la carte bascule automatiquement du placeholder au témoignage.
+ *
+ * TODO(temoignages): remplacer chaque entrée par un vrai retour vérifié
+ * — citation exacte, métier et département de l'artisan. Ne jamais inventer.
+ */
+const TEMOIGNAGES: Array<{
+  citation: string | null;
+  metier: string;
+  departement: string;
+}> = [
+  { citation: null, metier: "Métier de l’artisan", departement: "Département" },
+  { citation: null, metier: "Métier de l’artisan", departement: "Département" },
+];
+
+function Temoignages() {
+  return (
+    <section id="temoignages" className="py-16 sm:py-20">
+      <Shell>
+        <div className="max-w-2xl">
+          <SectionLabel>La parole aux artisans</SectionLabel>
+          <h2 className="mt-5 font-serif text-3xl font-semibold tracking-tight text-encre sm:text-[2.25rem] sm:leading-tight">
+            Les premiers retours arrivent
+          </h2>
+          <p className="mt-4 text-lg leading-relaxed text-ardoise">
+            Dossimo est jeune. Plutôt que d&rsquo;inventer des avis, nous gardons ces
+            deux places pour les premiers artisans qui auront déposé leur dossier.
+            Vous pourriez être l&rsquo;un d&rsquo;eux.
+          </p>
+        </div>
+
+        <ul className="mt-12 grid gap-5 md:grid-cols-2">
+          {TEMOIGNAGES.map((t, i) => (
+            <li key={i}>
+              <figure className="flex h-full flex-col rounded-2xl border border-dashed border-filigrane bg-blanc-casse p-7">
+                <Quote className="h-7 w-7 text-encre-claire" strokeWidth={1.5} aria-hidden="true" />
+                {t.citation ? (
+                  <blockquote className="mt-4 flex-1 text-lg leading-relaxed text-encre">
+                    « {t.citation} »
+                  </blockquote>
+                ) : (
+                  <p className="mt-4 flex-1 text-lg leading-relaxed text-encre-claire">
+                    Emplacement réservé à un retour d&rsquo;artisan vérifié.
+                  </p>
+                )}
+                <figcaption className="mt-6 border-t border-filigrane pt-4">
+                  <span className="block text-sm font-semibold text-ardoise">{t.metier}</span>
+                  <span className="mt-0.5 block text-sm text-encre-claire">{t.departement}</span>
+                </figcaption>
+              </figure>
+            </li>
+          ))}
+        </ul>
       </Shell>
     </section>
   );
