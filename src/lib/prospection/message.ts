@@ -72,6 +72,15 @@ export function lienDesinscription(token: string): string {
   return `${siteUrl()}/desinscription/${token}`;
 }
 
+/**
+ * Pixel de suivi d'ouverture, servi en première partie depuis dossimo.app. Le
+ * jeton est le même que celui du lien de démo : il attribue l'ouverture au bon
+ * prospect. N'existe que dans la version HTML (le texte brut ne charge pas d'image).
+ */
+export function lienPixel(token: string): string {
+  return `${siteUrl()}/api/prospection/pixel?t=${token}`;
+}
+
 export type VariablesMessage = Record<string, string>;
 
 /**
@@ -121,7 +130,8 @@ export function corpsPourProspect(
  * ici en dur car la structure HTML n'est pas dérivable du texte brut. Corollaire à
  * ne pas oublier : toute modification de fond (offre, prix, date DOSSIMO50) doit
  * être répercutée AUX DEUX endroits, le corps en base ET ce gabarit. Les seules
- * parties variables par prospect sont les quatre substitutions ci-dessous.
+ * parties variables par prospect sont les substitutions ci-dessous, dont le pixel
+ * de suivi d'ouverture (`{{lien_pixel}}`), absent de la version texte.
  */
 function echapperHtml(valeur: string): string {
   return valeur
@@ -178,7 +188,8 @@ const GABARIT_HTML = `<!-- dossimo -->
     <p style="margin:0;font-size:12px;line-height:1.55;color:#9AA1A9;"><a href="{{lien_desinscription}}" style="color:#5B636D;text-decoration:underline;">Se d&eacute;sinscrire</a> de tout message de ma part.</p>
   </td></tr>
 </table>
-</td></tr></table>`;
+</td></tr></table>
+<img src="{{lien_pixel}}" width="1" height="1" alt="" style="display:block;width:1px;height:1px;border:0;overflow:hidden;">`;
 
 /** Corps HTML prêt à envoyer pour un prospect donné (repli texte : `corpsPourProspect`). */
 export function corpsHtmlPourProspect(prospect: {
@@ -192,6 +203,7 @@ export function corpsHtmlPourProspect(prospect: {
     source: echapperHtml(prospect.source),
     lien_demo: lienDemo(prospect.unsubscribe_token),
     lien_desinscription: lienDesinscription(prospect.unsubscribe_token),
+    lien_pixel: lienPixel(prospect.unsubscribe_token),
     mentions_legales: echapperHtml(mentionsLegales()),
   });
 }

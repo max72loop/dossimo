@@ -87,6 +87,17 @@ describe("corpsHtmlPourProspect — version HTML à la marque", () => {
     expect(html).not.toMatch(/\{\{\s*\w+\s*\}\}/);
   });
 
+  it("embarque le pixel de suivi d'ouverture, attribué au bon prospect", () => {
+    const html = corpsHtmlPourProspect(prospect);
+    expect(html).toContain("/api/prospection/pixel?t=tok-123");
+    // Le pixel n'a de sens qu'en HTML : le repli texte ne charge aucune image.
+    const texte = corpsPourProspect(
+      "{{salutation}}\nEssai : {{lien_demo}}\n{{mentions_legales}}\n{{source}}\n{{lien_desinscription}}",
+      prospect,
+    );
+    expect(texte).not.toContain("/api/prospection/pixel");
+  });
+
   it("échappe le HTML des valeurs variables (pas d'injection via la source)", () => {
     const html = corpsHtmlPourProspect({
       ...prospect,

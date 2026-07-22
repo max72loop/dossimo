@@ -183,6 +183,9 @@ export function RecapDocument({ data }: { data: DossierComplet }) {
         <View style={styles.twoCol}>
           <View style={styles.col}>
             <Section title="Chronologie">
+              {data.dossier.dispositif === "cee" ? (
+                <Row label="Offre CEE engagée" value={dateFr(dates.offre_cee)} />
+              ) : null}
               <Row label="Visite technique" value={dateFr(dates.visite_technique)} />
               <Row label="Devis signé" value={dateFr(dates.devis)} />
               <Row label="Début travaux" value={dateFr(dates.debut_travaux)} />

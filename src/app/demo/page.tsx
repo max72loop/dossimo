@@ -14,9 +14,10 @@ export const metadata: Metadata = publicMetadata({
 
 /**
  * `?p=<jeton>` : le lien d'un message de prospection. On journalise la visite
- * côté serveur, sans pixel ni mouchard, et on n'en fait rien d'autre : la page
- * s'affiche à l'identique pour tout le monde. Une visite non attribuable (jeton
- * inconnu, lien recopié) est simplement ignorée.
+ * côté serveur (le clic ; l'ouverture, elle, est tracée par le pixel de
+ * `/api/prospection/pixel`), et on n'en fait rien d'autre : la page s'affiche à
+ * l'identique pour tout le monde. Une visite non attribuable (jeton inconnu, lien
+ * recopié) est simplement ignorée.
  */
 export default async function DemoPage({
   searchParams,

@@ -34,6 +34,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 
 /** Date de référence du dossier d'exemple. Figée : le pack doit être reproductible. */
 const REF = {
+  offreCee: "2026-05-05",
   devis: "2026-05-12",
   visite: "2026-05-04",
   debutTravaux: "2026-06-08",
@@ -126,6 +127,7 @@ export async function dossierExemple(): Promise<DossierComplet> {
       },
     },
     dates: {
+      offre_cee: REF.offreCee,
       visite_technique: REF.visite,
       devis: REF.devis,
       debut_travaux: REF.debutTravaux,

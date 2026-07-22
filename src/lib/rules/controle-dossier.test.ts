@@ -46,7 +46,7 @@ function dossier(over: {
       montants: { ht: 4200, ttc: 4431, prime_estime: 1800, ...over.montants },
       rge: { numero: "QB/12345", domaine: "Qualibat 7131", date_debut: "2024-01-01", date_fin: "2027-12-31", ...over.rge },
     },
-    dates: { visite_technique: "2026-03-05", devis: "2026-03-10", debut_travaux: "2026-04-01", fin_travaux: "2026-04-05", facture: "2026-04-10", ...over.dates },
+    dates: { offre_cee: "2026-03-08", visite_technique: "2026-03-05", devis: "2026-03-10", debut_travaux: "2026-04-01", fin_travaux: "2026-04-05", facture: "2026-04-10", ...over.dates },
     regle: over.regle === undefined ? regleCombles() : over.regle,
   } as unknown as DossierComplet;
 }
@@ -133,6 +133,47 @@ describe("controlerDossier", () => {
   it("TTC inférieur au HT : bloquant", () => {
     const r = controlerDossier(dossier({ montants: { ht: 4200, ttc: 4000 } }), AUJ);
     expect(r.conforme).toBe(false);
+  });
+});
+
+describe("controlerDossier — rôle actif et incitatif (offre CEE avant le devis)", () => {
+  it("offre CEE antérieure au devis : conforme, antériorité confirmée", () => {
+    // La fixture de référence porte offre_cee 2026-03-08, devis 2026-03-10.
+    const r = controlerDossier(dossier(), AUJ);
+    expect(r.conforme).toBe(true);
+    expect(codes(dossier())).toContain("chrono_offre_cee:ok");
+  });
+
+  it("offre CEE postérieure au devis : bloquant (motif de refus irrattrapable)", () => {
+    const over = { dates: { offre_cee: "2026-03-12", devis: "2026-03-10" } };
+    const r = controlerDossier(dossier(over), AUJ);
+    expect(r.conforme).toBe(false);
+    expect(codes(dossier(over))).toContain("chrono_offre_cee:bloquant");
+  });
+
+  it("offre CEE non renseignée en CEE : bloquant (antériorité invérifiable)", () => {
+    const over = { dates: { offre_cee: null } };
+    const r = controlerDossier(dossier(over), AUJ);
+    expect(r.conforme).toBe(false);
+    expect(codes(dossier(over))).toContain("chrono_offre_cee:bloquant");
+  });
+
+  it("même jour que le devis : conforme (l'offre n'a pas à précéder strictement)", () => {
+    const over = { dates: { offre_cee: "2026-03-10", devis: "2026-03-10" } };
+    expect(codes(dossier(over))).toContain("chrono_offre_cee:ok");
+    expect(controlerDossier(dossier(over), AUJ).conforme).toBe(true);
+  });
+
+  it("sans objet en MaPrimeRénov' : aucun finding, même offre CEE absente", () => {
+    const over = {
+      dispositif: "maprimerenov" as const,
+      regle: regleCombles({ anciennete_min_ans: 15 }),
+      logement: { annee_construction: 1985 },
+      dates: { offre_cee: null },
+    };
+    const cs = codes(dossier(over));
+    expect(cs.some((c) => c.startsWith("chrono_offre_cee"))).toBe(false);
+    expect(controlerDossier(dossier(over), AUJ).conforme).toBe(true);
   });
 });
 

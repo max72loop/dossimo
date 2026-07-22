@@ -180,6 +180,7 @@ export async function createDossierCeeIsolation(
       // §12.5) : compte dossiers et paiements par canal sans jointure.
       source: artisan.source ?? null,
       dates_json: {
+        offre_cee: d.date_offre_cee ?? null,
         visite_technique: d.date_visite_technique ?? null,
         devis: d.date_devis,
         debut_travaux: d.date_debut_travaux ?? null,
