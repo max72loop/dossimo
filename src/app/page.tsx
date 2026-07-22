@@ -3,17 +3,21 @@ import type { Metadata } from "next";
 import {
   AlertTriangle,
   ArrowRight,
+  Ban,
   CheckCircle2,
   ClipboardCheck,
+  Clock,
   FileCheck2,
   FileText,
   FolderCheck,
+  HandCoins,
   Lock,
   Mail,
   ScanSearch,
   Server,
   ShieldCheck,
   Stamp,
+  TicketPercent,
   XCircle,
 } from "lucide-react";
 
@@ -70,7 +74,7 @@ export default async function Home() {
           permet d'atterrir directement sur celle qu'on cherche. */}
       <main id="contenu" className="flex-1" tabIndex={-1}>
         <Hero />
-        <TrustStrip grille={grille} />
+        <TrustStrip />
         <Preparation />
         <Etapes />
         <Relecture />
@@ -309,26 +313,39 @@ function JsonLd({ grille }: { grille: GrilleAffichee | null }) {
 }
 
 /* ------------------------------------------------------------ TrustStrip */
-function TrustStrip({ grille }: { grille: GrilleAffichee | null }) {
+/**
+ * Bandeau de réassurance posé juste sous le hero. Il prolonge la zone encre du
+ * hero en barre de « stats » : quatre arguments déjà tenus ailleurs sur la page
+ * (rapidité, prime intégrale, pas de commission, offre de lancement), condensés
+ * en repères lisibles d'un coup d'œil avant d'entrer dans le déroulé.
+ *
+ * Aucun chiffre inventé : « 100 % », « 0 % » et « −50 % » sont des faits du
+ * positionnement (Dossimo ne touche pas la prime, facture un forfait, applique
+ * DOSSIMO50), pas un montant estimé — ils n'ont donc pas à passer par la grille.
+ */
+function TrustStrip() {
   const items = [
-    "Monté en minutes, pas en heures",
-    "Pack complet prêt à déposer",
-    "Vous gardez votre client et votre prime",
-    grille
-      ? `Dès ${prixLancement(grille)} au lieu de ${grille.minLabel} avec DOSSIMO50`
-      : "Code DOSSIMO50 : −50 % sur le premier dossier",
+    { icon: Clock, stat: null, texte: "Monté en minutes, pas en heures" },
+    { icon: HandCoins, stat: "100 %", texte: "de la prime conservée" },
+    { icon: Ban, stat: "0 %", texte: "de commission" },
+    { icon: TicketPercent, stat: "−50 %", texte: "sur le 1ᵉʳ dossier · code DOSSIMO50" },
   ];
   return (
-    <div className="border-b border-encre bg-papier-fonce">
+    <div className="border-b border-accent/40 bg-encre">
       <Shell>
-        <div className="grid divide-y divide-encre/15 py-1 text-sm font-medium text-encre sm:grid-cols-2 sm:divide-x sm:divide-y-0 lg:grid-cols-4">
+        <ul className="grid divide-y divide-papier/10 sm:grid-cols-2 sm:divide-x sm:divide-y-0 lg:grid-cols-4">
           {items.map((i) => (
-            <span key={i} className="flex items-center gap-2 px-4 py-4 lg:px-5">
-              <CheckCircle2 className="h-4 w-4 text-succes" strokeWidth={1.5} />
-              {i}
-            </span>
+            <li key={i.texte} className="flex items-center gap-3 px-1 py-5 sm:px-5 lg:px-6">
+              <i.icon className="h-5 w-5 shrink-0 text-accent-clair" strokeWidth={1.5} aria-hidden="true" />
+              <p className="text-sm leading-snug text-papier/85">
+                {i.stat && (
+                  <span className="mr-1 font-serif text-lg font-semibold text-blanc-casse">{i.stat}</span>
+                )}
+                <span className={i.stat ? "" : "font-medium text-papier"}>{i.texte}</span>
+              </p>
+            </li>
           ))}
-        </div>
+        </ul>
       </Shell>
     </div>
   );
