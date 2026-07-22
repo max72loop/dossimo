@@ -1,7 +1,6 @@
 import Link from "next/link";
 
 import { Logo } from "@/components/ui/logo";
-import { editeur } from "@/lib/legal/editeur";
 
 export function SiteFooter() {
   return (
@@ -41,7 +40,6 @@ export function SiteFooter() {
                 <li><Link href="/mentions-obligatoires-devis-rge" className="transition-colors hover:text-encre">Mentions devis RGE</Link></li>
                 <li><Link href="/eviter-refus-maprimerenov" className="transition-colors hover:text-encre">Éviter un refus</Link></li>
                 <li><Link href="/#contact" className="transition-colors hover:text-encre">Contact</Link></li>
-                <li><a href={`mailto:${editeur.emailContact}`} className="transition-colors hover:text-encre">{editeur.emailContact}</a></li>
               </ul>
             </div>
             <div>

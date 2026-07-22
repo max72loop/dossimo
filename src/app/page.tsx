@@ -9,9 +9,7 @@ import {
   FileCheck2,
   HandCoins,
   Lock,
-  Mail,
   ScanSearch,
-  Server,
   ShieldCheck,
   Stamp,
   TicketPercent,
@@ -26,7 +24,6 @@ import { SiteHeader } from "@/components/landing/site-header";
 import { FOCUS } from "@/components/ui/boutons";
 import { CTA_DEMO } from "@/lib/landing/copy";
 import { grillePublique } from "@/lib/landing/grille-publique";
-import { editeur } from "@/lib/legal/editeur";
 import { labelEuros, type GrilleAffichee } from "@/lib/pricing";
 import { publicMetadata, SITE_DESCRIPTION, SITE_TITLE, SITE_URL } from "@/lib/seo/site";
 
@@ -347,7 +344,7 @@ function Estimation() {
 function Confiance() {
   const proofs = [
     { icon: ScanSearch, title: "Analyse limitée", body: "Le modèle extrait les informations utiles du devis et de la facture, rien d’autre." },
-    { icon: Server, title: "Stockage identifié", body: "Documents chez " + editeur.baseDeDonnees.nom.split(" (")[0] + ", site hébergé par " + editeur.hebergeur.nom.replace(" Inc.", "") + "." },
+    { icon: ShieldCheck, title: "Traitement encadré", body: "Les documents servent uniquement à préparer et contrôler votre dossier." },
     { icon: Lock, title: "Aucune revente", body: "Vos données ne sont jamais vendues et Dossimo ne perçoit rien sur la prime." },
   ];
   return (
@@ -355,17 +352,12 @@ function Confiance() {
       <Shell>
         <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
           <div>
-            <SectionLabel>Une entreprise identifiable</SectionLabel>
-            <h2 className="mt-5 font-serif text-3xl font-semibold leading-tight tracking-tight text-encre sm:text-4xl">Vous savez à qui vous confiez le devis.</h2>
-            <p className="mt-5 text-lg leading-relaxed text-ardoise">Dossimo est édité par {editeur.directeurPublication}. Le nom, l’adresse, le SIREN et le contact restent visibles avant le premier envoi.</p>
-            <dl className="mt-8 grid gap-4 rounded-2xl bg-blanc-casse p-6 shadow-md sm:grid-cols-2">
-              <div><dt className="text-xs uppercase tracking-wide text-tampon">Éditeur</dt><dd className="mt-1 text-sm font-medium text-encre">{editeur.raisonSociale}</dd></div>
-              <div><dt className="text-xs uppercase tracking-wide text-tampon">SIREN</dt><dd className="mt-1 font-mono text-sm tabular-nums text-encre">{editeur.siren}</dd></div>
-              <div className="sm:col-span-2"><dt className="text-xs uppercase tracking-wide text-tampon">Adresse</dt><dd className="mt-1 text-sm text-encre">{editeur.adresse}</dd></div>
-            </dl>
-            <a href={"mailto:" + editeur.emailContact + "?subject=Question%20avant%20mon%20premier%20dossier"} className={"mt-6 inline-flex items-center gap-2 text-sm font-semibold text-tampon underline underline-offset-4 " + FOCUS}>
-              <Mail className="h-4 w-4" aria-hidden="true" /> {editeur.emailContact}
-            </a>
+            <SectionLabel>Confidentialité</SectionLabel>
+            <h2 className="mt-5 font-serif text-3xl font-semibold leading-tight tracking-tight text-encre sm:text-4xl">Vos documents restent vos documents.</h2>
+            <p className="mt-5 text-lg leading-relaxed text-ardoise">Un devis contient des informations sensibles sur votre client et son chantier. Dossimo limite leur utilisation à la préparation et au contrôle du dossier.</p>
+            <div className="mt-8 overflow-hidden rounded-2xl bg-blanc-casse shadow-md">
+              <Illustration src="/illustrations/controle.svg" className="aspect-[16/10] w-full object-cover" />
+            </div>
           </div>
           <div>
             <SectionLabel>Vos documents</SectionLabel>
@@ -497,7 +489,6 @@ function JsonLd({ grille }: { grille: GrilleAffichee | null }) {
       name: "Dossimo",
       url: SITE_URL,
       logo: SITE_URL + "/icon.png",
-      email: editeur.emailContact,
       description: "Service indépendant d’aide à la préparation et au contrôle de conformité de dossiers MaPrimeRénov’ et CEE, destiné aux artisans RGE.",
     },
     { "@context": "https://schema.org", "@type": "WebSite", name: "Dossimo", url: SITE_URL, inLanguage: "fr-FR" },
