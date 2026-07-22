@@ -31,6 +31,7 @@ import { SiteHeader } from "@/components/landing/site-header";
 import { SiteFooter } from "@/components/landing/site-footer";
 import { LeadForm } from "@/components/landing/lead-form";
 import { Estimateur } from "@/components/landing/estimateur";
+import { WaveDivider } from "@/components/landing/illustrations";
 import { FOCUS } from "@/components/ui/boutons";
 import { CTA_DEMO } from "@/lib/landing/copy";
 import { grillePublique } from "@/lib/landing/grille-publique";
@@ -82,11 +83,13 @@ export default async function Home() {
         <TrustStrip />
         <Preparation />
         <Etapes />
+        <WaveDivider bandClass="bg-blanc-casse" fillClass="text-papier" />
         <Gestes />
         <Relecture />
         <Difference />
         <Confiance />
         <Estimation />
+        <WaveDivider bandClass="bg-papier" fillClass="text-blanc-casse" />
         <Temoignages />
         <Pricing grille={grille} />
         <Reassurance />
@@ -373,7 +376,7 @@ function Difference() {
     "Un paiement fixe par dossier, jamais un pourcentage",
   ];
   return (
-    <section id="difference" className="py-16 sm:py-20">
+    <section id="difference" className="bg-blanc-casse py-16 sm:py-20">
       <Shell>
         <div className="max-w-2xl">
           <SectionLabel>La différence</SectionLabel>
@@ -466,7 +469,7 @@ function Confiance() {
   ];
 
   return (
-    <section id="confiance" className="border-y border-filigrane bg-papier-fonce/60 py-16 sm:py-20">
+    <section id="confiance" className="border-y border-filigrane bg-papier py-16 sm:py-20">
       <Shell>
         <div className="grid gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:gap-14">
           <div>
@@ -601,7 +604,7 @@ function Etapes() {
     },
   ];
   return (
-    <section id="etapes" className="py-16 sm:py-20">
+    <section id="etapes" className="bg-papier py-16 sm:py-20">
       <Shell>
         <div className="max-w-2xl">
           <SectionLabel>Comment ça marche</SectionLabel>
@@ -685,7 +688,7 @@ function Gestes() {
   ];
 
   return (
-    <section id="gestes" className="border-y border-filigrane bg-blanc-casse py-16 sm:py-20">
+    <section id="gestes" className="bg-blanc-casse py-16 sm:py-20">
       <Shell>
         <div className="max-w-2xl">
           <SectionLabel>Pour chaque chantier</SectionLabel>
@@ -747,7 +750,7 @@ function Gestes() {
  */
 function Relecture() {
   return (
-    <section id="relecture" className="border-y border-filigrane bg-papier-fonce/60 py-16 sm:py-20">
+    <section id="relecture" className="border-y border-filigrane bg-papier py-16 sm:py-20">
       <div className="mx-auto grid max-w-[1280px] items-center gap-14 px-5 sm:px-8 lg:grid-cols-[1fr_0.9fr]">
         <div>
           <SectionLabel>La garantie</SectionLabel>
@@ -875,7 +878,7 @@ function Reassurance() {
   ];
 
   return (
-    <section className="border-y border-filigrane bg-info-bg/45 py-12 sm:py-16">
+    <section className="border-y border-filigrane bg-papier py-12 sm:py-16">
       <Shell>
         <div className="grid gap-8 lg:grid-cols-[0.8fr_2fr] lg:items-center">
           <div>
@@ -945,7 +948,7 @@ function Preparation() {
  */
 function Estimation() {
   return (
-    <section id="estimation" className="py-16 sm:py-20">
+    <section id="estimation" className="bg-blanc-casse py-16 sm:py-20">
       <Shell>
         <div className="grid items-start gap-10 lg:grid-cols-[1fr_0.85fr] lg:gap-14">
           <div>
@@ -1013,7 +1016,7 @@ const TEMOIGNAGES: Array<{
 
 function Temoignages() {
   return (
-    <section id="temoignages" className="py-16 sm:py-20">
+    <section id="temoignages" className="bg-papier py-16 sm:py-20">
       <Shell>
         <div className="max-w-2xl">
           <SectionLabel>La parole aux artisans</SectionLabel>
@@ -1057,7 +1060,7 @@ function Temoignages() {
 /* --------------------------------------------------------------- Pricing */
 function Pricing({ grille }: { grille: GrilleAffichee | null }) {
   return (
-    <section id="tarifs" className="py-16 sm:py-20">
+    <section id="tarifs" className="border-t border-filigrane bg-blanc-casse py-16 sm:py-20">
       <Shell>
         <div className="rounded-2xl bg-encre px-6 py-12 shadow-lg sm:px-14 sm:py-14">
           <div>
@@ -1173,7 +1176,7 @@ function MobileConversionBar() {
 /* --------------------------------------------------------------- Contact */
 function Contact() {
   return (
-    <section id="contact" className="border-t border-filigrane bg-papier-fonce/60 py-16 sm:py-20">
+    <section id="contact" className="border-t border-filigrane bg-papier py-16 sm:py-20">
       <div className="mx-auto grid max-w-[1080px] items-start gap-14 px-5 sm:px-8 lg:grid-cols-2">
         <div>
           <SectionLabel>Rester en contact</SectionLabel>
@@ -1248,7 +1251,7 @@ const FAQ_ITEMS = [
 function Faq() {
   const items = FAQ_ITEMS;
   return (
-    <section id="faq" className="py-16 sm:py-20">
+    <section id="faq" className="bg-blanc-casse py-16 sm:py-20">
       <div className="mx-auto max-w-[760px] px-5 sm:px-8">
         <SectionLabel>Questions fréquentes</SectionLabel>
         <h2 className="mt-5 font-serif text-3xl font-semibold tracking-tight text-encre sm:text-[2.25rem] sm:leading-tight">
