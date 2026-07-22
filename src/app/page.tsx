@@ -5,13 +5,11 @@ import {
   ArrowRight,
   Ban,
   CheckCircle2,
-  ClipboardCheck,
   Clock,
   Droplets,
   FileCheck2,
   FileText,
   Flame,
-  FolderCheck,
   HandCoins,
   Layers,
   Lock,
@@ -31,7 +29,7 @@ import { SiteHeader } from "@/components/landing/site-header";
 import { SiteFooter } from "@/components/landing/site-footer";
 import { LeadForm } from "@/components/landing/lead-form";
 import { Estimateur } from "@/components/landing/estimateur";
-import { WaveDivider } from "@/components/landing/illustrations";
+import { EtapePicto, MaisonArtisan, WaveDivider } from "@/components/landing/illustrations";
 import { FOCUS } from "@/components/ui/boutons";
 import { CTA_DEMO } from "@/lib/landing/copy";
 import { grillePublique } from "@/lib/landing/grille-publique";
@@ -583,22 +581,22 @@ function Confiance() {
 function Etapes() {
   const steps = [
     {
-      icon: ClipboardCheck,
+      picto: "devis" as const,
       title: "Vous envoyez le devis",
       body: "Le PDF, ou une photo prise depuis le chantier. Aucun formulaire à remplir avant.",
     },
     {
-      icon: ShieldCheck,
+      picto: "recopie" as const,
       title: "Dossimo recopie tout",
       body: "Le client, les montants, les données techniques. Vous relisez ce qu’il a lu, vous corrigez si besoin.",
     },
     {
-      icon: ScanSearch,
+      picto: "controle" as const,
       title: "Dossimo contrôle",
       body: "Mentions obligatoires, chronologie, validité RGE, cohérence devis et facture. Ce qui bloque remonte avant le dépôt.",
     },
     {
-      icon: FolderCheck,
+      picto: "pack" as const,
       title: "Vous recevez le pack",
       body: "Récapitulatif client, checklist des pièces, rapport de contrôle. Il ne vous reste qu’à relire et déposer.",
     },
@@ -623,7 +621,7 @@ function Etapes() {
             <div key={s.title} className="relative border-encre px-0 py-7 sm:px-6 sm:[&:nth-child(odd)]:border-r lg:border-r lg:last:border-r-0">
               <div className="flex items-center justify-between">
                 <span className="font-mono text-sm text-tampon">ÉTAPE 0{i + 1}</span>
-                <s.icon className="h-5 w-5 text-encre" strokeWidth={1.5} />
+                <EtapePicto name={s.picto} className="h-9 w-9" />
               </div>
               <h3 className="mt-8 font-serif text-xl font-semibold text-encre">
                 {s.title}
@@ -884,6 +882,7 @@ function Reassurance() {
           <div>
             <SectionLabel>Vos garanties</SectionLabel>
             <h2 className="mt-4 font-serif text-2xl font-semibold tracking-tight text-encre sm:text-3xl">Clair avant de commencer</h2>
+            <MaisonArtisan className="mt-8 hidden w-full max-w-xs lg:block" />
           </div>
           <div className="grid gap-4 sm:grid-cols-3">
             {garanties.map((garantie) => (
