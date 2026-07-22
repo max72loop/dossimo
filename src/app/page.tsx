@@ -399,7 +399,11 @@ function Difference() {
               ))}
             </ul>
           </div>
-          <div className="rounded-2xl border-l-4 border-l-accent bg-blanc-casse p-7 shadow-lg">
+          <div className="relative rounded-2xl border-2 border-accent bg-blanc-casse p-7 shadow-lg ring-4 ring-accent/10">
+            <span className="absolute -top-3 right-6 inline-flex items-center gap-1.5 rounded-full bg-accent px-3 py-1 text-xs font-semibold text-blanc-casse shadow-md">
+              <CheckCircle2 className="h-3.5 w-3.5" strokeWidth={2} aria-hidden="true" />
+              Recommandé
+            </span>
             <h3 className="label flex items-center gap-2 text-accent">
               <Stamp className="h-4 w-4" strokeWidth={1.5} />
               Avec Dossimo
