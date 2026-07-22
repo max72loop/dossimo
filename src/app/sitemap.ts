@@ -13,6 +13,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: SITE_URL, lastModified: LAST_SIGNIFICANT_UPDATE },
     { url: `${SITE_URL}/demo`, lastModified: LAST_SIGNIFICANT_UPDATE },
     { url: `${SITE_URL}/exemple`, lastModified: LAST_SIGNIFICANT_UPDATE },
+    { url: `${SITE_URL}/tarifs`, lastModified: new Date("2026-07-22T00:00:00.000Z") },
     { url: `${SITE_URL}/guides`, lastModified: LAST_SIGNIFICANT_UPDATE },
     ...guideList.map((guide) => ({
       url: `${SITE_URL}/${guide.slug}`,

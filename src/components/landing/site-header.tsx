@@ -14,7 +14,7 @@ import { guideList } from "@/lib/seo/guides";
 const NAV = [
   { href: "/#etapes", label: "Comment ça marche" },
   { href: "/exemple", label: "Le pack en exemple" },
-  { href: "/#tarifs", label: "Tarifs" },
+  { href: "/tarifs", label: "Tarifs" },
   { href: "/guides", label: "Guides" },
   { href: "/#faq", label: "Questions" },
 ] as const;
