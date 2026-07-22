@@ -55,58 +55,28 @@ export function WaveDivider({
 }
 
 /**
- * Scène « maison + artisan » en aplats, pour habiller la section des garanties.
- * Elle porte un `role="img"` et un `aria-label` : c'est une vraie illustration,
- * pas un simple filet, mais tout ce qu'elle raconte est déjà dans le texte
- * voisin. Le seul vert est le badge de conformité (usage réservé de la charte).
+ * Illustration décorative servie depuis `public/illustrations/` (scènes en aplats
+ * dans la palette, recolorées sur les tokens exacts). On passe par un `<img>` et
+ * non `next/image` à dessein : ce sont des SVG statiques de même origine (aucun
+ * CDN), l'`<img>` les garde hors du payload HTML du composant serveur et évite
+ * d'activer `dangerouslyAllowSVG` dans la config Next pour un actif décoratif.
+ *
+ * `alt` vaut `""` par défaut : l'illustration ne fait que redoubler la copie
+ * voisine, un lecteur d'écran doit la sauter (§7). Passer un `alt` non vide
+ * seulement si l'image porte une information absente du texte.
  */
-export function MaisonArtisan({ className }: { className?: string }) {
+export function Illustration({
+  src,
+  alt = "",
+  className,
+}: {
+  src: string;
+  alt?: string;
+  className?: string;
+}) {
   return (
-    <svg
-      viewBox="0 0 360 260"
-      className={className}
-      role="img"
-      aria-label="Une maison rénovée marquée conforme, à côté d’un artisan avec sa fiche de contrôle."
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      {/* Panneau de fond crème */}
-      <rect x="0" y="0" width="360" height="260" rx="20" fill="#f3f0e9" />
-      {/* Sol : ombre douce sous la maison */}
-      <ellipse cx="150" cy="224" rx="120" ry="12" fill="#16202b" opacity="0.06" />
-
-      {/* Maison */}
-      <g>
-        {/* Corps */}
-        <rect x="64" y="120" width="150" height="100" rx="4" fill="#fbf9f3" stroke="#16202b" strokeWidth="3" />
-        {/* Toit */}
-        <path d="M52 122 L139 66 L226 122 Z" fill="#35507f" stroke="#16202b" strokeWidth="3" strokeLinejoin="round" />
-        {/* Cheminée */}
-        <rect x="188" y="78" width="16" height="26" fill="#2a3f65" stroke="#16202b" strokeWidth="3" strokeLinejoin="round" />
-        {/* Porte */}
-        <rect x="96" y="166" width="36" height="54" rx="3" fill="#35507f" stroke="#16202b" strokeWidth="3" />
-        <circle cx="124" cy="194" r="2.5" fill="#f3f0e9" />
-        {/* Fenêtre */}
-        <rect x="150" y="142" width="44" height="38" rx="3" fill="#9db0cf" stroke="#16202b" strokeWidth="3" />
-        <path d="M172 142 V180 M150 161 H194" stroke="#16202b" strokeWidth="2.5" />
-        {/* Badge conformité */}
-        <circle cx="210" cy="118" r="18" fill="#e7f1ea" stroke="#2d6a4f" strokeWidth="3" />
-        <path d="M202 118 l5 5 9-10" fill="none" stroke="#2d6a4f" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" />
-      </g>
-
-      {/* Artisan */}
-      <g>
-        {/* Buste */}
-        <path d="M258 220 v-30 a24 24 0 0 1 48 0 v30 Z" fill="#16202b" />
-        {/* Tête */}
-        <circle cx="282" cy="150" r="17" fill="#9db0cf" stroke="#16202b" strokeWidth="3" />
-        {/* Casque de chantier */}
-        <path d="M263 150 a19 19 0 0 1 38 0 Z" fill="#35507f" stroke="#16202b" strokeWidth="3" strokeLinejoin="round" />
-        <rect x="261" y="149" width="42" height="5" rx="2.5" fill="#35507f" stroke="#16202b" strokeWidth="3" />
-        {/* Fiche de contrôle tenue en main */}
-        <rect x="240" y="188" width="34" height="42" rx="3" fill="#fbf9f3" stroke="#16202b" strokeWidth="3" />
-        <path d="M247 200 h20 M247 209 h20 M247 218 h14" stroke="#9db0cf" strokeWidth="3" strokeLinecap="round" />
-      </g>
-    </svg>
+    // eslint-disable-next-line @next/next/no-img-element -- SVG décoratif statique, même origine (cf. bloc ci-dessus)
+    <img src={src} alt={alt} loading="lazy" decoding="async" className={className} />
   );
 }
 
