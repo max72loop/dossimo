@@ -20,7 +20,7 @@ export function SiteFooter() {
               <h3 className="label text-encre-claire">Produit</h3>
               <ul className="mt-4 space-y-2.5 text-sm text-ardoise">
                 <li><Link href="/#etapes" className="transition-colors hover:text-encre">Méthode</Link></li>
-                <li><Link href="/#tarifs" className="transition-colors hover:text-encre">Tarifs</Link></li>
+                <li><Link href="/tarifs" className="transition-colors hover:text-encre">Tarifs</Link></li>
                 <li><Link href="/#difference" className="transition-colors hover:text-encre">Vs mandataire</Link></li>
                 <li><Link href="/demo" className="transition-colors hover:text-encre">Déposer mon devis</Link></li>
               </ul>
