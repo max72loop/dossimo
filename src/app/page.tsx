@@ -29,7 +29,7 @@ import { SiteHeader } from "@/components/landing/site-header";
 import { SiteFooter } from "@/components/landing/site-footer";
 import { LeadForm } from "@/components/landing/lead-form";
 import { Estimateur } from "@/components/landing/estimateur";
-import { EtapePicto, MaisonArtisan, WaveDivider } from "@/components/landing/illustrations";
+import { EtapePicto, Illustration, WaveDivider } from "@/components/landing/illustrations";
 import { FOCUS } from "@/components/ui/boutons";
 import { CTA_DEMO } from "@/lib/landing/copy";
 import { grillePublique } from "@/lib/landing/grille-publique";
@@ -604,16 +604,22 @@ function Etapes() {
   return (
     <section id="etapes" className="bg-papier py-16 sm:py-20">
       <Shell>
-        <div className="max-w-2xl">
-          <SectionLabel>Comment ça marche</SectionLabel>
-          <h2 className="mt-5 font-serif text-3xl font-semibold tracking-tight text-encre sm:text-[2.25rem] sm:leading-tight">
-            Du devis au pack complet, en quelques minutes
-          </h2>
-          <p className="mt-4 text-lg leading-relaxed text-ardoise">
-            Vous fournissez le document que vous avez déjà. Dossimo fait la paperasse :
-            recopier, vérifier, assembler. Quelques minutes, là où un dossier monté à la
-            main vous prend une soirée.
-          </p>
+        <div className="grid items-center gap-10 lg:grid-cols-[1.3fr_0.9fr] lg:gap-14">
+          <div className="max-w-2xl">
+            <SectionLabel>Comment ça marche</SectionLabel>
+            <h2 className="mt-5 font-serif text-3xl font-semibold tracking-tight text-encre sm:text-[2.25rem] sm:leading-tight">
+              Du devis au pack complet, en quelques minutes
+            </h2>
+            <p className="mt-4 text-lg leading-relaxed text-ardoise">
+              Vous fournissez le document que vous avez déjà. Dossimo fait la paperasse :
+              recopier, vérifier, assembler. Quelques minutes, là où un dossier monté à la
+              main vous prend une soirée.
+            </p>
+          </div>
+          <Illustration
+            src="/illustrations/pack.svg"
+            className="hidden w-full rounded-2xl shadow-md lg:block"
+          />
         </div>
 
         <div className="mt-12 grid divide-y divide-encre border-y border-encre sm:grid-cols-2 sm:divide-y-0 lg:grid-cols-4">
@@ -688,16 +694,22 @@ function Gestes() {
   return (
     <section id="gestes" className="bg-blanc-casse py-16 sm:py-20">
       <Shell>
-        <div className="max-w-2xl">
-          <SectionLabel>Pour chaque chantier</SectionLabel>
-          <h2 className="mt-5 font-serif text-3xl font-semibold tracking-tight text-encre sm:text-[2.25rem] sm:leading-tight">
-            Un dossier conforme pour chaque geste
-          </h2>
-          <p className="mt-4 text-lg leading-relaxed text-ardoise">
-            Chaque geste a ses mentions obligatoires, sa fiche et son motif de refus.
-            Choisissez le vôtre : le guide correspondant liste ce qu&rsquo;il faut
-            vérifier avant le dépôt.
-          </p>
+        <div className="grid items-center gap-10 lg:grid-cols-[1.3fr_0.9fr] lg:gap-14">
+          <div className="max-w-2xl">
+            <SectionLabel>Pour chaque chantier</SectionLabel>
+            <h2 className="mt-5 font-serif text-3xl font-semibold tracking-tight text-encre sm:text-[2.25rem] sm:leading-tight">
+              Un dossier conforme pour chaque geste
+            </h2>
+            <p className="mt-4 text-lg leading-relaxed text-ardoise">
+              Chaque geste a ses mentions obligatoires, sa fiche et son motif de refus.
+              Choisissez le vôtre : le guide correspondant liste ce qu&rsquo;il faut
+              vérifier avant le dépôt.
+            </p>
+          </div>
+          <Illustration
+            src="/illustrations/maison-renovee.svg"
+            className="hidden w-full rounded-2xl shadow-md lg:block"
+          />
         </div>
 
         <ul className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -782,6 +794,11 @@ function Relecture() {
               </li>
             ))}
           </ul>
+
+          <Illustration
+            src="/illustrations/controle.svg"
+            className="mt-10 hidden w-full max-w-[15rem] rounded-2xl shadow-md lg:block"
+          />
         </div>
 
         <RelectureCard />
@@ -882,7 +899,10 @@ function Reassurance() {
           <div>
             <SectionLabel>Vos garanties</SectionLabel>
             <h2 className="mt-4 font-serif text-2xl font-semibold tracking-tight text-encre sm:text-3xl">Clair avant de commencer</h2>
-            <MaisonArtisan className="mt-8 hidden w-full max-w-xs lg:block" />
+            <Illustration
+              src="/illustrations/artisan-protecteur.svg"
+              className="mt-8 hidden w-full max-w-xs rounded-2xl shadow-md lg:block"
+            />
           </div>
           <div className="grid gap-4 sm:grid-cols-3">
             {garanties.map((garantie) => (
@@ -911,9 +931,15 @@ function Preparation() {
     <aside className="border-b border-filigrane bg-blanc-casse py-8" aria-labelledby="preparation-title">
       <Shell>
         <div className="grid gap-6 lg:grid-cols-[0.72fr_2fr] lg:items-center">
-          <div>
-            <p className="label text-tampon">Pour commencer</p>
-            <h2 id="preparation-title" className="mt-2 font-serif text-xl font-semibold text-encre">Rien à préparer, rien à ressaisir</h2>
+          <div className="flex items-center gap-4">
+            <Illustration
+              src="/illustrations/facture.svg"
+              className="hidden w-24 shrink-0 rounded-xl shadow-sm sm:block lg:w-28"
+            />
+            <div>
+              <p className="label text-tampon">Pour commencer</p>
+              <h2 id="preparation-title" className="mt-2 font-serif text-xl font-semibold text-encre">Rien à préparer, rien à ressaisir</h2>
+            </div>
           </div>
           <ul className="grid gap-4 sm:grid-cols-3">
             {pieces.map((piece) => (
@@ -1015,7 +1041,15 @@ const TEMOIGNAGES: Array<{
 
 function Temoignages() {
   return (
-    <section id="temoignages" className="bg-papier py-16 sm:py-20">
+    <section id="temoignages" className="relative isolate overflow-hidden bg-papier py-16 sm:py-20">
+      {/* Fond décoratif : le panneau crème du SVG (papier) se confond avec la
+          section, seules les formes périwinkle affleurent. Clippé par
+          overflow-hidden (pas de débordement horizontal en 375px), posé sous le
+          contenu par -z-10 dans le contexte isolé de la section. */}
+      <Illustration
+        src="/illustrations/formes-decoratives.svg"
+        className="pointer-events-none absolute -right-24 -top-24 -z-10 w-[26rem] opacity-50 sm:w-[32rem]"
+      />
       <Shell>
         <div className="max-w-2xl">
           <SectionLabel>La parole aux artisans</SectionLabel>
