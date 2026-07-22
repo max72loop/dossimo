@@ -30,14 +30,24 @@ export function WaveDivider({
   return (
     <div aria-hidden="true" className={`${bandClass} leading-[0]`}>
       <svg
-        viewBox="0 0 1440 48"
+        viewBox="0 0 1440 60"
         preserveAspectRatio="none"
-        className={`block h-6 w-full sm:h-10 ${fillClass}`}
+        className={`block h-8 w-full sm:h-12 ${fillClass}`}
         role="presentation"
       >
+        {/* L'aplat déverse la couleur du haut sur celle du bas. Entre deux crèmes
+            très proches il est presque invisible : c'est le fin trait filigrane
+            sur la crête, lui, qui rend la vague perceptible. */}
         <path
           fill="currentColor"
-          d="M0 0 H1440 V26 C1140 44 1020 12 720 26 C420 40 300 8 0 26 Z"
+          d="M0 0 H1440 V32 C1140 54 1020 12 720 32 C420 52 300 10 0 32 Z"
+        />
+        <path
+          fill="none"
+          stroke="#e2ddd1"
+          strokeWidth="2"
+          vectorEffect="non-scaling-stroke"
+          d="M0 32 C300 10 420 52 720 32 C1020 12 1140 54 1440 32"
         />
       </svg>
     </div>
