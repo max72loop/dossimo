@@ -7,10 +7,13 @@ import {
   CheckCircle2,
   ClipboardCheck,
   Clock,
+  Droplets,
   FileCheck2,
   FileText,
+  Flame,
   FolderCheck,
   HandCoins,
+  Layers,
   Lock,
   Mail,
   ScanSearch,
@@ -18,6 +21,7 @@ import {
   ShieldCheck,
   Stamp,
   TicketPercent,
+  Wind,
   XCircle,
 } from "lucide-react";
 
@@ -77,6 +81,7 @@ export default async function Home() {
         <TrustStrip />
         <Preparation />
         <Etapes />
+        <Gestes />
         <Relecture />
         <Difference />
         <Confiance />
@@ -628,6 +633,98 @@ function Etapes() {
             Envoyer un premier devis <span aria-hidden="true">→</span>
           </Link>
         </div>
+      </Shell>
+    </section>
+  );
+}
+
+/* ---------------------------------------------------------------- Gestes */
+/**
+ * Une entrée par grande famille de gestes, chacune menant au guide existant qui
+ * couvre le mieux son point de conformité.
+ *
+ * Les guides ne sont pas encore déclinés geste par geste : le lien pointe donc le
+ * guide dont le sujet recoupe le plus la famille (l'isolation vers le devis CEE,
+ * la PAC vers la qualification RGE qui la bloque le plus souvent, le solaire vers
+ * le non-cumul, le bois vers le devis MaPrimeRénov'). Toutes ces routes existent
+ * (`src/app/<slug>/page.tsx`) ; le jour où un guide dédié à un geste arrive, il
+ * suffit de mettre à jour `href` ici.
+ */
+function Gestes() {
+  const gestes = [
+    {
+      icon: Layers,
+      titre: "Isolation",
+      detail: "Combles, rampants, murs",
+      href: "/devis-cee-conforme",
+    },
+    {
+      icon: Wind,
+      titre: "Pompe à chaleur",
+      detail: "Air/eau, eau/eau",
+      href: "/qualification-rge-valide-geste",
+    },
+    {
+      icon: Droplets,
+      titre: "Chauffe-eau",
+      detail: "Thermodynamique et solaire",
+      href: "/cumul-maprimerenov-cee",
+    },
+    {
+      icon: Flame,
+      titre: "Chauffage bois",
+      detail: "Poêle, chaudière, insert",
+      href: "/devis-maprimerenov-conforme",
+    },
+  ];
+
+  return (
+    <section id="gestes" className="border-y border-filigrane bg-blanc-casse py-16 sm:py-20">
+      <Shell>
+        <div className="max-w-2xl">
+          <SectionLabel>Pour chaque chantier</SectionLabel>
+          <h2 className="mt-5 font-serif text-3xl font-semibold tracking-tight text-encre sm:text-[2.25rem] sm:leading-tight">
+            Un dossier conforme pour chaque geste
+          </h2>
+          <p className="mt-4 text-lg leading-relaxed text-ardoise">
+            Chaque geste a ses mentions obligatoires, sa fiche et son motif de refus.
+            Choisissez le vôtre : le guide correspondant liste ce qu&rsquo;il faut
+            vérifier avant le dépôt.
+          </p>
+        </div>
+
+        <ul className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {gestes.map((g) => (
+            <li key={g.titre}>
+              <Link
+                href={g.href}
+                className={`group flex h-full flex-col rounded-2xl bg-papier p-6 shadow-md transition hover:shadow-lg ${FOCUS}`}
+              >
+                <span
+                  aria-hidden="true"
+                  className="flex h-11 w-11 items-center justify-center rounded-xl bg-info-bg text-tampon transition-colors group-hover:bg-tampon group-hover:text-blanc-casse"
+                >
+                  <g.icon className="h-5 w-5" strokeWidth={1.5} />
+                </span>
+                <h3 className="mt-5 font-serif text-xl font-semibold text-encre group-hover:text-tampon">
+                  {g.titre}
+                </h3>
+                <p className="mt-1 text-sm text-ardoise">{g.detail}</p>
+                <span className="mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-tampon">
+                  Voir le guide
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+
+        <p className="mt-8 text-sm text-ardoise">
+          Vous ne trouvez pas votre geste ?{" "}
+          <Link href="/guides" className={`font-semibold text-tampon underline underline-offset-4 ${FOCUS}`}>
+            Parcourir tous les guides
+          </Link>
+        </p>
       </Shell>
     </section>
   );
