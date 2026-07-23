@@ -180,6 +180,31 @@ export async function creerSessionPaiementDossier(
 
   const { prenom, nom } = data.caracteristiques.beneficiaire;
 
+  // Code de lancement « 50 % premier dossier » : la restriction Stripe
+  // first_time_transaction ne mord PAS ici. La session ne porte pas de Customer
+  // stable (aucun `customer`/`customer_email`), donc Stripe crée un client neuf
+  // après chaque paiement : « aucun paiement antérieur » est toujours vrai et le
+  // coupon serait réutilisable sur chaque dossier de chaque artisan. On applique
+  // donc la règle sur NOTRE source de vérité : le champ code promo n'apparaît que
+  // pendant la fenêtre ET tant que l'artisan n'a réglé aucun dossier. Lecture en
+  // service-role pour un contrôle déterministe (indépendant de la RLS), et
+  // fail-closed : au moindre doute (erreur de lecture), pas de remise offerte.
+  const enLancement = Math.floor(Date.now() / 1000) <= FIN_LANCEMENT_EPOCH;
+  let promoAutorise = false;
+  if (enLancement) {
+    const { data: dejaPaye, error: errPaie } = await createAdminClient()
+      .from("paiements")
+      .select("id")
+      .eq("artisan_id", data.dossier.artisan_id ?? "")
+      .eq("statut", "paye")
+      .limit(1);
+    if (errPaie) {
+      console.error("[stripe] contrôle premier dossier:", errPaie.message);
+    } else {
+      promoAutorise = (dejaPaye?.length ?? 0) === 0;
+    }
+  }
+
   try {
     const stripe = getStripe();
     await garantirCodeLancement(stripe);
@@ -187,7 +212,7 @@ export async function creerSessionPaiementDossier(
       mode: "payment",
       // Force la page Checkout en français quel que soit le navigateur du client.
       locale: "fr",
-      allow_promotion_codes: Math.floor(Date.now() / 1000) <= FIN_LANCEMENT_EPOCH,
+      allow_promotion_codes: promoAutorise,
       // Case à cocher CGV obligatoire avant paiement. REQUIERT que l'URL des
       // CGV soit renseignée dans le Dashboard Stripe (Réglages > Informations
       // publiques > Conditions générales), EN TEST ET EN LIVE : sans elle,

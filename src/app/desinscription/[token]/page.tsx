@@ -26,15 +26,24 @@ export default async function DesinscriptionPage({
   searchParams,
 }: {
   params: Promise<{ token: string }>;
-  searchParams: Promise<{ fait?: string }>;
+  searchParams: Promise<{ fait?: string; echec?: string }>;
 }) {
   const { token } = await params;
-  const { fait } = await searchParams;
+  const { fait, echec } = await searchParams;
 
   async function confirmer() {
     "use server";
-    await desinscrire(token, "page de désinscription");
-    redirect(`/desinscription/${token}?fait=1`);
+    // On ne redirige vers l'écran de succès QUE si l'opposition a bien été
+    // inscrite. Une lecture en panne (desinscrire throw) ou un jeton inconnu
+    // (`ok:false`) mène à l'écran d'échec : jamais un « c'est fait » mensonger
+    // qui laisserait recontacter quelqu'un ayant cliqué stop (AGENTS.md).
+    let ok = false;
+    try {
+      ok = (await desinscrire(token, "page de désinscription")).ok;
+    } catch (err) {
+      console.error("[desinscription] échec:", err);
+    }
+    redirect(`/desinscription/${token}?${ok ? "fait=1" : "echec=1"}`);
   }
 
   return (
@@ -70,6 +79,25 @@ export default async function DesinscriptionPage({
           </div>
         ) : (
           <>
+            {echec === "1" && (
+              <div className="mb-8 border-l-4 border-erreur bg-erreur-bg px-6 py-5">
+                <h2 className="font-serif text-lg font-semibold text-encre">
+                  La désinscription n&rsquo;a pas pu être enregistrée
+                </h2>
+                <p className="mt-2 text-sm leading-relaxed text-ardoise">
+                  Un incident technique nous a empêchés d&rsquo;enregistrer votre
+                  demande, ou ce lien n&rsquo;est plus valide. Réessayez ci-dessous.
+                  Si le problème persiste, écrivez-nous à{" "}
+                  <a
+                    href={`mailto:${editeur.emailRgpd}`}
+                    className={`font-semibold text-tampon underline underline-offset-4 ${FOCUS}`}
+                  >
+                    {editeur.emailRgpd}
+                  </a>{" "}
+                  : votre opposition sera traitée à la main.
+                </p>
+              </div>
+            )}
             <h1 className="font-serif text-3xl font-semibold tracking-tight text-encre">
               Ne plus recevoir de message de Dossimo
             </h1>

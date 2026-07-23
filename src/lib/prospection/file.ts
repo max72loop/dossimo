@@ -467,11 +467,17 @@ export async function desinscrire(
   motif = "lien de désinscription",
 ): Promise<{ ok: boolean; email?: string }> {
   const supabase = createAdminClient();
-  const { data: prospect } = await supabase
+  const { data: prospect, error: errLecture } = await supabase
     .from("prospects")
     .select("id, email")
     .eq("unsubscribe_token", token)
     .maybeSingle();
+  // Une panne de lecture n'est PAS un « jeton inconnu » : les confondre ferait
+  // afficher un désabonnement réussi sans l'avoir inscrit, donc recontacter
+  // quelqu'un qui a cliqué stop. On échoue fort et distinctement (AGENTS.md).
+  if (errLecture) {
+    throw new Error(`Désinscription (lecture) : ${errLecture.message}`);
+  }
   if (!prospect) return { ok: false };
 
   const { error } = await supabase.rpc("prospection_desinscrire", {
@@ -480,11 +486,17 @@ export async function desinscrire(
   });
   if (error) throw new Error(`Désinscription : ${error.message}`);
 
-  await supabase.from("prospection_evenements").insert({
+  // L'opposition est désormais inscrite (RPC ci-dessus). L'événement n'est qu'une
+  // trace de preuve : son échec ne doit pas invalider une désinscription réussie,
+  // mais il ne doit pas non plus passer sous silence (il documente l'opposition).
+  const { error: errEvent } = await supabase.from("prospection_evenements").insert({
     prospect_id: prospect.id,
     type: "desinscription",
     payload: { motif },
   });
+  if (errEvent) {
+    console.error("[desinscription] trace événement:", errEvent.message);
+  }
 
   return { ok: true, email: prospect.email };
 }

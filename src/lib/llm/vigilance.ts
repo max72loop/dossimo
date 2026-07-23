@@ -107,6 +107,14 @@ function systemPrompt(dispositif: Dispositif): string {
   return `${INTRO}\n\n${motifs}\n\n${REGLES}`;
 }
 
+// Champs de comparaison dont la VALEUR est nominative et ne doit jamais partir
+// vers le LLM (AGENTS.md : « Never let personal data reach an LLM »). Le bloc
+// `beneficiaire` exclut déjà le nom ; le canal des écarts le réintroduisait,
+// précisément dans le cas visé (nom saisi ≠ nom lu sur la pièce). On transmet
+// donc l'EXISTENCE de l'écart, pas les deux versions du nom : l'artisan les voit
+// déjà dans le tableau de comparaison rendu depuis Supabase.
+const CHAMPS_NOMINATIFS = new Set(["Bénéficiaire"]);
+
 async function buildContext(data: DossierComplet): Promise<string> {
   const c = data.caracteristiques;
   const rapport = controlerDossier(data);
@@ -120,7 +128,15 @@ async function buildContext(data: DossierComplet): Promise<string> {
     lecture_automatique: p.piece.extraction_statut,
     ecarts_avec_saisie: p.comparaisons
       .filter((cmp) => cmp.statut === "ecart")
-      .map((cmp) => ({ champ: cmp.champ, saisie: cmp.saisie, piece: cmp.piece })),
+      .map((cmp) =>
+        CHAMPS_NOMINATIFS.has(cmp.champ)
+          ? {
+              champ: cmp.champ,
+              ecart: "présent",
+              valeurs: "masquées (donnée nominative) — ne pas inventer de nom",
+            }
+          : { champ: cmp.champ, saisie: cmp.saisie, piece: cmp.piece },
+      ),
     champs_non_lus: p.comparaisons
       .filter((cmp) => cmp.statut === "absent")
       .map((cmp) => cmp.champ),
