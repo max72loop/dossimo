@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { SiteFooter } from "@/components/landing/site-footer";
 import { SiteHeader } from "@/components/landing/site-header";
+import { getGesteGuides } from "@/lib/seo/gestes-loader";
 import { formatGuideDate, guideList, guidesByCategory } from "@/lib/seo/guides";
 import { publicMetadata, SITE_URL } from "@/lib/seo/site";
 
@@ -22,11 +23,15 @@ export const metadata = publicMetadata({
  * en route plate isolée. Les guides restent à leur URL d'origine : ce hub les fédère,
  * il ne les déplace pas.
  */
-export default function GuidesHubPage() {
-  const groups = guidesByCategory();
+export default async function GuidesHubPage() {
+  // Pages dérivées de `regles_metier`. Base injoignable : liste vide, le hub
+  // reste servi avec le seul éditorial plutôt que de tomber.
+  const gestes = await getGesteGuides();
+  const groups = guidesByCategory(gestes);
+  const toutesLesPages = [...guideList, ...gestes];
   const hubUrl = `${SITE_URL}/guides`;
   // Dates ISO : le tri lexical suffit pour retrouver la vérification la plus récente.
-  const derniereVerification = guideList
+  const derniereVerification = toutesLesPages
     .map((guide) => guide.updated)
     .sort()
     .at(-1)!;
@@ -42,7 +47,7 @@ export default function GuidesHubPage() {
       isPartOf: { "@type": "WebSite", name: "Dossimo", url: SITE_URL },
       mainEntity: {
         "@type": "ItemList",
-        itemListElement: guideList.map((guide, index) => ({
+        itemListElement: toutesLesPages.map((guide, index) => ({
           "@type": "ListItem",
           position: index + 1,
           url: `${SITE_URL}/${guide.slug}`,
