@@ -21,6 +21,11 @@ import { createAdminClient } from "@/lib/supabase/admin";
  * contenu incomplet — ce qui vaut mieux qu'une page publiée à moitié.
  */
 export async function getGesteGuides(): Promise<SeoGuide[]> {
+  // Publication coupée (`GESTES` vide) : on sort avant d'ouvrir une connexion.
+  // Sans ce court-circuit, chaque rendu du hub et de `[slug]` paierait une
+  // requête `in (...)` sur une liste vide pour un résultat connu d'avance.
+  if (GESTES.length === 0) return [];
+
   try {
     const supabase = createAdminClient();
     const { data, error } = await supabase

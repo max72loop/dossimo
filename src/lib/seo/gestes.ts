@@ -37,7 +37,12 @@ export interface GesteConfig {
   sources: SeoGuide["sources"];
 }
 
-export const GESTES: GesteConfig[] = [
+/**
+ * Gestes dont la configuration éditoriale est prête. Être dans ce catalogue ne
+ * suffit pas à être publié : c'est `GESTES`, plus bas, qui pilote la mise en
+ * ligne.
+ */
+export const GESTES_CATALOGUE: GesteConfig[] = [
   {
     slug: "pompe-a-chaleur-air-eau",
     typeTravaux: "pac_air_eau",
@@ -61,6 +66,25 @@ export const GESTES: GesteConfig[] = [
     ],
   },
 ];
+
+/**
+ * Gestes RÉELLEMENT publiés : route `[slug]`, sitemap et hub `/guides` ne
+ * connaissent que cette liste.
+ *
+ * Volontairement VIDE aujourd'hui. Ce qui bloque n'est pas le code mais la
+ * donnée : les libellés de `regles_metier` sont dépourvus d'accents sur tous
+ * les gestes (« Efficacite energetique saisonniere », « modele », « a compter
+ * du » — migrations 0004, 0005, 0009, 0010, 0011, 0042). C'est sans
+ * conséquence en interne, mais impubliable sur une page indexée.
+ *
+ * Ce garde-fou existe parce que l'absence de base masquait le problème en
+ * local (aucune page geste rendue) alors qu'un déploiement, lui, a bien accès
+ * à Supabase et publierait le texte tel quel.
+ *
+ * Pour publier une fois les accents corrigés en base : remplacer par
+ * `GESTES_CATALOGUE`. Rien d'autre à toucher.
+ */
+export const GESTES: GesteConfig[] = [];
 
 /** Forme utile d'une ligne `regles_metier`, une fois le JSONB lu. */
 interface PieceRequise {

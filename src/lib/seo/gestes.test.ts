@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { GESTES, regleToGeste, type RegleSeo } from "@/lib/seo/gestes";
+import { GESTES, GESTES_CATALOGUE, regleToGeste, type RegleSeo } from "@/lib/seo/gestes";
 
 /**
  * Lignes conformes au seed de `regles_metier` pour la pompe à chaleur air/eau
@@ -56,7 +56,7 @@ const REGLES_PAC: RegleSeo[] = [
   },
 ];
 
-const CONFIG = GESTES.find((geste) => geste.typeTravaux === "pac_air_eau")!;
+const CONFIG = GESTES_CATALOGUE.find((geste) => geste.typeTravaux === "pac_air_eau")!;
 
 /**
  * `formatEuros` produit des espaces fines insécables (U+202F, U+00A0), invisibles
@@ -64,6 +64,16 @@ const CONFIG = GESTES.find((geste) => geste.typeTravaux === "pac_air_eau")!;
  * un caractère qu'on ne voit pas.
  */
 const normaliser = (texte: string) => texte.replace(/[\u202F\u00A0]/g, " ");
+
+describe("catalogue et publication des gestes", () => {
+  // Invariant vrai que la publication soit coupée ou rétablie : on ne met en
+  // ligne que des gestes dont la configuration éditoriale est au catalogue.
+  it("ne publie que des gestes présents au catalogue", () => {
+    for (const geste of GESTES) {
+      expect(GESTES_CATALOGUE).toContainEqual(geste);
+    }
+  });
+});
 
 describe("regleToGeste — page geste dérivée de regles_metier", () => {
   it("refuse de produire une page quand aucune règle n'est active (cas de refus)", () => {
