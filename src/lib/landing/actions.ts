@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 
+import { consumeAuthRateLimit } from "@/lib/auth/rate-limit";
 import { estimerAidePublique } from "@/lib/landing/estimation";
 import {
   estimationSchema,
@@ -57,7 +58,27 @@ export async function submitLead(input: unknown): Promise<SubmitLeadResult> {
 
   const { email, entreprise, telephone, message } = parsed.data;
 
-  // --- 1. Capture en base (cœur de la tâche) ---
+  // --- 1. Anti-flood, borné par IP ---
+  // Le honeypot (`website`) écarte les robots opportunistes mais ne borne pas un
+  // envoi répété depuis une même source : sans plafond, la route inonde `leads`
+  // et bombarde une victime d'e-mails via la confirmation prospect. On plafonne
+  // donc par IP — surtout PAS par email : l'adresse est saisie par l'appelant,
+  // la faire entrer dans la clé laisserait un attaquant repartir à zéro à chaque
+  // envoi. Identité vide → la clé se réduit à l'IP (cf. `consumeAuthRateLimit`).
+  //
+  // Différence assumée avec l'auth : on n'échoue PAS en mode fermé. Si le
+  // limiteur est indisponible (secret absent, RPC en erreur), on laisse passer —
+  // perdre un lead sur une panne du limiteur coûte plus que de laisser filer un
+  // envoi (cf. « on ne perd jamais un lead » plus bas). Seul un vrai dépassement
+  // de quota bloque.
+  if ((await consumeAuthRateLimit("lead", "", 5)) === "quota") {
+    return {
+      ok: false,
+      error: "Trop de demandes envoyées depuis votre connexion. Réessayez dans quelques minutes.",
+    };
+  }
+
+  // --- 2. Capture en base (cœur de la tâche) ---
   try {
     await captureLead({
       email,
@@ -75,7 +96,7 @@ export async function submitLead(input: unknown): Promise<SubmitLeadResult> {
     };
   }
 
-  // --- 2. Notifications e-mail (best-effort, jamais bloquant) ---
+  // --- 3. Notifications e-mail (best-effort, jamais bloquant) ---
   await notifyGoogleAppsScript({ email, entreprise, telephone, message });
 
   return { ok: true };

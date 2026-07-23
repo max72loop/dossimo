@@ -24,7 +24,11 @@ export function messageRateLimit(verdict: Exclude<RateLimitVerdict, "ok">, quota
 }
 
 export async function consumeAuthRateLimit(
-  action: "signin" | "signup" | "password-reset" | "password-change" | "email-change",
+  // Le limiteur n'est pas propre à l'auth : la table `auth_rate_limits.action`
+  // est un simple `text` sans contrainte, toute clé d'usage y est valable. On
+  // partage donc la même mécanique pour le formulaire public (`lead`) plutôt
+  // que d'en dupliquer une seconde (README §1, règle 5).
+  action: "signin" | "signup" | "password-reset" | "password-change" | "email-change" | "lead",
   identity: string,
   limit: number,
   windowSeconds = 15 * 60,

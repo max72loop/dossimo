@@ -1,3 +1,4 @@
+import { refuserSiCronNonAutorise } from "@/lib/cron/auth";
 import { preparerFile } from "@/lib/prospection/file";
 
 export const runtime = "nodejs";
@@ -13,13 +14,8 @@ export const dynamic = "force-dynamic";
  * sans le dépasser.
  */
 export async function GET(req: Request) {
-  const secret = process.env.CRON_SECRET;
-  if (!secret) {
-    return new Response("CRON_SECRET non configuré.", { status: 503 });
-  }
-  if (req.headers.get("authorization") !== `Bearer ${secret}`) {
-    return new Response("Non autorisé.", { status: 401 });
-  }
+  const refus = refuserSiCronNonAutorise(req);
+  if (refus) return refus;
 
   try {
     const resultat = await preparerFile();
