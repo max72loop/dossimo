@@ -109,7 +109,7 @@ describe("regleToGeste — page geste dérivée de regles_metier", () => {
     expect(conditions?.paragraphs.join(" ")).toContain("5,5 %");
 
     // Le barème est restitué profil par profil, dans les deux dispositifs.
-    const bareme = normaliser(page.faq?.find((entry) => entry.question.includes("montant"))!.answer);
+    const bareme = normaliser(page.faq!.find((entry) => entry.question.includes("montant"))!.answer);
     expect(bareme).toContain("4 500,00 €");
     expect(bareme).toContain("très modestes (bleu)");
     expect(bareme).toContain("5 000,00 €");
