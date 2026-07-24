@@ -101,18 +101,32 @@ export async function creerSessionPaiementDossier(
   // un montant fourni par le client). Sans barème estimable, pas de tarif fiable.
   const aide = estimerPrime(data);
   if (!aide) {
-    // Deux causes, un seul geste (déblocage manuel), mais un message distinct :
-    // « surface » est réparable côté artisan, « structurel » est une dette de
-    // barème (profil MPR « classique », couple sans barème). Le client rend un
-    // bloc de reprise avec un contact, jamais un cul-de-sac technique.
+    // Trois causes, un seul geste côté client (déblocage manuel), mais un message
+    // distinct et surtout un traitement différent côté serveur :
+    //   surface        → réparable par l'artisan (surface non saisie) ;
+    //   non_eligible   → attendu (rose non éligible MPR par geste), rien à corriger ;
+    //   bareme_manquant → une règle active sans barème pour un profil éligible : un
+    //                     dossier PAYABLE bloqué en silence. On le CRIE (AGENTS.md,
+    //                     « les erreurs ne sont jamais tues ») pour qu'il soit
+    //                     complété en admin, au lieu de perdre la vente sans trace.
     const raison = raisonNonEstimable(data);
+    if (raison === "bareme_manquant") {
+      console.error(
+        `[paiement] barème manquant, vente perdue en silence : dossier=${dossierId} ` +
+          `dispositif=${data.dossier.dispositif} geste=${data.dossier.type_travaux} ` +
+          `profil=${data.caracteristiques.beneficiaire.precarite} — compléter ` +
+          `condition_json.prime de la règle active pour ce profil.`,
+      );
+    }
     return {
       ok: false,
       code: "aide_non_estimable",
       error:
         raison === "surface"
           ? "La surface isolée n'a pas été renseignée à la création, donc l'aide et le palier ne peuvent pas être calculés."
-          : "On ne peut pas estimer l'aide sur ce profil pour l'instant, donc aucun palier de prix ne peut être fixé automatiquement.",
+          : raison === "non_eligible"
+            ? "Ce profil de revenus n'ouvre pas droit à MaPrimeRénov' par geste, donc aucune aide ni palier de prix ne peut être fixé. Vérifiez l'éligibilité du ménage."
+            : "On ne peut pas estimer l'aide sur ce profil pour l'instant, donc aucun palier de prix ne peut être fixé automatiquement.",
     };
   }
   const aidCents = Math.round(aide.montant * 100);

@@ -1,20 +1,25 @@
 import { describe, it, expect } from "vitest";
 
-import { estimerPrime } from "@/lib/dossier/prime";
+import { estimerPrime, raisonNonEstimable } from "@/lib/dossier/prime";
 import type { DossierComplet } from "@/lib/dossier/get-dossier";
 
 function dossier(opts: {
   dispositif?: "cee" | "maprimerenov";
+  type_travaux?: string;
   precarite?: string;
   surface?: number;
+  noSurface?: boolean;
   prime?: unknown;
 }): DossierComplet {
   return {
-    dossier: { dispositif: opts.dispositif ?? "cee" },
+    dossier: {
+      dispositif: opts.dispositif ?? "cee",
+      type_travaux: opts.type_travaux ?? "combles_perdus",
+    },
     artisan: null,
     caracteristiques: {
       beneficiaire: { precarite: opts.precarite ?? "precaire" },
-      travaux: { surface_isolee_m2: opts.surface ?? 95 },
+      travaux: opts.noSurface ? undefined : { surface_isolee_m2: opts.surface ?? 95 },
     },
     dates: {},
     regle:
@@ -104,5 +109,81 @@ describe("estimerPrime", () => {
   it("forfait : renvoie null si le profil n'a pas de montant", () => {
     const e = estimerPrime(dossier({ precarite: "superieur", prime: { forfait: { precaire: 3500 } } }));
     expect(e).toBeNull();
+  });
+});
+
+describe("raisonNonEstimable", () => {
+  it("estimable : renvoie null", () => {
+    expect(
+      raisonNonEstimable(dossier({ precarite: "precaire", prime: { par_m2: { precaire: 8 } } })),
+    ).toBeNull();
+  });
+
+  it("rose (superieur) en MPR : non_eligible, PAS un trou de barème", () => {
+    // Le rose n'est pas éligible à MaPrimeRénov' par geste : l'absence de forfait est
+    // voulue. Ne doit surtout pas remonter comme `bareme_manquant` (sinon le cri
+    // serveur se déclencherait sur un cas parfaitement normal).
+    expect(
+      raisonNonEstimable(
+        dossier({
+          dispositif: "maprimerenov",
+          precarite: "superieur",
+          prime: { forfait: { grande_precarite: 4000, precaire: 3000, intermediaire: 2000 } },
+        }),
+      ),
+    ).toBe("non_eligible");
+  });
+
+  it("rose (superieur) en CEE : estimable (clé superieur présente) → null", () => {
+    expect(
+      raisonNonEstimable(
+        dossier({
+          dispositif: "cee",
+          precarite: "superieur",
+          surface: 100,
+          prime: { par_m2: { grande_precarite: 13, precaire: 11, intermediaire: 7, superieur: 7 } },
+        }),
+      ),
+    ).toBeNull();
+  });
+
+  it("profil éligible absent du barème au m² : bareme_manquant (la fuite)", () => {
+    // Intermédiaire est éligible mais aucune clé ne le couvre : dette de barème, pas
+    // inéligibilité. C'est exactement le cas qui bloquait une vente en silence.
+    expect(
+      raisonNonEstimable(
+        dossier({
+          dispositif: "maprimerenov",
+          precarite: "intermediaire",
+          prime: { par_m2: { grande_precarite: 25, precaire: 20 } },
+        }),
+      ),
+    ).toBe("bareme_manquant");
+  });
+
+  it("profil éligible absent du forfait : bareme_manquant", () => {
+    expect(
+      raisonNonEstimable(
+        dossier({
+          dispositif: "maprimerenov",
+          precarite: "intermediaire",
+          prime: { forfait: { grande_precarite: 5000, precaire: 4000 } },
+        }),
+      ),
+    ).toBe("bareme_manquant");
+  });
+
+  it("règle active sans aucun barème (hors rose MPR) : bareme_manquant", () => {
+    expect(
+      raisonNonEstimable(dossier({ dispositif: "cee", precarite: "precaire", prime: null })),
+    ).toBe("bareme_manquant");
+  });
+
+  it("barème présent pour le profil mais surface non saisie : surface (réparable)", () => {
+    expect(
+      raisonNonEstimable(
+        dossier({ precarite: "precaire", noSurface: true, prime: { par_m2: { precaire: 8 } } }),
+      ),
+    ).toBe("surface");
   });
 });
