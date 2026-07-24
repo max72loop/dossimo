@@ -92,7 +92,8 @@ Un seul accès `anon` dans tout le schéma : `pricing_tiers` en lecture
 - **Une policy borne la LIGNE, pas la COLONNE.** `0031` a dû corriger une faille
   où un artisan réécrivait son propre `credit_balance_cents` via PostgREST : la
   policy l'autorisait sur sa ligne. Le correctif est `revoke update` + `grant
-  update (col, col, ...)`. **`dossiers` n'a pas encore reçu ce traitement.**
+  update (col, col, ...)`. Appliqué à `artisans` (`0031`) **et à `dossiers`
+  (`0045`, 7 colonnes ouvertes, tout le reste verrouillé)**.
 - **`SECURITY DEFINER` contourne la RLS** : la fonction doit revérifier la
   propriété elle-même. Toutes celles du projet le font, garder l'habitude.
 - **`set search_path = public, pg_temp` sur toute `SECURITY DEFINER`.** Si
@@ -201,8 +202,6 @@ Tant qu'on maintient à la main : le faire, sérieusement.
   URL et n'existe pas en base. Ni accès, ni rectification, ni effacement.
 - **Son nom est figé à vie** dans `factures.lignes_json`, que le trigger
   `factures_immuables` protège de tout UPDATE, y compris en service-role.
-- **`dossiers` : grant UPDATE non borné en colonnes** (cf. §4, le traitement de
-  `0031` n'a pas été reporté).
 - **Pas de purge** de `leads`, `prospects`, `auth_rate_limits` (CNIL : ~3 ans
   après dernier contact en prospection B2B).
 - **`expire_old_credits` n'est câblée à aucun cron** : `credit_balance_cents`

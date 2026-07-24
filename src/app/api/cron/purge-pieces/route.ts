@@ -1,3 +1,4 @@
+import { refuserSiCronNonAutorise } from "@/lib/cron/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { purgerPiecesExpirees } from "@/lib/piece/retention";
 
@@ -15,13 +16,8 @@ export const dynamic = "force-dynamic";
  * est fermée (503) ; secret présent mais en-tête absente/fausse → 401.
  */
 export async function GET(req: Request) {
-  const secret = process.env.CRON_SECRET;
-  if (!secret) {
-    return new Response("CRON_SECRET non configuré.", { status: 503 });
-  }
-  if (req.headers.get("authorization") !== `Bearer ${secret}`) {
-    return new Response("Non autorisé.", { status: 401 });
-  }
+  const refus = refuserSiCronNonAutorise(req);
+  if (refus) return refus;
 
   try {
     const rapport = await purgerPiecesExpirees(createAdminClient());

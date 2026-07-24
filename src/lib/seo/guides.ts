@@ -8,6 +8,10 @@ export const GUIDE_CATEGORIES = [
   "Monter le dossier",
   "Devis & conformité",
   "Refus & prévention",
+  // Pages dérivées de `regles_metier` (cf. `gestes.ts`) : elles répondent à
+  // l'intention « mon geste », pas « ma méthode ». Elles ne vivent pas dans
+  // `guides` ci-dessous, qui reste l'éditorial écrit à la main.
+  "Par geste",
 ] as const;
 
 export type GuideCategory = (typeof GUIDE_CATEGORIES)[number];
@@ -739,13 +743,33 @@ export const guides = {
 export const guideList = Object.values(guides);
 
 /**
+ * Index slug → guide, construit une seule fois. Sert à la route dynamique
+ * `app/[slug]` : elle reçoit un slug d'URL et doit retrouver le guide en O(1),
+ * sans réénumérer `guideList` à chaque requête.
+ */
+const guidesBySlug = new Map(guideList.map((guide) => [guide.slug, guide] as const));
+
+/** Retrouve un guide par son slug d'URL, ou `undefined` s'il n'existe pas. */
+export function guideBySlug(slug: string): SeoGuide | undefined {
+  return guidesBySlug.get(slug);
+}
+
+/**
  * Guides regroupés par famille, dans l'ordre de `GUIDE_CATEGORIES`. Les catégories
  * vides ne sont pas rendues : le hub grandit tout seul quand on ajoute un guide.
+ *
+ * `extra` accueille les pages qui ne vivent pas dans `guides` parce qu'elles sont
+ * dérivées de la base (cf. `gestes.ts`). Si la base est injoignable, l'appelant
+ * passe une liste vide et le hub se contente de l'éditorial : une catégorie sans
+ * page disparaît au lieu de s'afficher vide.
  */
-export function guidesByCategory(): Array<{ category: GuideCategory; guides: SeoGuide[] }> {
+export function guidesByCategory(
+  extra: SeoGuide[] = [],
+): Array<{ category: GuideCategory; guides: SeoGuide[] }> {
+  const pages = [...guideList, ...extra];
   return GUIDE_CATEGORIES.map((category) => ({
     category,
-    guides: guideList.filter((guide) => guide.category === category),
+    guides: pages.filter((guide) => guide.category === category),
   })).filter((group) => group.guides.length > 0);
 }
 

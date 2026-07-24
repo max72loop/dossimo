@@ -1,3 +1,4 @@
+import { refuserSiCronNonAutorise } from "@/lib/cron/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { expireOldCredits } from "@/lib/pricing";
 
@@ -14,13 +15,8 @@ export const dynamic = "force-dynamic";
  * (503) pour éviter une exposition publique par erreur.
  */
 export async function GET(req: Request) {
-  const secret = process.env.CRON_SECRET;
-  if (!secret) {
-    return new Response("CRON_SECRET non configuré.", { status: 503 });
-  }
-  if (req.headers.get("authorization") !== `Bearer ${secret}`) {
-    return new Response("Non autorisé.", { status: 401 });
-  }
+  const refus = refuserSiCronNonAutorise(req);
+  if (refus) return refus;
 
   try {
     const expired = await expireOldCredits(createAdminClient());

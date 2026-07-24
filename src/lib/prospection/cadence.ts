@@ -132,3 +132,31 @@ export function dansLaFenetre(maintenant: Date): boolean {
   const minutes = minutesParis(maintenant);
   return minutes >= FENETRE.debut && minutes <= FENETRE.fin;
 }
+
+/**
+ * Bilan de fin de journée : la campagne a-t-elle SOUS-LIVRÉ par la faute du
+ * planificateur, et non par manque de matière ?
+ *
+ * Le point aveugle qu'on ferme ici : `tick` renvoie 200 même quand il n'envoie
+ * rien, et un run que GitHub ne planifie pas ne laisse AUCUNE trace. Le 2026-07-19,
+ * 4 messages sont partis sur 27 préparés sans qu'aucun signal ne se lève. On ne crie
+ * au loup que si les trois conditions tiennent ENSEMBLE :
+ *
+ *   - la fenêtre d'envoi est CLOSE (sinon il reste du temps pour rattraper) ;
+ *   - moins de messages sont partis que le plafond du jour n'en autorisait ;
+ *   - il restait des messages VALIDÉS et dus, prêts à partir.
+ *
+ * Une file vide (rien de validé) n'est pas une panne du système : c'est une
+ * validation humaine oubliée ou un fichier épuisé, qui ne doit pas rougir un run
+ * chaque jour. Ce cas est reporté dans le bilan, jamais compté comme sous-livraison.
+ */
+export function estSousLivraison(params: {
+  fenetreOuverte: boolean;
+  plafond: number;
+  envoyes: number;
+  restantsDus: number;
+}): boolean {
+  const { fenetreOuverte, plafond, envoyes, restantsDus } = params;
+  if (fenetreOuverte) return false;
+  return envoyes < plafond && restantsDus > 0;
+}

@@ -25,6 +25,12 @@ name: Prospection
 #             fenêtre, pour absorber le retard de planification (le 19/07 la
 #             préparation demandée à 06:15 UTC est partie à 08:33).
 #   tick    : à l'heure ronde de 07:00 à 16:00 UTC = 09:00 à 18:00 à Paris.
+#   bilan   : 16:35 UTC = 18:35 à Paris, juste après la fermeture de la fenêtre
+#             (18:30 Paris). Vérifie que la journée a livré ce que le plafond
+#             autorisait ; si une sous-livraison DUE au planificateur est constatée
+#             (des messages validés sont restés en file), le job vire au rouge et
+#             GitHub envoie l'e-mail d'échec. C'est le seul filet contre une journée
+#             qui sort 4 messages sur 40 sans que personne ne le voie (cf. 2026-07-19).
 # La fenêtre exacte (9h30-18h30) et le plafond du jour sont revérifiés côté
 # application : ce planificateur peut déborder sans conséquence.
 
@@ -32,6 +38,7 @@ on:
   schedule:
     - cron: "0 4 * * *"
     - cron: "5 7-16 * * *"
+    - cron: "35 16 * * *"
   workflow_dispatch:
 
 concurrency:
@@ -53,8 +60,19 @@ jobs:
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
             "${{ secrets.SITE_URL }}/api/prospection/prepare"
 
+      - name: Bilan de fin de journée (rougit si sous-livraison)
+        if: github.event.schedule == '35 16 * * *'
+        run: |
+          curl --fail-with-body -sS --max-time 60 \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.SITE_URL }}/api/prospection/bilan"
+
       - name: Envoyer au goutte-à-goutte
-        if: github.event.schedule != '0 4 * * *'
+        # Les ticks horaires ET les lancements manuels ; jamais les runs prepare
+        # (04:00) ni bilan (16:35), qui ont leur propre step ci-dessus.
+        if: >-
+          github.event_name == 'workflow_dispatch' ||
+          github.event.schedule == '5 7-16 * * *'
         env:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
           SITE_URL: ${{ secrets.SITE_URL }}

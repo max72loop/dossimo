@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   dansLaFenetre,
   debutJourParis,
+  estSousLivraison,
   joursEntre,
   jourParis,
   minutesParis,
@@ -80,6 +81,45 @@ describe("joursEntre — jours calendaires bornes incluses", () => {
 
   it("traverse un changement de mois", () => {
     expect(joursEntre("2026-07-30", "2026-08-02")).toBe(4);
+  });
+});
+
+describe("estSousLivraison — alerte de fin de journée", () => {
+  it("crie quand la journée sous-livre alors qu'il restait des messages validés", () => {
+    // Le cas du 2026-07-19 : fenêtre close, 4 partis sur 40, de la matière en file.
+    expect(
+      estSousLivraison({ fenetreOuverte: false, plafond: 40, envoyes: 4, restantsDus: 23 }),
+    ).toBe(true);
+  });
+
+  it("se tait tant que la fenêtre est ouverte : il reste du temps pour rattraper", () => {
+    expect(
+      estSousLivraison({ fenetreOuverte: true, plafond: 40, envoyes: 4, restantsDus: 23 }),
+    ).toBe(false);
+  });
+
+  it("ne crie pas au loup sur une file vide (validation oubliée, fichier épuisé)", () => {
+    // Sous le plafond, mais plus rien de validé à envoyer : ce n'est pas une panne
+    // du planificateur, c'est un manque d'approvisionnement. On ne rougit pas le run.
+    expect(
+      estSousLivraison({ fenetreOuverte: false, plafond: 40, envoyes: 4, restantsDus: 0 }),
+    ).toBe(false);
+  });
+
+  it("se tait quand le plafond du jour a été atteint", () => {
+    expect(
+      estSousLivraison({ fenetreOuverte: false, plafond: 40, envoyes: 40, restantsDus: 0 }),
+    ).toBe(false);
+    // Même avec du retard rattrapé qui dépasse (backlog), aucune sous-livraison.
+    expect(
+      estSousLivraison({ fenetreOuverte: false, plafond: 35, envoyes: 40, restantsDus: 2 }),
+    ).toBe(false);
+  });
+
+  it("se tait hors campagne (plafond 0)", () => {
+    expect(
+      estSousLivraison({ fenetreOuverte: false, plafond: 0, envoyes: 0, restantsDus: 0 }),
+    ).toBe(false);
   });
 });
 

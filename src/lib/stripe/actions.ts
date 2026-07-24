@@ -101,18 +101,32 @@ export async function creerSessionPaiementDossier(
   // un montant fourni par le client). Sans barème estimable, pas de tarif fiable.
   const aide = estimerPrime(data);
   if (!aide) {
-    // Deux causes, un seul geste (déblocage manuel), mais un message distinct :
-    // « surface » est réparable côté artisan, « structurel » est une dette de
-    // barème (profil MPR « classique », couple sans barème). Le client rend un
-    // bloc de reprise avec un contact, jamais un cul-de-sac technique.
+    // Trois causes, un seul geste côté client (déblocage manuel), mais un message
+    // distinct et surtout un traitement différent côté serveur :
+    //   surface        → réparable par l'artisan (surface non saisie) ;
+    //   non_eligible   → attendu (rose non éligible MPR par geste), rien à corriger ;
+    //   bareme_manquant → une règle active sans barème pour un profil éligible : un
+    //                     dossier PAYABLE bloqué en silence. On le CRIE (AGENTS.md,
+    //                     « les erreurs ne sont jamais tues ») pour qu'il soit
+    //                     complété en admin, au lieu de perdre la vente sans trace.
     const raison = raisonNonEstimable(data);
+    if (raison === "bareme_manquant") {
+      console.error(
+        `[paiement] barème manquant, vente perdue en silence : dossier=${dossierId} ` +
+          `dispositif=${data.dossier.dispositif} geste=${data.dossier.type_travaux} ` +
+          `profil=${data.caracteristiques.beneficiaire.precarite} — compléter ` +
+          `condition_json.prime de la règle active pour ce profil.`,
+      );
+    }
     return {
       ok: false,
       code: "aide_non_estimable",
       error:
         raison === "surface"
           ? "La surface isolée n'a pas été renseignée à la création, donc l'aide et le palier ne peuvent pas être calculés."
-          : "On ne peut pas estimer l'aide sur ce profil pour l'instant, donc aucun palier de prix ne peut être fixé automatiquement.",
+          : raison === "non_eligible"
+            ? "Ce profil de revenus n'ouvre pas droit à MaPrimeRénov' par geste, donc aucune aide ni palier de prix ne peut être fixé. Vérifiez l'éligibilité du ménage."
+            : "On ne peut pas estimer l'aide sur ce profil pour l'instant, donc aucun palier de prix ne peut être fixé automatiquement.",
     };
   }
   const aidCents = Math.round(aide.montant * 100);
@@ -180,6 +194,31 @@ export async function creerSessionPaiementDossier(
 
   const { prenom, nom } = data.caracteristiques.beneficiaire;
 
+  // Code de lancement « 50 % premier dossier » : la restriction Stripe
+  // first_time_transaction ne mord PAS ici. La session ne porte pas de Customer
+  // stable (aucun `customer`/`customer_email`), donc Stripe crée un client neuf
+  // après chaque paiement : « aucun paiement antérieur » est toujours vrai et le
+  // coupon serait réutilisable sur chaque dossier de chaque artisan. On applique
+  // donc la règle sur NOTRE source de vérité : le champ code promo n'apparaît que
+  // pendant la fenêtre ET tant que l'artisan n'a réglé aucun dossier. Lecture en
+  // service-role pour un contrôle déterministe (indépendant de la RLS), et
+  // fail-closed : au moindre doute (erreur de lecture), pas de remise offerte.
+  const enLancement = Math.floor(Date.now() / 1000) <= FIN_LANCEMENT_EPOCH;
+  let promoAutorise = false;
+  if (enLancement) {
+    const { data: dejaPaye, error: errPaie } = await createAdminClient()
+      .from("paiements")
+      .select("id")
+      .eq("artisan_id", data.dossier.artisan_id ?? "")
+      .eq("statut", "paye")
+      .limit(1);
+    if (errPaie) {
+      console.error("[stripe] contrôle premier dossier:", errPaie.message);
+    } else {
+      promoAutorise = (dejaPaye?.length ?? 0) === 0;
+    }
+  }
+
   try {
     const stripe = getStripe();
     await garantirCodeLancement(stripe);
@@ -187,7 +226,7 @@ export async function creerSessionPaiementDossier(
       mode: "payment",
       // Force la page Checkout en français quel que soit le navigateur du client.
       locale: "fr",
-      allow_promotion_codes: Math.floor(Date.now() / 1000) <= FIN_LANCEMENT_EPOCH,
+      allow_promotion_codes: promoAutorise,
       // Case à cocher CGV obligatoire avant paiement. REQUIERT que l'URL des
       // CGV soit renseignée dans le Dashboard Stripe (Réglages > Informations
       // publiques > Conditions générales), EN TEST ET EN LIVE : sans elle,
