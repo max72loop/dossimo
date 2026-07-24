@@ -11,6 +11,7 @@ import type {
 import {
   dansLaFenetre,
   debutJourParis,
+  estSousLivraison,
   jourParis,
   plafondDuJour,
 } from "@/lib/prospection/cadence";
@@ -121,6 +122,96 @@ export async function etatFile(maintenant = new Date()): Promise<EtatFile> {
     valides: await compte("valide"),
     echecs: await compte("echec"),
     prospectsDisponibles: disponibles ?? 0,
+  };
+}
+
+export interface BilanJour {
+  jour: string;
+  /** Plafond que la rampe / le cap autorisaient aujourd'hui. */
+  plafond: number;
+  /** Messages réellement partis aujourd'hui (comptés sur `sent_at`, comme le plafond). */
+  envoyes: number;
+  /**
+   * Messages VALIDÉS et dus (`scheduled_on <= jour`) encore en file : la matière que
+   * le planificateur aurait dû écouler. `lte`, comme le sélecteur d'envoi, pour
+   * inclure le backlog des jours précédents.
+   */
+  restantsDus: number;
+  /** En attente de validation humaine : un manque d'appro, pas une panne d'envoi. */
+  enAttente: number;
+  fenetreOuverte: boolean;
+  /** Vrai seulement si la journée a sous-livré par la faute du planificateur. */
+  sousLivraison: boolean;
+}
+
+/**
+ * Bilan de fin de journée, à lire après la fermeture de la fenêtre d'envoi. Il
+ * existe pour un seul point aveugle : la route `tick` renvoie 200 même quand elle
+ * n'envoie rien, et un run que GitHub ne planifie pas ne laisse aucune trace — une
+ * journée à 4 envois sur 40 (2026-07-19) passait donc inaperçue. Ce bilan rend cette
+ * sous-livraison bruyante (cf. `/api/prospection/bilan`), sans crier au loup sur une
+ * file simplement vide.
+ */
+export async function bilanFinDeJournee(
+  maintenant = new Date(),
+): Promise<BilanJour> {
+  const supabase = createAdminClient();
+  const campagne = await campagneActive(supabase);
+  const jour = jourParis(maintenant);
+  const fenetreOuverte = dansLaFenetre(maintenant);
+
+  const vide: BilanJour = {
+    jour,
+    plafond: 0,
+    envoyes: 0,
+    restantsDus: 0,
+    enAttente: 0,
+    fenetreOuverte,
+    sousLivraison: false,
+  };
+  if (!campagne || campagne.en_pause) return vide;
+
+  const plafond = plafondDuJour({
+    debut: campagne.demarre_le,
+    fin: campagne.termine_le,
+    jour,
+    capMax: campagne.daily_cap_max,
+  });
+
+  const { count: envoyes } = await supabase
+    .from("prospection_messages")
+    .select("id", { count: "exact", head: true })
+    .eq("campagne_id", campagne.id)
+    .gte("sent_at", debutJourParis(maintenant).toISOString())
+    .eq("statut", "envoye");
+
+  const { count: restantsDus } = await supabase
+    .from("prospection_messages")
+    .select("id", { count: "exact", head: true })
+    .eq("campagne_id", campagne.id)
+    .eq("statut", "valide")
+    .lte("scheduled_on", jour);
+
+  const { count: enAttente } = await supabase
+    .from("prospection_messages")
+    .select("id", { count: "exact", head: true })
+    .eq("campagne_id", campagne.id)
+    .eq("scheduled_on", jour)
+    .eq("statut", "en_attente");
+
+  return {
+    jour,
+    plafond,
+    envoyes: envoyes ?? 0,
+    restantsDus: restantsDus ?? 0,
+    enAttente: enAttente ?? 0,
+    fenetreOuverte,
+    sousLivraison: estSousLivraison({
+      fenetreOuverte,
+      plafond,
+      envoyes: envoyes ?? 0,
+      restantsDus: restantsDus ?? 0,
+    }),
   };
 }
 
