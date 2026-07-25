@@ -28,12 +28,7 @@ export const metadata: Metadata = {
 function Ecran({ titre, children }: { titre: string; children: React.ReactNode }) {
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-5 py-16 text-center">
-      <Logo
-        href={null}
-        variant="encre-mono"
-        taille="text-[2.5rem] sm:text-[3rem]"
-        className="justify-center"
-      />
+      <Logo href={null} hauteur="h-10 sm:h-12" className="justify-center" />
       <h1 className="mt-8 font-display text-2xl font-bold text-encre">{titre}</h1>
       <div className="mt-3 text-base leading-relaxed text-ardoise">{children}</div>
     </main>
