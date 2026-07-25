@@ -128,7 +128,7 @@ Quatre familles, câblées dans `layout.tsx` puis exposées en tokens `@theme` :
 
 | Token | Police | Rôle |
 |---|---|---|
-| `--font-display` | Unbounded | Titres forts, wordmark |
+| `--font-display` | Unbounded | Titres forts (plus le mot-signe : cf. §5) |
 | `--font-serif` | Source Serif 4 | Titres de section, chiffres éditoriaux |
 | `--font-sans` | Inter | Corps de texte, UI |
 | `--font-mono` | Geist Mono | Données : références, dates, montants (avec `tabular-nums`) |
@@ -280,18 +280,84 @@ contournements existent déjà et sont à résorber (un `const input = "…"` re
 
 ### Logo et actifs de marque
 
-Fichiers dans [`public/brand/`](public/brand/). Deux variantes de mot-signe, **une par
-fond** :
+Le logo est un **symbole + un mot-signe**, depuis la refonte du 2026-07-25. Le
+symbole est un dossier dont le rabat se prolonge en coche : *le dossier est
+complet*, ce que le produit promet en une forme. Le mot-signe qui l'accompagne a
+**sa propre police**, qui n'est pas Unbounded : c'est normal pour un logotype
+dessiné, et cela ne change rien aux titres, qui restent en `--font-display` (§3).
+L'ancien mot-signe purement typographique (Unbounded, deux « o » gris) est dans
+[`public/brand/archive/`](public/brand/archive/) et ne doit plus apparaître nulle
+part.
 
-- `dossimo-logo-nuit.png` : version claire, **sur fond encre** (bandeau PDF via
-  [`logo.ts`](src/lib/pack/logo.ts), en-tête e-mail).
-- `dossimo-logo-encre.png` / `.svg` : version sombre, **sur fond crème** (web).
-- Icônes : `dossimo-icon.png` / `dossimo-icon-clair.png`. Favicon, apple-icon et
-  images sociales : `src/app/icon.png`, `apple-icon.png`, `opengraph-image.tsx`,
-  `twitter-image.tsx`.
+**Une seule source : [`src/lib/brand/mark.ts`](src/lib/brand/mark.ts).** Elle porte
+les tracés, les quatre déclinaisons de couleur et les seuils de taille. Tout le
+reste en dérive :
 
-**Règle : jamais le mauvais logo sur le mauvais fond** (nuit sur clair, encre sur
-sombre). Zone de protection et taille minimale : à figer (§8).
+```
+mark.ts   ← tracés + DECLINAISONS (les couleurs viennent de tokens.ts)
+  ├─ ui/logo.tsx           SVG inline, l'écran
+  ├─ opengraph-image.tsx   carte sociale (Satori ne lit pas le disque)
+  └─ public/brand/*        régénéré par `node scripts/brand-assets.mjs`
+                           égalité imposée par mark.test.ts
+```
+
+Un actif retouché à la main dans un éditeur, ou un PNG oublié d'avant une refonte,
+devient un **test rouge** : c'est le même garde-fou que `tokens.test.ts` pour la
+palette. Ne jamais recolorer un tracé dans un composant, passer par
+`DECLINAISONS`.
+
+**Quatre déclinaisons, une par fond.**
+
+| Déclinaison | Symbole | Mot-signe | Fond |
+|---|---|---|---|
+| `encre` | `tampon` | `encre` | Clair (crème, blanc) : la référence |
+| `nuit` | `accent-clair` | `blanc-casse` | Encre (bandeau PDF, en-tête e-mail) |
+| `mono-encre` | `encre` | `encre` | Un seul ton : gravure, tampon, impression N/B |
+| `mono-blanc` | blanc | blanc | Un seul ton sur photo ou aplat |
+
+**Le bleu de marque ne va JAMAIS sur fond encre** : `#35507f` sur `#16202b`
+plafonne à 1,95:1, le symbole y disparaît. Sur foncé, c'est `accent-clair`
+(7,3:1). C'est la seule raison d'être de la déclinaison `nuit`, et un test le
+vérifie.
+
+**Zone de protection** : rien (texte, filet, bord de page) à moins de **0,5 × la
+hauteur du signe**. Exprimée en fraction, elle reste vraie à toutes les tailles.
+
+**Tailles minimales**, mesurées sur rendu réel et non devinées :
+
+- signature horizontale : **20 px** de haut. En dessous, le mot-signe se referme.
+- symbole seul, en contour sur fond clair : **24 px**.
+- en dessous, c'est la **pastille** (symbole clair sur aplat encre, glyphe à 68 %
+  du côté). Ce qui **ne marche pas**, et a été essayé : épaissir le contour du
+  symbole pour les petites tailles. Ce sont les vides internes qui portent la
+  forme ; un contour doublé les referme et l'icône devient une tache grise.
+
+**Les fichiers.** Signature : `dossimo-logo.svg` / `.png` (fond clair),
+`dossimo-logo-nuit.svg` / `.png` (fond encre, utilisé par le bandeau PDF via
+[`logo.ts`](src/lib/pack/logo.ts) et l'en-tête e-mail), `dossimo-logo-mono-encre.svg`,
+`dossimo-logo-mono-blanc.svg`. Symbole : `dossimo-symbole{,-nuit,-blanc}.svg`.
+Pastilles du kit (usages externes : presse, partenaires, profils) :
+`dossimo-icon.png`, `dossimo-icon-clair.png`, `dossimo-avatar-512.png` (plein
+cadre, sans arrondi : les plateformes appliquent le leur, et un double arrondi
+bave).
+
+Icônes d'application, dans `src/app/` : `icon.png` (32), `icon1.png` (16),
+`icon2.png` (512), `apple-icon.png` (180, plein cadre, iOS masque lui-même) et
+`favicon.ico` (16 + 32). **Les trois tailles sont nécessaires** : Next lit la
+dimension réelle du fichier pour écrire l'attribut `sizes` de chaque `<link>`, et
+sans un 16 px rendu net, l'onglet reçoit le 512 réduit à la volée par le
+navigateur — exactement la bouillie que les seuils ci-dessus cherchent à éviter.
+L'`.ico` est la seule icône qu'un client demande sans qu'on la lui ait déclarée
+(lecteurs de flux, robots, aperçus de lien).
+
+Les sources brutes des kits livrés sont dans
+[`templates/brand/`](templates/brand/), hors dossier servi.
+
+**Le rapport d'aspect fait partie du logo** : 998,29 / 204,59 ≈ **4,88**. La
+refonte l'a fait passer de 2,96 à 4,88, et tout cadre fixe qui contient le logo
+doit suivre (`styles.logo` du PDF, `width` de l'image e-mail). `mark.test.ts`
+vérifie les rasters et le cadre PDF, précisément parce que ce genre d'oubli ne se
+voit qu'à l'impression.
 
 ### Iconographie et emoji
 
@@ -441,7 +507,8 @@ vérité, partagée entre les supports.
       **centralisées** dans `champs.ts` (fin des 5 copies divergentes de
       `inputClass`/`labelClass`) ; restent les `<input>` bruts recopiés dans
       `oblige-suivi.tsx` et `issue-dossier.tsx`, à faire passer par `TextField`.
-- [ ] Logo : zone de protection et taille minimale (§5).
+- [x] Logo : zone de protection et taille minimale — figées le 2026-07-25 (§5),
+      dans `mark.ts` (`ZONE_PROTECTION`, `MIN_PX`).
 - [ ] Formaliser l'échelle de z-index (§4).
 - [x] Éliminer les emoji de l'UI produit au profit de lucide (§5) : emoji et
       glyphes de statut (`🔒`→`Lock`, `✓`→`Check`, `✗`→`X`, `↓`→`Download`,
@@ -514,3 +581,4 @@ Deux lignes par décision, datées, pour ne pas re-débattre le passé.
 | 2026-07-22 | Landing : retrait de toutes les données nominatives et coordonnées personnelles (nom de l'éditeur, adresse, SIREN, e-mail), y compris du pied et du JSON-LD. La confiance est portée par les engagements de traitement et un lien vers la politique de confidentialité ; les informations obligatoires restent sur les pages légales. | La vitrine présente le produit, pas l'identité privée de l'entrepreneur. Les mentions réglementaires gardent leur place sur les surfaces légales dédiées. |
 | 2026-07-22 | Tarifs : création d'une page publique autonome `/tarifs`. Le header et le footer y conduisent directement ; la grille et les offres JSON-LD sont dérivées de `pricing_tiers` via `grillePublique`, comme le checkout. Si la base est indisponible, aucun prix n'est affiché. | Permettre de consulter, comprendre et partager les tarifs sans atterrir sur une ancre de la longue landing, tout en conservant une seule source de vérité commerciale. |
 | 2026-07-21 | Audit UX : trois briques posées. (1) **Error boundaries** à la marque (`error.tsx`, `dossiers/error.tsx`, `global-error.tsx`) — Next 16 : récupération via `unstable_retry`, pas `reset`. (2) **Navigation mobile de l'espace artisan** (`espace-artisan-menu.tsx`) sur le patron de `site-menu.tsx` : les liens Dossiers/Factures/Devis/Compte, masqués sous `md:`, étaient inatteignables au téléphone. (3) **`champs.ts`** : source unique des classes de champ, fin des 5 copies divergentes (les formulaires vitrine/auth n'avaient ni état désactivé ni `aria-[invalid]`). | Audit produit / UX. Ces trois trous contredisaient des principes déjà écrits (erreur qui se dit §5, produit terrain mobile §4, source unique §1). Aucun nouveau token ni couleur. |
+| 2026-07-25 | **Refonte du logo** : le mot-signe typographique (Unbounded, deux « o » gris) devient une signature **symbole + mot-signe**, le symbole étant un dossier dont le rabat se prolonge en coche. Nouvelle source unique [`src/lib/brand/mark.ts`](src/lib/brand/mark.ts) : tracés, 4 déclinaisons par fond, zone de protection, tailles minimales. `public/brand/*` et les icônes d'application sont désormais **dérivés** par `scripts/brand-assets.mjs`, et `mark.test.ts` interdit la dérive (rapports d'aspect des rasters et cadre PDF compris). `ui/logo.tsx` passe en SVG inline (`taille` → `hauteur`, variante `encre-mono` → `mono-encre`), la carte sociale cesse de redessiner le mot-signe en texte, le cadre du bandeau PDF passe de 82 × 27 à 78 × 16. Aucun nouveau token : le bleu du kit livré **était déjà** `tampon` (`#35507f`) ; l'encre du kit (`#19222D`) a été ramenée sur le token `encre` (`#16202b`). | Kit livré le 2026-07-25. Trois décisions au-delà du simple remplacement de fichiers. (1) **Contraste** : le bleu de marque sur fond encre plafonne à 1,95:1, donc la déclinaison `nuit` porte le symbole en `accent-clair` (7,3:1) — sans quoi le symbole disparaissait du bandeau PDF et de l'en-tête e-mail. (2) **Petites tailles** : le contour du symbole tombe sous le pixel en favicon ; l'épaissir referme les vides internes et donne une tache, la correction juste est d'agrandir le glyphe dans sa pastille (68 % du côté). (3) **Rapport d'aspect** : passer de 2,96 à 4,88 casse silencieusement tout cadre fixe, d'où le test qui compare rasters et cadre PDF au tracé. Le mot-signe a désormais sa propre police, distincte d'Unbounded qui reste la police des titres (§3). |

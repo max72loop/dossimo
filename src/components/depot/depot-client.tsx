@@ -342,11 +342,7 @@ export function DepotClient({
   return (
     <main className="mx-auto w-full max-w-2xl flex-1 px-5 py-12 sm:py-16">
       <header>
-        <Logo
-          href={null}
-          variant="encre-mono"
-          taille="text-[2.5rem] sm:text-[3rem]"
-        />
+        <Logo href={null} hauteur="h-10 sm:h-12" />
         <h1 className="mt-8 font-display text-2xl font-bold leading-tight text-encre sm:text-3xl">
           {titre}
         </h1>

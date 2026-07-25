@@ -1,5 +1,14 @@
 import { ImageResponse } from "next/og";
 
+import {
+  DECLINAISONS,
+  LOCKUP_VIEWBOX,
+  MOT_SIGNE_D,
+  RATIO_LOCKUP,
+  SYMBOLE_D,
+  ZONE_PROTECTION,
+} from "@/lib/brand/mark";
+
 /**
  * Carte de partage social (LinkedIn, WhatsApp, SMS — les canaux par lesquels un
  * artisan recommande un outil à un autre). Sans elle, chaque lien partagé affichait
@@ -7,6 +16,11 @@ import { ImageResponse } from "next/og";
  *
  * Générée au build par `next/og`, aux couleurs de la marque (papier / encre / tampon).
  * `twitter-image.tsx` la réutilise telle quelle.
+ *
+ * Le logo vient de `@/lib/brand/mark`, comme partout ailleurs. Avant la refonte du
+ * 2026-07-25, cette carte redessinait le mot-signe en texte (`d` + `o` bleu + …) :
+ * une deuxième définition du logo, qui a survécu telle quelle à un changement de
+ * palette et affichait donc un logo que le site n'utilisait plus.
  */
 
 export const alt =
@@ -19,6 +33,17 @@ const ENCRE = "#16202b";
 const TAMPON = "#35507f";
 const ARDOISE = "#5b636d";
 const FILIGRANE = "#e2ddd1";
+
+/** Hauteur du logo sur la carte, en pixels de l'image 1200 × 630. */
+const LOGO_H = 46;
+
+/**
+ * Zone de protection du logo (DESIGN.md §5), appliquée et non recopiée : rien ne
+ * s'approche du signe à moins de la moitié de sa hauteur. C'est la seule surface
+ * du produit dont la composition autour du logo est fixée au pixel, donc le seul
+ * endroit où la règle peut être tenue par le code plutôt que par la vigilance.
+ */
+const GARDE = Math.round(LOGO_H * ZONE_PROTECTION);
 
 export default async function Image() {
   return new ImageResponse(
@@ -36,13 +61,15 @@ export default async function Image() {
           borderBottom: `16px solid ${ENCRE}`,
         }}
       >
-        {/* Mot-signe : les deux « o » en bleu, comme le logo du site. */}
-        <div style={{ display: "flex", fontSize: 40, fontWeight: 700, color: ENCRE }}>
-          <span>d</span>
-          <span style={{ color: TAMPON }}>o</span>
-          <span>ssim</span>
-          <span style={{ color: TAMPON }}>o</span>
-        </div>
+        <svg
+          width={Math.round(LOGO_H * RATIO_LOCKUP)}
+          height={LOGO_H}
+          viewBox={LOCKUP_VIEWBOX}
+          style={{ marginBottom: GARDE }}
+        >
+          <path fill={DECLINAISONS.encre.symbole} d={SYMBOLE_D} />
+          <path fill={DECLINAISONS.encre.motSigne} d={MOT_SIGNE_D} />
+        </svg>
 
         <div style={{ display: "flex", flexDirection: "column" }}>
           <div
