@@ -8,7 +8,7 @@ export function SiteFooter() {
       <div className="mx-auto max-w-[1280px] px-8 py-14">
         <div className="flex flex-col gap-10 md:flex-row md:justify-between">
           <div className="max-w-sm">
-            <Logo />
+            <Logo hauteur="h-9" />
             <p className="mt-4 text-sm leading-relaxed text-ardoise">
               La conformité de vos dossiers MaPrimeRénov&rsquo; et CEE, sécurisée
               avant dépôt. Sans mandataire.

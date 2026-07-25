@@ -28,8 +28,12 @@ export async function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40 border-b-2 border-encre bg-papier/95 backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-[1280px] items-center justify-between gap-4 px-5 sm:px-8">
-        <Logo />
+      {/* La barre s'ouvre à 72 px à partir de `sm` pour tenir la zone de
+          protection du logo (DESIGN.md §5 : 0,5 × sa hauteur, ici 18 px de part
+          et d'autre). Un logo plus grand dans une barre inchangée le collerait au
+          filet du bas. */}
+      <div className="mx-auto flex h-16 max-w-[1280px] items-center justify-between gap-4 px-5 sm:h-18 sm:px-8">
+        <Logo hauteur="h-8 sm:h-9" />
 
         <nav aria-label="Sections du site" className="hidden items-center gap-7 md:flex">
           {NAV.map((item) => (
