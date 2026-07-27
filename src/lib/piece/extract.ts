@@ -62,8 +62,10 @@ const extractedSchema = z.object({
   pac_marque: str,
   pac_reference: str,
   pac_regulateur_classe: str,
+  pac_reference_modele: str,
 
   // Chauffe-eau thermodynamique
+  cet_efficacite_ecs: frNum,
   cet_cop: frNum,
   cet_volume_l: frNum,
   cet_profil_soutirage: str,
@@ -127,11 +129,13 @@ const BLOC: Record<Famille, { objet: string; champs: string }> = {
   "pac_puissance_kw": nombre (puissance thermique, en kW),
   "pac_marque": "marque de la pompe à chaleur",
   "pac_reference": "référence / modèle de la pompe à chaleur",
-  "pac_regulateur_classe": "classe du régulateur (ex. IV, V, VI)"`,
+  "pac_regulateur_classe": "classe du régulateur (ex. IV, V, VI)",
+  "pac_reference_modele": "référence ou numéro du modèle au registre EPREL (règlement UE 2017/1369)"`,
   },
   cet: {
     objet: "installation d'un chauffe-eau thermodynamique",
-    champs: `  "cet_cop": nombre (coefficient de performance COP, norme EN 16147),
+    champs: `  "cet_efficacite_ecs": nombre (efficacité énergétique pour le chauffage de l'eau, en %),
+  "cet_cop": nombre (coefficient de performance COP, s'il est mentionné),
   "cet_volume_l": nombre (volume du ballon, en litres),
   "cet_profil_soutirage": "profil de soutirage (M, L ou XL)",
   "cet_marque": "marque du chauffe-eau",

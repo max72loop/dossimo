@@ -144,11 +144,17 @@ export async function chargerLotDuJour(
   const restantsPlafond = Math.max(0, PLAFOND_QUOTIDIEN - (envoyesAujourdhui ?? 0));
 
   // --- Sélection des candidats ---
+  // `contact_auto_le is null` (migration 0050) : jamais un artisan déjà démarché
+  // par la campagne AUTOMATIQUE, qui puise dans le même fichier. Le tirage l'exclut
+  // déjà de l'assignation ; le filtre est répété ici parce qu'une assignation
+  // antérieure au tirage corrigé suffirait à faire partir un second message, et
+  // qu'un double contact ne se rattrape pas.
   let requete = admin
     .from("prospects_dossimo")
     .select("place_id, name, denomination, city, code_postal, phone, email_valide, emails, rge_domaines")
     .eq("canal", canal)
-    .eq("opt_out", false);
+    .eq("opt_out", false)
+    .is("contact_auto_le", null);
 
   if (mode === "premier") {
     requete = requete.is("date_envoi", null);

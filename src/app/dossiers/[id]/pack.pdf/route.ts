@@ -20,7 +20,7 @@ export const runtime = "nodejs";
 /**
  * Pack documentaire complet en un seul PDF : page de garde + récapitulatif +
  * rapport de contrôle (avec les points de vigilance déjà générés) + checklist +
- * formulaire officiel (AH reproduction / mandat MPR). Auth-scopé via getDossier.
+ * formulaire officiel (fiche de préparation AH / mandat MPR). Auth-scopé via getDossier.
  */
 export async function GET(
   _req: Request,

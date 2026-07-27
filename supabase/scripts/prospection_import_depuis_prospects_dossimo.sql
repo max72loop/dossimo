@@ -40,6 +40,7 @@ select distinct on (lower(trim(pd.emails[1])))
 from public.prospects_dossimo pd
 where pd.opt_out is not true
   and pd.canal is null                       -- réservés au sprint manuel : on ne double pas le contact
+  and pd.contact_auto_le is null             -- déjà démarché par cette campagne (0050) : jamais deux fois
   -- and pd.email_valide is true             -- décommenter pour n'envoyer QU'aux adresses validées
   and pd.emails is not null
   and array_length(pd.emails, 1) >= 1

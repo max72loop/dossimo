@@ -40,6 +40,23 @@ const R_MIN_DEFAUT: Record<string, number> = {
 const SOLAIRE_SURFACE_CAPTEURS_MIN_DEFAUT = 2;
 
 /**
+ * Efficacité énergétique pour le chauffage de l'eau d'un chauffe-eau
+ * thermodynamique (règlement UE 814/2013), par profil de soutirage — REPLI,
+ * surchargeable par `condition_json.efficacite_ecs_min`.
+ *
+ * C'est LE critère du BAR-TH-148 depuis la vA78-4 (en vigueur au 01/01/2026) :
+ * le cadre A de l'attestation sur l'honneur ne demande plus le COP, et le mot
+ * n'apparaît plus une seule fois dans la fiche. Contrôler encore un COP, c'était
+ * bloquer sur un seuil abrogé tout en laissant passer un appareil réellement
+ * sous le plancher (revue du 2026-07-25, CHANGELOG-cerfa.md).
+ */
+const CET_EFFICACITE_ECS_MIN_DEFAUT: Record<"M" | "L" | "XL", number> = {
+  M: 95,
+  L: 100,
+  XL: 110,
+};
+
+/**
  * Efficacité énergétique ECS minimale d'un CESI (règlement UE 814/2013), par
  * énergie d'appoint et profil de soutirage — REPLI, surchargeable par
  * `condition_json.efficacite_ecs_min`.
@@ -328,6 +345,62 @@ export function controlerDossier(
     }
   }
 
+  // ---------------------------------------------------------------------
+  // Dates exigées au cadre A des fiches d'isolation
+  // ---------------------------------------------------------------------
+  // Les BAR-EN-101 / 102 / 103 marquent d'un astérisque la date de visite
+  // préalable ET la date de début des travaux. Les fiches chauffage ne les
+  // demandent pas. Elles restent facultatives au schéma — un dossier se prépare
+  // souvent avant le chantier — mais leur absence doit être dite avant dépôt,
+  // sinon l'artisan découvre le trou devant l'AH de son obligé.
+  if ((c.geste ?? "isolation") === "isolation") {
+    const manquantes = [
+      !dVisite ? "la date de visite préalable du bâtiment" : null,
+      !dDebut ? "la date de début des travaux (pose de l'isolant)" : null,
+    ].filter(Boolean);
+
+    if (manquantes.length > 0) {
+      add({
+        code: "cadre_a_dates_isolation",
+        categorie: "chronologie",
+        severite: "avertissement",
+        titre: "Date obligatoire du cadre A manquante",
+        detail: `Le cadre A des fiches BAR-EN exige ${manquantes.join(" et ")}. Ces champs portent un astérisque sur l'attestation sur l'honneur : sans eux, elle ne peut pas être signée.`,
+      });
+    }
+  }
+
+  // ---------------------------------------------------------------------
+  // Sous-traitance
+  // ---------------------------------------------------------------------
+  // Le cadre A des six fiches réserve un bloc au « professionnel titulaire du
+  // signe de qualité ayant réalisé l'opération, s'il n'est pas le signataire ».
+  // Le piège qu'il révèle : quand un sous-traitant pose, c'est SA qualification
+  // RGE qui doit couvrir les travaux, alors que tout le contrôle RGE ci-dessus
+  // porte sur le SIRET du signataire. On ne peut pas le vérifier ici (l'annuaire
+  // n'a été interrogé que pour le signataire), donc on le dit au lieu de laisser
+  // croire que c'est couvert.
+  if (c.sous_traitant) {
+    add({
+      code: "sous_traitance",
+      categorie: "rge",
+      severite: "avertissement",
+      titre: "Sous-traitance déclarée : la qualification RGE à vérifier est celle du sous-traitant",
+      detail: `Les travaux ont été réalisés par ${c.sous_traitant.raison_sociale} (SIRET ${c.sous_traitant.siret}), qui doit être reporté au cadre A de l'attestation. Le contrôle RGE automatique ci-dessus porte sur le SIRET du signataire : la qualification du sous-traitant, elle, reste à vérifier à la main pour la date du devis et le domaine des travaux.`,
+    });
+  } else if (c.sous_traitant === undefined) {
+    // Dossier créé avant que la question soit posée : on ne suppose pas
+    // l'absence de sous-traitance, on signale que le cadre A sera à compléter.
+    add({
+      code: "sous_traitance",
+      categorie: "rge",
+      severite: "avertissement",
+      titre: "Sous-traitance non renseignée",
+      detail:
+        "Ce dossier est antérieur à la question sur la sous-traitance. Le cadre A de l'attestation demande l'identité du professionnel titulaire du signe de qualité s'il n'est pas le signataire : vérifiez si le bloc doit être rempli avant dépôt.",
+    });
+  }
+
   // Contrôle de repli sur les dates RGE AUTO-DÉCLARÉES : seulement si l'annuaire
   // officiel n'a pas tranché (mode dégradé, dossier antérieur au contrôle,
   // panne réseau). Sinon l'annuaire, plus fiable, prime.
@@ -466,34 +539,47 @@ export function controlerDossier(
       });
     }
   } else if (geste === "cet") {
-    // Chauffe-eau thermodynamique : coefficient de performance (COP) selon le
-    // profil de soutirage (EN 16147). Seuil par défaut 2,5, surchargeable par
-    // la règle métier (cop_min).
-    const copMin = cond?.cop_min ?? 2.5;
-    const cop = c.cet?.cop;
-    if (cop == null) {
+    // Chauffe-eau thermodynamique : efficacité énergétique pour le chauffage de
+    // l'eau, au profil de soutirage déclaré. Le seuil dépend du profil ; sans
+    // profil, on ne peut pas le déterminer et on se tait plutôt que d'en
+    // supposer un (même prudence que pour le CESI).
+    const profilCet = c.cet?.profil_soutirage;
+    const seuilCet = profilCet ? CET_EFFICACITE_ECS_MIN_DEFAUT[profilCet] : null;
+    const efficaciteCetMin = cond?.efficacite_ecs_min ?? seuilCet;
+    const efficaciteCet = c.cet?.efficacite_ecs;
+
+    if (efficaciteCet == null) {
       add({
-        code: "technique_cop",
+        code: "technique_efficacite_ecs",
         categorie: "technique",
         severite: "avertissement",
-        titre: "COP non renseigné",
-        detail: "Le coefficient de performance (COP) est nécessaire pour vérifier l'éligibilité du chauffe-eau thermodynamique.",
+        titre: "Efficacité énergétique ECS non renseignée",
+        detail:
+          "Le cadre A de l'attestation sur l'honneur exige l'efficacité énergétique pour le chauffage de l'eau, au profil de soutirage déclaré. Sans elle, l'éligibilité du chauffe-eau thermodynamique ne peut pas être vérifiée.",
       });
-    } else if (cop < copMin) {
+    } else if (efficaciteCetMin == null) {
       add({
-        code: "technique_cop",
+        code: "technique_efficacite_ecs",
+        categorie: "technique",
+        severite: "avertissement",
+        titre: "Profil de soutirage manquant",
+        detail: `Efficacité déclarée : ${efficaciteCet} %. Sans profil de soutirage (M, L ou XL), le plancher applicable est indéterminé.`,
+      });
+    } else if (efficaciteCet < efficaciteCetMin) {
+      add({
+        code: "technique_efficacite_ecs",
         categorie: "technique",
         severite: "bloquant",
-        titre: "COP insuffisant",
-        detail: `COP = ${cop}, en dessous du minimum de ${copMin} attendu (profil de soutirage ${c.cet?.profil_soutirage ?? "?"}).`,
+        titre: "Efficacité énergétique ECS insuffisante",
+        detail: `Efficacité = ${efficaciteCet} %, en dessous du minimum de ${efficaciteCetMin} % exigé au profil de soutirage ${profilCet}.`,
       });
     } else {
       add({
-        code: "technique_cop",
+        code: "technique_efficacite_ecs",
         categorie: "technique",
         severite: "ok",
-        titre: "COP conforme",
-        detail: `COP = ${cop} >= ${copMin} (profil ${c.cet?.profil_soutirage ?? "?"}).`,
+        titre: "Efficacité énergétique ECS conforme",
+        detail: `Efficacité = ${efficaciteCet} % >= ${efficaciteCetMin} % (profil ${profilCet}).`,
       });
     }
     if (!c.cet?.marque || !c.cet?.reference) {

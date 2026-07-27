@@ -5,11 +5,15 @@ facture ou un ancien PDF sans se demander de quoi il s'agit. Rien ici ne doit
 apparaître sur une surface vivante : le logo en vigueur est décrit dans
 `DESIGN.md` §5 et dérive de `src/lib/brand/mark.ts`.
 
-## 2026-07-25 — mot-signe typographique
+## 2026-07-25 — mot-signe seul, sans symbole
 
-Retiré à la refonte du logo (signature symbole + mot-signe). C'était le mot
-« dossimo » composé en **Unbounded**, deuxième et cinquième lettres en gris
-`#9aa1a9`, sans symbole.
+Retiré à la refonte du logo. C'était le mot « dossimo » **seul**, composé en
+Unbounded, deuxième et cinquième lettres en gris `#9aa1a9`.
+
+Deux choses ont changé, une n'a pas changé : le symbole (dossier + coche) est
+apparu, les « o » gris ont disparu (ils entraient en concurrence avec le bleu du
+symbole), et la police est restée Unbounded. Le mot-signe en vigueur est donc le
+même dessin, d'un seul ton, converti en courbes.
 
 - `dossimo-logo-encre.svg` / `.png` — sur fond clair
 - `dossimo-logo-nuit.png` — sur fond encre

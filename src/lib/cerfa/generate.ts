@@ -8,13 +8,14 @@ import { PDFDocument } from "pdf-lib";
 import type { DossierComplet } from "@/lib/dossier/get-dossier";
 import {
   resolveCerfaTemplate,
+  revueValidee,
   type CerfaTemplate,
   type CerfaKind,
 } from "@/lib/cerfa/registry";
 import { fillAndFlatten } from "@/lib/cerfa/fill";
 import { fillByOverlay } from "@/lib/cerfa/overlay";
 import { mapDossierToAhCee, mapDossierToMandatMpr } from "@/lib/cerfa/mapping";
-import { renderAhCeePdf } from "@/lib/pack/render";
+import { renderPreparationAhPdf } from "@/lib/pack/render";
 
 export interface CerfaMeta {
   id: string;
@@ -23,6 +24,8 @@ export interface CerfaMeta {
   version: string;
   official: boolean;
   kind: CerfaKind;
+  /** Revue four-eyes signée : conditionne ce que l'UI et le PDF osent affirmer. */
+  revueValidee: boolean;
 }
 
 export type GenerateResult =
@@ -36,6 +39,7 @@ const toMeta = (t: CerfaTemplate): CerfaMeta => ({
   version: t.version,
   official: t.official,
   kind: t.kind,
+  revueValidee: revueValidee(t),
 });
 
 /** Date pertinente pour choisir la version : date de devis, sinon création. */
@@ -86,9 +90,9 @@ export async function generateCerfa(data: DossierComplet): Promise<GenerateResul
     return { ok: true, bytes, meta: toMeta(t) };
   }
 
-  if (t.strategy === "reproduction") {
-    // Reproduction fidèle du modèle réglementaire (React-PDF), pré-remplie.
-    const buf = await renderAhCeePdf(data, {
+  if (t.strategy === "preparation") {
+    // Fiche de préparation (React-PDF) : Dossimo ne reproduit pas l'AH, cf. registry.
+    const buf = await renderPreparationAhPdf(data, {
       titre: t.titre,
       arrete: t.arrete,
       version: t.version,

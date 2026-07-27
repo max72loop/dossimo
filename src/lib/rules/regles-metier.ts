@@ -44,6 +44,10 @@ const conditionSchema = z
   .object({
     r_min: z.number().optional(),
     etas_min: z.number().optional(),
+    // Plus lu par le moteur : le BAR-TH-148 ne retient plus le COP depuis la
+    // vA78-4 (le critère est `efficacite_ecs_min`). La clé reste déclarée pour
+    // ne pas invalider une règle éditée qui la porterait encore, mais la
+    // renseigner n'a aucun effet. Ne pas la recâbler sans relire la fiche.
     cop_min: z.number().optional(),
     rendement_min: z.number().optional(),
     efficacite_ecs_min: z.number().optional(),

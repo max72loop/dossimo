@@ -87,19 +87,27 @@ export function comparerPiece(
   // de sa famille (`travaux` OU `pac` OU `cet` OU `bois`) : on ne lit jamais un bloc
   // absent, et on ne compare que ce que le dossier déclare. Ajouter un geste =
   // ajouter un cas ici (miroir de `BLOC` dans extract.ts).
+
+  /**
+   * Une valeur non saisie n'est pas comparable : on saute la ligne plutôt que
+   * d'opposer « null » à ce qui a été lu sur la pièce. Cas réel depuis que le
+   * COP du chauffe-eau est devenu facultatif (BAR-TH-148 vA78-4).
+   */
   const nombre = (
     champ: string,
-    saisie: number,
+    saisie: number | null | undefined,
     lu: number | null | undefined,
     unite: string,
     tol: number,
-  ) =>
+  ) => {
+    if (saisie == null) return;
     push(
       champ,
       `${saisie}${unite}`,
       lu != null ? `${lu}${unite}` : "—",
       lu != null ? numEq(saisie, lu, tol) : null,
     );
+  };
 
   /** Marque et référence : comparées seulement si la saisie les porte. */
   const texte = (
@@ -120,6 +128,7 @@ export function comparerPiece(
     texte("Marque PAC", pac.marque, ex.pac_marque);
     texte("Référence PAC", pac.reference, ex.pac_reference);
   } else if (cet) {
+    nombre("Efficacité ECS", cet.efficacite_ecs, ex.cet_efficacite_ecs, " %", 0.5);
     nombre("COP", cet.cop, ex.cet_cop, "", 0.05);
     nombre("Volume du ballon", cet.volume_l, ex.cet_volume_l, " L", 1);
     texte("Marque du chauffe-eau", cet.marque, ex.cet_marque);

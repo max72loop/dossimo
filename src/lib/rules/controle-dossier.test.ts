@@ -26,6 +26,7 @@ function dossier(over: {
   logement?: Record<string, unknown>;
   montants?: Record<string, unknown>;
   rge?: Record<string, unknown>;
+  sous_traitant?: Record<string, unknown> | null;
 } = {}): DossierComplet {
   return {
     dossier: { dispositif: over.dispositif ?? "cee", created_at: "2026-06-01" },
@@ -45,6 +46,9 @@ function dossier(over: {
       },
       montants: { ht: 4200, ttc: 4431, prime_estime: 1800, ...over.montants },
       rge: { numero: "QB/12345", domaine: "Qualibat 7131", date_debut: "2024-01-01", date_fin: "2027-12-31", ...over.rge },
+      // `null` = sous-traitance déclarée absente. Le distinguer de `undefined`
+      // (question jamais posée) est tout l'objet du contrôle `sous_traitance`.
+      sous_traitant: over.sous_traitant === undefined ? null : over.sous_traitant,
     },
     dates: { offre_cee: "2026-03-08", visite_technique: "2026-03-05", devis: "2026-03-10", debut_travaux: "2026-04-01", fin_travaux: "2026-04-05", facture: "2026-04-10", ...over.dates },
     regle: over.regle === undefined ? regleCombles() : over.regle,
@@ -259,7 +263,7 @@ describe("controlerDossier — PAC air/eau (BAR-TH-171)", () => {
   });
 });
 
-/** Règle CEE chauffe-eau thermodynamique (forfait, sans cop_min figé). */
+/** Règle CEE chauffe-eau thermodynamique (forfait, sans seuil figé). */
 function regleCet(over: Partial<RegleMetierResolue["condition"]> = {}): RegleMetierResolue {
   return {
     version: 1,
@@ -284,7 +288,7 @@ function dossierCet(over: { cet?: Record<string, unknown>; regle?: RegleMetierRe
       geste: "cet",
       fiche: "BAR-TH-148",
       cet: {
-        type_cet: "accumulation", fiche: "BAR-TH-148", cop: 3.0,
+        type_cet: "accumulation", fiche: "BAR-TH-148", efficacite_ecs: 130, cop: 3.0,
         profil_soutirage: "L", volume_l: 200, marque: "Atlantic", reference: "Calypso",
         ...over.cet,
       },
@@ -297,24 +301,53 @@ const codesCet = (d: DossierComplet) =>
   controlerDossier(d, AUJ).findings.map((f) => `${f.code}:${f.severite}`);
 
 describe("controlerDossier — chauffe-eau thermodynamique (BAR-TH-148)", () => {
-  it("CET de référence : conforme, COP ok", () => {
+  it("CET de référence : conforme, efficacité ECS ok", () => {
     const r = controlerDossier(dossierCet(), AUJ);
     expect(r.conforme).toBe(true);
-    expect(codesCet(dossierCet())).toContain("technique_cop:ok");
+    expect(codesCet(dossierCet())).toContain("technique_efficacite_ecs:ok");
   });
 
-  it("COP insuffisant (< 2,5) : bloquant", () => {
-    const r = controlerDossier(dossierCet({ cet: { cop: 2.2 } }), AUJ);
-    expect(r.conforme).toBe(false);
-    expect(codesCet(dossierCet({ cet: { cop: 2.2 } }))).toContain("technique_cop:bloquant");
+  it("efficacité sous le plancher du profil L (100 %) : bloquant", () => {
+    const sous = dossierCet({ cet: { efficacite_ecs: 98 } });
+    expect(controlerDossier(sous, AUJ).conforme).toBe(false);
+    expect(codesCet(sous)).toContain("technique_efficacite_ecs:bloquant");
   });
 
-  it("cop_min de la règle surcharge le défaut : 3,2 requis => 3,0 bloqué", () => {
+  it("le plancher suit le profil : 98 % passe en M, pas en L", () => {
+    const m = dossierCet({ cet: { profil_soutirage: "M", efficacite_ecs: 98 } });
+    expect(codesCet(m)).toContain("technique_efficacite_ecs:ok");
+
+    const xl = dossierCet({ cet: { profil_soutirage: "XL", efficacite_ecs: 98 } });
+    expect(codesCet(xl)).toContain("technique_efficacite_ecs:bloquant");
+  });
+
+  it("efficacite_ecs_min de la règle surcharge le repli", () => {
     const r = controlerDossier(
-      dossierCet({ cet: { cop: 3.0 }, regle: regleCet({ cop_min: 3.2 }) }),
+      dossierCet({
+        cet: { efficacite_ecs: 105 },
+        regle: regleCet({ efficacite_ecs_min: 120 }),
+      }),
       AUJ,
     );
     expect(r.conforme).toBe(false);
+  });
+
+  it("efficacité absente : avertissement, pas de blocage", () => {
+    const sans = dossierCet({ cet: { efficacite_ecs: null } });
+    expect(codesCet(sans)).toContain("technique_efficacite_ecs:avertissement");
+  });
+
+  /**
+   * Le COP n'est plus un critère depuis la vA78-4 : le contrôler encore, c'était
+   * bloquer sur un seuil abrogé (CHANGELOG-cerfa.md, revue du 2026-07-25).
+   */
+  it("ne contrôle plus le COP, même bas, même surchargé par cop_min", () => {
+    const copBas = dossierCet({
+      cet: { cop: 1.8 },
+      regle: regleCet({ cop_min: 3.2 }),
+    });
+    expect(codesCet(copBas).some((c) => c.startsWith("technique_cop"))).toBe(false);
+    expect(controlerDossier(copBas, AUJ).conforme).toBe(true);
   });
 
   it("ne déclenche aucun contrôle d'isolation (R) ni ETAS sur un CET", () => {
@@ -565,5 +598,91 @@ describe("controlerDossier — non-cumul CEE PAC / solaire thermique (2026)", ()
       dossier: { dispositif: "maprimerenov", created_at: "2026-06-01" },
     } as unknown as DossierComplet;
     expect(nonCumul(mprPac)).toBeUndefined();
+  });
+});
+
+/**
+ * Sous-traitance. Le cadre A des six fiches réserve un bloc au professionnel
+ * titulaire du signe de qualité qui a réalisé l'opération quand ce n'est pas le
+ * signataire. Le contrôle RGE automatique ne porte QUE sur le SIRET du
+ * signataire : quand un sous-traitant pose, il faut le dire plutôt que laisser
+ * croire que la qualification a été vérifiée (CHANGELOG-cerfa.md, 2026-07-25).
+ */
+describe("controlerDossier — sous-traitance", () => {
+  it("sans sous-traitance déclarée : aucun constat", () => {
+    const cs = codes(dossier({ sous_traitant: null }));
+    expect(cs.some((c) => c.startsWith("sous_traitance"))).toBe(false);
+  });
+
+  it("sous-traitance déclarée : avertissement sur la qualification à vérifier", () => {
+    const cs = codes(
+      dossier({
+        sous_traitant: {
+          nom: "Bernard",
+          prenom: "Luc",
+          raison_sociale: "Toiture Ardennes",
+          siret: "98765432109876",
+        },
+      }),
+    );
+    expect(cs).toContain("sous_traitance:avertissement");
+  });
+
+  it("ne bloque pas le dossier : c'est un point à vérifier, pas un refus", () => {
+    const r = controlerDossier(
+      dossier({
+        sous_traitant: {
+          nom: "Bernard",
+          prenom: "Luc",
+          raison_sociale: "Toiture Ardennes",
+          siret: "98765432109876",
+        },
+      }),
+      AUJ,
+    );
+    expect(r.conforme).toBe(true);
+  });
+
+  it("dossier antérieur à la question : signalé, pas supposé sans sous-traitant", () => {
+    const ancien = dossier();
+    delete (ancien.caracteristiques as unknown as Record<string, unknown>)
+      .sous_traitant;
+    expect(codes(ancien)).toContain("sous_traitance:avertissement");
+  });
+});
+
+/**
+ * Les BAR-EN-101 / 102 / 103 marquent d'un astérisque la date de visite
+ * préalable ET la date de début des travaux. Les fiches chauffage, non. Le
+ * schéma les laisse facultatives (un dossier se prépare avant le chantier) :
+ * c'est donc au moteur de les réclamer avant dépôt.
+ */
+describe("controlerDossier — dates du cadre A des fiches BAR-EN", () => {
+  it("isolation avec les deux dates : aucun constat", () => {
+    const cs = codes(dossier());
+    expect(cs.some((c) => c.startsWith("cadre_a_dates_isolation"))).toBe(false);
+  });
+
+  it("visite préalable manquante : avertissement", () => {
+    const cs = codes(dossier({ dates: { visite_technique: null } }));
+    expect(cs).toContain("cadre_a_dates_isolation:avertissement");
+  });
+
+  it("début des travaux manquant : avertissement", () => {
+    const cs = codes(dossier({ dates: { debut_travaux: null } }));
+    expect(cs).toContain("cadre_a_dates_isolation:avertissement");
+  });
+
+  it("ne bloque pas : le dossier reste préparable avant le chantier", () => {
+    const r = controlerDossier(
+      dossier({ dates: { visite_technique: null, debut_travaux: null } }),
+      AUJ,
+    );
+    expect(r.conforme).toBe(true);
+  });
+
+  it("ne s'applique pas aux gestes chauffage, dont les fiches ne l'exigent pas", () => {
+    const cs = codesCet(dossierCet({ cet: {} }));
+    expect(cs.some((c) => c.startsWith("cadre_a_dates_isolation"))).toBe(false);
   });
 });

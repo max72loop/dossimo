@@ -56,6 +56,9 @@ export interface CeeIsolationCaracteristiques {
     isolant_reference: string | null;
     resistance_thermique_r: number;
     epaisseur_mm: number | null;
+    /** Pare-vapeur ou dispositif équivalent (cadre A des BAR-EN-101 / 103).
+     *  `null` = non renseigné ; absent des dossiers antérieurs à la question. */
+    pare_vapeur?: boolean | null;
   };
   /** Bloc technique de la PAC air/eau (présent pour la famille pac_air_eau). */
   pac?: {
@@ -66,13 +69,38 @@ export interface CeeIsolationCaracteristiques {
     temperature: "basse" | "moyenne_haute";
     marque: string | null;
     reference: string | null;
+    /** « La PAC est équipée d'un régulateur » — case à astérisque du cadre A. */
+    regulateur?: boolean | null;
     regulateur_classe: string | null;
+    /** Note de dimensionnement remise au bénéficiaire (cadre A). */
+    note_dimensionnement?: boolean | null;
+    /** Le système déporté consomme de l'énergie pour l'ECS (cadre A). */
+    deporte_consomme_energie?: boolean | null;
+    // Cadre A de l'AH (annexe 1 BAR-TH-171 vA78.4). Nullables et non requis :
+    // les dossiers créés avant leur ajout n'en portent pas, et prétendre le
+    // contraire au niveau du type ferait mentir la lecture.
+    surface_chauffee_m2?: number | null;
+    usage?: "chauffage" | "chauffage_ecs" | null;
+    systeme_deporte?: boolean | null;
+    deporte_marque?: string | null;
+    deporte_reference?: string | null;
+    /** Référence du modèle au sens du règlement (UE) 2017/1369 — base EPREL. */
+    reference_modele?: string | null;
+    /** Numéro d'agrément, cadre A vA82.5 pour les PAC bonifiées. */
+    numero_agrement?: string | null;
   };
   /** Bloc technique du chauffe-eau thermodynamique (présent pour la famille cet). */
   cet?: {
     type_cet: "accumulation";
     fiche: string;
-    cop: number;
+    /**
+     * Efficacité énergétique pour le chauffage de l'eau (%), au profil déclaré.
+     * Critère d'éligibilité depuis la vA78-4. Absente des dossiers antérieurs
+     * à son ajout, d'où le type nullable.
+     */
+    efficacite_ecs?: number | null;
+    /** Plus un critère depuis la vA78-4 : indicatif, souvent porté au devis. */
+    cop: number | null;
     profil_soutirage: "M" | "L" | "XL";
     volume_l: number;
     marque: string | null;
@@ -105,6 +133,9 @@ export interface CeeIsolationCaracteristiques {
     volume_ballon_l: number;
     classe_ballon: string | null;
     certification: "cstbat" | "solar_keymark" | "equivalence";
+    /** Cases à astérisque du cadre A du BAR-TH-101. */
+    couvre_totalite_ecs?: boolean | null;
+    capteurs_non_hybrides?: boolean | null;
     marque: string | null;
     reference: string | null;
   };
@@ -113,6 +144,8 @@ export interface CeeIsolationCaracteristiques {
     ttc: number;
     prime_estime: number | null;
     aides_publiques_hors_cee?: number | null;
+    /** Référence de la facture, portée au cadre A de l'AH (annexe 1). */
+    facture_reference?: string | null;
   };
   rge: {
     numero: string;
@@ -120,6 +153,17 @@ export interface CeeIsolationCaracteristiques {
     date_debut: string | null;
     date_fin: string;
   };
+  /**
+   * Titulaire du signe de qualité ayant réalisé l'opération quand ce n'est pas
+   * le signataire de l'AH (cadre A des six fiches). `null` = pas de
+   * sous-traitance ; `undefined` = dossier antérieur à la question, jamais posée.
+   */
+  sous_traitant?: {
+    nom: string;
+    prenom: string;
+    raison_sociale: string;
+    siret: string;
+  } | null;
   /**
    * Résultat de la vérification SIRET + RGE contre les annuaires officiels,
    * figé à la création du dossier. Optionnel : absent des dossiers créés avant

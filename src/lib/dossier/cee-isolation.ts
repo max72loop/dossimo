@@ -110,7 +110,11 @@ export const BOIS_COMBUSTIBLES = {
 } as const;
 export type BoisCombustible = keyof typeof BOIS_COMBUSTIBLES;
 
-/** Profils de soutirage (norme EN 16147) — conditionnent le COP minimal. */
+/**
+ * Profils de soutirage du chauffe-eau thermodynamique. Ils conditionnent le
+ * plancher d'EFFICACITÉ ÉNERGÉTIQUE ECS (95 / 100 / 110 %), et non plus un COP :
+ * le BAR-TH-148 ne mentionne plus le COP depuis la vA78-4 (01/01/2026).
+ */
 export const SOUTIRAGE_PROFILS = {
   M: "Profil M",
   L: "Profil L",
@@ -210,6 +214,22 @@ export const LOGEMENT_TYPES = {
 export const RESIDENCES = {
   principale: "Résidence principale",
   secondaire: "Résidence secondaire",
+} as const;
+
+/**
+ * Usage couvert par la PAC. Exigé au cadre A de l'attestation sur l'honneur par
+ * l'annexe 1 de la fiche BAR-TH-171 (vA78.4, en vigueur au 01/01/2026), qui
+ * définit mot pour mot le contenu de cette partie. Cf. CHANGELOG-cerfa.md.
+ */
+export const USAGES_PAC = {
+  chauffage: "Chauffage seul",
+  chauffage_ecs: "Chauffage et eau chaude sanitaire",
+} as const;
+
+/** Réponse binaire déclarée sur l'attestation (cases OUI / NON à cocher). */
+export const OUI_NON = {
+  oui: "Oui",
+  non: "Non",
 } as const;
 
 // ---------------------------------------------------------------------------
@@ -312,6 +332,13 @@ export const ceeIsolationSchema = z.object({
   isolant_reference: z.string().optional().default(""),
   resistance_thermique_r: nombreOptionnel,
   epaisseur_mm: nombreOptionnel,
+  // Cadre A des BAR-EN-101 et 103 uniquement : « L'isolation thermique réalisée
+  // a nécessité la mise en place d'un pare-vapeur ou tout autre dispositif
+  // permettant d'atteindre un résultat équivalent ». Absent du BAR-EN-102
+  // (murs), et SANS astérisque : attendu, pas bloquant.
+  isolation_pare_vapeur: z
+    .enum(Object.keys(OUI_NON) as [keyof typeof OUI_NON])
+    .optional(),
 
   // --- Travaux : pompe à chaleur air/eau (requis si geste = pac_air_eau) ---
   pac_etas: nombreOptionnel,
@@ -319,9 +346,66 @@ export const ceeIsolationSchema = z.object({
   pac_temperature: z.enum(["basse", "moyenne_haute"]).optional(),
   pac_marque: z.string().optional().default(""),
   pac_reference: z.string().optional().default(""),
+  // « *La PAC est équipée d'un régulateur : OUI / NON », puis « *Classe du
+  // régulateur ». Les deux à astérisque : la classe seule ne suffit pas, et la
+  // déduire d'une case remplie reviendrait à répondre à la place de l'artisan.
+  pac_regulateur: z
+    .enum(Object.keys(OUI_NON) as [keyof typeof OUI_NON])
+    .optional(),
   pac_regulateur_classe: z.string().optional().default(""),
+  /**
+   * « *[…] le système déporté consomme de l'énergie pour la production de l'eau
+   * chaude sanitaire, hors systèmes déportés intégrant une résistance électrique
+   * à des fins de secours ou de cycle anti-légionelle […] ». À astérisque, mais
+   * sans objet quand il n'y a pas de système déporté.
+   */
+  pac_deporte_consomme_energie: z
+    .enum(Object.keys(OUI_NON) as [keyof typeof OUI_NON])
+    .optional(),
+  /**
+   * « *Une note de dimensionnement a été remise au bénéficiaire : OUI / NON ».
+   * Distinct de la pièce « note de dimensionnement » de la checklist : celle-ci
+   * suit le document que Dossimo détient, celle-là déclare sa remise au client.
+   */
+  pac_note_dimensionnement: z
+    .enum(Object.keys(OUI_NON) as [keyof typeof OUI_NON])
+    .optional(),
+  // Exigés au cadre A de l'AH par l'annexe 1 de la fiche BAR-TH-171 (vA78.4),
+  // qui en définit le contenu champ par champ. Leur absence laissait l'artisan
+  // devant des cases à remplir de tête au moment de signer (CHANGELOG-cerfa.md).
+  pac_surface_chauffee_m2: nombreOptionnel,
+  pac_usage: z
+    .enum(Object.keys(USAGES_PAC) as [keyof typeof USAGES_PAC])
+    .optional(),
+  pac_systeme_deporte: z
+    .enum(Object.keys(OUI_NON) as [keyof typeof OUI_NON])
+    .optional(),
+  pac_deporte_marque: z.string().optional().default(""),
+  pac_deporte_reference: z.string().optional().default(""),
+  /**
+   * Identifiant du modèle de PAC au sens de l'article 2 du règlement (UE)
+   * 2017/1369 — celui de la base EPREL. Le cadre A le marque d'un astérisque
+   * DEPUIS la vA78.4, soit le 01/01/2026 : c'est une obligation en vigueur, pas
+   * à venir. Le mot « EPREL » n'apparaît jamais dans les textes officiels, qui
+   * disent « le numéro du modèle » (vA78.4) puis « la référence du modèle »
+   * (vA82.5) — même donnée, deux formulations.
+   */
+  pac_reference_modele: z.string().optional().default(""),
+  /**
+   * Numéro d'agrément du modèle, exigé au cadre A de la vA82.5 (01/09/2026)
+   * pour les seules PAC bénéficiant de la bonification du 1° du IV de
+   * l'article 3-6 de l'arrêté du 29 décembre 2014 modifié. Facultatif : il ne
+   * concerne qu'une partie des dossiers, et pas avant septembre.
+   */
+  pac_numero_agrement: z.string().optional().default(""),
 
   // --- Travaux : chauffe-eau thermodynamique (requis si geste = cet) ---
+  // Critère d'éligibilité depuis la vA78-4 (01/01/2026) : l'efficacité
+  // énergétique ECS au profil déclaré, pas le COP. Cf. CHANGELOG-cerfa.md.
+  cet_efficacite_ecs: nombreOptionnel,
+  // Le COP n'est plus un critère et ne figure plus au cadre A. Conservé en
+  // facultatif : il reste écrit sur beaucoup de devis, et le supprimer ferait
+  // perdre la comparaison devis / saisie sur les dossiers qui le portent.
   cet_cop: nombreOptionnel,
   cet_profil_soutirage: z.enum(["M", "L", "XL"]).optional(),
   cet_volume_l: nombreOptionnel,
@@ -348,6 +432,16 @@ export const ceeIsolationSchema = z.object({
   /** Classe d'efficacité du ballon (UE 812/2013) — exigée si volume <= 500 L. */
   solaire_classe_ballon: z.string().optional().default(""),
   solaire_certification: z.enum(["cstbat", "solar_keymark", "equivalence"]).optional(),
+  // Deux cases à astérisque du cadre A du BAR-TH-101, sans équivalent ailleurs
+  // dans la saisie : la couverture totale du besoin ECS, et le fait que les
+  // capteurs ne soient pas hybrides (un capteur hybride PV/thermique ne relève
+  // pas de cette fiche).
+  solaire_couvre_totalite_ecs: z
+    .enum(Object.keys(OUI_NON) as [keyof typeof OUI_NON])
+    .optional(),
+  solaire_capteurs_non_hybrides: z
+    .enum(Object.keys(OUI_NON) as [keyof typeof OUI_NON])
+    .optional(),
   solaire_marque: z.string().optional().default(""),
   solaire_reference: z.string().optional().default(""),
 
@@ -361,6 +455,9 @@ export const ceeIsolationSchema = z.object({
   date_debut_travaux: dateISOOptionnelle,
   date_fin_travaux: dateISOOptionnelle,
   date_facture: dateISOOptionnelle,
+  // Référence de la facture. Portée au cadre A de l'AH (annexe 1 BAR-TH-171),
+  // sans astérisque : attendue mais pas bloquante, d'où l'absence de `requisSi`.
+  facture_reference: z.string().optional().default(""),
 
   // --- Montants ---
   montant_ht: nombrePositif("Montant HT invalide"),
@@ -369,6 +466,21 @@ export const ceeIsolationSchema = z.object({
   // Aides publiques perçues hors CEE (ex. MaPrimeRénov') — obligatoire sur l'AH
   // depuis la 6e période (01/04/2026). Laisser vide = aucune aide.
   montant_aides_publiques: nombreOptionnel,
+
+  // --- Sous-traitance ---
+  // Les SIX cadres A portent, à astérisque : « Identité du professionnel
+  // titulaire du signe de qualité ayant réalisé l'opération, s'il n'est pas le
+  // signataire de cette attestation (sous-traitant par exemple) ». Question
+  // posée quel que soit le geste, et jamais préremplie : une sous-traitance non
+  // déclarée est un motif de refus, et supposer « non » serait deviner à la
+  // place de l'artisan (revue du 2026-07-25, CHANGELOG-cerfa.md).
+  sous_traitance: z
+    .enum(Object.keys(OUI_NON) as [keyof typeof OUI_NON])
+    .optional(),
+  sous_traitant_nom: z.string().optional().default(""),
+  sous_traitant_prenom: z.string().optional().default(""),
+  sous_traitant_raison_sociale: z.string().optional().default(""),
+  sous_traitant_siret: z.string().optional().default(""),
 
   // Parrainage artisan → artisan : code du parrain saisi au 1er dossier
   // (−30 € de remise). Facultatif ; validé côté serveur (apply_referral_code).
@@ -384,8 +496,35 @@ export const ceeIsolationSchema = z.object({
     requisSi("pac_puissance_kw", v.pac_puissance_kw, "Puissance requise (kW)");
     requisSi("pac_temperature", v.pac_temperature);
     requisSi("pac_marque", v.pac_marque);
+    // Les trois champs marqués d'un astérisque à l'annexe 1 : sans eux, l'AH de
+    // l'obligé ne peut pas être remplie.
+    requisSi(
+      "pac_surface_chauffee_m2",
+      v.pac_surface_chauffee_m2,
+      "Surface chauffée par la PAC requise (m²)",
+    );
+    requisSi("pac_usage", v.pac_usage);
+    requisSi("pac_systeme_deporte", v.pac_systeme_deporte);
+    requisSi(
+      "pac_reference_modele",
+      v.pac_reference_modele,
+      "Référence du modèle (base EPREL) requise",
+    );
+    requisSi("pac_regulateur", v.pac_regulateur);
+    if (v.pac_regulateur === "oui") {
+      requisSi("pac_regulateur_classe", v.pac_regulateur_classe);
+    }
+    requisSi("pac_note_dimensionnement", v.pac_note_dimensionnement);
+    if (v.pac_systeme_deporte === "oui") {
+      requisSi("pac_deporte_marque", v.pac_deporte_marque);
+      requisSi("pac_deporte_consomme_energie", v.pac_deporte_consomme_energie);
+    }
   } else if (v.geste === "cet") {
-    requisSi("cet_cop", v.cet_cop, "COP requis");
+    requisSi(
+      "cet_efficacite_ecs",
+      v.cet_efficacite_ecs,
+      "Efficacité énergétique ECS requise (%)",
+    );
     requisSi("cet_profil_soutirage", v.cet_profil_soutirage);
     requisSi("cet_volume_l", v.cet_volume_l, "Volume requis (L)");
     requisSi("cet_marque", v.cet_marque);
@@ -406,6 +545,9 @@ export const ceeIsolationSchema = z.object({
     requisSi("solaire_nb_ballons", v.solaire_nb_ballons, "Nombre de ballons requis");
     requisSi("solaire_volume_ballon_l", v.solaire_volume_ballon_l, "Volume requis (L)");
     requisSi("solaire_certification", v.solaire_certification);
+    // Les deux cases à astérisque du cadre A.
+    requisSi("solaire_couvre_totalite_ecs", v.solaire_couvre_totalite_ecs);
+    requisSi("solaire_capteurs_non_hybrides", v.solaire_capteurs_non_hybrides);
     requisSi("solaire_marque", v.solaire_marque);
     // Classe d'efficacité : exigée par la fiche pour les ballons <= 500 L
     // seulement. Au-dessus, la fiche ne la demande pas : ne pas la réclamer.
@@ -424,6 +566,30 @@ export const ceeIsolationSchema = z.object({
     requisSi("surface_isolee_m2", v.surface_isolee_m2, "Surface requise");
     requisSi("isolant_type", v.isolant_type);
     requisSi("resistance_thermique_r", v.resistance_thermique_r, "Résistance R requise");
+  }
+
+  // Sous-traitance : hors des branches par geste, les six fiches la demandent.
+  requisSi("sous_traitance", v.sous_traitance);
+  if (v.sous_traitance === "oui") {
+    requisSi("sous_traitant_nom", v.sous_traitant_nom);
+    requisSi("sous_traitant_prenom", v.sous_traitant_prenom);
+    requisSi("sous_traitant_raison_sociale", v.sous_traitant_raison_sociale);
+    if (!/^\d{14}$/.test(v.sous_traitant_siret ?? "")) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["sous_traitant_siret"],
+        message: "Le SIRET doit comporter 14 chiffres",
+      });
+    } else if (v.sous_traitant_siret === v.siret) {
+      // Un sous-traitant qui porte le SIRET du signataire n'en est pas un : ce
+      // cadre n'existe QUE pour le cas « ce n'est pas le signataire ».
+      ctx.addIssue({
+        code: "custom",
+        path: ["sous_traitant_siret"],
+        message:
+          "Ce SIRET est celui de votre entreprise. Le cadre ne se remplit que si les travaux ont été réalisés par une AUTRE entreprise.",
+      });
+    }
   }
 });
 
@@ -464,12 +630,24 @@ export const ceeIsolationDefaults: CeeIsolationInput = {
   isolant_reference: "",
   resistance_thermique_r: "",
   epaisseur_mm: "",
+  isolation_pare_vapeur: undefined as unknown as keyof typeof OUI_NON,
   pac_etas: "",
   pac_puissance_kw: "",
   pac_temperature: undefined as unknown as "basse" | "moyenne_haute",
   pac_marque: "",
   pac_reference: "",
+  pac_regulateur: undefined as unknown as keyof typeof OUI_NON,
   pac_regulateur_classe: "",
+  pac_deporte_consomme_energie: undefined as unknown as keyof typeof OUI_NON,
+  pac_note_dimensionnement: undefined as unknown as keyof typeof OUI_NON,
+  pac_surface_chauffee_m2: "",
+  pac_usage: undefined as unknown as keyof typeof USAGES_PAC,
+  pac_systeme_deporte: undefined as unknown as keyof typeof OUI_NON,
+  pac_deporte_marque: "",
+  pac_deporte_reference: "",
+  pac_reference_modele: "",
+  pac_numero_agrement: "",
+  cet_efficacite_ecs: "",
   cet_cop: "",
   cet_profil_soutirage: undefined as unknown as "M" | "L" | "XL",
   cet_volume_l: "",
@@ -492,6 +670,8 @@ export const ceeIsolationDefaults: CeeIsolationInput = {
     | "cstbat"
     | "solar_keymark"
     | "equivalence",
+  solaire_couvre_totalite_ecs: undefined as unknown as keyof typeof OUI_NON,
+  solaire_capteurs_non_hybrides: undefined as unknown as keyof typeof OUI_NON,
   solaire_marque: "",
   solaire_reference: "",
   date_offre_cee: "",
@@ -500,9 +680,15 @@ export const ceeIsolationDefaults: CeeIsolationInput = {
   date_debut_travaux: "",
   date_fin_travaux: "",
   date_facture: "",
+  facture_reference: "",
   montant_ht: "" as unknown as number,
   montant_ttc: "" as unknown as number,
   montant_prime_estime: "",
   montant_aides_publiques: "",
+  sous_traitance: undefined as unknown as keyof typeof OUI_NON,
+  sous_traitant_nom: "",
+  sous_traitant_prenom: "",
+  sous_traitant_raison_sociale: "",
+  sous_traitant_siret: "",
   code_parrain: "",
 };

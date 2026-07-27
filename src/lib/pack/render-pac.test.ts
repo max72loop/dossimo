@@ -4,7 +4,7 @@ import {
   renderRecapPdf,
   renderChecklistPdf,
   renderControlePdf,
-  renderAhCeePdf,
+  renderPreparationAhPdf,
 } from "@/lib/pack/render";
 import type { DossierComplet } from "@/lib/dossier/get-dossier";
 import type { RegleMetierResolue } from "@/lib/rules/regles-metier";
@@ -77,7 +77,7 @@ describe("rendu du pack — geste PAC air/eau (Phase 1b)", () => {
   });
 
   it("attestation sur l'honneur CEE : PDF non vide", async () => {
-    const buf = await renderAhCeePdf(dossierPac(), {
+    const buf = await renderPreparationAhPdf(dossierPac(), {
       titre: "Attestation sur l'honneur — CEE PAC air/eau",
       arrete: "annexe 7-1",
       version: "2026-04 (P6)",
@@ -116,7 +116,7 @@ describe("rendu du pack — geste chauffe-eau thermodynamique (BAR-TH-148)", () 
     expect((await renderControlePdf(dossierCet())).length).toBeGreaterThan(1000);
   });
   it("attestation sur l'honneur CEE : PDF non vide", async () => {
-    const buf = await renderAhCeePdf(dossierCet(), {
+    const buf = await renderPreparationAhPdf(dossierCet(), {
       titre: "Attestation sur l'honneur — CEE CET",
       arrete: "annexe 7-1",
       version: "2026-04 (P6)",
@@ -155,7 +155,7 @@ describe("rendu du pack — geste appareil de chauffage au bois (BAR-TH-112)", (
     expect((await renderControlePdf(dossierBois())).length).toBeGreaterThan(1000);
   });
   it("attestation sur l'honneur CEE : PDF non vide", async () => {
-    const buf = await renderAhCeePdf(dossierBois(), {
+    const buf = await renderPreparationAhPdf(dossierBois(), {
       titre: "Attestation sur l'honneur — CEE bois",
       arrete: "annexe 7-1",
       version: "2026-04 (P6)",
@@ -206,7 +206,7 @@ describe("rendu du pack — chauffe-eau solaire individuel (BAR-TH-101)", () => 
     expect((await renderControlePdf(dossierSolaire())).length).toBeGreaterThan(1000);
   });
   it("attestation sur l'honneur CEE : PDF non vide", async () => {
-    const buf = await renderAhCeePdf(dossierSolaire(), {
+    const buf = await renderPreparationAhPdf(dossierSolaire(), {
       titre: "Attestation sur l'honneur — CEE chauffe-eau solaire individuel",
       arrete: "annexe 7-1",
       version: "2026-04 (P6)",

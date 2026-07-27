@@ -9,14 +9,22 @@ import { dateFr, euro } from "@/lib/pack/format";
 import { COLORS, styles } from "@/lib/pack/pdf-theme";
 import { DISCLAIMER_DOSSIMO } from "@/lib/legal/mentions";
 
-const DISCLAIMER = `${DISCLAIMER_DOSSIMO} Reproduction fidèle du modèle réglementaire, à faire signer avant dépôt.`;
+const DISCLAIMER = `${DISCLAIMER_DOSSIMO} Document de préparation : ce n'est pas une attestation sur l'honneur, ne le signez pas et ne le déposez pas.`;
 
 /**
- * Reproduction fidèle du modèle réglementaire de l'attestation sur l'honneur CEE
- * (fiches BAR-EN), pré-remplie depuis la saisie unique. Ce N'EST PAS un placeholder :
- * la structure (cadres A/B/C, engagement, signatures) et les mentions reprennent le
- * modèle officiel en vigueur. La date et la signature restent manuscrites (exigence
- * réglementaire : signature originale, aucune rature ni blanc correcteur).
+ * FICHE DE PRÉPARATION de l'attestation sur l'honneur CEE — pas une AH.
+ *
+ * Dossimo ne reproduit PAS l'AH, et c'est une contrainte de droit, pas un choix
+ * de prudence. Annexe 7 de l'arrêté du 4 septembre 2014 modifié : « aucune
+ * modification du contenu et de l'organisation de l'attestation sur l'honneur
+ * n'est autorisée », hors les éléments que le demandeur (l'obligé) dactylographie
+ * lui-même — sa raison sociale, son SIREN, sa mention CNIL. L'AH vierge naît donc
+ * chez l'obligé et nulle part ailleurs (revue du 2026-07-25, CHANGELOG-cerfa.md).
+ *
+ * Ce document rassemble les valeurs issues de la saisie unique pour que l'artisan
+ * les reporte sur l'AH de son obligé sans se contredire d'une pièce à l'autre.
+ * D'où l'absence délibérée de cadres A/B/C, d'engagement sur l'honneur et de
+ * zones de signature : leur présence rendrait la confusion possible.
  */
 
 const s = StyleSheet.create({
@@ -71,16 +79,6 @@ const s = StyleSheet.create({
   engage: { flexDirection: "row", gap: 6, marginBottom: 5 },
   engageNum: { fontFamily: "Helvetica-Bold", color: COLORS.tampon, width: 14, fontSize: 9 },
   engageText: { flex: 1, fontSize: 9, lineHeight: 1.4 },
-  sigRow: { flexDirection: "row", gap: 16, marginTop: 6 },
-  sigCol: { flex: 1 },
-  sigWho: { fontSize: 8.5, fontFamily: "Helvetica-Bold", marginBottom: 3 },
-  sigMeta: { fontSize: 8.5, color: COLORS.muted, marginBottom: 4 },
-  sigBox: {
-    borderWidth: 1,
-    borderColor: COLORS.line,
-    borderRadius: 3,
-    height: 66,
-  },
   note: { fontSize: 7.5, color: COLORS.warn, marginTop: 8 },
 });
 
@@ -93,7 +91,7 @@ function Field({ label, value }: { label: string; value: string }) {
   );
 }
 
-function Cadre({ title, children }: { title: string; children: React.ReactNode }) {
+function Bloc({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <View style={s.cadre} wrap={false}>
       <Text style={s.cadreTitle}>{title}</Text>
@@ -121,7 +119,7 @@ export interface AhRef {
   ficheRef?: string;
 }
 
-export function AttestationHonneurDocument({
+export function PreparationAhDocument({
   data,
   template,
 }: {
@@ -156,25 +154,30 @@ export function AttestationHonneurDocument({
             {/* @react-pdf/renderer n'expose pas d'équivalent typé de `alt`. */}
             {/* eslint-disable-next-line jsx-a11y/alt-text */}
             <Image src={logoNuit()} style={styles.logo} />
-            <Text style={styles.eyebrow}>Reproduction du modèle réglementaire</Text>
-            <Text style={styles.bandTitle}>Attestation sur l&apos;honneur</Text>
+            <Text style={styles.eyebrow}>Document de travail Dossimo</Text>
+            <Text style={styles.bandTitle}>Préparer votre attestation sur l&apos;honneur</Text>
             <Text style={styles.bandSubtitle}>CEE · {templateRef.ficheRef ?? c.fiche}</Text>
           </View>
           <View style={styles.bandRight}>
-            <Text style={styles.bandRef}>À imprimer et signer</Text>
-            <Text style={styles.bandRefSub}>modèle {templateRef.version}</Text>
+            <Text style={styles.bandRef}>Ne pas signer</Text>
+            <Text style={styles.bandRefSub}>ne pas déposer</Text>
           </View>
         </View>
         <View style={styles.accentLine} />
 
         <Text style={s.intro}>
-          Reproduction fidèle du modèle réglementaire en vigueur ({templateRef.arrete}). Les
-          valeurs sont reprises de la saisie unique du dossier — cohérentes avec le devis,
-          la facture et le reste du pack. À imprimer, puis <Text style={{ fontFamily: "Helvetica-Bold" }}>dater
-          et signer de façon manuscrite</Text> par le bénéficiaire ET le professionnel.
+          <Text style={{ fontFamily: "Helvetica-Bold" }}>
+            Ceci n&apos;est pas une attestation sur l&apos;honneur.
+          </Text>{" "}
+          L&apos;AH ne peut être émise que par votre obligé : {templateRef.arrete} lui
+          réserve la partie « demandeur » (raison sociale, SIREN, mention CNIL) et
+          interdit toute modification du contenu et de l&apos;organisation du modèle.
+          Demandez-lui la sienne. Cette fiche rassemble les valeurs exactes à y
+          reporter, telles qu&apos;elles figurent sur le devis, la facture et le reste
+          du pack : c&apos;est ce qui vous évite l&apos;incohérence entre pièces.
         </Text>
 
-        <Cadre title="Cadre A — Nature et caractéristiques de l'opération">
+        <Bloc title="Opération et logement">
           <Field label="Opération standardisée" value={`${c.fiche} — ${poste}`} />
           <Field label="Adresse des travaux" value={b.adresse} />
           <Field label="Code postal / commune" value={`${b.code_postal} ${b.commune}`} />
@@ -188,24 +191,41 @@ export function AttestationHonneurDocument({
           {lignes.map((l) => (
             <Field key={l.label} label={l.label} value={l.value} />
           ))}
-        </Cadre>
+        </Bloc>
 
-        <Cadre title="Cadre B — Bénéficiaire">
+        <Bloc title="Bénéficiaire">
           <Field label="Nom et prénom (ou raison sociale)" value={`${b.prenom} ${b.nom}`} />
           <Field label="Adresse des travaux" value={`${b.adresse}, ${b.code_postal} ${b.commune}`} />
           <Field label="Téléphone" value={b.telephone ?? "—"} />
           <Field label="Courriel" value={b.email ?? "—"} />
-        </Cadre>
+        </Bloc>
 
-        <Cadre title="Cadre C — Professionnel ayant réalisé les travaux">
+        <Bloc title="Professionnel ayant réalisé les travaux">
           <Field label="Raison sociale" value={data.artisan?.entreprise ?? "—"} />
           <Field label="N° SIRET" value={data.artisan?.siret ?? "—"} />
           <Field label="Qualification RGE (n° et domaine)" value={`${c.rge.numero} — ${c.rge.domaine}`} />
           <Field label="RGE valable jusqu'au" value={dateFr(c.rge.date_fin)} />
-        </Cadre>
+        </Bloc>
+
+        {/* Cadre A des six fiches. Bloc rendu seulement si une sous-traitance a
+            été déclarée : l'afficher vide sur les autres dossiers ferait croire
+            à une information manquante. */}
+        {c.sous_traitant && (
+          <Bloc title="Sous-traitant titulaire du signe de qualité">
+            <Text style={{ fontSize: 8.5, color: COLORS.muted, marginBottom: 6 }}>
+              À reporter au cadre A : le professionnel titulaire du signe de
+              qualité ayant réalisé l&apos;opération, puisqu&apos;il n&apos;est pas
+              le signataire de l&apos;attestation.
+            </Text>
+            <Field label="Nom" value={c.sous_traitant.nom} />
+            <Field label="Prénom" value={c.sous_traitant.prenom} />
+            <Field label="Raison sociale" value={c.sous_traitant.raison_sociale} />
+            <Field label="N° SIRET" value={c.sous_traitant.siret} />
+          </Bloc>
+        )}
 
         {templateRef.variant === "p6" && (
-          <Cadre title="Cadre — Coût de l'opération et aides (6e période)">
+          <Bloc title="Coût de l'opération et aides publiques">
             <Field label="Coût de l'opération (TTC, pose incluse)" value={euro(c.montants.ttc)} />
             {c.montants.aides_publiques_hors_cee == null ? (
               <View style={s.field}>
@@ -230,25 +250,19 @@ export function AttestationHonneurDocument({
               incitation CEE). Renseignez les aides éventuelles (ex. MaPrimeRénov&apos;)
               avant signature.
             </Text>
-          </Cadre>
+          </Bloc>
         )}
 
-        <Cadre title="Engagement sur l'honneur">
-          <Text style={{ fontSize: 9, marginBottom: 6 }}>
-            Le bénéficiaire et le professionnel soussignés attestent sur l&apos;honneur que :
-          </Text>
+        {/* Pas d'engagement sur l'honneur ni de zone de signature : ce document
+            n'est pas l'AH, et lui en donner l'apparence serait le piège même que
+            la requalification cherche à supprimer. À la place, la marche à suivre. */}
+        <Bloc title="Ce qu'il vous reste à faire">
           {[
-            `Les travaux décrits ci-dessus ont été réalisés à l'adresse indiquée et correspondent à l'opération standardisée ${c.fiche}.`,
-            `Les caractéristiques techniques mentionnées (${caractEngagement}) sont exactes et identiques à celles portées sur le devis et sur la facture.`,
-            "Le professionnel disposait, à la date d'engagement de l'opération (acceptation du devis), d'une qualification RGE en cours de validité couvrant le domaine des travaux réalisés.",
-            "Les matériaux éligibles ont été fournis, installés et facturés par l'entreprise mentionnée au cadre C, ou par son sous-traitant déclaré.",
-            "Aucune autre demande de certificats d'économies d'énergie n'a été sollicitée pour cette même opération.",
-            ...(templateRef.variant === "p6"
-              ? [
-                  "Les travaux ont été effectivement réalisés et l'installation mise en service ; le bénéficiaire et le professionnel attestent de cette mise en service.",
-                ]
-              : []),
-            "Les informations portées sur la présente attestation sont exactes ; toute fausse déclaration expose son auteur aux sanctions prévues par la loi.",
+            "Demandez à votre obligé (le financeur qui verse la prime) son attestation sur l'honneur pour cette opération. Lui seul peut l'émettre : elle porte sa raison sociale, son SIREN et sa mention CNIL.",
+            "Reportez-y les valeurs ci-dessus à l'identique. Elles sont déjà cohérentes avec le devis, la facture et le reste du pack.",
+            `Vérifiez en particulier les caractéristiques techniques (${caractEngagement}) : un écart entre l'attestation, le devis et la facture est un motif de refus classique.`,
+            "Si l'AH de votre obligé est un PDF à champs, téléversez-la dans Dossimo : le report se fait automatiquement.",
+            "Faites dater et signer l'AH de façon manuscrite par le bénéficiaire ET par vous. Signature originale, aucune rature, surcharge ni blanc correcteur.",
           ].map((txt, i) => (
             <View style={s.engage} key={i}>
               <Text style={s.engageNum}>{i + 1}.</Text>
@@ -256,26 +270,11 @@ export function AttestationHonneurDocument({
             </View>
           ))}
 
-          <View style={s.sigRow}>
-            <View style={s.sigCol}>
-              <Text style={s.sigWho}>Le bénéficiaire</Text>
-              <Text style={s.sigMeta}>Fait à {b.commune}, le ____________</Text>
-              <Text style={s.sigMeta}>Signature (« Lu et approuvé ») :</Text>
-              <View style={s.sigBox} />
-            </View>
-            <View style={s.sigCol}>
-              <Text style={s.sigWho}>Le professionnel</Text>
-              <Text style={s.sigMeta}>Fait à ____________, le ____________</Text>
-              <Text style={s.sigMeta}>Signature et cachet :</Text>
-              <View style={s.sigBox} />
-            </View>
-          </View>
-
           <Text style={s.note}>
-            La date et la signature doivent être renseignées de façon manuscrite (signature
-            originale). Aucune rature, surcharge ni blanc correcteur : le dossier serait refusé.
+            Ne signez pas et ne déposez pas la présente fiche : elle n&apos;a aucune
+            valeur d&apos;attestation. Seule l&apos;AH de votre obligé est recevable.
           </Text>
-        </Cadre>
+        </Bloc>
 
         <Text
           style={styles.footer}

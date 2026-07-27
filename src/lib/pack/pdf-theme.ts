@@ -68,11 +68,12 @@ export const styles = StyleSheet.create({
     backgroundColor: COLORS.accent,
     marginBottom: 20,
   },
-  // 78 × 16 est le rapport d'aspect EXACT de la signature (998,29 / 204,59 ≈ 4,88).
-  // La refonte du 2026-07-25 l'a fait passer de 2,96 à 4,88 : la boîte précédente
-  // (82 × 27) laissait `objectFit` recentrer le logo dans un cadre trop haut, donc
-  // un blanc de 10 pt sous le logo dans tous les bandeaux.
-  logo: { width: 78, height: 16, objectFit: "contain", alignSelf: "flex-start", marginBottom: 12 },
+  // 94 × 16 suit le rapport d'aspect de la signature (1206,12 / 204,59 ≈ 5,90).
+  // Ce rapport fait partie du logo : le cadre le suit, sinon `objectFit` recentre
+  // le logo dans une boîte trop haute et laisse un blanc sous le bandeau.
+  // `mark.test.ts` compare ce cadre au tracé, précisément parce que l'oubli ne se
+  // voit qu'à l'impression.
+  logo: { width: 94, height: 16, objectFit: "contain", alignSelf: "flex-start", marginBottom: 12 },
   eyebrow: {
     fontSize: 8,
     fontFamily: "Helvetica-Bold",

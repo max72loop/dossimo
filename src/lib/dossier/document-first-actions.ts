@@ -198,6 +198,7 @@ export async function analyserDevisInitial(formData: FormData): Promise<AnalyseD
     pac_marque: d.pac_marque ?? undefined,
     pac_reference: d.pac_reference ?? undefined,
     pac_regulateur_classe: d.pac_regulateur_classe ?? undefined,
+    cet_efficacite_ecs: d.cet_efficacite_ecs ?? undefined,
     cet_cop: d.cet_cop ?? undefined,
     cet_volume_l: d.cet_volume_l ?? undefined,
     cet_profil_soutirage: profilSoutirage(d.cet_profil_soutirage),

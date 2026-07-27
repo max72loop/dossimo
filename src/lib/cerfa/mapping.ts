@@ -21,7 +21,7 @@ export function mapDossierToAhCee(data: DossierComplet): CerfaValues {
   // Les champs `travaux_*` de l'AH à champs (AH_CEE_FIELDS) décrivent une
   // isolation : surface, résistance R, isolant, épaisseur. Les gestes PAC / CET /
   // bois n'ont pas de bloc `travaux` et résolvent leurs propres modèles (fiches
-  // BAR-TH), rendus par reproduction. On laisse donc ces champs vides plutôt que
+  // BAR-TH), rendus en fiche de préparation. On laisse donc ces champs vides plutôt que
   // d'y écrire des valeurs d'un autre geste : une AH fausse fabriquerait le motif
   // de refus que Dossimo prétend éviter (CLAUDE.md §8).
   const t = c.travaux;
