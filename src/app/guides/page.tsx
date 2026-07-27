@@ -5,7 +5,7 @@ import { SiteFooter } from "@/components/landing/site-footer";
 import { SiteHeader } from "@/components/landing/site-header";
 import { getGesteGuides } from "@/lib/seo/gestes-loader";
 import { formatGuideDate, guideList, guidesByCategory } from "@/lib/seo/guides";
-import { publicMetadata, SITE_URL } from "@/lib/seo/site";
+import { ORGANIZATION_ID, publicMetadata, serializeJsonLd, SITE_URL } from "@/lib/seo/site";
 
 const TITLE = "Guides MaPrimeRénov' & CEE pour artisans RGE";
 const DESCRIPTION =
@@ -45,6 +45,7 @@ export default async function GuidesHubPage() {
       url: hubUrl,
       inLanguage: "fr-FR",
       isPartOf: { "@type": "WebSite", name: "Dossimo", url: SITE_URL },
+      publisher: { "@id": ORGANIZATION_ID },
       mainEntity: {
         "@type": "ItemList",
         itemListElement: toutesLesPages.map((guide, index) => ({
@@ -67,7 +68,7 @@ export default async function GuidesHubPage() {
 
   return (
     <div className="flex min-h-full flex-col bg-papier">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }} />
       <SiteHeader />
       <main className="flex-1">
         <header className="border-b border-filigrane bg-blanc-casse">

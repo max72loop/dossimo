@@ -31,7 +31,13 @@ const pac = dossier({
 const cet = dossier({
   geste: "cet",
   fiche: "BAR-TH-148",
-  cet: { fiche: "BAR-TH-148", cop: 3.2, profil_soutirage: "L", volume_l: 200 },
+  cet: {
+    fiche: "BAR-TH-148",
+    efficacite_ecs: 130,
+    cop: 3.2,
+    profil_soutirage: "L",
+    volume_l: 200,
+  },
 });
 
 const bois = (emissions_co: number | null) =>
@@ -86,11 +92,23 @@ describe("mentionsTemplates", () => {
     expect(ms).toContain("Fiche CEE : BAR-TH-171");
   });
 
-  it("un dossier CET exige son COP, son volume et son profil de soutirage", () => {
+  it("un dossier CET exige son efficacité ECS, son volume et son profil", () => {
     const ms = mentionsTemplates(cet);
-    expect(ms).toContain("COP (norme EN 16147) : 3.2");
+    expect(ms).toContain(
+      "Efficacité énergétique pour le chauffage de l'eau (profil L) : 130 %",
+    );
     expect(ms).toContain("Volume du ballon : 200 L");
     expect(ms).toContain("Profil de soutirage : L");
+  });
+
+  /**
+   * Le BAR-TH-148 vA78-4 ne demande plus le COP : l'exiger sur le devis ferait
+   * signaler comme incomplète une pièce parfaitement conforme.
+   */
+  it("n'exige plus le COP sur le devis d'un CET", () => {
+    expect(
+      mentionsTemplates(cet).some((m) => m.toUpperCase().includes("COP")),
+    ).toBe(false);
   });
 
   it("un dossier bois exige son rendement et son combustible", () => {

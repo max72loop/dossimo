@@ -4,7 +4,13 @@ import Link from "next/link";
 import { SiteFooter } from "@/components/landing/site-footer";
 import { SiteHeader } from "@/components/landing/site-header";
 import { formatGuideDate, guideList, type SeoGuide } from "@/lib/seo/guides";
-import { SITE_URL } from "@/lib/seo/site";
+import {
+  EDITORIAL_ORGANIZATION_URL,
+  ORGANIZATION_ID,
+  PUBLISHING_PRINCIPLES_URL,
+  serializeJsonLd,
+  SITE_URL,
+} from "@/lib/seo/site";
 
 export function SeoGuidePage({ guide }: { guide: SeoGuide }) {
   const pageUrl = `${SITE_URL}/${guide.slug}`;
@@ -19,13 +25,21 @@ export function SeoGuidePage({ guide }: { guide: SeoGuide }) {
       datePublished: guide.updated,
       dateModified: guide.updated,
       inLanguage: "fr-FR",
-      author: { "@type": "Organization", name: "Dossimo", url: SITE_URL },
+      image: `${SITE_URL}/opengraph-image`,
+      author: {
+        "@type": "Organization",
+        "@id": ORGANIZATION_ID,
+        name: "Dossimo",
+        url: EDITORIAL_ORGANIZATION_URL,
+      },
       publisher: {
         "@type": "Organization",
+        "@id": ORGANIZATION_ID,
         name: "Dossimo",
         url: SITE_URL,
-        logo: { "@type": "ImageObject", url: `${SITE_URL}/icon.png` },
+        logo: { "@type": "ImageObject", url: `${SITE_URL}/icon2.png` },
       },
+      publishingPrinciples: PUBLISHING_PRINCIPLES_URL,
     },
     {
       "@context": "https://schema.org",
@@ -54,7 +68,7 @@ export function SeoGuidePage({ guide }: { guide: SeoGuide }) {
 
   return (
     <div className="flex min-h-full flex-col bg-papier">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }} />
       <SiteHeader />
       <main className="flex-1">
         <article>
@@ -74,7 +88,12 @@ export function SeoGuidePage({ guide }: { guide: SeoGuide }) {
                   <p className="mt-5 max-w-3xl text-lg leading-relaxed text-ardoise">{guide.intro}</p>
                   <div className="mt-7 flex flex-wrap gap-x-6 gap-y-2 text-sm text-encre-claire">
                     <span>Vérifié le {dateVerification}</span>
-                    <span>Relecture éditoriale : équipe Dossimo</span>
+                    <span>
+                      Relecture :{" "}
+                      <Link href="/methode-editoriale" className="underline underline-offset-4 hover:text-encre">
+                        équipe éditoriale Dossimo
+                      </Link>
+                    </span>
                   </div>
                 </div>
                 {guide.hero ? (

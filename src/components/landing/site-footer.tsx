@@ -36,6 +36,8 @@ export function SiteFooter() {
               <h3 className="label text-encre-claire">Ressources</h3>
               <ul className="mt-4 space-y-2.5 text-sm text-ardoise">
                 <li><Link href="/guides" className="transition-colors hover:text-encre">Tous les guides</Link></li>
+                <li><Link href="/a-propos" className="transition-colors hover:text-encre">À propos</Link></li>
+                <li><Link href="/methode-editoriale" className="transition-colors hover:text-encre">Méthode éditoriale</Link></li>
                 <li><Link href="/#faq" className="transition-colors hover:text-encre">Questions fréquentes</Link></li>
                 <li><Link href="/mentions-obligatoires-devis-rge" className="transition-colors hover:text-encre">Mentions devis RGE</Link></li>
                 <li><Link href="/eviter-refus-maprimerenov" className="transition-colors hover:text-encre">Éviter un refus</Link></li>

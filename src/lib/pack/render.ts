@@ -18,7 +18,7 @@ import type { FeuilleRoute } from "@/lib/dossier/feuille-route";
 import { controlerDossier } from "@/lib/rules/controle-dossier";
 import type { RapportControle } from "@/lib/rules/types";
 import {
-  AttestationHonneurDocument,
+  PreparationAhDocument,
   type AhRef,
 } from "@/lib/cerfa/ah-document";
 import type { PointVigilance } from "@/lib/llm/vigilance";
@@ -64,12 +64,12 @@ export function renderControlePdf(
   );
 }
 
-export function renderAhCeePdf(
+export function renderPreparationAhPdf(
   data: DossierComplet,
   ref: AhRef,
 ): Promise<Buffer> {
   return renderToBuffer(
-    createElement(AttestationHonneurDocument, {
+    createElement(PreparationAhDocument, {
       data,
       template: ref,
     }) as unknown as DocElement,

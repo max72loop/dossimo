@@ -14,6 +14,7 @@ import {
   FAMILLES,
   LOGEMENT_TYPES,
   OCCUPATIONS,
+  OUI_NON,
   PRECARITES,
   RESIDENCES,
   SOLAIRE_APPOINTS,
@@ -21,6 +22,7 @@ import {
   SOLAIRE_FLUIDES,
   SOLAIRE_SOUTIRAGE_PROFILS,
   TYPES_ISOLATION,
+  USAGES_PAC,
   ceeIsolationDefaults,
   ceeIsolationSchema,
   type CeeIsolationInput,
@@ -197,6 +199,11 @@ export function DossierCeeIsolationForm({
   const geste = useWatch({ control, name: "geste" });
   const estPac = geste === "pac_air_eau";
   const estCet = geste === "cet";
+  // Marque et référence du système déporté ne sont demandées que s'il existe.
+  const systemeDeporte = useWatch({ control, name: "pac_systeme_deporte" });
+  // L'identité du sous-traitant n'est réclamée que s'il y en a un.
+  const regulateurPac = useWatch({ control, name: "pac_regulateur" });
+  const sousTraitance = useWatch({ control, name: "sous_traitance" });
   const estBois = geste === "bois";
   const estSolaire = geste === "solaire_thermique";
 
@@ -446,6 +453,27 @@ export function DossierCeeIsolationForm({
             <TextField label="Prénom du signataire" required error={errors.signataire_prenom} register={register("signataire_prenom")} />
             <TextField label="Email" required type="email" error={errors.email} register={register("email")} />
             <TextField label="Téléphone" error={errors.telephone} register={register("telephone")} />
+            {/* Cadre A des six fiches : identité du titulaire du signe de
+                qualité ayant réalisé l'opération s'il n'est pas le signataire.
+                Jamais prérempli — une sous-traitance non déclarée fait refuser
+                le dossier, et supposer « non » reviendrait à répondre à la
+                place de l'artisan. */}
+            <SelectField
+              label="Les travaux ont-ils été réalisés par une autre entreprise ?"
+              required
+              options={OUI_NON}
+              hint="Sous-traitance. Le cadre A de l'attestation exige alors l'identité du sous-traitant."
+              error={errors.sous_traitance}
+              register={register("sous_traitance")}
+            />
+            {sousTraitance === "oui" && (
+              <>
+                <TextField label="Sous-traitant — nom" required error={errors.sous_traitant_nom} register={register("sous_traitant_nom")} />
+                <TextField label="Sous-traitant — prénom" required error={errors.sous_traitant_prenom} register={register("sous_traitant_prenom")} />
+                <TextField label="Sous-traitant — raison sociale" required error={errors.sous_traitant_raison_sociale} register={register("sous_traitant_raison_sociale")} />
+                <TextField label="Sous-traitant — SIRET" required placeholder="14 chiffres" inputMode="numeric" hint="C'est sa qualification RGE qui doit couvrir les travaux." error={errors.sous_traitant_siret} register={register("sous_traitant_siret")} />
+              </>
+            )}
             <TextField
               label="Code parrain (facultatif)"
               placeholder="Ex. AB12CD34"
@@ -499,7 +527,84 @@ export function DossierCeeIsolationForm({
             <TextField label="Puissance (kW)" required type="number" step="0.1" inputMode="decimal" error={errors.pac_puissance_kw} register={register("pac_puissance_kw")} />
             <TextField label="Marque" required error={errors.pac_marque} register={register("pac_marque")} />
             <TextField label="Référence / modèle" error={errors.pac_reference} register={register("pac_reference")} />
-            <TextField label="Classe du régulateur" placeholder="Ex. IV à VIII" hint="Un régulateur de classe IV à VIII est requis." error={errors.pac_regulateur_classe} register={register("pac_regulateur_classe")} />
+            {/* Deux cases distinctes au cadre A : la présence du régulateur,
+                puis sa classe. La classe ne se déduit pas de la présence. */}
+            <SelectField
+              label="La PAC est-elle équipée d'un régulateur ?"
+              required
+              options={OUI_NON}
+              error={errors.pac_regulateur}
+              register={register("pac_regulateur")}
+            />
+            {regulateurPac === "oui" && (
+              <TextField label="Classe du régulateur" required placeholder="Ex. IV à VIII" hint="Un régulateur de classe IV à VIII est requis." error={errors.pac_regulateur_classe} register={register("pac_regulateur_classe")} />
+            )}
+            <SelectField
+              label="Une note de dimensionnement a-t-elle été remise au bénéficiaire ?"
+              required
+              options={OUI_NON}
+              hint="Déclaration du cadre A, distincte du document à joindre au dossier."
+              error={errors.pac_note_dimensionnement}
+              register={register("pac_note_dimensionnement")}
+            />
+            {/* Cadre A de l'attestation sur l'honneur (annexe 1 de la fiche
+                BAR-TH-171 vA78.4) : ces cases sont à remplir sur l'AH de
+                l'obligé, autant les tenir depuis la saisie unique. */}
+            <TextField
+              label="Surface chauffée par la PAC (m²)"
+              required
+              type="number"
+              step="1"
+              inputMode="numeric"
+              hint="Surface habitable réellement chauffée par la PAC installée."
+              error={errors.pac_surface_chauffee_m2}
+              register={register("pac_surface_chauffee_m2")}
+            />
+            <SelectField
+              label="Usage couvert par la PAC"
+              required
+              options={USAGES_PAC}
+              error={errors.pac_usage}
+              register={register("pac_usage")}
+            />
+            {/* À astérisque au cadre A DEPUIS la vA78.4 (01/01/2026) : le texte
+                dit « le numéro du modèle au sens du règlement (UE) 2017/1369 »,
+                soit l'identifiant de la base EPREL. */}
+            <TextField
+              label="Référence du modèle (base EPREL)"
+              required
+              hint="Identifiant du modèle au registre européen EPREL, exigé sur l'attestation."
+              error={errors.pac_reference_modele}
+              register={register("pac_reference_modele")}
+            />
+            <TextField
+              label="N° d'agrément du modèle (PAC bonifiée)"
+              hint="Uniquement si la PAC bénéficie de la bonification. Exigé à compter du 01/09/2026."
+              error={errors.pac_numero_agrement}
+              register={register("pac_numero_agrement")}
+            />
+            <SelectField
+              label="Système déporté pour l'eau chaude sanitaire"
+              required
+              options={OUI_NON}
+              hint="La PAC est-elle associée à un système déporté qui produit l'eau chaude ?"
+              error={errors.pac_systeme_deporte}
+              register={register("pac_systeme_deporte")}
+            />
+            {systemeDeporte === "oui" && (
+              <>
+                <TextField label="Système déporté — marque" required error={errors.pac_deporte_marque} register={register("pac_deporte_marque")} />
+                <TextField label="Système déporté — référence" error={errors.pac_deporte_reference} register={register("pac_deporte_reference")} />
+                <SelectField
+                  label="Le système déporté consomme-t-il de l'énergie pour l'eau chaude ?"
+                  required
+                  options={OUI_NON}
+                  hint="Hors résistance électrique de secours ou de cycle anti-légionelle avec priorité à la PAC."
+                  error={errors.pac_deporte_consomme_energie}
+                  register={register("pac_deporte_consomme_energie")}
+                />
+              </>
+            )}
           </Section>
         )}
 
@@ -516,7 +621,19 @@ export function DossierCeeIsolationForm({
               error={errors.cet_profil_soutirage}
               register={register("cet_profil_soutirage")}
             />
-            <TextField label="COP" required type="number" step="0.01" inputMode="decimal" hint="Coefficient de performance (EN 16147). Minimum indicatif : ≥ 2,5." error={errors.cet_cop} register={register("cet_cop")} />
+            {/* Critère d'éligibilité du BAR-TH-148 depuis la vA78-4 : c'est
+                cette valeur, et non le COP, que porte le cadre A de l'AH. */}
+            <TextField
+              label="Efficacité énergétique ECS (%)"
+              required
+              type="number"
+              step="0.1"
+              inputMode="decimal"
+              hint="Pour le profil de soutirage déclaré. Minimum : 95 % en M, 100 % en L, 110 % en XL."
+              error={errors.cet_efficacite_ecs}
+              register={register("cet_efficacite_ecs")}
+            />
+            <TextField label="COP (facultatif)" type="number" step="0.01" inputMode="decimal" hint="Plus exigé par la fiche. À renseigner s'il figure sur le devis." error={errors.cet_cop} register={register("cet_cop")} />
             <TextField label="Volume du ballon (L)" required type="number" step="1" inputMode="numeric" error={errors.cet_volume_l} register={register("cet_volume_l")} />
             <TextField label="Marque" required error={errors.cet_marque} register={register("cet_marque")} />
             <TextField label="Référence / modèle" error={errors.cet_reference} register={register("cet_reference")} />
@@ -625,6 +742,22 @@ export function DossierCeeIsolationForm({
               error={errors.solaire_certification}
               register={register("solaire_certification")}
             />
+            {/* Deux cases à astérisque du cadre A du BAR-TH-101. */}
+            <SelectField
+              label="Le CESI couvre-t-il la totalité du besoin en eau chaude ?"
+              required
+              options={OUI_NON}
+              error={errors.solaire_couvre_totalite_ecs}
+              register={register("solaire_couvre_totalite_ecs")}
+            />
+            <SelectField
+              label="Les capteurs sont-ils non hybrides ?"
+              required
+              options={OUI_NON}
+              hint="Un capteur hybride (photovoltaïque et thermique) ne relève pas de cette fiche."
+              error={errors.solaire_capteurs_non_hybrides}
+              register={register("solaire_capteurs_non_hybrides")}
+            />
             <TextField label="Marque" required error={errors.solaire_marque} register={register("solaire_marque")} />
             <TextField label="Référence / modèle" error={errors.solaire_reference} register={register("solaire_reference")} />
           </Section>
@@ -651,6 +784,17 @@ export function DossierCeeIsolationForm({
             <TextField label="Marque de l'isolant" error={errors.isolant_marque} register={register("isolant_marque")} />
             <TextField label="Référence produit" error={errors.isolant_reference} register={register("isolant_reference")} />
             <TextField label="Épaisseur (mm)" type="number" inputMode="numeric" error={errors.epaisseur_mm} register={register("epaisseur_mm")} />
+            {/* Cadre A des BAR-EN-101 et 103 uniquement. Le BAR-EN-102 (murs)
+                ne pose pas la question : la masquer plutôt que la laisser vide. */}
+            {typeIsolation !== "murs" && (
+              <SelectField
+                label="Un pare-vapeur a-t-il été mis en place ?"
+                options={OUI_NON}
+                hint="Ou tout dispositif permettant d'atteindre un résultat équivalent."
+                error={errors.isolation_pare_vapeur}
+                register={register("isolation_pare_vapeur")}
+              />
+            )}
           </Section>
         )}
 
@@ -674,6 +818,8 @@ export function DossierCeeIsolationForm({
               <TextField label="Date de début des travaux" type="date" error={errors.date_debut_travaux} register={register("date_debut_travaux")} />
               <TextField label="Date de fin des travaux" type="date" error={errors.date_fin_travaux} register={register("date_fin_travaux")} />
               <TextField label="Date de la facture" type="date" error={errors.date_facture} register={register("date_facture")} />
+              {/* Portée au cadre A de l'AH, sans astérisque : attendue, pas bloquante. */}
+              <TextField label="Référence de la facture" placeholder="Ex. FA-2026-0142" hint="Reprise telle quelle sur l'attestation sur l'honneur." error={errors.facture_reference} register={register("facture_reference")} />
             </Section>
 
             <div className="mt-6">

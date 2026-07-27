@@ -25,7 +25,15 @@ import { FOCUS } from "@/components/ui/boutons";
 import { CTA_DEMO } from "@/lib/landing/copy";
 import { grillePublique } from "@/lib/landing/grille-publique";
 import { labelEuros, type GrilleAffichee } from "@/lib/pricing";
-import { publicMetadata, SITE_DESCRIPTION, SITE_TITLE, SITE_URL } from "@/lib/seo/site";
+import {
+  editorialOrganizationSchema,
+  ORGANIZATION_ID,
+  publicMetadata,
+  serializeJsonLd,
+  SITE_DESCRIPTION,
+  SITE_TITLE,
+  SITE_URL,
+} from "@/lib/seo/site";
 
 export const metadata: Metadata = publicMetadata({
   path: "/",
@@ -485,13 +493,16 @@ function JsonLd({ grille }: { grille: GrilleAffichee | null }) {
   const data = [
     {
       "@context": "https://schema.org",
-      "@type": "Organization",
+      ...editorialOrganizationSchema(),
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
       name: "Dossimo",
       url: SITE_URL,
-      logo: SITE_URL + "/icon.png",
-      description: "Service indépendant d’aide à la préparation et au contrôle de conformité de dossiers MaPrimeRénov’ et CEE, destiné aux artisans RGE.",
+      inLanguage: "fr-FR",
+      publisher: { "@id": ORGANIZATION_ID },
     },
-    { "@context": "https://schema.org", "@type": "WebSite", name: "Dossimo", url: SITE_URL, inLanguage: "fr-FR" },
     {
       "@context": "https://schema.org",
       "@type": "FAQPage",
@@ -501,7 +512,7 @@ function JsonLd({ grille }: { grille: GrilleAffichee | null }) {
       "@context": "https://schema.org",
       "@type": "Service",
       name: "Préparation et contrôle de dossier MaPrimeRénov’ / CEE",
-      provider: { "@type": "Organization", name: "Dossimo" },
+      provider: { "@id": ORGANIZATION_ID },
       areaServed: "FR",
       offers: grille.lignes.map((line) => ({
         "@type": "Offer",
@@ -514,5 +525,5 @@ function JsonLd({ grille }: { grille: GrilleAffichee | null }) {
       })),
     }] : []),
   ];
-  return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }} />;
+  return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(data) }} />;
 }

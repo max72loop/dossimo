@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { getDossier } from "@/lib/dossier/get-dossier";
 import { rapportComplet } from "@/lib/dossier/rapport";
 import { nbEcarts } from "@/lib/piece/compare";
-import { resolveCerfaTemplate } from "@/lib/cerfa/registry";
+import { resolveCerfaTemplate, revueValidee } from "@/lib/cerfa/registry";
 import { storedVigilance } from "@/lib/llm/vigilance";
 import { PointsVigilanceIA } from "@/components/dossier/points-vigilance-ia";
 import { PiecesJustificatives } from "@/components/dossier/pieces-justificatives";
@@ -180,6 +180,9 @@ export default async function DossierPage({
     c.fiche,
     dates.devis || dossier.created_at,
   );
+  // Ce que le modèle autorise à AFFIRMER : pas de badge « conforme » sans revue
+  // four-eyes signée (CHANGELOG-cerfa.md).
+  const cerfaRevu = cerfa.ok && revueValidee(cerfa.template);
 
   // Points de vigilance déjà générés (persistés) : affichage instantané.
   const vigilance = storedVigilance(data);
@@ -647,7 +650,11 @@ export default async function DossierPage({
       </SectionRepliable>
 
       <SectionRepliable
-        titre="Formulaire officiel"
+        titre={
+          cerfa.ok && cerfa.template.kind === "preparation"
+            ? "Attestation sur l'honneur"
+            : "Formulaire officiel"
+        }
         resume={
           cerfa.ok
             ? `${cerfa.template.titre} · version ${cerfa.template.version}`
@@ -664,6 +671,9 @@ export default async function DossierPage({
                   <span className="font-mono">{cerfa.template.version}</span>
                 </p>
               </div>
+              {/* Le badge dit la nature du document, jamais une conformité que
+                  personne n'a vérifiée. `cerfaRevu` (revue four-eyes signée,
+                  registry) est la seule chose qui autorise une telle affirmation. */}
               <span
                 className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium ${
                   cerfa.template.kind === "officiel"
@@ -673,18 +683,35 @@ export default async function DossierPage({
               >
                 {cerfa.template.kind === "officiel"
                   ? "Officiel"
-                  : "Reproduction conforme"}
+                  : "Fiche de préparation"}
               </span>
             </div>
 
-            {cerfa.template.kind === "reproduction" && (
+            {/* Revue du 2026-07-25 : l'AH ne peut être émise que par l'obligé
+                (annexe 7, cf. CHANGELOG-cerfa.md). Le téléversement passe donc
+                DEVANT la fiche de préparation : c'est le seul chemin recevable. */}
+            {cerfa.template.kind === "preparation" && (
+              <>
+                <p className="mt-3 rounded border-l-4 border-tampon bg-tampon/5 px-3 py-2 text-xs text-ardoise">
+                  L&apos;attestation sur l&apos;honneur ne peut être émise que par{" "}
+                  <strong>votre obligé</strong>, le financeur qui verse la prime : la
+                  réglementation lui réserve la partie « demandeur » et interdit à
+                  quiconque de refaire le modèle. Demandez-lui la sienne, puis
+                  téléversez-la ici : Dossimo y reporte votre saisie.
+                </p>
+
+                {acces.debloque && <AhObligeFill dossierId={id} />}
+              </>
+            )}
+
+            {/* Le PDF vient bien de l'administration, mais les coordonnées de
+                surimpression sont mesurées à la main chez nous et n'ont pas été
+                contre-vérifiées (revue four-eyes, CHANGELOG-cerfa.md). */}
+            {cerfa.template.kind === "officiel" && !cerfaRevu && (
               <p className="mt-3 rounded border-l-4 border-tampon bg-tampon/5 px-3 py-2 text-xs text-ardoise">
-                L&apos;attestation sur l&apos;honneur CEE n&apos;est pas un Cerfa
-                remplissable : c&apos;est un modèle réglementaire imprimé et signé à
-                la main. Dossimo en produit une{" "}
-                <strong>reproduction fidèle du modèle en vigueur</strong>,
-                pré-remplie depuis votre saisie. À imprimer, puis dater et signer de
-                façon manuscrite (bénéficiaire + professionnel) avant dépôt.
+                Formulaire officiel pré-rempli par Dossimo.{" "}
+                <strong>Relisez le placement des valeurs</strong> avant signature :
+                le report dans les cases n&apos;a pas encore été contre-vérifié.
               </p>
             )}
 
@@ -696,20 +723,28 @@ export default async function DossierPage({
                 className={`mt-4 gap-1.5 ${BTN_SECONDAIRE_SM}`}
               >
                 <Download className="h-4 w-4" strokeWidth={1.8} aria-hidden="true" />
-                Formulaire officiel pré-rempli (PDF)
+                {cerfa.template.kind === "officiel"
+                  ? "Formulaire officiel pré-rempli (PDF)"
+                  : "Fiche de préparation (PDF)"}
               </a>
             ) : (
               <p className="mt-4 flex items-start gap-1.5 text-sm text-ardoise">
                 <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0" strokeWidth={1.8} aria-hidden="true" />
                 <span>
-                  Débloquez le dossier pour télécharger l&apos;attestation
-                  pré-remplie.
+                  Débloquez le dossier pour télécharger{" "}
+                  {cerfa.template.kind === "officiel"
+                    ? "le formulaire pré-rempli"
+                    : "la fiche de préparation"}
+                  .
                 </span>
               </p>
             )}
 
-            {cerfa.template.kind === "reproduction" && acces.debloque && (
-              <AhObligeFill dossierId={id} />
+            {cerfa.template.kind === "preparation" && (
+              <p className="mt-2 text-xs text-encre-claire">
+                Cette fiche rassemble les valeurs à reporter sur l&apos;AH de votre
+                obligé. Elle ne se signe pas et ne se dépose pas.
+              </p>
             )}
           </>
         ) : (

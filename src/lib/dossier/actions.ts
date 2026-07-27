@@ -96,7 +96,26 @@ export async function createDossierCeeIsolation(
         temperature: d.pac_temperature,
         marque: d.pac_marque || null,
         reference: d.pac_reference || null,
+        regulateur: d.pac_regulateur ? d.pac_regulateur === "oui" : null,
         regulateur_classe: d.pac_regulateur_classe || null,
+        note_dimensionnement: d.pac_note_dimensionnement
+          ? d.pac_note_dimensionnement === "oui"
+          : null,
+        deporte_consomme_energie: d.pac_deporte_consomme_energie
+          ? d.pac_deporte_consomme_energie === "oui"
+          : null,
+        // Cadre A de l'AH, annexe 1 de la fiche BAR-TH-171 (vA78.4).
+        surface_chauffee_m2: d.pac_surface_chauffee_m2 ?? null,
+        usage: d.pac_usage ?? null,
+        systeme_deporte: d.pac_systeme_deporte
+          ? d.pac_systeme_deporte === "oui"
+          : null,
+        deporte_marque: d.pac_deporte_marque || null,
+        deporte_reference: d.pac_deporte_reference || null,
+        // Identifiant EPREL du modele : a asterisque depuis la vA78.4 (01/01/2026).
+        reference_modele: d.pac_reference_modele || null,
+        // Bonification : cadre A de la vA82.5, a compter du 01/09/2026.
+        numero_agrement: d.pac_numero_agrement || null,
       },
     };
   } else if (d.geste === "cet") {
@@ -106,7 +125,9 @@ export async function createDossierCeeIsolation(
       cet: {
         type_cet: "accumulation",
         fiche,
-        cop: d.cet_cop,
+        // Critère d'éligibilité (vA78-4). Le COP le suit, à titre indicatif.
+        efficacite_ecs: d.cet_efficacite_ecs ?? null,
+        cop: d.cet_cop ?? null,
         profil_soutirage: d.cet_profil_soutirage,
         volume_l: d.cet_volume_l,
         marque: d.cet_marque || null,
@@ -143,6 +164,9 @@ export async function createDossierCeeIsolation(
         volume_ballon_l: d.solaire_volume_ballon_l,
         classe_ballon: d.solaire_classe_ballon || null,
         certification: d.solaire_certification,
+        // Deux cases a asterisque du cadre A du BAR-TH-101.
+        couvre_totalite_ecs: d.solaire_couvre_totalite_ecs === "oui",
+        capteurs_non_hybrides: d.solaire_capteurs_non_hybrides === "oui",
         marque: d.solaire_marque || null,
         reference: d.solaire_reference || null,
       },
@@ -160,6 +184,8 @@ export async function createDossierCeeIsolation(
         isolant_reference: d.isolant_reference || null,
         resistance_thermique_r: d.resistance_thermique_r,
         epaisseur_mm: d.epaisseur_mm ?? null,
+        // Cadre A des BAR-EN-101 / 103 (absent du 102, murs).
+        pare_vapeur: d.isolation_pare_vapeur ? d.isolation_pare_vapeur === "oui" : null,
       },
     };
   }
@@ -213,7 +239,20 @@ export async function createDossierCeeIsolation(
           ttc: d.montant_ttc,
           prime_estime: d.montant_prime_estime ?? null,
           aides_publiques_hors_cee: d.montant_aides_publiques ?? null,
+          facture_reference: d.facture_reference || null,
         },
+        // Cadre A des six fiches : le titulaire du signe de qualité qui a
+        // réalisé l'opération, quand ce n'est pas le signataire de l'AH.
+        // `null` = déclaré sans sous-traitance, pas « non renseigné ».
+        sous_traitant:
+          d.sous_traitance === "oui"
+            ? {
+                nom: d.sous_traitant_nom,
+                prenom: d.sous_traitant_prenom,
+                raison_sociale: d.sous_traitant_raison_sociale,
+                siret: d.sous_traitant_siret,
+              }
+            : null,
         rge: {
           numero: d.rge_numero,
           domaine: d.rge_domaine,

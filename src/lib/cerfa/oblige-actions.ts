@@ -69,7 +69,7 @@ export async function remplirAhOblige(
     return {
       ok: false,
       reason:
-        "Ce PDF n'est pas un formulaire à champs remplissable. Utilisez la reproduction Dossimo, ou faites-la remplir à la main.",
+        "Ce PDF n'est pas un formulaire à champs remplissable. Remplissez-le à la main en vous appuyant sur la fiche de préparation Dossimo.",
     };
   }
 

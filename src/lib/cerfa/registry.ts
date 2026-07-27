@@ -6,11 +6,22 @@
  * pertinente : sinon Dossimo fabriquerait lui-même le motif de refus qu'il
  * prétend éviter.
  *
- * Deux stratégies de production :
- *  - `acroform` : modèle à champs (AcroForm) rempli par nom de champ. Utilisé
- *    par le placeholder CEE, et par tout PDF officiel réellement à champs.
- *  - `overlay`  : modèle officiel STATIQUE (imprimé/signé, sans champ) sur lequel
- *    on surimprime les valeurs à des coordonnées mesurées. Cas du Cerfa Anah.
+ * Trois stratégies de production :
+ *  - `acroform`    : modèle à champs (AcroForm) rempli par nom de champ.
+ *  - `overlay`     : modèle officiel STATIQUE (imprimé/signé, sans champ) sur
+ *    lequel on surimprime les valeurs à des coordonnées mesurées. Cas du Cerfa Anah.
+ *  - `preparation` : Dossimo ne produit PAS le document réglementaire, il produit
+ *    une fiche de préparation des valeurs à y reporter. Cas de l'AH CEE.
+ *
+ * POURQUOI PAS DE REPRODUCTION DE L'AH CEE (revue du 2026-07-25, cf.
+ * CHANGELOG-cerfa.md). L'annexe 7 de l'arrêté du 4 septembre 2014 modifié dit :
+ * « En dehors de ces éléments qui doivent être personnalisés par le demandeur,
+ * aucune modification du contenu et de l'organisation de l'attestation sur
+ * l'honneur n'est autorisée. » L'AH vierge naît chez le demandeur (l'obligé),
+ * qui y dactylographie sa raison sociale, son SIREN et sa mention CNIL avant
+ * signature. Un tiers n'a donc pas le droit d'en produire une, si fidèle soit
+ * elle, et il n'existe aucune AH officielle vierge à remplir. Le seul chemin
+ * conforme est l'AH de l'obligé, pré-remplie : `oblige-actions.ts`.
  *
  * Source de vérité actuelle : ce registre. Seam prévu vers `regles_metier`
  * (colonne `version_formulaire`) — voir `expectedVersionFromRule()`.
@@ -18,16 +29,16 @@
 
 import type { Dispositif } from "@/lib/database.types";
 
-export type CerfaStrategy = "acroform" | "overlay" | "reproduction";
+export type CerfaStrategy = "acroform" | "overlay" | "preparation";
 
 /**
  * Nature du document produit :
- *  - `officiel`      : PDF officiel réel (rempli par overlay ou acroform).
- *  - `reproduction`  : reproduction fidèle du modèle réglementaire quand il
- *    n'existe pas de PDF officiel remplissable/canonique (cas de l'AH CEE, qui
- *    est un modèle statique, spécifique à l'obligé et versionné par arrêté).
+ *  - `officiel`    : PDF officiel réel (rempli par overlay ou acroform).
+ *  - `preparation` : document Dossimo qui n'est PAS le document réglementaire et
+ *    ne prétend pas l'être. Il rassemble les valeurs à reporter sur le document
+ *    que le tiers habilité (l'obligé) émet lui-même.
  */
-export type CerfaKind = "officiel" | "reproduction";
+export type CerfaKind = "officiel" | "preparation";
 
 export interface CerfaField {
   name: string;
@@ -44,6 +55,24 @@ export interface OverlaySpec {
   size?: number;
 }
 
+/**
+ * Revue « four-eyes » du modèle : comparaison cadre par cadre de ce que Dossimo
+ * produit avec la source réglementaire ET le modèle d'un obligé réel, consignée
+ * dans `CHANGELOG-cerfa.md`.
+ *
+ * Absence de `revue` = revue NON faite. C'est le sens sûr : aucune promesse de
+ * conformité n'est affichée à l'artisan tant que quelqu'un ne l'a pas signée.
+ * L'UI et le PDF DÉRIVENT leur formulation de ce champ, ils ne la décident pas.
+ */
+export interface RevueModele {
+  /** Date de signature de la revue (ISO). */
+  valideeLe: string;
+  /** Personne qui a signé la revue. */
+  valideePar: string;
+  /** Obligé dont le modèle a servi de référence à la comparaison. */
+  obligeReference: string;
+}
+
 export interface CerfaTemplate {
   id: string;
   dispositif: Dispositif;
@@ -55,10 +84,12 @@ export interface CerfaTemplate {
   version: string;
   effectiveFrom: string; // ISO (YYYY-MM-DD)
   effectiveTo: string | null;
-  /** true = document officiel réel ; false = reproduction fidèle du modèle. */
+  /** true = document officiel réel ; false = document Dossimo de préparation. */
   official: boolean;
   kind: CerfaKind;
   strategy: CerfaStrategy;
+  /** Revue four-eyes signée. Absent = non validé (cf. `RevueModele`). */
+  revue?: RevueModele;
   /** Variante du modèle d'AH à rendre (5e période vs 6e période). */
   ahVariant?: "p5" | "p6";
   /** Champs canoniques (stratégie acroform). */
@@ -124,15 +155,16 @@ const TEMPLATES: CerfaTemplate[] = [
     id: "ah-cee-bar-en-p5",
     dispositif: "cee",
     fiches: ["BAR-EN-101", "BAR-EN-102", "BAR-EN-103"],
-    titre: "Attestation sur l'honneur — CEE Isolation (fiches BAR-EN)",
+    titre:
+      "Fiche de préparation — Attestation sur l'honneur CEE Isolation (fiches BAR-EN)",
     arrete:
       "Modèle d'attestation sur l'honneur — arrêté du 4 septembre 2014 modifié (annexe 7-1)",
     version: "2025-01",
     effectiveFrom: "2024-01-01",
     effectiveTo: "2026-03-31",
     official: false,
-    kind: "reproduction",
-    strategy: "reproduction",
+    kind: "preparation",
+    strategy: "preparation",
     ahVariant: "p5",
     fields: AH_CEE_FIELDS,
   },
@@ -143,15 +175,16 @@ const TEMPLATES: CerfaTemplate[] = [
     id: "ah-cee-bar-en-p6",
     dispositif: "cee",
     fiches: ["BAR-EN-101", "BAR-EN-102", "BAR-EN-103"],
-    titre: "Attestation sur l'honneur — CEE Isolation (fiches BAR-EN)",
+    titre:
+      "Fiche de préparation — Attestation sur l'honneur CEE Isolation (fiches BAR-EN)",
     arrete:
       "Modèle d'attestation sur l'honneur 6e période — arrêté du 4 septembre 2014 modifié (annexe 7-1) et arrêté du 21 décembre 2025",
     version: "2026-04 (P6)",
     effectiveFrom: "2026-04-01",
     effectiveTo: null,
     official: false,
-    kind: "reproduction",
-    strategy: "reproduction",
+    kind: "preparation",
+    strategy: "preparation",
     ahVariant: "p6",
     fields: AH_CEE_FIELDS,
   },
@@ -161,30 +194,32 @@ const TEMPLATES: CerfaTemplate[] = [
     id: "ah-cee-bar-th-171-p5",
     dispositif: "cee",
     fiches: ["BAR-TH-171"],
-    titre: "Attestation sur l'honneur — CEE Pompe à chaleur air/eau (BAR-TH-171)",
+    titre:
+      "Fiche de préparation — Attestation sur l'honneur CEE Pompe à chaleur air/eau (BAR-TH-171)",
     arrete:
       "Modèle d'attestation sur l'honneur — arrêté du 4 septembre 2014 modifié (annexe 7-1)",
     version: "2025-01",
     effectiveFrom: "2024-01-01",
     effectiveTo: "2026-03-31",
     official: false,
-    kind: "reproduction",
-    strategy: "reproduction",
+    kind: "preparation",
+    strategy: "preparation",
     ahVariant: "p5",
   },
   {
     id: "ah-cee-bar-th-171-p6",
     dispositif: "cee",
     fiches: ["BAR-TH-171"],
-    titre: "Attestation sur l'honneur — CEE Pompe à chaleur air/eau (BAR-TH-171)",
+    titre:
+      "Fiche de préparation — Attestation sur l'honneur CEE Pompe à chaleur air/eau (BAR-TH-171)",
     arrete:
       "Modèle d'attestation sur l'honneur 6e période — arrêté du 4 septembre 2014 modifié (annexe 7-1) et arrêté du 21 décembre 2025",
     version: "2026-04 (P6)",
     effectiveFrom: "2026-04-01",
     effectiveTo: null,
     official: false,
-    kind: "reproduction",
-    strategy: "reproduction",
+    kind: "preparation",
+    strategy: "preparation",
     ahVariant: "p6",
   },
   // AH CEE chauffe-eau thermodynamique (BAR-TH-148) — même modèle réglementaire
@@ -193,30 +228,32 @@ const TEMPLATES: CerfaTemplate[] = [
     id: "ah-cee-bar-th-148-p5",
     dispositif: "cee",
     fiches: ["BAR-TH-148"],
-    titre: "Attestation sur l'honneur — CEE Chauffe-eau thermodynamique (BAR-TH-148)",
+    titre:
+      "Fiche de préparation — Attestation sur l'honneur CEE Chauffe-eau thermodynamique (BAR-TH-148)",
     arrete:
       "Modèle d'attestation sur l'honneur — arrêté du 4 septembre 2014 modifié (annexe 7-1)",
     version: "2025-01",
     effectiveFrom: "2024-01-01",
     effectiveTo: "2026-03-31",
     official: false,
-    kind: "reproduction",
-    strategy: "reproduction",
+    kind: "preparation",
+    strategy: "preparation",
     ahVariant: "p5",
   },
   {
     id: "ah-cee-bar-th-148-p6",
     dispositif: "cee",
     fiches: ["BAR-TH-148"],
-    titre: "Attestation sur l'honneur — CEE Chauffe-eau thermodynamique (BAR-TH-148)",
+    titre:
+      "Fiche de préparation — Attestation sur l'honneur CEE Chauffe-eau thermodynamique (BAR-TH-148)",
     arrete:
       "Modèle d'attestation sur l'honneur 6e période — arrêté du 4 septembre 2014 modifié (annexe 7-1) et arrêté du 21 décembre 2025",
     version: "2026-04 (P6)",
     effectiveFrom: "2026-04-01",
     effectiveTo: null,
     official: false,
-    kind: "reproduction",
-    strategy: "reproduction",
+    kind: "preparation",
+    strategy: "preparation",
     ahVariant: "p6",
   },
   // AH CEE appareil de chauffage au bois (BAR-TH-112) — même modèle
@@ -225,30 +262,32 @@ const TEMPLATES: CerfaTemplate[] = [
     id: "ah-cee-bar-th-112-p5",
     dispositif: "cee",
     fiches: ["BAR-TH-112"],
-    titre: "Attestation sur l'honneur — CEE Appareil de chauffage au bois (BAR-TH-112)",
+    titre:
+      "Fiche de préparation — Attestation sur l'honneur CEE Appareil de chauffage au bois (BAR-TH-112)",
     arrete:
       "Modèle d'attestation sur l'honneur — arrêté du 4 septembre 2014 modifié (annexe 7-1)",
     version: "2025-01",
     effectiveFrom: "2024-01-01",
     effectiveTo: "2026-03-31",
     official: false,
-    kind: "reproduction",
-    strategy: "reproduction",
+    kind: "preparation",
+    strategy: "preparation",
     ahVariant: "p5",
   },
   {
     id: "ah-cee-bar-th-112-p6",
     dispositif: "cee",
     fiches: ["BAR-TH-112"],
-    titre: "Attestation sur l'honneur — CEE Appareil de chauffage au bois (BAR-TH-112)",
+    titre:
+      "Fiche de préparation — Attestation sur l'honneur CEE Appareil de chauffage au bois (BAR-TH-112)",
     arrete:
       "Modèle d'attestation sur l'honneur 6e période — arrêté du 4 septembre 2014 modifié (annexe 7-1) et arrêté du 21 décembre 2025",
     version: "2026-04 (P6)",
     effectiveFrom: "2026-04-01",
     effectiveTo: null,
     official: false,
-    kind: "reproduction",
-    strategy: "reproduction",
+    kind: "preparation",
+    strategy: "preparation",
     ahVariant: "p6",
   },
   // AH CEE chauffe-eau solaire individuel (BAR-TH-101) — même modèle
@@ -260,30 +299,32 @@ const TEMPLATES: CerfaTemplate[] = [
     id: "ah-cee-bar-th-101-p5",
     dispositif: "cee",
     fiches: ["BAR-TH-101"],
-    titre: "Attestation sur l'honneur — CEE Chauffe-eau solaire individuel (BAR-TH-101)",
+    titre:
+      "Fiche de préparation — Attestation sur l'honneur CEE Chauffe-eau solaire individuel (BAR-TH-101)",
     arrete:
       "Modèle d'attestation sur l'honneur — arrêté du 4 septembre 2014 modifié (annexe 7-1)",
     version: "2025-01",
     effectiveFrom: "2024-01-01",
     effectiveTo: "2026-03-31",
     official: false,
-    kind: "reproduction",
-    strategy: "reproduction",
+    kind: "preparation",
+    strategy: "preparation",
     ahVariant: "p5",
   },
   {
     id: "ah-cee-bar-th-101-p6",
     dispositif: "cee",
     fiches: ["BAR-TH-101"],
-    titre: "Attestation sur l'honneur — CEE Chauffe-eau solaire individuel (BAR-TH-101)",
+    titre:
+      "Fiche de préparation — Attestation sur l'honneur CEE Chauffe-eau solaire individuel (BAR-TH-101)",
     arrete:
       "Modèle d'attestation sur l'honneur 6e période — arrêté du 4 septembre 2014 modifié (annexe 7-1) et arrêté du 21 décembre 2025",
     version: "2026-04 (P6)",
     effectiveFrom: "2026-04-01",
     effectiveTo: null,
     official: false,
-    kind: "reproduction",
-    strategy: "reproduction",
+    kind: "preparation",
+    strategy: "preparation",
     ahVariant: "p6",
   },
   {
@@ -340,9 +381,28 @@ export function resolveCerfaTemplate(
 }
 
 /**
- * Seam vers `regles_metier.version_formulaire` (§8). Quand la table sera
- * peuplée, comparer la version résolue à celle pilotée par la règle active et
- * signaler toute divergence. Non branché tant que `regles_metier` est vide.
+ * Un modèle ne peut se dire vérifié que si la revue four-eyes est signée. Sans
+ * exception de complaisance pour le `kind: "officiel"` : sur un overlay, le PDF
+ * vient bien de l'administration mais les COORDONNÉES de surimpression sont
+ * mesurées à la main par Dossimo, et une valeur posée dans la mauvaise case est
+ * le même défaut que reproduire un modèle de travers.
+ */
+export function revueValidee(t: CerfaTemplate): boolean {
+  return t.revue != null;
+}
+
+/**
+ * Seam vers `regles_metier.version_formulaire` (§8) — DÉLIBÉRÉMENT non branché.
+ *
+ * Attention avant de le câbler : les deux valeurs ne sont PAS sur le même axe.
+ * `regles_metier.version_formulaire` porte la version de la FICHE d'opération
+ * (« BAR-TH-171 vA78.4 »), `CerfaTemplate.version` porte la version du MODÈLE
+ * d'attestation (« 2026-04 (P6) »). Les comparer produirait une divergence à
+ * chaque dossier, donc une alerte que plus personne ne lirait.
+ *
+ * Ce qu'il faudrait d'abord : un champ distinct côté règle pour la version du
+ * modèle d'AH, ou un `ficheVersion` côté registre. Tant que l'un des deux
+ * n'existe pas, renvoyer null est la seule réponse honnête.
  */
 export function expectedVersionFromRule(): string | null {
   return null;

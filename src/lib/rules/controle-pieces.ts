@@ -228,6 +228,7 @@ const CROISES: Record<Famille, ChampCroise[]> = {
     { cle: "pac_reference", label: "Référence de la pompe à chaleur" },
   ],
   cet: [
+    { cle: "cet_efficacite_ecs", label: "Efficacité énergétique ECS", tolerance: 0.5 },
     { cle: "cet_cop", label: "COP", tolerance: 0.05 },
     { cle: "cet_volume_l", label: "Volume du ballon", tolerance: 1 },
     { cle: "cet_marque", label: "Marque du chauffe-eau" },

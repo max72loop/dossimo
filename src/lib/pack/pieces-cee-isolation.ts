@@ -60,7 +60,9 @@ const MENTIONS_DEFAUT: Record<Famille, string[]> = {
   cet: [
     "Fiche CEE : {fiche}",
     "Marque et référence du chauffe-eau thermodynamique",
-    "COP (norme EN 16147) : {cop}",
+    // Le BAR-TH-148 vA78-4 ne demande plus le COP : exiger sa mention ferait
+    // signaler un devis conforme. C'est l'efficacité ECS qui est le critère.
+    "Efficacité énergétique pour le chauffage de l'eau (profil {soutirage}) : {efficacite} %",
     "Profil de soutirage : {soutirage}",
     "Volume du ballon : {volume} L",
     "Mention de la qualification RGE (n° et domaine)",
@@ -106,7 +108,9 @@ function valeursMention(c: CeeIsolationCaracteristiques): Record<string, string>
   if (famille === "cet" && c.cet) {
     return {
       fiche: c.cet.fiche || c.fiche,
-      cop: String(c.cet.cop),
+      efficacite:
+        c.cet.efficacite_ecs != null ? String(c.cet.efficacite_ecs) : "",
+      cop: c.cet.cop != null ? String(c.cet.cop) : "",
       soutirage: c.cet.profil_soutirage,
       volume: String(c.cet.volume_l),
     };
