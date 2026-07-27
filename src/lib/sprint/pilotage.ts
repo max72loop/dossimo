@@ -81,10 +81,31 @@ export type ChiffresSource = {
   dossiersPayes: number;
 };
 
+/**
+ * Couverture du fichier de prospection, tous canaux confondus : qui a été démarché,
+ * qui reste à démarcher. Le tableau par canal ne le dit pas — il ne voit que les
+ * 300 contacts tirés au sort pour le sprint manuel, jamais les 3 000 autres, que la
+ * campagne automatique traite en parallèle (colonnes `contact_auto_*`, migration
+ * 0050). Lire les deux séparément, c'était ne jamais savoir ce qui avait été fait.
+ */
+export type ChiffresFichier = {
+  total: number;
+  /** Démarchés par la campagne automatique, échecs compris (un échec a pu partir). */
+  autoContactes: number;
+  autoEchecs: number;
+  /** Démarchés à la main dans le sprint (`date_envoi`), quel que soit le canal. */
+  sprintContactes: number;
+  /** Ni l'un ni l'autre : le vrai reste à faire. */
+  jamaisContactes: number;
+  /** Marqués par les DEUX voies : doit rester à 0, sinon quelqu'un a reçu deux messages. */
+  doubleContact: number;
+};
+
 export type Pilotage = {
   jour: string;
   plafond: number;
   canaux: ChiffresCanal[];
+  fichier: ChiffresFichier;
   sources: ChiffresSource[];
 };
 
@@ -129,6 +150,31 @@ export async function chargerPilotage(): Promise<Pilotage> {
     }),
   );
 
+  // --- Couverture du fichier, les deux voies réunies ---
+  const compterFichier = async (
+    libelle: string,
+    build: (q: ReturnType<typeof requeteFichier>) => ReturnType<typeof requeteFichier>,
+  ) => {
+    const { count, error } = await build(requeteFichier());
+    if (error) throw new Error(`Pilotage fichier (${libelle}) : ${error.message}`);
+    return count ?? 0;
+  };
+  function requeteFichier() {
+    return admin.from("prospects_dossimo").select("place_id", { count: "exact", head: true });
+  }
+
+  const [total, autoContactes, autoEchecs, sprintContactes, jamaisContactes, doubleContact] =
+    await Promise.all([
+      compterFichier("total", (q) => q),
+      compterFichier("auto", (q) => q.not("contact_auto_le", "is", null)),
+      compterFichier("échecs auto", (q) => q.eq("contact_auto_statut", "echec")),
+      compterFichier("sprint", (q) => q.not("date_envoi", "is", null)),
+      compterFichier("jamais", (q) => q.is("contact_auto_le", null).is("date_envoi", null)),
+      compterFichier("double", (q) =>
+        q.not("contact_auto_le", "is", null).not("date_envoi", "is", null),
+      ),
+    ]);
+
   // --- Croisement utm : ce que le site a réellement vu arriver ---
   const [{ data: artisans }, { data: lignes }, { data: paiements }] = await Promise.all([
     admin.from("artisans").select("source"),
@@ -156,6 +202,14 @@ export async function chargerPilotage(): Promise<Pilotage> {
     jour,
     plafond: PLAFOND_QUOTIDIEN,
     canaux,
+    fichier: {
+      total,
+      autoContactes,
+      autoEchecs,
+      sprintContactes,
+      jamaisContactes,
+      doubleContact,
+    },
     sources: [...parSource.values()].sort((x, y) => y.comptes - x.comptes || x.source.localeCompare(y.source)),
   };
 }

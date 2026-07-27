@@ -53,7 +53,7 @@ est impossible à monter. **Le faire tourner après toute migration.**
 | Facturation | `factures`, `facture_compteurs`, `paiements` | 0001, 0014 |
 | Dépôt bénéficiaire | `liens_depot`, `reminder_schedules`, `reminder_logs` | 0017, 0026-0029, 0041 |
 | Devis | `quote_gestures`, `quote_gesture_fields`, `quote_templates`, `generated_quotes`, `user_quote_templates` | 0021-0023, 0028 |
-| Prospection | `prospection_campagnes`, `prospects`, `prospection_messages`, `prospection_evenements`, `prospection_suppressions`, `prospects_dossimo` | 0032-0034, 0037, 0039 |
+| Prospection | `prospection_campagnes`, `prospects`, `prospection_messages`, `prospection_evenements`, `prospection_suppressions`, `prospects_dossimo` | 0032-0034, 0037, 0039, 0050 |
 | Sécurité | `auth_rate_limits` | 0030, 0036 |
 
 **Aucune vue.** Tous les agrégats sont faits en TypeScript.
@@ -153,6 +153,24 @@ La table était créée à la main ; `0033` et `0037` ne faisaient qu'y ajouter 
 colonnes, en s'auto-ignorant si elle était absente. La prod marchait, tout
 environnement neuf cassait. `0039` la crée dans sa forme finale, après elles.
 **Leçon : si le code interroge une table, une migration doit la créer.**
+
+### Deux systèmes démarchaient le même fichier sans se voir (corrigé en `0050`)
+
+`prospects_dossimo` alimente **deux** voies : le sprint manuel, qui y écrit
+(`canal`, `date_envoi`), et la campagne automatique de `0032`, qui écrivait
+seulement dans `prospects` / `prospection_messages`. Du 19 au 27 juillet 2026, 215
+artisans ont donc reçu un e-mail sans qu'aucune trace n'apparaisse dans le fichier :
+impossible de savoir qui avait été contacté, et le tirage du sprint — qui pioche
+dans `canal is null`, exactement la population que l'import automatique consomme —
+pouvait rassigner un artisan déjà démarché.
+
+`0050` ajoute `contact_auto_le` / `contact_auto_statut`, écrites par
+`envoyerProchain` au moment de l'envoi, rattrapables depuis `prospection_messages`
+(`supabase/scripts/prospects_dossimo_rattrapage_contact_auto.sql`), qui reste la
+source de vérité. Colonnes distinctes de `date_envoi` à dessein : y verser ces
+contacts aurait faussé l'A/B du sprint et déclenché sur eux la relance J+5 d'une
+campagne conçue sans relance. **Leçon : deux systèmes qui puisent dans la même
+population doivent écrire leur passage au même endroit.**
 
 ## 6. Dérive de conventions — l'état des lieux
 

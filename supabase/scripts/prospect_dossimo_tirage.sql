@@ -16,11 +16,18 @@
 -- Il n'assigne que les lignes encore libres (`canal IS NULL`) et non désinscrites,
 -- donc le relancer n'écrase jamais une assignation ni un opt-out existant : il
 -- complète seulement les nouveaux contacts.
+--
+-- `contact_auto_le is null` (migration 0050) exclut les artisans déjà démarchés par
+-- la campagne AUTOMATIQUE. Sans ce filtre, un contact déjà touché par e-mail
+-- retombait dans un bras du sprint et recevait un second message : les deux
+-- systèmes puisent dans le même fichier, tous deux via `canal is null`.
 
 with tirage as (
   select place_id, row_number() over (order by random()) as rn
   from public.prospects_dossimo
-  where opt_out is not true and canal is null
+  where opt_out is not true
+    and canal is null
+    and contact_auto_le is null
 )
 update public.prospects_dossimo p
 set canal = case when t.rn <= 150 then 'email' else 'whatsapp' end

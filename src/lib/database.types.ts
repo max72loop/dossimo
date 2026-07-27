@@ -169,6 +169,13 @@ export interface Database {
           opt_out: boolean | null;
           question_posee: string | null;
           notes: string | null;
+          /**
+           * Campagne AUTOMATIQUE (0032), pas le sprint manuel (migration 0050).
+           * Jour de l'envoi et son issue : « echec » vaut contact, le message a pu
+           * partir malgré l'erreur. Null = jamais démarché par cette voie.
+           */
+          contact_auto_le: string | null;
+          contact_auto_statut: "envoye" | "echec" | null;
         };
         Insert: {
           place_id: string;
@@ -200,6 +207,8 @@ export interface Database {
           opt_out?: boolean | null;
           question_posee?: string | null;
           notes?: string | null;
+          contact_auto_le?: string | null;
+          contact_auto_statut?: "envoye" | "echec" | null;
         };
         Update: Partial<Database["public"]["Tables"]["prospects_dossimo"]["Insert"]>;
         Relationships: [];

@@ -448,7 +448,7 @@ export async function envoyerProchain(
   // fermée) rattrape aujourd'hui, sous le plafond du jour.
   const { data: candidat } = await supabase
     .from("prospection_messages")
-    .select("*, prospects(email, unsubscribe_token, prenom, source)")
+    .select("*, prospects(email, unsubscribe_token, prenom, source, notes)")
     .eq("campagne_id", campagne.id)
     .eq("statut", "valide")
     .lte("scheduled_on", jour)
@@ -464,6 +464,7 @@ export async function envoyerProchain(
       unsubscribe_token: string;
       prenom: string | null;
       source: string;
+      notes: string | null;
     } | null;
   };
   const prospect = message.prospects;
@@ -495,6 +496,9 @@ export async function envoyerProchain(
       .from("prospection_messages")
       .update({ statut: "echec", erreur: resultat.erreur })
       .eq("id", message.id);
+    // Même raison : le fichier de prospection doit le compter comme démarché,
+    // sinon le sprint manuel le rappellerait demain.
+    await marquerContactDansFichier(supabase, prospect.notes, "echec", maintenant);
     return { envoye: false, motif: `échec d'envoi : ${resultat.erreur}` };
   }
 
@@ -508,9 +512,51 @@ export async function envoyerProchain(
       type: "envoi",
       payload: { message_id: message.id, campagne: campagne.nom },
     }),
+    marquerContactDansFichier(supabase, prospect.notes, "envoye", maintenant),
   ]);
 
   return { envoye: true, messageId: message.id, destinataire: prospect.email };
+}
+
+/**
+ * Reporte l'envoi dans le fichier de prospection (`prospects_dossimo`, migration
+ * 0050), d'où ce prospect a été importé.
+ *
+ * POURQUOI CETTE ÉCRITURE EXISTE
+ * Sans elle, les deux systèmes s'ignorent : la campagne automatique démarche des
+ * artisans que le fichier continue d'afficher comme jamais contactés. C'est ce qui
+ * s'est produit du 19 au 27 juillet 2026 — 215 envois invisibles dans le fichier —
+ * et ce qui exposait un artisan à être redémarché à la main par le sprint.
+ *
+ * Elle est délibérément NON bloquante : le message est déjà parti, échouer ici ne
+ * le rattrape pas et masquerait un envoi réussi. Mais elle n'est pas silencieuse
+ * non plus (AGENTS.md) : l'erreur part en console, et
+ * `supabase/scripts/prospects_dossimo_rattrapage_contact_auto.sql` répare l'écart
+ * à tout moment depuis `prospection_messages`, qui reste la source de vérité.
+ *
+ * Le `place_id` vient des notes d'import (« … place_id=<id> »). Un prospect importé
+ * autrement (CSV admin) n'en a pas : il n'y a alors rien à reporter, et ce n'est
+ * pas une anomalie.
+ */
+async function marquerContactDansFichier(
+  supabase: Client,
+  notes: string | null,
+  statut: "envoye" | "echec",
+  maintenant: Date,
+): Promise<void> {
+  const placeId = /place_id=(\S+)$/.exec(notes ?? "")?.[1];
+  if (!placeId) return;
+
+  const { error } = await supabase
+    .from("prospects_dossimo")
+    .update({
+      contact_auto_le: jourParis(maintenant),
+      contact_auto_statut: statut,
+    })
+    .eq("place_id", placeId);
+  if (error) {
+    console.error(`[prospection] report dans prospects_dossimo (${placeId}):`, error.message);
+  }
 }
 
 /** Journalise un clic sur le lien de démo du message, attribué par le jeton. */

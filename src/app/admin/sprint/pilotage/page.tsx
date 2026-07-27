@@ -28,9 +28,11 @@ const pourcent = (t: number | null) => (t === null ? "—" : `${(t * 100).toFixe
 export default async function PilotageSprintPage() {
   if (!(await getAdminEmail())) notFound();
 
-  const { jour, plafond, canaux, sources } = await chargerPilotage();
+  const { jour, plafond, canaux, fichier, sources } = await chargerPilotage();
   const totalEnvois = canaux.reduce((n, c) => n + c.envois, 0);
-  const aucunEnvoi = totalEnvois === 0;
+  // « Aucun envoi » ne se juge qu'au regard des DEUX voies : le sprint peut être à
+  // zéro pendant que la campagne automatique démarche tous les jours.
+  const aucunEnvoi = totalEnvois === 0 && fichier.autoContactes === 0;
 
   return (
     <main className="mx-auto max-w-4xl px-6 py-10">
@@ -109,6 +111,32 @@ export default async function PilotageSprintPage() {
         pas le canal.
       </p>
 
+      {/* --- Couverture du fichier : les deux voies réunies --- */}
+      <h2 className="mt-8 text-sm font-semibold text-encre">Couverture du fichier · qui a été démarché</h2>
+      <p className="mt-1 text-xs text-ardoise">
+        Le tableau du dessus ne voit que les contacts tirés au sort pour le sprint manuel. Celui-ci couvre le fichier
+        entier, campagne automatique comprise : c&apos;est lui qui dit ce qui a été fait et ce qui reste.
+      </p>
+      <div className="mt-3 grid gap-3 sm:grid-cols-4">
+        <Chiffre
+          label="Campagne automatique"
+          valeur={fichier.autoContactes}
+          note={
+            fichier.autoEchecs > 0
+              ? `dont ${fichier.autoEchecs} en échec, comptés comme démarchés`
+              : "e-mails partis, marqués par la machine"
+          }
+        />
+        <Chiffre label="Sprint manuel" valeur={fichier.sprintContactes} note="marqués à la main" />
+        <Chiffre label="Jamais démarchés" valeur={fichier.jamaisContactes} note={`sur ${fichier.total} contacts`} />
+        <Chiffre
+          label="Démarchés deux fois"
+          valeur={fichier.doubleContact}
+          note={fichier.doubleContact > 0 ? "à regarder de près" : "aucun, c'est l'objectif"}
+          alerte={fichier.doubleContact > 0}
+        />
+      </div>
+
       {/* --- Factuel : tables applicatives croisées par utm --- */}
       <h2 className="mt-8 text-sm font-semibold text-encre">Par source utm · constaté sur le site</h2>
       <p className="mt-1 text-xs text-ardoise">
@@ -146,5 +174,26 @@ export default async function PilotageSprintPage() {
         </table>
       </div>
     </main>
+  );
+}
+
+/** Compteur simple de la couverture du fichier. `alerte` réservé au double contact. */
+function Chiffre({
+  label,
+  valeur,
+  note,
+  alerte = false,
+}: {
+  label: string;
+  valeur: number;
+  note: string;
+  alerte?: boolean;
+}) {
+  return (
+    <div className={`rounded border p-3 ${alerte ? "border-erreur/40 bg-erreur-bg" : "border-filigrane bg-papier/40"}`}>
+      <p className="text-[0.7rem] uppercase tracking-wide text-encre-claire">{label}</p>
+      <p className={`mt-1 font-mono text-xl ${alerte ? "text-erreur" : "text-encre"}`}>{valeur}</p>
+      <p className="mt-0.5 text-xs text-ardoise">{note}</p>
+    </div>
   );
 }
