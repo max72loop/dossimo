@@ -82,9 +82,46 @@ export const guides = {
       "La cartographie d’un dossier CEE complet : les pièces de l’artisan, celles du bénéficiaire, la chronologie du rôle incitatif et le délai d’envoi, pour un pack cohérent avant dépôt.",
     eyebrow: "Guide artisan RGE · Pack CEE",
     category: "Monter le dossier",
-    updated: "2026-07-17",
+    updated: "2026-07-28",
     intro:
       "Un dossier CEE conforme ne se résume pas au devis. C’est un ensemble de pièces produites par l’artisan et par le bénéficiaire, qui doivent rester cohérentes entre elles et respecter une chronologie précise. Une seule mention qui diffère d’une pièce à l’autre, ou une date placée au mauvais moment, suffit à bloquer la prime. Ce guide cartographie ce que le dossier doit contenir et qui fournit quoi.",
+    sections: [
+      {
+        heading: "Un dossier CEE se juge sur son ensemble, pas pièce par pièce",
+        paragraphs: [
+          "La première difficulté d’un dossier CEE n’est pas de produire les bonnes pièces : c’est de les faire tenir ensemble. Chaque document peut être irréprochable pris isolément et le dossier tomber quand même, parce qu’une surface diffère de deux mètres carrés entre le devis et la facture, ou parce qu’une référence produit a changé sans que l’attestation sur l’honneur suive.",
+          "C’est la conséquence directe de ce que contrôle le dispositif. L’instructeur ne visite pas le chantier : il reconstitue l’opération à partir du papier. Sa méthode consiste précisément à rapprocher les pièces entre elles, parce que la concordance est le seul indice de sincérité dont il dispose. Un dossier CEE doit donc être relu comme un tout, une fois toutes les pièces réunies, et pas seulement validé document par document au fil de l’eau.",
+        ],
+      },
+      {
+        heading: "Les pièces produites par l’artisan",
+        paragraphs: [
+          "L’artisan porte la partie technique du dossier. Le devis conforme d’abord, qui rattache le geste à sa fiche d’opération standardisée et porte les caractéristiques exigées : surface, résistance thermique, marque et référence de l’isolant, certification ACERMI le cas échéant, numéro et domaine de qualification RGE. La facture ensuite, qui doit reprendre ces mentions à l’identique et non les reformuler.",
+          "S’ajoutent les pièces qui prouvent la réalité et la qualité de l’opération : certificat RGE en cours de validité, fiche technique du produit posé, attestation sur l’honneur co-signée par l’artisan et le bénéficiaire, photos avant et après travaux. Ces pièces sont souvent réunies en dernier, alors qu’elles se préparent au moment du devis : une photo d’avant travaux ne se rattrape pas une fois les combles isolés.",
+        ],
+      },
+      {
+        heading: "Les pièces fournies par le bénéficiaire",
+        paragraphs: [
+          "Le bénéficiaire apporte la partie qui le concerne : selon la situation, pièce d’identité, RIB, justificatif de propriété et justificatif d’occupation du logement. C’est la partie du dossier sur laquelle l’artisan a le moins de prise, et c’est aussi celle qui retarde le plus souvent l’envoi.",
+          "Certaines configurations demandent des pièces supplémentaires qu’il vaut mieux identifier dès le premier rendez-vous. Un bailleur devra produire le bail et un engagement de location. Une copropriété demandera le procès-verbal d’assemblée générale autorisant les travaux et la quote-part du demandeur. Découvrir ces exigences après le chantier revient à attendre une assemblée générale qui n’aura peut-être pas lieu avant plusieurs mois, alors que le délai d’envoi, lui, continue de courir.",
+        ],
+      },
+      {
+        heading: "Deux dates structurent tout le dossier",
+        paragraphs: [
+          "La première est l’engagement de l’offre CEE, qui doit précéder l’acceptation du devis par le client. C’est le rôle actif et incitatif : la prime doit avoir contribué à décider les travaux. Un engagement daté après la signature fait tomber le dossier pour effet d’aubaine, sans recours possible. C’est le seul motif de refus qui ne se corrige jamais, et il se joue avant même le début du chantier.",
+          "La seconde est la date de la facture, qui ouvre le délai d’envoi du dossier, fixé à trois mois. Ce délai paraît confortable et se consomme vite, entre la collecte des pièces du bénéficiaire, les relances et les corrections. Le réflexe qui protège consiste à réunir les pièces au fur et à mesure du chantier plutôt qu’après la facture.",
+        ],
+      },
+      {
+        heading: "Partir de la version en vigueur, jamais d’un ancien modèle",
+        paragraphs: [
+          "Les fiches d’opérations standardisées et les modèles de pièces sont revus régulièrement, et la sixième période CEE ouverte en 2026 a renforcé les exigences de collecte au dépôt. Réutiliser une attestation sur l’honneur enregistrée deux ans plus tôt, ou raisonner sur une fiche d’une période antérieure, revient à fabriquer soi-même le motif de refus que l’on cherche à éviter.",
+          "Le contrôle est simple à intégrer dans la routine : avant de chiffrer, vérifiez la fiche en vigueur à la date d’engagement de l’opération, et repartez des modèles à jour plutôt que d’un dossier précédent. Dossimo génère les pièces à partir d’une saisie unique et d’une table de règles versionnée, ce qui rend l’écart entre devis et facture structurellement difficile à produire. C’est un service indépendant d’aide à la préparation de dossier, non affilié à l’Anah ni à France Rénov’ : il ne dépose pas le dossier et ne touche pas la prime.",
+        ],
+      },
+    ],
     checklist: [
       { title: "Pièces produites par l’artisan RGE", text: "Devis conforme (fiche CEE, surface, résistance thermique, marque et référence de l’isolant, ACERMI, numéro et domaine RGE), facture reprenant ces mentions à l’identique, certificat RGE, fiche technique du produit, attestation sur l’honneur co-signée, photos avant et après." },
       { title: "Pièces fournies par le bénéficiaire", text: "Selon la situation : pièce d’identité, RIB, justificatif de propriété et d’occupation. Cas particuliers du bailleur (bail, engagement de location) et de la copropriété (procès-verbal d’assemblée, quote-part)." },
@@ -104,6 +141,38 @@ export const guides = {
       before: "Les pièces sont réunies au fil de l’eau, sans relecture d’ensemble, et la facture porte une surface légèrement différente du devis.",
       after: "Chaque pièce est rapprochée des autres avant l’envoi, les écarts sont corrigés, et le dossier part dans le délai avec des mentions identiques partout.",
     },
+    faq: [
+      {
+        question: "Quelles pièces composent un dossier CEE complet ?",
+        answer:
+          "Du côté de l’artisan : devis conforme, facture reprenant les mêmes mentions, certificat RGE, fiche technique du produit, attestation sur l’honneur co-signée, photos avant et après travaux. Du côté du bénéficiaire, selon la situation : pièce d’identité, RIB, justificatif de propriété et d’occupation, auxquels s’ajoutent le bail pour un bailleur et le procès-verbal d’assemblée en copropriété.",
+      },
+      {
+        question: "Quel est le délai pour envoyer un dossier CEE ?",
+        answer:
+          "Le dossier part au plus tard trois mois après la date de la facture. Ce délai se consomme vite si la collecte des pièces du bénéficiaire ne commence qu’après le chantier : réunissez-les au fil de l’eau plutôt qu’à la fin.",
+      },
+      {
+        question: "Qui fournit les pièces du bénéficiaire, et comment les obtenir à temps ?",
+        answer:
+          "Le bénéficiaire lui-même. C’est la partie du dossier sur laquelle l’artisan a le moins de prise et celle qui retarde le plus souvent l’envoi. Listez-les dès le premier rendez-vous, en identifiant tout de suite les cas particuliers du bailleur et de la copropriété, dont les pièces demandent parfois plusieurs semaines.",
+      },
+      {
+        question: "Faut-il des photos avant et après travaux ?",
+        answer:
+          "Oui, elles font partie des modes de preuve attendus. Leur particularité est de ne pas se rattraper : une photo d’avant travaux prise après l’isolation des combles n’existe pas. Prévoyez-les au moment du devis, pas au moment du dépôt.",
+      },
+      {
+        question: "Le dossier peut-il être refusé alors que chaque pièce est correcte ?",
+        answer:
+          "Oui, et c’est le cas le plus fréquent. L’instructeur ne visite pas le chantier : il rapproche les pièces entre elles. Une surface, une référence ou une performance qui diffère d’un document à l’autre suffit à bloquer la prime, même si chaque document est irréprochable pris isolément.",
+      },
+      {
+        question: "Peut-on réutiliser les modèles d’un dossier précédent ?",
+        answer:
+          "C’est risqué. Les fiches d’opérations standardisées et les modèles de pièces sont revus régulièrement, et la sixième période ouverte en 2026 a renforcé les exigences de collecte au dépôt. Repartez de la version en vigueur à la date d’engagement de l’opération plutôt que d’un dossier antérieur.",
+      },
+    ],
     sources: [
       { label: "Questions-réponses officielles sur le dispositif CEE (ecologie.gouv.fr)", href: questionsCee },
       { label: "Catalogue officiel des fiches d’opérations standardisées CEE", href: catalogueCee },
@@ -223,9 +292,46 @@ export const guides = {
       "Vérifiez les mentions, le RGE, l’adresse, les montants et les caractéristiques techniques d’un devis MaPrimeRénov’ avant le dépôt.",
     eyebrow: "Guide artisan RGE · MaPrimeRénov’",
     category: "Devis & conformité",
-    updated: "2026-07-14",
+    updated: "2026-07-28",
     intro:
       "Un devis lisible ne suffit pas : les informations de l’entreprise, du logement, des travaux et de la qualification doivent rester cohérentes avec la demande d’aide puis avec la facture. Cette checklist organise la relecture avant que le client ne dépose son dossier.",
+    sections: [
+      {
+        heading: "Le devis est la pièce sur laquelle l’aide est instruite",
+        paragraphs: [
+          "Dans un dossier MaPrimeRénov’, le devis n’arrive pas en fin de parcours commercial : il ouvre le dossier. C’est à partir de lui que la demande d’aide est déposée, que le montant est calculé et que l’éligibilité du geste est appréciée. Tout ce qui manquera au devis manquera à l’instruction, et devra être rattrapé par une pièce complémentaire, quand c’est encore possible.",
+          "Cette place particulière change la façon de le rédiger. Un devis pensé pour convaincre un client met en avant le résultat et le prix. Un devis pensé pour un dossier MaPrimeRénov’ doit en plus rendre le geste vérifiable par quelqu’un qui n’a jamais vu le chantier et qui ne dispose que du papier. Les deux objectifs ne s’opposent pas, mais le second demande un niveau de détail que le premier n’impose pas.",
+        ],
+      },
+      {
+        heading: "Identifier le logement, pas seulement le client",
+        paragraphs: [
+          "MaPrimeRénov’ finance un logement, avec ses propres conditions d’ancienneté et d’occupation. L’adresse d’exécution des travaux est donc une donnée de fond, pas une formalité. Elle doit être écrite en entier sur le devis et correspondre exactement à celle renseignée dans la demande d’aide, y compris le complément d’adresse dans un immeuble.",
+          "L’erreur classique consiste à reprendre l’adresse de facturation du client. Elle diffère de l’adresse du chantier dès qu’il s’agit d’un bien loué, d’une résidence secondaire ou d’un client qui a déménagé pendant le projet. Le nom du bénéficiaire doit lui aussi correspondre à celui de la demande : en indivision ou en couple, c’est la personne déclarée comme demandeur qui doit apparaître.",
+        ],
+      },
+      {
+        heading: "Décrire chaque geste séparément",
+        paragraphs: [
+          "MaPrimeRénov’ raisonne geste par geste, chacun avec ses critères techniques et son barème. Un devis qui présente un forfait global empêche d’instruire quoi que ce soit : il faut une ligne par geste, avec la quantité, l’unité, le produit posé et les performances attendues pour ce geste précis. Pour une isolation, la surface et la résistance thermique. Pour un équipement, la marque, la référence et les caractéristiques de performance.",
+          "Ce découpage sert deux fois. Il permet d’abord d’instruire la demande. Il permet ensuite de rapprocher la facture du devis poste par poste, contrôle que l’Anah opère au moment du versement. Un devis détaillé et une facture au forfait replacent l’artisan dans la même impasse : rien ne se recoupe.",
+        ],
+      },
+      {
+        heading: "La qualification RGE doit couvrir le geste, à la bonne date",
+        paragraphs: [
+          "Être RGE ne suffit pas. La qualification doit couvrir le domaine de travaux concerné et être valable à la date qui compte pour le dispositif. Une entreprise qualifiée en chauffage qui pose une isolation de combles n’ouvre pas droit à l’aide pour ce geste, même si le chantier est irréprochable.",
+          "Deux situations méritent une vérification systématique. Un devis à plusieurs postes relevant de domaines différents demande que chaque geste soit couvert, pas seulement le principal. Et lorsqu’un poste est sous-traité, c’est la qualification de l’entreprise qui exécute réellement le geste qui compte. Vérifiez enfin la date d’échéance : une qualification qui expire entre la signature et la fin du chantier crée un risque évitable.",
+        ],
+      },
+      {
+        heading: "Relire avant signature, jamais après",
+        paragraphs: [
+          "La logique commune à tous ces contrôles est temporelle. Une fois le devis signé et le dossier déposé, chaque correction devient un devis rectificatif, un nouvel envoi et un délai supplémentaire, quand elle ne fait pas tomber la demande. Avant signature, les mêmes corrections coûtent quelques minutes de relecture.",
+          "Cette relecture porte sur trois cohérences : entre le devis et la demande d’aide, entre le devis et la future facture, et entre les travaux décrits et la qualification invoquée. Dossimo les vérifie automatiquement et remonte les points de vigilance avant le dépôt. C’est un service indépendant d’aide à la préparation de dossier, non affilié à l’Anah ni à France Rénov’ : il ne dépose jamais le dossier et ne touche jamais la prime, que le client et vous gardez entre vos mains.",
+        ],
+      },
+    ],
     checklist: [
       { title: "Identifier les deux parties", text: "Vérifiez la raison sociale, le SIRET, l’adresse de l’entreprise, le nom du client et l’adresse exacte du logement concerné." },
       { title: "Décrire chaque geste", text: "Séparez les postes et indiquez les quantités, surfaces, performances, marques ou références nécessaires à l’instruction du geste." },
@@ -244,6 +350,38 @@ export const guides = {
       before: "Isolation des combles — forfait : 6 500 € TTC",
       after: "Isolation de 95 m² de combles perdus — isolant, référence, épaisseur et résistance thermique détaillés — prix HT, TVA et TTC séparés.",
     },
+    faq: [
+      {
+        question: "Que doit contenir un devis pour être accepté par MaPrimeRénov’ ?",
+        answer:
+          "L’identité complète de l’entreprise avec son SIRET, le nom du bénéficiaire tel que déclaré, l’adresse exacte du logement où les travaux sont exécutés, une ligne par geste avec quantité, unité, produit et performances, le numéro et le domaine de qualification RGE, et le détail des montants HT, TVA et TTC poste par poste.",
+      },
+      {
+        question: "Faut-il déposer la demande avant ou après la signature du devis ?",
+        answer:
+          "La demande d’aide se dépose avant le début des travaux, à partir du devis. C’est ce devis qui sert de base à l’instruction et au calcul du montant. Commencer le chantier avant l’accord expose le dossier à un refus, et les règles de démarrage se vérifient dans le mode d’emploi en vigueur à la date du projet.",
+      },
+      {
+        question: "Un devis au forfait peut-il passer ?",
+        answer:
+          "Difficilement. MaPrimeRénov’ instruit geste par geste, avec des critères techniques propres à chacun. Un forfait global ne permet ni de vérifier l’éligibilité, ni de rapprocher ensuite la facture du devis poste par poste, contrôle opéré au moment du versement.",
+      },
+      {
+        question: "L’adresse de facturation peut-elle remplacer l’adresse du chantier ?",
+        answer:
+          "Non. MaPrimeRénov’ finance un logement précis, avec ses conditions d’ancienneté et d’occupation. L’adresse d’exécution des travaux doit figurer en entier sur le devis et correspondre exactement à celle de la demande, complément d’adresse compris dans un immeuble.",
+      },
+      {
+        question: "Mon RGE couvre-t-il automatiquement tous les postes du devis ?",
+        answer:
+          "Non. Chaque geste doit relever d’un domaine de qualification effectivement détenu. Un devis à plusieurs postes relevant de domaines différents exige que chacun soit couvert, et pas seulement le poste principal. En sous-traitance, c’est l’entreprise qui exécute réellement le geste qui doit détenir la qualification.",
+      },
+      {
+        question: "Que faire si un produit change entre le devis et la facture ?",
+        answer:
+          "Le produit de remplacement doit rester éligible et sa performance au moins équivalente à celle annoncée. Le changement doit être tracé, par un devis rectificatif ou une pièce complémentaire selon le cas, plutôt que découvert par l’instructeur au moment du rapprochement entre le devis et la facture.",
+      },
+    ],
     sources: [
       { label: "Bonnes pratiques devis et factures MaPrimeRénov’ — France Rénov’", href: franceRenovDevis },
       { label: "Bien monter son dossier MaPrimeRénov’ — France Rénov’", href: franceRenovDossier },
@@ -540,9 +678,53 @@ export const guides = {
       "Checklist des mentions d’entreprise, de chantier et de travaux à contrôler sur un devis RGE avant un dossier MaPrimeRénov’ ou CEE.",
     eyebrow: "Guide pratique · Devis artisan RGE",
     category: "Devis & conformité",
-    updated: "2026-07-14",
+    updated: "2026-07-28",
     intro:
       "La conformité se vérifie plus vite lorsque le devis est relu en trois blocs : l’entreprise, le client et le chantier, puis la description technique et financière des travaux.",
+    sections: [
+      {
+        heading: "Deux couches de mentions, pas une",
+        paragraphs: [
+          "Un devis d’artisan RGE porte en réalité deux séries d’obligations qui se superposent. La première relève du droit commun : ce sont les mentions qu’un devis doit comporter quel que soit le chantier, parce qu’il engage une entreprise vis-à-vis d’un consommateur. La seconde relève des dispositifs d’aide, MaPrimeRénov’ ou CEE, qui exigent en plus de quoi vérifier l’éligibilité du geste.",
+          "Cette superposition explique un malentendu fréquent. Un devis peut être parfaitement valable commercialement, avoir été accepté sans réserve par le client, et faire tomber la prime parce qu’il lui manque une caractéristique technique dont le droit commun se moque. À l’inverse, un devis très détaillé techniquement mais dont le bloc entreprise est incomplet posera problème au moment du rapprochement avec la facture. Les deux couches doivent tenir ensemble.",
+        ],
+      },
+      {
+        heading: "Bloc entreprise : désigner sans ambiguïté qui facture",
+        paragraphs: [
+          "Le premier bloc identifie l’entreprise : raison sociale, forme juridique le cas échéant, adresse, identifiants d’immatriculation, SIRET, coordonnées. L’exigence de fond n’est pas décorative : le dossier d’aide doit pouvoir rattacher le devis, la facture, le certificat RGE et l’attestation sur l’honneur à une seule et même entité, sans reconstitution.",
+          "Les écarts se glissent là où on ne les attend pas. Un nom commercial sur le devis et une raison sociale sur la facture, une adresse de siège d’un côté et d’établissement de l’autre, un SIRET d’un établissement secondaire : chacun de ces cas crée un doute légitime sur l’identité du prestataire. Choisissez une désignation unique et tenez-la sur toutes les pièces du dossier.",
+        ],
+      },
+      {
+        heading: "Bloc client et chantier : l’adresse d’exécution est décisive",
+        paragraphs: [
+          "Le deuxième bloc identifie le bénéficiaire et le lieu des travaux. C’est ici que se joue une confusion coûteuse : l’adresse de facturation n’est pas l’adresse du chantier. Un logement mis en location, une résidence secondaire, un client qui a déménagé en cours de projet suffisent à les dissocier. Or c’est l’adresse d’exécution qui conditionne l’aide, puisqu’elle détermine le logement financé.",
+          "Écrivez cette adresse en entier, telle qu’elle figurera dans la demande d’aide : numéro, voie, complément d’adresse, code postal, commune. Les abréviations et les identifications partielles, comme la seule mention de la ville, laissent planer un doute que le dossier ne pourra pas lever. Le nom du client doit lui aussi correspondre exactement à celui du bénéficiaire déclaré.",
+        ],
+      },
+      {
+        heading: "Bloc technique : ce qui n’est pas écrit n’existe pas",
+        paragraphs: [
+          "Le troisième bloc décrit les travaux, et c’est celui qui fait la différence entre un devis ordinaire et un devis qui ouvre droit à une aide. Chaque poste doit porter la nature du geste, la quantité, l’unité, le produit posé avec sa marque et sa référence, et les performances exigées par le dispositif visé, comme la résistance thermique pour un isolant.",
+          "La règle de relecture tient en une phrase : ce qui n’est pas écrit sur le devis n’existe pas pour l’instructeur. Une performance annoncée dans une documentation fabricant, une précision donnée oralement au client, une caractéristique évidente pour un professionnel du métier ne comptent pas. Le corollaire est qu’une ligne unique regroupant plusieurs gestes est presque toujours un problème : elle mélange des critères techniques distincts, et souvent des taux de TVA différents.",
+        ],
+      },
+      {
+        heading: "Bloc financier : préparer le rapprochement avec la facture",
+        paragraphs: [
+          "Le quatrième bloc rend les montants comparables : prix unitaires ou forfaits explicites, total hors taxes, taux et montant de TVA, total toutes taxes comprises, conditions de règlement et durée de validité. L’enjeu n’est pas la facture en tant que telle, c’est le rapprochement ligne à ligne qui sera fait plus tard entre le devis et la facture.",
+          "Un devis construit poste par poste rend ce rapprochement mécanique. Un devis au forfait le rend impossible : personne ne peut vérifier que la facture correspond au devis si aucun des deux ne détaille. Vérifiez enfin que les totaux se recoupent réellement, l’incohérence arithmétique étant l’un des signaux qui déclenchent un examen plus poussé de tout le dossier.",
+        ],
+      },
+      {
+        heading: "Sous-traitance et qualification RGE",
+        paragraphs: [
+          "Dernier point, souvent oublié : lorsque le geste est sous-traité, c’est la qualification RGE de l’entreprise qui exécute réellement les travaux qui doit couvrir ce geste. Le numéro RGE porté sur le devis doit être vérifiable et associé au bon domaine de travaux, pas simplement mentionné.",
+          "Dossimo relit ces quatre blocs automatiquement et remonte les écarts avant le dépôt. C’est un service indépendant d’aide à la préparation de dossier, non affilié à l’Anah ni à France Rénov’ : il ne dépose pas le dossier et ne touche pas la prime.",
+        ],
+      },
+    ],
     checklist: [
       { title: "Bloc entreprise", text: "Raison sociale, forme juridique le cas échéant, adresse, identifiants d’immatriculation, SIRET et coordonnées doivent désigner sans ambiguïté l’entreprise qui facture." },
       { title: "Bloc client et chantier", text: "Le nom du client et l’adresse d’exécution doivent correspondre aux autres pièces du dossier, sans abréviation qui crée un doute." },
@@ -561,6 +743,38 @@ export const guides = {
       before: "Fourniture et pose matériel selon normes — 12 000 €",
       after: "Une ligne par geste avec lieu de pose, quantité, unité, marque, référence, performance, prix HT, TVA et TTC.",
     },
+    faq: [
+      {
+        question: "Quelles mentions sont obligatoires sur un devis d’artisan RGE ?",
+        answer:
+          "Deux séries se superposent. Celles du droit commun d’abord : identité complète de l’entreprise, SIRET, coordonnées, identité du client, description et prix des prestations, totaux HT et TTC, TVA, durée de validité. Celles des dispositifs d’aide ensuite : adresse exacte du logement, caractéristiques techniques du geste, marque et référence du produit, performances, numéro et domaine RGE.",
+      },
+      {
+        question: "L’adresse du chantier doit-elle vraiment figurer sur le devis ?",
+        answer:
+          "Oui, et en entier. C’est l’adresse d’exécution des travaux qui conditionne l’aide, pas l’adresse de facturation. Les deux diffèrent dès qu’il s’agit d’un logement mis en location, d’une résidence secondaire ou d’un client qui a déménagé. Une identification par la seule ville ne suffit pas.",
+      },
+      {
+        question: "Peut-on regrouper plusieurs gestes sur une même ligne ?",
+        answer:
+          "C’est déconseillé et souvent bloquant. Chaque geste a ses propres critères techniques d’éligibilité, et parfois son propre taux de TVA. Une ligne unique empêche de rattacher les critères au bon geste et rend impossible le rapprochement ligne à ligne entre le devis et la facture.",
+      },
+      {
+        question: "Une performance annoncée dans la documentation du fabricant compte-t-elle ?",
+        answer:
+          "Non. Ce qui n’est pas écrit sur le devis n’existe pas pour l’instructeur. La résistance thermique, la marque, la référence et les caractéristiques exigées par le dispositif doivent figurer sur le devis lui-même, même si elles paraissent évidentes pour un professionnel du métier.",
+      },
+      {
+        question: "Le numéro RGE suffit-il, ou faut-il préciser le domaine ?",
+        answer:
+          "Le numéro seul ne suffit pas à démontrer l’éligibilité. La qualification doit couvrir le domaine du geste facturé et être valable à la date utile. Un domaine voisin ne vaut pas couverture, et en cas de sous-traitance, c’est l’entreprise qui exécute réellement le geste qui doit détenir la qualification.",
+      },
+      {
+        question: "Que se passe-t-il si le devis et la facture diffèrent ?",
+        answer:
+          "C’est le motif de refus le plus courant. Un écart de surface, de référence produit ou de performance suffit à bloquer le dossier, même si chaque pièce est correcte prise isolément. La parade se prépare au devis : mêmes désignations, mêmes unités, mêmes valeurs, dans le même découpage de postes.",
+      },
+    ],
     sources: [
       { label: "Bonnes pratiques des professionnels MaPrimeRénov’", href: franceRenovDevis },
       { label: "Mentions obligatoires d’une facture — Service Public", href: mentionsFacture },
@@ -677,9 +891,46 @@ export const guides = {
       "Pour une prime CEE valable, l’offre doit être engagée avant l’acceptation du devis. Comprendre la chronologie du rôle actif et incitatif (RAI) pour éviter un rejet sans recours.",
     eyebrow: "Guide artisan RGE · Chronologie CEE",
     category: "Refus & prévention",
-    updated: "2026-07-17",
+    updated: "2026-07-28",
     intro:
       "Une prime CEE n’est valable que si elle a réellement contribué à décider les travaux. C’est le rôle actif et incitatif : l’offre CEE doit être engagée avant que le client n’accepte le devis. Si l’engagement est daté après, le dossier tombe pour effet d’aubaine, sans recours possible. La chronologie se sécurise document par document, avant le chantier.",
+    sections: [
+      {
+        heading: "Ce que le rôle actif et incitatif exige vraiment",
+        paragraphs: [
+          "Le dispositif des certificats d’économies d’énergie ne finance pas des travaux : il finance une décision. La prime n’est due que si elle a pesé sur le choix du ménage, et c’est exactement ce que vérifie le rôle actif et incitatif, souvent abrégé RAI. Un contrôleur ne cherche pas à savoir si les travaux ont été bien faits, il cherche à savoir si l’offre CEE existait avant que le client ne dise oui.",
+          "Cette exigence se lit dans une seule comparaison : la date d’engagement de l’offre CEE face à la date d’acceptation du devis. Si la première précède la seconde, la chronologie tient. Si elle vient après, le dossier est rejeté pour effet d’aubaine, c’est-à-dire une prime versée pour des travaux qui auraient eu lieu de toute façon. La distinction paraît formelle, elle est en réalité la raison d’être du dispositif.",
+        ],
+      },
+      {
+        heading: "Pourquoi c’est le seul motif de refus sans rattrapage",
+        paragraphs: [
+          "La plupart des motifs de refus se corrigent. Une mention absente s’ajoute, une facture se rectifie, une pièce manquante se demande au bénéficiaire. Le rôle actif et incitatif fait exception : il porte sur un ordre entre deux dates, et cet ordre ne se réécrit pas. Antidater une pièce serait un faux, et un dossier reconstitué après coup se repère à la première demande de justificatif.",
+          "C’est ce qui rend l’erreur si coûteuse. L’artisan découvre en général le problème au dépôt, alors que le chantier est fait, la facture émise et le client informé du montant qu’il attendait. Il ne reste alors qu’à annoncer que la prime est perdue. Le seul moment où le sujet se traite est celui où le devis n’est pas encore signé.",
+        ],
+      },
+      {
+        heading: "Qui engage l’offre, et avec quel document",
+        paragraphs: [
+          "L’offre CEE n’émane pas de l’artisan mais de l’obligé ou de son délégataire, c’est-à-dire l’acteur qui achètera les certificats. Elle prend des formes variables selon les partenaires : bon d’adhésion signé par le bénéficiaire, courrier d’offre nominatif, contrat cadre auquel le chantier est rattaché. Peu importe la forme, ce qui compte est qu’une pièce écrite et datée matérialise l’engagement avant la signature du devis.",
+          "Un point échappe souvent à la vigilance : cette pièce doit relier l’offre à ce chantier précis. Un contrat cadre signé un an plus tôt, sans aucun rattachement daté à l’opération en cours, laisse un doute qu’un contrôleur tranchera rarement en votre faveur. Conservez systématiquement la trace qui fait le lien entre l’offre et le projet, et rappelez le dispositif CEE sur le devis lui-même.",
+        ],
+      },
+      {
+        heading: "Organiser la chronologie sur un chantier réel",
+        paragraphs: [
+          "L’ordre de travail qui sécurise le dossier inverse le réflexe commercial habituel. On chiffre, on présente l’offre CEE au client, on fait engager cette offre, et seulement ensuite on fait signer le devis. Tant que la chronologie n’est pas établie, aucun acompte engageant ni aucun début de travaux : un chantier démarré vaut décision prise, quelle que soit la date portée sur le devis.",
+          "La date d’acceptation du devis mérite une attention particulière. Elle doit figurer lisiblement sur la pièce signée, de la main du client. Un devis retourné sans date, ou daté seulement par l’entreprise, prive le dossier de la preuve dont il a besoin, alors même que la chronologie réelle était correcte. Une tolérance encadrée peut exister pour certains particuliers, mais elle se vérifie dans les textes en vigueur et ne couvre jamais un chantier déjà démarré. En cas de doute, restez sur la règle simple : l’offre avant le devis.",
+        ],
+      },
+      {
+        heading: "Le rôle de Dossimo sur ce point",
+        paragraphs: [
+          "Dossimo contrôle la chronologie du rôle actif et incitatif parmi les points de vigilance remontés avant le dépôt, en rapprochant les dates portées par les pièces du dossier. L’objectif est que l’écart se voie tant qu’il est encore corrigeable, c’est-à-dire avant la signature, et non au moment où la prime est déjà perdue.",
+          "Dossimo est un service indépendant d’aide à la préparation de dossier, non affilié à l’Anah ni à France Rénov’. Il ne dépose jamais le dossier et ne touche jamais la prime : vous gardez votre client et votre relation avec l’obligé.",
+        ],
+      },
+    ],
     checklist: [
       { title: "Situer l’engagement CEE", text: "L’offre ou le contrat CEE (bon d’adhésion, courrier, contrat cadre) doit porter une date antérieure à l’acceptation du devis par le client." },
       { title: "Dater l’acceptation du devis", text: "La date d’acceptation du devis fait foi. Elle doit venir après l’engagement CEE, et rester lisible sur la pièce signée." },
@@ -698,6 +949,38 @@ export const guides = {
       before: "Devis accepté le 3 mars, contrat CEE signé le 20 mars : l’incitation arrive après la décision de travaux.",
       after: "Offre CEE engagée le 1er mars, devis accepté le 3 mars : la prime a bien précédé la décision, la chronologie est défendable.",
     },
+    faq: [
+      {
+        question: "Que signifie « rôle actif et incitatif » en pratique ?",
+        answer:
+          "Que la prime CEE doit avoir contribué à décider les travaux, et non les récompenser après coup. Concrètement, l’offre CEE doit être engagée avant que le client n’accepte le devis. C’est cet ordre entre deux dates qui est contrôlé, pas la qualité des travaux.",
+      },
+      {
+        question: "J’ai fait signer le devis avant l’offre CEE, puis-je rattraper ?",
+        answer:
+          "Non. C’est le seul motif de refus qui ne se corrige pas, parce qu’il porte sur un ordre entre deux dates déjà établies. Antidater une pièce serait un faux. Si le devis est signé et que rien n’a démarré, la seule voie est d’annuler ce devis et d’en établir un nouveau après l’engagement de l’offre CEE.",
+      },
+      {
+        question: "Quelle date fait foi pour le devis ?",
+        answer:
+          "La date d’acceptation par le client, celle qu’il porte lui-même sur la pièce signée, et non la date d’édition du devis par l’entreprise. Un devis retourné sans date d’acceptation lisible prive le dossier de sa preuve, même lorsque la chronologie réelle était correcte.",
+      },
+      {
+        question: "Un acompte compte-t-il comme un démarrage des travaux ?",
+        answer:
+          "Un acompte engageant est un signal fort que la décision était prise. Tant que la chronologie du rôle incitatif n’est pas établie, n’encaissez ni acompte ni commande ferme, et ne démarrez aucun travaux, y compris la commande de matériel spécifique au chantier.",
+      },
+      {
+        question: "Un contrat cadre signé il y a un an suffit-il ?",
+        answer:
+          "Pas à lui seul. Il faut une trace écrite et datée qui rattache l’offre à ce chantier précis. Un contrat cadre ancien sans rattachement daté à l’opération en cours laisse un doute qu’un contrôleur tranchera rarement en votre faveur.",
+      },
+      {
+        question: "Qui émet l’offre CEE : l’artisan ou un autre acteur ?",
+        answer:
+          "L’obligé ou son délégataire, c’est-à-dire l’acteur qui achètera les certificats. L’artisan ne l’émet pas, mais c’est lui qui subit le refus si la chronologie est mauvaise : c’est donc à lui de vérifier que l’engagement est bien intervenu avant de faire signer le devis.",
+      },
+    ],
     sources: [
       { label: "Questions-réponses officielles sur le dispositif CEE (ecologie.gouv.fr)", href: questionsCee },
       { label: "Catalogue officiel des fiches d’opérations standardisées CEE", href: catalogueCee },
@@ -711,9 +994,46 @@ export const guides = {
       "Une aide est bloquée si la qualification RGE ne couvre pas le geste réalisé ou n’est pas valable à la date utile. Les points à vérifier avant d’engager le chantier.",
     eyebrow: "Guide artisan RGE · Éligibilité",
     category: "Refus & prévention",
-    updated: "2026-07-17",
+    updated: "2026-07-28",
     intro:
       "Le statut RGE ne suffit pas à lui seul : il doit couvrir précisément le geste réalisé et être valable à la date qui compte pour le dispositif. Une qualification dans un domaine voisin, expirée ou portée par la mauvaise entreprise bloque l’accès aux aides. Ces contrôles se font avant d’engager les travaux, quand tout est encore corrigeable.",
+    sections: [
+      {
+        heading: "« Être RGE » ne veut rien dire tout seul",
+        paragraphs: [
+          "Reconnu Garant de l’Environnement n’est pas un label unique attribué à une entreprise, mais un ensemble de qualifications délivrées domaine par domaine. Une entreprise n’est jamais RGE dans l’absolu : elle est qualifiée pour l’isolation, pour les pompes à chaleur, pour la ventilation, ou pour plusieurs de ces domaines à la fois. C’est cette distinction qui décide de l’accès aux aides, et c’est précisément celle que le langage courant efface.",
+          "La conséquence est directe. La bonne question n’est pas « suis-je RGE ? » mais « ce geste précis est-il couvert par une qualification que je détiens, valable à la date qui compte pour ce dispositif ? ». Un chantier techniquement irréprochable, réalisé par une entreprise réellement qualifiée, peut ne pas ouvrir droit à l’aide simplement parce que le geste relève d’un domaine voisin de celui détenu.",
+        ],
+      },
+      {
+        heading: "Le domaine doit correspondre au geste facturé",
+        paragraphs: [
+          "Le contrôle consiste à mettre en regard deux choses : le geste tel qu’il apparaît sur la facture, et le périmètre exact de la qualification invoquée. Les frontières entre domaines paraissent parfois arbitraires vues du chantier, mais elles sont opposables. Une qualification chauffage ne couvre pas une isolation de combles, une qualification isolation des murs ne couvre pas nécessairement l’isolation des planchers bas.",
+          "Le cas le plus piégeux est celui du devis à plusieurs postes. Un chantier qui associe une pompe à chaleur et une isolation relève de deux domaines distincts, et chacun doit être couvert. Invoquer une seule qualification pour l’ensemble ne bloque pas forcément tout le dossier, mais fait tomber le geste non couvert, souvent celui qui portait la plus grosse part de la prime attendue.",
+        ],
+      },
+      {
+        heading: "La date utile n’est pas la date des travaux",
+        paragraphs: [
+          "Une qualification a une durée de validité, et le dispositif regarde si elle était active à une date précise. Cette date n’est pas celle de la fin du chantier, ni celle de la facture : c’est en général celle de l’acceptation du devis ou de l’engagement de l’opération, selon le dispositif. Autrement dit, la qualification doit être valable au moment où le client s’engage, bien avant que le premier isolant soit posé.",
+          "Cela crée un risque discret sur les chantiers longs et sur les qualifications proches de leur échéance. Une qualification qui expire trois semaines après la signature laisse croire que tout va bien alors que le renouvellement n’est pas acquis. Vérifiez la date d’échéance avant d’engager, pas au moment de monter le dossier, et lancez le renouvellement avec de la marge : un audit ou une visite de contrôle ne se programment pas en quelques jours.",
+        ],
+      },
+      {
+        heading: "En sous-traitance, c’est celui qui pose qui doit être qualifié",
+        paragraphs: [
+          "La règle est constante et régulièrement méconnue : la qualification doit être détenue par l’entreprise qui exécute réellement le geste. Une entreprise générale qualifiée qui sous-traite l’isolation à un poseur non qualifié ne transmet pas sa qualification avec le contrat de sous-traitance.",
+          "Cela impose de vérifier les qualifications de vos sous-traitants avec la même rigueur que la vôtre, et de les vérifier pour le geste qu’ils exécutent réellement, pas pour l’objet global du chantier. Ce point mérite une place explicite dans le dossier lorsque la sous-traitance existe, plutôt que d’être découvert lors d’une demande de justificatif.",
+        ],
+      },
+      {
+        heading: "Rendre la qualification vérifiable, pas seulement la mentionner",
+        paragraphs: [
+          "Un numéro RGE porté sur un devis sans domaine de travaux identifiable n’apporte rien à l’instruction. Ce qui compte est que l’instructeur puisse retrouver la qualification dans l’annuaire officiel des professionnels RGE, constater qu’elle couvre le geste et qu’elle était active à la date utile. Indiquez donc le domaine à côté du numéro, et conservez le certificat correspondant dans les pièces du dossier.",
+          "Dossimo contrôle la correspondance entre le geste et le domaine RGE parmi les points de vigilance remontés avant le dépôt. C’est un service indépendant d’aide à la préparation de dossier, non affilié à l’Anah ni à France Rénov’ : il ne dépose jamais le dossier et ne touche jamais la prime.",
+        ],
+      },
+    ],
     checklist: [
       { title: "Identifier le domaine exact", text: "La qualification doit couvrir précisément le geste concerné, par exemple pompe à chaleur, isolation ou ventilation, et non un domaine seulement proche." },
       { title: "Vérifier la validité à la date utile", text: "Contrôlez que la qualification est active à la date qui compte pour le dispositif, souvent l’acceptation du devis ou l’engagement de l’opération." },
@@ -732,6 +1052,38 @@ export const guides = {
       before: "Une qualification « chauffage » est invoquée pour une isolation de combles : le domaine ne correspond pas au geste.",
       after: "Le geste d’isolation est porté par une qualification RGE isolation, valide à la date d’acceptation du devis et vérifiable dans l’annuaire officiel.",
     },
+    faq: [
+      {
+        question: "Une entreprise RGE est-elle qualifiée pour tous les travaux de rénovation ?",
+        answer:
+          "Non. RGE n’est pas un label unique mais un ensemble de qualifications délivrées domaine par domaine : isolation, pompes à chaleur, ventilation, chauffage bois. Une entreprise est qualifiée pour un ou plusieurs domaines, jamais « RGE dans l’absolu », et seul le domaine correspondant au geste facturé ouvre droit à l’aide.",
+      },
+      {
+        question: "À quelle date la qualification doit-elle être valable ?",
+        answer:
+          "À la date qui compte pour le dispositif, en général celle de l’acceptation du devis ou de l’engagement de l’opération, et non celle de la fin du chantier ou de la facture. Une qualification qui expire pendant le chantier mais qui était active à l’engagement ne pose pas le même problème qu’une qualification expirée à la signature.",
+      },
+      {
+        question: "Mon devis comporte deux gestes de domaines différents, que faire ?",
+        answer:
+          "Chaque geste doit être couvert par une qualification adaptée. Invoquer une seule qualification pour l’ensemble fait tomber le geste non couvert, souvent celui qui portait la plus grosse part de la prime. Si vous ne détenez qu’un des deux domaines, faites porter l’autre geste par une entreprise qualifiée et tracez-le dans le dossier.",
+      },
+      {
+        question: "Puis-je sous-traiter un geste à une entreprise non RGE ?",
+        answer:
+          "Pas si le geste doit ouvrir droit à une aide. La qualification doit être détenue par l’entreprise qui exécute réellement les travaux : elle ne se transmet pas par le contrat de sous-traitance. Vérifiez les qualifications de vos sous-traitants pour le geste qu’ils réalisent, pas pour l’objet global du chantier.",
+      },
+      {
+        question: "Comment vérifier qu’une qualification RGE est valide ?",
+        answer:
+          "Par l’annuaire officiel des professionnels RGE de France Rénov’, qui permet de retrouver l’entreprise, ses domaines de qualification et leur validité. C’est aussi ce que fera l’instructeur : indiquez donc le domaine à côté du numéro sur le devis et conservez le certificat dans les pièces du dossier.",
+      },
+      {
+        question: "Ma qualification expire bientôt, dois-je attendre pour signer ?",
+        answer:
+          "Ne signez pas en comptant sur un renouvellement non acquis. Un audit ou une visite de contrôle ne se programment pas en quelques jours. Lancez la démarche de renouvellement avec de la marge et vérifiez la date d’échéance avant d’engager le chantier, plutôt qu’au moment de monter le dossier.",
+      },
+    ],
     sources: [
       { label: "Annuaire officiel des professionnels RGE (France Rénov’)", href: annuaireRge },
       { label: "Bien monter son dossier MaPrimeRénov’ — France Rénov’", href: franceRenovDossier },
