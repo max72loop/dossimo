@@ -95,6 +95,12 @@ export function SiteMenu({
                 {item.label}
               </MenuLien>
             ))}
+            {/* La visite guidée entre par le menu, pas par la barre en ligne : celle-ci
+                tient déjà cinq rubriques, et ce panneau est justement « le point
+                d'entrée unique et extensible vers tout ce qui déborde du header ». */}
+            <MenuLien href="/visite" onClick={fermer}>
+              La visite guidée
+            </MenuLien>
             <MenuLien href="/demo" onClick={fermer}>
               Analyser un devis
             </MenuLien>
