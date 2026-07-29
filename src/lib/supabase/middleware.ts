@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
 import type { Database } from "@/lib/database.types";
+import { construireCsp } from "@/lib/security/csp";
 
 /**
  * Refreshes the Supabase auth session on every matched request and keeps the
@@ -10,20 +11,7 @@ import type { Database } from "@/lib/database.types";
 export async function updateSession(request: NextRequest) {
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
   const isDev = process.env.NODE_ENV === "development";
-  const csp = [
-    "default-src 'self'",
-    "base-uri 'self'",
-    "form-action 'self'",
-    "frame-ancestors 'none'",
-    "object-src 'none'",
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDev ? " 'unsafe-eval'" : ""}`,
-    // Les composants Motion utilisent des attributs style dynamiques.
-    "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data: blob:",
-    "connect-src 'self' https://*.supabase.co https://api.stripe.com",
-    "font-src 'self' data:",
-    "upgrade-insecure-requests",
-  ].join("; ");
+  const csp = construireCsp({ nonce, isDev });
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-nonce", nonce);
   requestHeaders.set("Content-Security-Policy", csp);

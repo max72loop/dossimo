@@ -17,13 +17,23 @@
  */
 const ID = "cms6l7xck00v9yq0jup68rp8w";
 
+/**
+ * Origine de l'hébergeur. Elle sert DEUX choses qui doivent rester d'accord : les
+ * URL ci-dessous et la directive `frame-src` de la politique de sécurité
+ * ([`lib/security/csp.ts`](../security/csp.ts)). Sans cette seconde, la `iframe`
+ * retombe sur `default-src 'self'` et le navigateur affiche « Ce contenu est
+ * bloqué » — c'est arrivé en production le 2026-07-30.
+ */
+const ORIGINE = "https://app.supademo.com";
+
 export const VISITE = {
   id: ID,
   titre: "Du devis au dossier prêt à déposer",
+  origine: ORIGINE,
   /** Lien direct : ouverture en plein écran, partage, prospection. */
-  lien: `https://app.supademo.com/demo/${ID}`,
+  lien: `${ORIGINE}/demo/${ID}`,
   /** URL d'embarquement dans un `iframe` (paramètres imposés par Supademo). */
-  embed: `https://app.supademo.com/embed/${ID}?embed_v=2&utm_source=dossimo`,
+  embed: `${ORIGINE}/embed/${ID}?embed_v=2&utm_source=dossimo`,
   /** Rapport largeur/hauteur des captures de la démo (1920 × 945). */
   ratio: "1920 / 945",
   hebergeur: "Supademo",
