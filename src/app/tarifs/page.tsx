@@ -13,6 +13,7 @@ import {
 
 import { SiteFooter } from "@/components/landing/site-footer";
 import { SiteHeader } from "@/components/landing/site-header";
+import { FOCUS_SOMBRE } from "@/components/ui/boutons";
 import { CTA_DEMO } from "@/lib/landing/copy";
 import { grillePublique } from "@/lib/landing/grille-publique";
 import type { GrilleAffichee } from "@/lib/pricing";
@@ -24,9 +25,6 @@ export const metadata: Metadata = publicMetadata({
   description:
     "Consultez les tarifs Dossimo pour la préparation et le contrôle de vos dossiers MaPrimeRénov’ et CEE. Paiement unique, sans abonnement ni commission.",
 });
-
-const FOCUS_SOMBRE =
-  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-papier";
 
 function Shell({
   children,

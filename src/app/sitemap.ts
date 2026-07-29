@@ -19,9 +19,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   return [
     { url: SITE_URL, lastModified: LAST_SIGNIFICANT_UPDATE },
     { url: `${SITE_URL}/demo`, lastModified: LAST_SIGNIFICANT_UPDATE },
+    { url: `${SITE_URL}/visite`, lastModified: new Date("2026-07-29T00:00:00.000Z") },
     { url: `${SITE_URL}/exemple`, lastModified: LAST_SIGNIFICANT_UPDATE },
     { url: `${SITE_URL}/tarifs`, lastModified: new Date("2026-07-22T00:00:00.000Z") },
-    { url: `${SITE_URL}/guides`, lastModified: LAST_SIGNIFICANT_UPDATE },
+    { url: `${SITE_URL}/guides`, lastModified: new Date("2026-07-28T00:00:00.000Z") },
     { url: `${SITE_URL}/a-propos`, lastModified: new Date("2026-07-27T00:00:00.000Z") },
     { url: `${SITE_URL}/methode-editoriale`, lastModified: new Date("2026-07-27T00:00:00.000Z") },
     ...[...guideList, ...gestes].map((page) => ({

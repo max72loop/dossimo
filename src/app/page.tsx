@@ -21,7 +21,8 @@ import { EtapePicto, Illustration } from "@/components/landing/illustrations";
 import { LeadForm } from "@/components/landing/lead-form";
 import { SiteFooter } from "@/components/landing/site-footer";
 import { SiteHeader } from "@/components/landing/site-header";
-import { FOCUS } from "@/components/ui/boutons";
+import { VisiteGuidee } from "@/components/landing/visite-guidee";
+import { FOCUS, FOCUS_SOMBRE } from "@/components/ui/boutons";
 import { CTA_DEMO } from "@/lib/landing/copy";
 import { grillePublique } from "@/lib/landing/grille-publique";
 import { labelEuros, type GrilleAffichee } from "@/lib/pricing";
@@ -41,9 +42,6 @@ export const metadata: Metadata = publicMetadata({
   description: SITE_DESCRIPTION,
   absoluteTitle: true,
 });
-
-const FOCUS_SOMBRE =
-  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-papier";
 
 function prixLancement(grille: GrilleAffichee): string {
   return labelEuros(Math.round(grille.minCents / 2));
@@ -200,6 +198,32 @@ function Parcours() {
             </li>
           ))}
         </ol>
+
+        {/* La visite guidée prolonge les quatre étapes DANS la même section, plutôt
+            que dans une section à elle : les cartes annoncent le parcours, la visite
+            le montre, et la page garde son alternance de fonds (§5, rythme de la
+            vitrine) au lieu de coller deux sections de même teinte. L'ancre
+            `#visite` reste adressable pour la prospection. */}
+        <div id="visite" className="mt-16 scroll-mt-24 border-t border-filigrane pt-12">
+          <div className="grid items-end gap-6 lg:grid-cols-[1fr_0.75fr]">
+            <h3 className="max-w-2xl font-serif text-2xl font-semibold leading-tight tracking-tight text-encre sm:text-3xl">
+              Les mêmes quatre étapes, écran par écran.
+            </h3>
+            <p className="max-w-xl leading-relaxed text-ardoise lg:justify-self-end">
+              La visite suit un dossier du devis déposé jusqu&rsquo;au pack contrôlé.
+              Elle est la même pour l&rsquo;isolation, la pompe à chaleur, le
+              chauffe-eau et le chauffage au bois : seules les caractéristiques
+              techniques changent.
+            </p>
+          </div>
+          <VisiteGuidee className="mt-8" />
+          <Link
+            href="/visite"
+            className={"mt-6 inline-flex items-center gap-2 text-sm font-semibold text-tampon underline underline-offset-4 " + FOCUS}
+          >
+            La visite sur sa propre page <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          </Link>
+        </div>
       </Shell>
     </section>
   );
