@@ -4,7 +4,11 @@ import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Check } from "lucide-react";
 
+import { Spinner } from "@/components/ui/spinner";
+import { FOCUS } from "@/components/ui/boutons";
+import { compresserImage } from "@/lib/depot/compresser-image";
 import { uploadPiece } from "@/lib/piece/actions";
+import { ACCEPT_DOCUMENT, estTypeArtisan, LIBELLE_DEPOT } from "@/lib/piece/catalogue";
 import type { EntreeChecklist } from "@/lib/piece/checklist";
 import type { TypePiece } from "@/lib/database.types";
 
@@ -17,18 +21,6 @@ import type { TypePiece } from "@/lib/database.types";
  * sont marquées comme telles : il n'a rien à faire, c'est le lien de dépôt qui s'en
  * charge — et il ne les verse pas à sa place.
  */
-
-/** Libellé du bouton, par type manquant. Deux photos = deux boutons. */
-const LIBELLE: Partial<Record<TypePiece, string>> = {
-  devis: "Déposer le devis",
-  facture: "Déposer la facture",
-  qualification_rge: "Déposer le certificat",
-  fiche_technique: "Déposer la fiche",
-  cadre_contribution: "Déposer le cadre",
-  attestation_honneur: "Déposer l'attestation",
-  photo_avant: "Photo avant",
-  photo_apres: "Photo après",
-};
 
 function BoutonDepot({
   dossierId,
@@ -48,8 +40,11 @@ function BoutonDepot({
     setEnvoi(true);
     setErreur(null);
 
+    // Même compression qu'ailleurs : une photo de chantier sort à 10 Mo du
+    // téléphone, et l'artisan dépose souvent depuis le chantier, en 4G.
+    const pret = await compresserImage(file);
     const fd = new FormData();
-    fd.append("file", file);
+    fd.append("file", pret);
     const res = await uploadPiece(dossierId, type, fd);
 
     setEnvoi(false);
@@ -63,7 +58,7 @@ function BoutonDepot({
       <input
         ref={input}
         type="file"
-        accept="image/jpeg,image/png,image/webp,application/pdf"
+        accept={ACCEPT_DOCUMENT}
         className="sr-only"
         onChange={(e) => choisir(e.target.files?.[0])}
         disabled={envoi}
@@ -72,11 +67,20 @@ function BoutonDepot({
         type="button"
         onClick={() => input.current?.click()}
         disabled={envoi}
-        className="inline-flex h-8 items-center rounded border border-encre/25 bg-blanc-casse px-2.5 text-xs font-medium text-encre transition-colors hover:bg-papier-fonce disabled:cursor-not-allowed disabled:opacity-60"
+        className={`inline-flex h-8 items-center gap-1.5 rounded border border-encre/25 bg-blanc-casse px-2.5 text-xs font-medium text-encre transition-colors hover:bg-papier-fonce disabled:cursor-not-allowed disabled:opacity-60 ${FOCUS}`}
       >
-        {envoi ? "Envoi…" : (LIBELLE[type] ?? "Déposer")}
+        {envoi ? <Spinner className="h-3.5 w-3.5" /> : null}
+        {envoi
+          ? "Envoi…"
+          : estTypeArtisan(type)
+            ? LIBELLE_DEPOT[type]
+            : "Déposer"}
       </button>
-      {erreur ? <span className="text-xs text-erreur">{erreur}</span> : null}
+      {erreur ? (
+        <span role="alert" className="text-xs text-erreur">
+          {erreur}
+        </span>
+      ) : null}
     </span>
   );
 }

@@ -8,6 +8,7 @@ import {
   type RetourStatut,
 } from "@/lib/dossier/oblige-actions";
 import { CARTE } from "@/components/ui/cartes";
+import { ChampReprise } from "@/components/dossier/reprise-depot";
 
 /**
  * Capture de l'issue d'un dossier après dépôt, pour MaPrimeRénov'.
@@ -30,19 +31,34 @@ export function IssueDossier({
   retour,
 }: {
   dossierId: string;
-  retour: { statut: RetourStatut; motif: string | null; detail: string | null } | null;
+  retour: {
+    statut: RetourStatut;
+    motif: string | null;
+    detail: string | null;
+    reprise_demandee: boolean | null;
+    motif_reprise: string | null;
+  } | null;
 }) {
   const router = useRouter();
   const [statut, setStatut] = useState<RetourStatut>(retour?.statut ?? "en_cours");
   const [motif, setMotif] = useState(retour?.motif ?? "");
   const [detail, setDetail] = useState(retour?.detail ?? "");
+  const [reprise, setReprise] = useState<boolean | null>(retour?.reprise_demandee ?? null);
+  const [motifReprise, setMotifReprise] = useState(retour?.motif_reprise ?? "");
   const [pending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
 
   function save() {
     setMessage(null);
     startTransition(async () => {
-      const res = await enregistrerRetourDepot({ dossierId, statut, motif, detail });
+      const res = await enregistrerRetourDepot({
+        dossierId,
+        statut,
+        motif,
+        detail,
+        repriseDemandee: reprise,
+        motifReprise,
+      });
       if (res.ok) {
         setMessage("Issue enregistrée.");
         router.refresh();
@@ -100,6 +116,16 @@ export function IssueDossier({
             prochains dossiers.
           </div>
         </div>
+      )}
+
+      {statut !== "abandonne" && (
+        <ChampReprise
+          demandee={reprise}
+          motif={motifReprise}
+          onDemandee={setReprise}
+          onMotif={setMotifReprise}
+          inputClass={input}
+        />
       )}
 
       <div className="mt-4">

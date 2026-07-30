@@ -10,9 +10,8 @@ import { piecesAttendues, PIECES_BENEFICIAIRE } from "@/lib/depot/pieces-attendu
 import { lireAvisImposition } from "@/lib/piece/avis-imposition";
 import { preparerDocument, type DocumentPrepare } from "@/lib/piece/document";
 import { ACCEPTED_DOCUMENT_MIMES, isAcceptedDocument } from "@/lib/piece/file-validation";
+import { TAILLE_MAX_PIECE } from "@/lib/piece/catalogue";
 import type { Json, TypePiece } from "@/lib/database.types";
-
-const TAILLE_MAX = 15 * 1024 * 1024; // 15 Mo
 
 /* ------------------------------------------------------------ Côté artisan */
 
@@ -157,7 +156,7 @@ export async function deposerPiece(
   if (!ACCEPTED_DOCUMENT_MIMES.has(file.type)) {
     return { ok: false, error: "Format non supporté (JPG, PNG, WEBP ou PDF)." };
   }
-  if (file.size > TAILLE_MAX) {
+  if (file.size > TAILLE_MAX_PIECE) {
     return { ok: false, error: "Fichier trop volumineux (15 Mo max)." };
   }
 
@@ -195,7 +194,7 @@ export async function deposerPiece(
     return { ok: false, error: "L'envoi a échoué. Réessayez." };
   }
 
-  const lu = doc ? await lireAvisImposition({ doc }) : null;
+  const lu = doc ? await lireAvisImposition({ doc, mesure: { dossierId: lien.dossierId } }) : null;
 
   const { error: insErr } = await admin.from("pieces_justificatives").insert({
     id: pieceId,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { Camera, Check, Plus, ShieldCheck, Upload, X } from "lucide-react";
 
@@ -12,6 +12,7 @@ import type { PieceAttendue } from "@/lib/depot/pieces-attendues";
 import { BTN_PRINCIPAL, BTN_SECONDAIRE_SM, FOCUS } from "@/components/ui/boutons";
 import { Logo } from "@/components/ui/logo";
 import { Spinner } from "@/components/ui/spinner";
+import { useTactile } from "@/components/ui/use-tactile";
 
 /**
  * L'écran du bénéficiaire. Une personne qui n'a jamais entendu parler de Dossimo,
@@ -31,29 +32,6 @@ import { Spinner } from "@/components/ui/spinner";
 
 /** Aperçus locaux des fichiers envoyés dans cette session, par id de pièce. */
 type Apercus = Record<string, string>;
-
-/**
- * Écran tactile ou non. Le bouton « Photographier » n'a de sens que là où `capture`
- * est honoré : sur un ordinateur, l'attribut est ignoré et le bouton rouvrirait le
- * même sélecteur de fichiers, en promettant un appareil photo qui n'existe pas.
- *
- * `useSyncExternalStore` plutôt qu'un `useEffect` : le serveur rend `false` (aucun
- * `window`), le client lit la vraie valeur dès le premier rendu, sans cascade de
- * rendus ni divergence d'hydratation.
- */
-const REQUETE_TACTILE = "(pointer: coarse)";
-
-function useTactile(): boolean {
-  return useSyncExternalStore(
-    (onChange) => {
-      const mq = window.matchMedia(REQUETE_TACTILE);
-      mq.addEventListener("change", onChange);
-      return () => mq.removeEventListener("change", onChange);
-    },
-    () => window.matchMedia(REQUETE_TACTILE).matches,
-    () => false,
-  );
-}
 
 function Vignette({ url, nom }: { url: string | undefined; nom: string }) {
   if (!url) {

@@ -44,6 +44,19 @@ export type Deposant = "artisan" | "beneficiaire";
 export type StatutExtraction = "en_attente" | "ok" | "echec";
 export type StatutValidationPiece = "submitted" | "approved" | "rejected";
 
+/**
+ * Étapes du tunnel qu'aucune table métier ne portait (migration 0051). Un
+ * `text + check` côté base, une union ici : les deux doivent rester en miroir.
+ */
+export type TypeEvenementParcours =
+  | "essai_commence"
+  | "devis_lu"
+  | "devis_echec"
+  | "assistance";
+
+/** Pourquoi une lecture de devis a échoué. Un service tombé n'est pas un document illisible. */
+export type MotifEchecLecture = "non_configure" | "illisible" | "service_indisponible";
+
 // Pricing + parrainage (migrations 0012 / 0013).
 export type DossierBillingStatus =
   | "draft"
@@ -67,7 +80,10 @@ export type StatutProspect =
   | "repondu"
   | "desinscrit"
   | "bounce"
-  | "exclu";
+  | "exclu"
+  // Mis de côté pour un appel (migration 0052). Réversible, contrairement à
+  // « exclu » : repasser à « nouveau » rend le contact à la file automatique.
+  | "reserve_telephone";
 export type StatutMessageProspection =
   | "en_attente"
   | "valide"
@@ -300,10 +316,31 @@ export interface Database {
         Relationships: [];
       };
       retours_depot: {
-        Row: { id: string; dossier_id: string; statut: "en_cours" | "accepte" | "refuse" | "abandonne"; motif: string | null; detail: string | null; declared_at: string; updated_at: string };
-        Insert: { id?: string; dossier_id: string; statut: "en_cours" | "accepte" | "refuse" | "abandonne"; motif?: string | null; detail?: string | null; declared_at?: string; updated_at?: string };
+        // `reprise_demandee` est nullable SANS défaut (migration 0051) : NULL
+        // signifie « on n'a pas posé la question », jamais « sans reprise ».
+        Row: { id: string; dossier_id: string; statut: "en_cours" | "accepte" | "refuse" | "abandonne"; motif: string | null; detail: string | null; reprise_demandee: boolean | null; motif_reprise: string | null; declared_at: string; updated_at: string };
+        Insert: { id?: string; dossier_id: string; statut: "en_cours" | "accepte" | "refuse" | "abandonne"; motif?: string | null; detail?: string | null; reprise_demandee?: boolean | null; motif_reprise?: string | null; declared_at?: string; updated_at?: string };
         Update: Partial<Database["public"]["Tables"]["retours_depot"]["Insert"]>;
         Relationships: [{ foreignKeyName: "retours_depot_dossier_id_fkey"; columns: ["dossier_id"]; referencedRelation: "dossiers"; referencedColumns: ["id"] }];
+      };
+      // --- Mesure du tunnel d'entreprise (migration 0051) ------------------
+      evenements_parcours: {
+        Row: { id: string; type: TypeEvenementParcours; dossier_id: string | null; artisan_id: string | null; source: string | null; motif: string | null; minutes: number | null; detail_json: Json; created_at: string };
+        Insert: { id?: string; type: TypeEvenementParcours; dossier_id?: string | null; artisan_id?: string | null; source?: string | null; motif?: string | null; minutes?: number | null; detail_json?: Json; created_at?: string };
+        Update: Partial<Database["public"]["Tables"]["evenements_parcours"]["Insert"]>;
+        Relationships: [
+          { foreignKeyName: "evenements_parcours_dossier_id_fkey"; columns: ["dossier_id"]; referencedRelation: "dossiers"; referencedColumns: ["id"] },
+          { foreignKeyName: "evenements_parcours_artisan_id_fkey"; columns: ["artisan_id"]; referencedRelation: "artisans"; referencedColumns: ["id"] },
+        ];
+      };
+      appels_llm: {
+        Row: { id: string; dossier_id: string | null; artisan_id: string | null; contexte: string; modele: string; tokens_entree: number; tokens_sortie: number; cout_micro_usd: number | null; created_at: string };
+        Insert: { id?: string; dossier_id?: string | null; artisan_id?: string | null; contexte: string; modele: string; tokens_entree?: number; tokens_sortie?: number; cout_micro_usd?: number | null; created_at?: string };
+        Update: Partial<Database["public"]["Tables"]["appels_llm"]["Insert"]>;
+        Relationships: [
+          { foreignKeyName: "appels_llm_dossier_id_fkey"; columns: ["dossier_id"]; referencedRelation: "dossiers"; referencedColumns: ["id"] },
+          { foreignKeyName: "appels_llm_artisan_id_fkey"; columns: ["artisan_id"]; referencedRelation: "artisans"; referencedColumns: ["id"] },
+        ];
       };
       quote_gestures: {
         Row: { id: string; slug: string; label: string; category: string; mpr_eligible: boolean; cee_eligible: boolean; cee_fiche_reference: string | null; active: boolean; valid_from: string; valid_until: string | null; created_at: string; updated_at: string };
@@ -910,6 +947,9 @@ export type Artisan = Database["public"]["Tables"]["artisans"]["Row"];
 export type Dossier = Database["public"]["Tables"]["dossiers"]["Row"];
 export type Oblige = Database["public"]["Tables"]["obliges"]["Row"];
 export type RetourDepot = Database["public"]["Tables"]["retours_depot"]["Row"];
+export type EvenementParcours =
+  Database["public"]["Tables"]["evenements_parcours"]["Row"];
+export type AppelLlm = Database["public"]["Tables"]["appels_llm"]["Row"];
 export type RegleMetier = Database["public"]["Tables"]["regles_metier"]["Row"];
 export type Paiement = Database["public"]["Tables"]["paiements"]["Row"];
 export type Facture = Database["public"]["Tables"]["factures"]["Row"];

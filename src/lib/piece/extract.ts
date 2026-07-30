@@ -93,7 +93,19 @@ export type ExtractedPiece = z.infer<typeof extractedSchema>;
 
 export type ExtractResult =
   | { ok: true; data: ExtractedPiece }
-  | { ok: false; reason: "non-configure" | "erreur"; message?: string };
+  | {
+      ok: false;
+      reason: "non-configure" | "erreur";
+      message?: string;
+      /**
+       * Vrai quand c'est le SERVICE qui a flanché, pas le document. La
+       * distinction existait déjà dans le message affiché à l'artisan ; elle
+       * remonte maintenant aussi en donnée, parce qu'un taux d'échec de lecture
+       * qui mélange « quota dépassé » et « scan illisible » ne se pilote pas :
+       * le premier se règle avec le fournisseur, le second avec l'artisan.
+       */
+      indisponible?: true;
+    };
 
 /** Champs communs, demandés quelle que soit la famille. */
 const CHAMPS_COMMUNS = `  "beneficiaire_nom": "nom du client bénéficiaire",
@@ -186,6 +198,8 @@ export async function extractPiece(params: {
   type: TypePiece;
   /** Famille du geste du dossier : détermine les champs techniques à chercher. */
   famille: Famille | "auto";
+  /** Rattachement du coût de lecture. Absent sur l'essai anonyme, qui n'a pas de dossier. */
+  mesure?: { dossierId?: string | null; artisanId?: string | null };
 }): Promise<ExtractResult> {
   if (!isLlmConfigured()) return { ok: false, reason: "non-configure" };
 
@@ -199,6 +213,7 @@ export async function extractPiece(params: {
       file: params.doc,
       jsonMode: true,
       maxTokens: 1200,
+      mesure: { contexte: `extraction_${params.type}`, ...params.mesure },
     });
     const parsed = extractedSchema.safeParse(extraireJson(raw));
     if (!parsed.success) {
@@ -211,6 +226,7 @@ export async function extractPiece(params: {
     return {
       ok: false,
       reason: "erreur",
+      ...(err instanceof LlmIndisponibleError ? { indisponible: true as const } : {}),
       // Le document n'est pas en cause quand c'est le service qui flanche : lui
       // demander un scan plus net le ferait tourner en rond sur un fichier net.
       message:

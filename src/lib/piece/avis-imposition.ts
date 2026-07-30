@@ -73,6 +73,8 @@ Aucune phrase autour du JSON.`;
 
 export async function lireAvisImposition(params: {
   doc: DocumentPrepare;
+  /** Rattachement du coût de lecture au dossier du bénéficiaire. */
+  mesure?: { dossierId?: string | null; artisanId?: string | null };
 }): Promise<AvisResult> {
   if (!isLlmConfigured()) return { ok: false, reason: "non-configure" };
 
@@ -84,6 +86,7 @@ export async function lireAvisImposition(params: {
       file: params.doc,
       jsonMode: true,
       maxTokens: 800,
+      mesure: { contexte: "avis_imposition", ...params.mesure },
     });
     const parsed = avisSchema.safeParse(extraireJson(raw));
     if (!parsed.success) {

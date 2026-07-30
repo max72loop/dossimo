@@ -7,8 +7,9 @@ import { getCurrentArtisan } from "@/lib/auth/get-artisan";
 import { ACCEPTED_DOCUMENT_MIMES, isAcceptedDocument } from "@/lib/piece/file-validation";
 import { preparerDocument } from "@/lib/piece/document";
 import { extractPiece } from "@/lib/piece/extract";
-
-const TAILLE_MAX = 15 * 1024 * 1024;
+import { enregistrerEvenement } from "@/lib/mesure/journal";
+import { sanitizeSource } from "@/lib/tracking/source";
+import { TAILLE_MAX_PIECE } from "@/lib/piece/catalogue";
 
 export type AnalyseDevisResult =
   | {
@@ -124,7 +125,7 @@ export async function analyserDevisInitial(formData: FormData): Promise<AnalyseD
   if (dispositif !== "auto" && dispositif !== "cee" && dispositif !== "maprimerenov") {
     return { ok: false, error: "Choisissez le dispositif visé." };
   }
-  if (!ACCEPTED_DOCUMENT_MIMES.has(file.type) || file.size > TAILLE_MAX) {
+  if (!ACCEPTED_DOCUMENT_MIMES.has(file.type) || file.size > TAILLE_MAX_PIECE) {
     return { ok: false, error: "Format non supporté ou fichier supérieur à 15 Mo." };
   }
 
@@ -133,15 +134,42 @@ export async function analyserDevisInitial(formData: FormData): Promise<AnalyseD
     return { ok: false, error: "Le fichier ne semble pas être un PDF ou une image valide." };
   }
 
+  // À partir d'ici, un vrai document part à la lecture : c'est CE point qui fait
+  // l'essai. Le compter plus tôt gonflerait le dénominateur avec des formulaires
+  // mal remplis ; plus tard, on perdrait exactement les essais qui échouent,
+  // c'est-à-dire les seuls qui apprennent quelque chose.
+  //
+  // Le rattachement est volontairement pauvre : l'artisan s'il est connecté, le
+  // canal utm sinon. Aucun identifiant de visiteur, aucun cookie de traçage.
+  const mesure = {
+    artisanId: artisan?.id ?? null,
+    source: sanitizeSource(typeof formData.get("source") === "string" ? String(formData.get("source")) : null),
+  };
+  await enregistrerEvenement({ type: "essai_commence", ...mesure });
+
   const prep = await preparerDocument({ bytes, mime: file.type, filename: file.name });
-  if (!prep.ok) return { ok: false, error: prep.message };
+  if (!prep.ok) {
+    await enregistrerEvenement({ type: "devis_echec", motif: "illisible", ...mesure });
+    return { ok: false, error: prep.message };
+  }
 
   const extraction = await extractPiece({
     doc: prep.doc,
     type: "devis",
     famille: geste === "auto" ? "auto" : familleDeGeste(geste),
+    mesure: { artisanId: artisan?.id ?? null },
   });
   if (!extraction.ok) {
+    await enregistrerEvenement({
+      type: "devis_echec",
+      motif:
+        extraction.reason === "non-configure"
+          ? "non_configure"
+          : extraction.indisponible
+            ? "service_indisponible"
+            : "illisible",
+      ...mesure,
+    });
     return {
       ok: false,
       nonConfigure: extraction.reason === "non-configure",
@@ -221,6 +249,15 @@ export async function analyserDevisInitial(formData: FormData): Promise<AnalyseD
   const champsTrouves = Object.entries(valeurs)
     .filter(([cle, valeur]) => !["dispositif", "geste"].includes(cle) && valeur !== undefined && valeur !== "")
     .map(([cle]) => cle);
+
+  // Le nombre de champs préremplis est le seul vrai juge de la lecture : une
+  // extraction qui « aboutit » en ne trouvant rien ne vaut pas mieux qu'un échec,
+  // et seule cette valeur permettra plus tard de le voir.
+  await enregistrerEvenement({
+    type: "devis_lu",
+    ...mesure,
+    detail: { champs: champsTrouves.length, geste: gesteDetecte, dispositif: dispositifDetecte },
+  });
 
   if (!artisan) {
     cookieStore.set("dossimo_essai_devis", "1", {

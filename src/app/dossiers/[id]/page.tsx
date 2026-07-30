@@ -15,6 +15,7 @@ import { LienDepot } from "@/components/dossier/lien-depot";
 import { MarquerVues } from "@/components/dossier/marquer-vues";
 import { ChecklistPieces } from "@/components/dossier/checklist-pieces";
 import { checklistDossier, completude, resumePieces } from "@/lib/piece/checklist";
+import { estTypeArtisan, LIBELLE_PIECE } from "@/lib/piece/catalogue";
 import { feuilleRoute } from "@/lib/dossier/feuille-route";
 import { FeuilleDeRoute } from "@/components/dossier/feuille-de-route";
 import { piecesAttendues } from "@/lib/depot/pieces-attendues";
@@ -166,6 +167,20 @@ export default async function DossierPage({
   const resumeRoute = resumePieces(checklist);
   const routeDossier = feuilleRoute(data);
 
+  // Ce que le dossier attend encore de l'ARTISAN, offert en raccourci dans la zone
+  // de dépôt. Dérivé de la checklist, donc de `regles_metier` : la zone ne rejuge
+  // rien, elle affiche. Les pièces du client n'y figurent pas, il les dépose
+  // lui-même par son lien.
+  const manquantsArtisan = Array.from(
+    new Map(
+      checklist
+        .filter((e) => e.fournisseur === "artisan" && !e.deposee)
+        .flatMap((e) => e.manquants)
+        .filter(estTypeArtisan)
+        .map((t) => [t, { type: t, label: LIBELLE_PIECE[t] }] as const),
+    ).values(),
+  );
+
   // Pièces que seul le bénéficiaire peut fournir, et ce qu'il a déjà déposé.
   const attenduesClient = piecesAttendues(data);
   const suivi = suivrePieces(
@@ -199,7 +214,11 @@ export default async function DossierPage({
   const tiers = await getActiveTiers(supabase);
   const [{ data: obliges }, { data: retourDepot }, { data: beneficiaryUploads }, tokenDepotActif, etatRelance] = await Promise.all([
     supabase.from("obliges").select("id, nom").eq("actif", true).order("nom"),
-    supabase.from("retours_depot").select("statut, motif, detail").eq("dossier_id", dossier.id).maybeSingle(),
+    supabase
+      .from("retours_depot")
+      .select("statut, motif, detail, reprise_demandee, motif_reprise")
+      .eq("dossier_id", dossier.id)
+      .maybeSingle(),
     // Ordre CROISSANT : une pièce peut tenir en plusieurs fichiers (recto/verso,
     // pages d'un avis), et l'écran de revue les présente dans l'ordre d'envoi.
     supabase.from("pieces_justificatives").select("id,type,nom_fichier,validation_status,rejection_reason,created_at").eq("dossier_id", dossier.id).eq("deposant", "beneficiaire").order("created_at", { ascending: true }),
@@ -364,6 +383,7 @@ export default async function DossierPage({
             dossierId={id}
             initial={piecesReelles}
             nbMentions={mentionsDevis.length}
+            manquants={manquantsArtisan}
           />
           {/* 6 bis. Les pièces qui ne peuvent venir que du client. En les affichant,
               on les déclare vues : le signal « nouveau » de la liste s'éteint. */}

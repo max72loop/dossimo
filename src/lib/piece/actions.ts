@@ -9,36 +9,25 @@ import { comparerPiece, type Comparaison } from "@/lib/piece/compare";
 import { verifierMentions, type MentionVerifiee } from "@/lib/piece/mentions";
 import { mentionsTemplates } from "@/lib/pack/pieces-cee-isolation";
 import { ACCEPTED_DOCUMENT_MIMES, isAcceptedDocument } from "@/lib/piece/file-validation";
+import { estTypeArtisan, TAILLE_MAX_PIECE, TYPES_LUS } from "@/lib/piece/catalogue";
 import type { Json, TypePiece } from "@/lib/database.types";
-
-const TAILLE_MAX = 15 * 1024 * 1024; // 15 Mo
 
 export type UploadResult =
   | {
       ok: true;
+      /**
+       * Identifiant de la pièce créée. L'écran s'en sert pour savoir quand sa
+       * ligne d'envoi peut céder la place à la vraie carte rendue par le
+       * serveur : sans lui, il faudrait deviner ce moment au chronomètre, et
+       * la pièce disparaîtrait de l'écran entre les deux.
+       */
+      pieceId: string;
       comparaisons: Comparaison[];
       mentions: MentionVerifiee[];
       statut: "ok" | "echec";
       message?: string;
     }
   | { ok: false; error: string };
-
-/**
- * Pièces que l'ARTISAN dépose. Les pièces du bénéficiaire (identité, avis
- * d'imposition, titre, RIB) passent par son lien de dépôt : elles ne sont pas les
- * siennes à fournir, et il ne doit pas pouvoir les verser à sa place.
- */
-const TYPES_ARTISAN = new Set<TypePiece>([
-  "devis",
-  "facture",
-  "qualification_rge",
-  "fiche_technique",
-  "cadre_contribution",
-  "attestation_honneur",
-  "photo_avant",
-  "photo_apres",
-  "autre",
-]);
 
 /**
  * Upload d'une pièce de l'artisan → Storage (bucket privé « pieces »), lecture VLM
@@ -53,7 +42,12 @@ export async function uploadPiece(
   const data = await getDossier(dossierId);
   if (!data) return { ok: false, error: "Dossier introuvable." };
 
-  if (!TYPES_ARTISAN.has(type)) {
+  // Les pièces du bénéficiaire (identité, avis d'imposition, titre, RIB) passent
+  // par son lien de dépôt : elles ne sont pas les siennes à fournir, et il ne doit
+  // pas pouvoir les verser à sa place. La liste vit dans le catalogue, avec celle
+  // qu'affiche la zone de dépôt : quand les deux étaient séparées, l'écran n'en
+  // proposait que deux sur neuf.
+  if (!estTypeArtisan(type)) {
     return {
       ok: false,
       error: "Cette pièce est fournie par le bénéficiaire, via son lien de dépôt.",
@@ -67,7 +61,7 @@ export async function uploadPiece(
   if (!ACCEPTED_DOCUMENT_MIMES.has(file.type)) {
     return { ok: false, error: "Format non supporté (JPG, PNG, WEBP ou PDF)." };
   }
-  if (file.size > TAILLE_MAX) {
+  if (file.size > TAILLE_MAX_PIECE) {
     return { ok: false, error: "Fichier trop volumineux (15 Mo max)." };
   }
 
@@ -85,7 +79,7 @@ export async function uploadPiece(
   // Le certificat RGE, en particulier, n'a pas besoin d'être lu : le dossier est déjà
   // confronté à l'annuaire officiel RGE (`controle-dossier.ts`), ce qui vaut mieux que
   // la lecture d'un PDF que l'artisan fournit lui-même.
-  const lisible = type === "devis" || type === "facture";
+  const lisible = TYPES_LUS.has(type);
 
   // Document préparé une seule fois pour les deux passes VLM (valeurs + mentions),
   // et volume borné avant même l'upload : refuser un lot de 40 pages ici évite de
@@ -120,8 +114,8 @@ export async function uploadPiece(
   const famille = familleDeGeste(data.caracteristiques.geste ?? "isolation");
   const [ex, mn] = doc
     ? await Promise.all([
-        extractPiece({ doc, type, famille }),
-        verifierMentions({ doc, type, mentions: mentionsTemplates(data) }),
+        extractPiece({ doc, type, famille, mesure: { dossierId } }),
+        verifierMentions({ doc, type, mentions: mentionsTemplates(data), mesure: { dossierId } }),
       ])
     : [null, null];
 
@@ -154,6 +148,7 @@ export async function uploadPiece(
 
   return {
     ok: true,
+    pieceId,
     // Une pièce qu'on ne lit pas est « reçue », jamais « en échec » : l'artisan ne
     // doit pas voir « document illisible » sur une photo qu'on n'a pas cherché à lire.
     statut: ex ? (ex.ok ? "ok" : "echec") : "ok",

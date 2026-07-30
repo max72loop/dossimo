@@ -27,6 +27,15 @@ export async function enregistrerRetourDepot(input: {
   statut: RetourStatut;
   motif?: string;
   detail?: string;
+  /**
+   * L'organisme a-t-il demandé une correction avant d'accepter ?
+   *
+   * `undefined` = la question n'a pas été posée, et c'est enregistré tel quel.
+   * Ne jamais le ramener à `false` : « accepté du premier coup » est la métrique
+   * qui juge le produit, elle ne doit pas pouvoir se remplir toute seule.
+   */
+  repriseDemandee?: boolean | null;
+  motifReprise?: string;
 }): Promise<{ ok: boolean; error?: string }> {
   if (!(await getDossier(input.dossierId))) return { ok: false, error: "Dossier introuvable." };
   const supabase = await createClient();
@@ -36,6 +45,8 @@ export async function enregistrerRetourDepot(input: {
       statut: input.statut,
       motif: input.motif?.trim() || null,
       detail: input.detail?.trim() || null,
+      reprise_demandee: input.repriseDemandee ?? null,
+      motif_reprise: input.motifReprise?.trim() || null,
       updated_at: new Date().toISOString(),
     },
     { onConflict: "dossier_id" },
@@ -43,6 +54,7 @@ export async function enregistrerRetourDepot(input: {
   if (error) return { ok: false, error: "Enregistrement impossible." };
   revalidatePath(`/dossiers/${input.dossierId}`);
   revalidatePath("/admin/pilotage");
+  revalidatePath("/admin/tunnel");
   return { ok: true };
 }
 

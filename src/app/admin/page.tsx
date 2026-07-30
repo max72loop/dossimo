@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { Send, BarChart3, Mails, Database, Compass, Scale, FileText, type LucideIcon } from "lucide-react";
+import { Send, BarChart3, Mails, Database, Compass, Scale, FileText, Filter, type LucideIcon } from "lucide-react";
 
 import { getAdminEmail } from "@/lib/auth/is-admin";
 
@@ -48,6 +48,12 @@ const SPRINT: Section[] = [
 ];
 
 const OUTILS: Section[] = [
+  {
+    href: "/admin/tunnel",
+    titre: "Tunnel d'entreprise",
+    aide: "Du contact au dossier accepté sans reprise, avec le coût de production et le temps passé.",
+    icone: Filter,
+  },
   {
     href: "/admin/pilotage",
     titre: "Pilotage terrain",

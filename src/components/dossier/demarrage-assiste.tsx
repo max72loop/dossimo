@@ -1,16 +1,33 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Camera, CheckCircle2, FileText, Sparkles } from "lucide-react";
+import { Camera, Check, CheckCircle2, FileText, Sparkles, Upload, X } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 
 import { DossierCeeIsolationForm } from "@/components/dossier/DossierCeeIsolationForm";
 import { CHAMP_INPUT } from "@/components/ui/champs";
+import { BTN_SECONDAIRE, FOCUS } from "@/components/ui/boutons";
+import { useTactile } from "@/components/ui/use-tactile";
 import { analyserDevisInitial } from "@/lib/dossier/document-first-actions";
 import { loadGuestDraft } from "@/lib/dossier/guest-draft";
+import { readSource } from "@/lib/tracking/source";
+import {
+  ACCEPT_DOCUMENT,
+  ACCEPT_PHOTO,
+  TAILLE_MAX_PIECE,
+} from "@/lib/piece/catalogue";
 import type { CeeIsolationInput, Famille } from "@/lib/dossier/cee-isolation";
 
 const inputClass = `mt-1.5 ${CHAMP_INPUT}`;
+
+const FORMATS_ACCEPTES = new Set(ACCEPT_DOCUMENT.split(","));
+
+function libelleTaille(octets: number): string {
+  const mo = octets / (1024 * 1024);
+  return mo >= 1
+    ? `${mo.toFixed(1).replace(".", ",")} Mo`
+    : `${Math.max(1, Math.round(octets / 1024))} Ko`;
+}
 
 export function DemarrageAssiste({
   initialValues,
@@ -28,6 +45,16 @@ export function DemarrageAssiste({
   seuilsIsolation?: Record<string, number>;
 }) {
   const fileRef = useRef<HTMLInputElement>(null);
+  const photoRef = useRef<HTMLInputElement>(null);
+  const tactile = useTactile();
+  /**
+   * Le fichier choisi vit désormais dans l'état, et plus seulement dans l'input.
+   * Avant, choisir un devis ne changeait STRICTEMENT rien à l'écran : même
+   * libellé, même bouton, aucune trace du fichier. On ne savait pas s'il avait
+   * été pris, et le seul moyen de le vérifier était de lancer la lecture.
+   */
+  const [fichier, setFichier] = useState<File | null>(null);
+  const [survol, setSurvol] = useState(false);
   const [geste, setGeste] = useState<Famille>((initialValues.geste as Famille) ?? "isolation");
   const [dispositif, setDispositif] = useState<"cee" | "maprimerenov">(
     initialValues.dispositif ?? "cee",
@@ -53,8 +80,25 @@ export function DemarrageAssiste({
     return () => { actif = false; };
   }, [initialValues, manual]);
 
+  /** Fichier retenu, ou refus expliqué tout de suite plutôt qu'après l'envoi. */
+  function choisir(f: File | undefined) {
+    if (!f) return;
+    if (f.type && !FORMATS_ACCEPTES.has(f.type)) {
+      setFichier(null);
+      setError("Format non supporté. Déposez un PDF, un JPG, un PNG ou un WEBP.");
+      return;
+    }
+    if (f.size > TAILLE_MAX_PIECE) {
+      setFichier(null);
+      setError(`Ce fichier fait ${libelleTaille(f.size)}, la limite est de 15 Mo.`);
+      return;
+    }
+    setError(null);
+    setFichier(f);
+  }
+
   async function analyser() {
-    const file = fileRef.current?.files?.[0];
+    const file = fichier;
     if (!file) {
       setError("Ajoutez votre devis en PDF ou prenez-le en photo.");
       return;
@@ -65,6 +109,10 @@ export function DemarrageAssiste({
     fd.append("file", file);
     fd.append("geste", geste);
     fd.append("dispositif", dispositif);
+    // Canal d'acquisition mémorisé à l'arrivée (sessionStorage, first-touch). Il
+    // suit déjà l'inscription ; sans lui ici, l'essai serait la seule étape du
+    // tunnel qu'on ne saurait pas rattacher à une campagne.
+    fd.append("source", readSource() ?? "");
     try {
       const result = await analyserDevisInitial(fd);
       if (!result.ok) {
@@ -151,32 +199,140 @@ export function DemarrageAssiste({
         </label>
       </div>
 
-      <label className="mt-5 flex min-h-36 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-filigrane bg-papier/50 px-5 py-6 text-center transition hover:border-tampon hover:bg-info-bg/40">
-        <span className="flex items-center gap-2 text-encre">
-          <FileText className="h-5 w-5" />
-          <span className="font-medium">Choisir le devis ou le prendre en photo</span>
-        </span>
-        <span className="mt-1 text-xs text-encre-claire">PDF, JPG, PNG ou WEBP · 15 Mo maximum</span>
+      {/* Zone de dépôt. Deux inputs plutôt qu'un : `capture` posé sans condition
+          forçait l'appareil photo sur mobile, rendant inatteignable le devis en
+          PDF déjà rangé dans le téléphone. */}
+      <div
+        onDragOver={(e) => {
+          e.preventDefault();
+          setSurvol(true);
+        }}
+        onDragLeave={() => setSurvol(false)}
+        onDrop={(e) => {
+          e.preventDefault();
+          setSurvol(false);
+          choisir(e.dataTransfer.files?.[0]);
+        }}
+        className={`mt-5 rounded-lg border-2 border-dashed px-5 py-6 text-center transition ${
+          survol
+            ? "border-tampon bg-info-bg/50"
+            : fichier
+              ? "border-succes/40 bg-succes-bg/40"
+              : "border-filigrane bg-papier/50"
+        }`}
+      >
         <input
           ref={fileRef}
           type="file"
-          accept="application/pdf,image/jpeg,image/png,image/webp"
-          capture="environment"
+          accept={ACCEPT_DOCUMENT}
+          aria-label="Choisir le devis"
+          tabIndex={-1}
           className="sr-only"
-          onChange={() => setError(null)}
+          onChange={(e) => choisir(e.target.files?.[0])}
         />
-      </label>
+        <input
+          ref={photoRef}
+          type="file"
+          accept={ACCEPT_PHOTO}
+          capture="environment"
+          aria-label="Photographier le devis"
+          tabIndex={-1}
+          className="sr-only"
+          onChange={(e) => choisir(e.target.files?.[0])}
+        />
 
-      {error && <p className="mt-3 rounded border-l-4 border-avertissement bg-avertissement-bg px-4 py-3 text-sm text-avertissement">{error}</p>}
+        {fichier ? (
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-succes text-blanc-casse">
+              <Check className="h-4 w-4" strokeWidth={2.5} aria-hidden="true" />
+            </span>
+            <span className="min-w-0 text-left">
+              <span className="block truncate text-sm font-medium text-encre">
+                {fichier.name}
+              </span>
+              <span className="block text-xs tabular-nums text-encre-claire">
+                {libelleTaille(fichier.size)} · prêt à être lu
+              </span>
+            </span>
+            <button
+              type="button"
+              disabled={loading}
+              onClick={() => {
+                setFichier(null);
+                if (fileRef.current) fileRef.current.value = "";
+                if (photoRef.current) photoRef.current.value = "";
+              }}
+              className={`inline-flex items-center gap-1 rounded px-2 py-1 text-xs text-ardoise underline-offset-2 hover:text-encre hover:underline disabled:opacity-50 ${FOCUS}`}
+            >
+              <X className="h-3.5 w-3.5" aria-hidden="true" />
+              Changer de document
+            </button>
+          </div>
+        ) : (
+          <>
+            <Upload className="mx-auto h-6 w-6 text-ardoise" aria-hidden="true" />
+            <p className="mt-2 text-sm font-medium text-encre">
+              Glissez votre devis ici
+            </p>
+            <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                className={BTN_SECONDAIRE}
+              >
+                <FileText className="mr-2 h-4 w-4" aria-hidden="true" />
+                Choisir le fichier
+              </button>
+              {tactile ? (
+                <button
+                  type="button"
+                  onClick={() => photoRef.current?.click()}
+                  className={BTN_SECONDAIRE}
+                >
+                  <Camera className="mr-2 h-4 w-4" aria-hidden="true" />
+                  Le prendre en photo
+                </button>
+              ) : null}
+            </div>
+            <p className="mt-3 text-xs text-encre-claire">
+              PDF, JPG, PNG ou WEBP · 15 Mo maximum
+            </p>
+          </>
+        )}
+      </div>
+
+      {error && <p role="alert" className="mt-3 rounded border-l-4 border-avertissement bg-avertissement-bg px-4 py-3 text-sm text-avertissement">{error}</p>}
+
+      {/* La lecture prend plusieurs secondes. Sans ce bloc, l'écran était
+          rigoureusement identique à celui d'avant le clic, à un mot près sur le
+          bouton : de quoi croire que rien ne part et recliquer. */}
+      {loading && (
+        <div role="status" className="mt-4 rounded-lg bg-info-bg/60 p-4">
+          <p className="flex items-center gap-2 text-sm font-medium text-encre">
+            <Spinner className="h-4 w-4" />
+            Dossimo lit votre devis
+          </p>
+          <p className="mt-1 text-xs leading-relaxed text-ardoise">
+            {`Client, montants, dates, caractéristiques techniques : tout ce qui est lisible est recopié dans le formulaire. Quelques secondes, ne fermez pas la page.`}
+          </p>
+          <div className="mt-3 h-1 w-full overflow-hidden rounded-full bg-papier-fonce" aria-hidden="true">
+            <div className="h-full w-full rounded-full bg-accent/70 animate-pulse motion-reduce:animate-none" />
+          </div>
+        </div>
+      )}
 
       <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
         <button
           type="button"
+          // Volontairement pas désactivé faute de fichier : cliquer d'abord sur
+          // l'action principale est le geste naturel, et un bouton mort sans
+          // explication laisse l'artisan chercher ce qui cloche. Il obtient une
+          // phrase qui lui dit quoi faire.
           disabled={loading}
           onClick={analyser}
-          className="inline-flex h-12 items-center justify-center gap-2 rounded bg-accent px-6 text-sm font-semibold text-blanc-casse transition hover:bg-accent-hover disabled:opacity-60"
+          className={`inline-flex h-12 items-center justify-center gap-2 rounded bg-accent px-6 text-sm font-semibold text-blanc-casse transition hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60 ${FOCUS}`}
         >
-          {loading ? <Spinner className="h-4 w-4" /> : <Camera className="h-4 w-4" />}
+          {loading ? <Spinner className="h-4 w-4" /> : <Sparkles className="h-4 w-4" />}
           {loading ? "Lecture du devis…" : "Lire mon devis et préremplir"}
         </button>
         <a
