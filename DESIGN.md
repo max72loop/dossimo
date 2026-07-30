@@ -315,6 +315,46 @@ contournements existent déjà et sont à résorber (un `const input = "…"` re
   propose une reprise (`unstable_retry`) + une sortie. C'est la traduction visuelle
   de « les erreurs ne sont jamais avalées en silence » (`AGENTS.md`).
 
+### Dépôt de fichiers
+
+Le geste central du produit : l'artisan verse ses pièces, le bénéficiaire
+photographie les siennes. Trois écrans le portent
+([`pieces-justificatives.tsx`](src/components/dossier/pieces-justificatives.tsx),
+[`demarrage-assiste.tsx`](src/components/dossier/demarrage-assiste.tsx),
+[`depot-client.tsx`](src/components/depot/depot-client.tsx)) et suivent le même
+motif. Décision 2026-07-30.
+
+- **Le fichier choisi se voit immédiatement.** Nom, poids, et une ligne à lui.
+  Rien ne doit pouvoir être déposé sans que l'écran change : c'est le défaut qui
+  a motivé le motif.
+- **Une ligne par fichier, un état par ligne** (`attente`, `préparation`,
+  `envoi`, `reçue`, `erreur`), et la ligne avance seule. Pas de formulaire à
+  valider à la fin.
+- **L'attente est nommée et bornée.** Une lecture par le modèle prend plusieurs
+  secondes : on dit ce qui se passe (« Dossimo lit le document et vérifie les
+  mentions obligatoires »), avec `Spinner` + barre indéterminée. La barre est en
+  CSS (`animate-pulse` + `motion-reduce:animate-none`) et **jamais** en transform
+  Motion : `reducedMotion="user"` expédie un transform à sa valeur d'arrivée,
+  donc hors cadre, et supprime le seul signe d'activité pour ceux qui l'ont
+  demandé.
+- **La ligne d'envoi ne cède la place à la carte définitive que lorsque celle-ci
+  est rendue** (état dérivé de l'identifiant renvoyé par l'action, pas un
+  minuteur). La pièce n'est jamais nulle part.
+- **Glisser-déposer sur ordinateur, appareil photo sur mobile.** Le bouton
+  « Photographier » et l'attribut `capture` sont conditionnés à
+  [`useTactile`](src/components/ui/use-tactile.ts) : posé sans condition,
+  `capture` force l'appareil photo et rend inatteignable le PDF déjà rangé dans
+  le téléphone.
+- **Le chemin clavier passe par de vrais boutons**, pas par l'`input` : celui-ci
+  reste `sr-only` (jamais `hidden`, qui casse le déclenchement programmatique),
+  porte un `aria-label` et sort de l'ordre de tabulation (`tabIndex={-1}`) pour
+  ne pas doubler le bouton d'un arrêt muet.
+- **Ce qui manque est proposé là où l'on dépose**, en raccourcis dérivés de la
+  checklist (donc de `regles_metier`), jamais d'une liste recopiée.
+- **Un type deviné est proposé, jamais imposé** : il s'affiche, se corrige d'un
+  clic avant l'envoi, et reste vide quand le nom du fichier ne dit rien. Même
+  règle que « ne jamais inventer un chiffre » (§6), appliquée à un classement.
+
 ### Logo et actifs de marque
 
 Le logo est un **symbole + un mot-signe**, depuis la refonte du 2026-07-25. Le
@@ -641,3 +681,4 @@ Deux lignes par décision, datées, pour ne pas re-débattre le passé.
 | 2026-07-27 | Autorité éditoriale SEO : les pages publiques `/a-propos` et `/methode-editoriale` reprennent la coquille des guides (`max-w-4xl`, prose `max-w-3xl`, titres serif, fil d’Ariane). Les guides sont signés par l’organisation Dossimo et renvoient vers sa méthode, sans profil personnel ni donnée nominative sur la vitrine. | Donner aux moteurs de recherche et aux outils d’IA une entité éditoriale et des principes de publication explicites, tout en conservant la décision du 2026-07-22 qui cantonne l’identité personnelle aux pages légales. |
 | 2026-07-29 | **Visite guidée** ajoutée à la vitrine : parcours interactif Supademo, capturé sur l'app réelle et rendu **neutre quant au geste**. Embarquée dans la section « Comment ça marche » (ancre `#visite`), plus une page autonome `/visite` (menu et pied de page). Nouveau motif §5 « Contenu tiers embarqué » : rien n'est chargé avant le clic (affiche locale dessinée avec les tokens, aucun actif servi), lien direct toujours offert, hébergeur nommé sous le cadre. `FOCUS_SOMBRE`, recopié à l'identique dans `app/page.tsx` et `app/tarifs/page.tsx`, remonte dans `boutons.ts`. Aucun nouveau token, aucune couleur nouvelle. | La vitrine décrivait le parcours (quatre cartes) sans jamais le montrer : le seul livrable visible était le PDF d'exemple, en fin de tunnel. La première version de la démo racontait un chantier de chauffe-eau solaire, dont un tiers des étapes en saisie de champs propres au CESI : un poseur de pompe à chaleur ne s'y reconnaissait pas, et le parcours donnait l'image d'un long formulaire, l'inverse de « montés sans vos soirées ». La version retenue ne garde que le tronc commun à tous les gestes — dépôt du devis, préremplissage, contrôles, checklist — qui est aussi ce que Dossimo a d'unique. Le chargement au clic plutôt qu'au rendu : la vitrine ne troque pas sa vitesse et sa sobriété de traitement contre un lecteur tiers que la plupart des visiteurs n'ouvriront pas. |
 | 2026-07-30 | Visite guidée, correctif : la CSP gagne une directive `frame-src 'self' https://app.supademo.com`, lue depuis `VISITE.origine`. La politique quitte le proxy pour [`lib/security/csp.ts`](src/lib/security/csp.ts), module pur testable, et [`csp.test.ts`](src/lib/security/csp.test.ts) vérifie que l'origine du tiers y figure. Le motif §5 « Contenu tiers embarqué » passe de trois à quatre règles, la nouvelle étant la première. | La visite est partie en production illisible : sans `frame-src`, la CSP retombe sur `default-src 'self'` et le navigateur affichait « Ce contenu est bloqué » à la place du cadre. Ni le build, ni ESLint, ni les tests ne pouvaient le voir — le test existant vérifie l'absence d'`iframe` au rendu, pas la permission de la charger. D'où le déplacement : une politique de sécurité enfouie dans le proxy, au milieu du rafraîchissement de session Supabase, n'est ni relue ni testée. `frame-ancestors 'none'` donnait en plus l'illusion que le sujet des cadres était traité, alors qu'il ne couvre que le sens entrant. |
+| 2026-07-30 | **Dépôt de fichiers** : nouveau motif §5, appliqué aux trois écrans qui reçoivent un document. Le fichier choisi s'affiche (nom, poids) au lieu de disparaître dans l'input ; une file d'envoi montre chaque fichier avec son état et son avancement ; l'attente longue est nommée ; la ligne s'efface quand la carte définitive arrive (état dérivé de l'`pieceId` renvoyé par l'action). Glisser-déposer et envoi multiple sur la zone artisan, qui offre désormais les neuf types de pièces au lieu de deux, avec raccourcis vers ce que la checklist réclame encore et type deviné d'après le nom du fichier. `capture` et bouton « Photographier » conditionnés à `useTactile` (remonté de `depot-client.tsx` vers `ui/use-tactile.ts`), `input` en `sr-only` et non `hidden`. Barres de progression en CSS et non en transform Motion. Nouvelle source unique [`lib/piece/catalogue.ts`](src/lib/piece/catalogue.ts) : libellés, types déposables par l'artisan, formats, taille maximale. Aucun nouveau token. | Retour terrain : « on dépose le document dans l'impression que rien ne se passe ». C'était exact — sur l'écran d'entrée, choisir un devis ne changeait rien à l'affichage, et pendant les secondes de lecture du modèle l'écran était identique à celui d'avant le clic, à un mot près sur le bouton. Deuxième défaut, de rythme celui-là : la zone de dépôt n'acceptait que le devis et la facture (le serveur en accepte neuf), un fichier à la fois, ce qui obligeait à finir le dossier depuis la checklist repliée en bas de page. Le motif Motion est un piège d'accessibilité vérifié : `reducedMotion="user"` fige un transform à sa valeur finale, donc hors cadre. |
