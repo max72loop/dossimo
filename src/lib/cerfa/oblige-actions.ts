@@ -77,7 +77,10 @@ export async function remplirAhOblige(
 
   let mappings;
   try {
-    mappings = await mapAhFields(inspect.fields, facts);
+    mappings = await mapAhFields(inspect.fields, facts, undefined, {
+      dossierId: data.dossier.id,
+      artisanId: data.dossier.artisan_id,
+    });
   } catch (err) {
     console.error("[ah-oblige] mapping:", err);
     return {

@@ -1,5 +1,7 @@
 import "server-only";
 
+import { enregistrerAppelLlm, microUsd } from "@/lib/mesure/journal";
+
 /**
  * Accès LLM via OpenRouter (passerelle compatible OpenAI). Appel HTTP direct,
  * sans dépendance SDK. Modèles pilotables par variables d'environnement
@@ -61,13 +63,32 @@ export interface ChatMessage {
   content: unknown;
 }
 
+/**
+ * Ce que l'appel a consommé, tel que le renvoie OpenRouter. `cost` n'est présent
+ * que si la requête a demandé `usage: { include: true }`, et tous les
+ * fournisseurs ne le remontent pas : il reste donc facultatif.
+ */
+type UsageOpenRouter = {
+  prompt_tokens?: number;
+  completion_tokens?: number;
+  cost?: number;
+};
+
+/** Ce qu'un appel doit dire de lui-même pour être rattaché à un dossier. */
+export type MesureAppel = {
+  /** D'où part l'appel : 'extraction_devis', 'vigilance', 'admin_nl'… */
+  contexte: string;
+  dossierId?: string | null;
+  artisanId?: string | null;
+};
+
 /** Une tentative, bornée dans le temps. Les pannes transitoires sortent en `LlmIndisponibleError`. */
 async function tenterChat(
   body: Record<string, unknown>,
   apiKey: string,
   timeoutMs: number,
   signal?: AbortSignal,
-): Promise<string> {
+): Promise<{ contenu: string; usage?: UsageOpenRouter; modele?: string }> {
   const ctrl = new AbortController();
   const minuteur = setTimeout(() => ctrl.abort(), timeoutMs);
   const relais = () => ctrl.abort();
@@ -115,7 +136,10 @@ async function tenterChat(
   if (typeof content !== "string" || !content.trim()) {
     throw new LlmIndisponibleError("Réponse OpenRouter vide.");
   }
-  return content;
+  // `model` est celui que la passerelle a REELLEMENT servi : OpenRouter peut
+  // basculer sur un autre fournisseur que celui demandé. C'est celui-là qu'il
+  // faut consigner, sinon le coût est imputé au mauvais modèle.
+  return { contenu: content, usage: data?.usage, modele: data?.model };
 }
 
 /**
@@ -138,7 +162,7 @@ const POLITIQUE_DONNEES = { data_collection: "deny" } as const;
 
 async function postChat(
   body: Record<string, unknown>,
-  opts: { signal?: AbortSignal; timeoutMs?: number } = {},
+  opts: { signal?: AbortSignal; timeoutMs?: number; mesure?: MesureAppel } = {},
 ): Promise<string> {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) throw new Error("OPENROUTER_API_KEY manquant.");
@@ -147,9 +171,16 @@ async function postChat(
   // TOUS les appels (chat et vision), donc aucun moyen d'en oublier un. Les
   // options `provider` d'un appelant sont conservées, la politique de données
   // est imposée par-dessus.
+  //
+  // `usage: { include: true }` relève du même raisonnement : c'est ce qui fait
+  // renvoyer le COÛT de l'appel par la passerelle. Sans lui, on ne connaîtrait
+  // que des jetons, qu'il faudrait retarifer à la main avec une grille recopiée
+  // dans le code — deux sources pour une même valeur, donc deux valeurs qui
+  // divergent (AGENTS.md). Ici le coût vient de celui qui facture.
   const corps = {
     ...body,
     provider: { ...(body.provider as object | undefined), ...POLITIQUE_DONNEES },
+    usage: { include: true },
   };
 
   const budget = opts.timeoutMs ?? BUDGET_CHAT_MS;
@@ -161,8 +192,9 @@ async function postChat(
     const restant = echeance - Date.now();
     if (restant <= 0) break;
 
+    let reponse: Awaited<ReturnType<typeof tenterChat>>;
     try {
-      return await tenterChat(corps, apiKey, restant, opts.signal);
+      reponse = await tenterChat(corps, apiKey, restant, opts.signal);
     } catch (err) {
       // Seul le transitoire se reprend. Le reste remonte immédiatement.
       if (!(err instanceof LlmIndisponibleError)) throw err;
@@ -171,7 +203,26 @@ async function postChat(
       // Ne pas attendre pour une tentative que le budget ne laissera pas aboutir.
       if (pause == null || echeance - Date.now() <= pause) break;
       await attendre(pause, opts.signal);
+      continue;
     }
+
+    // Hors du `try`, à dessein : une écriture de mesure qui échouerait ne doit
+    // en aucun cas pouvoir se faire passer pour un échec d'appel LLM et
+    // déclencher une reprise. Le compteur ne relance jamais ce qu'il compte.
+    //
+    // Seule la tentative ABOUTIE est consignée : une 429 ou une 5xx n'a rien
+    // produit, donc rien coûté. Compter les tentatives gonflerait le coût par
+    // dossier les jours où le fournisseur va mal, ce qui est l'inverse du but.
+    await enregistrerAppelLlm({
+      contexte: opts.mesure?.contexte ?? "inconnu",
+      modele: reponse.modele ?? String(body.model ?? "inconnu"),
+      tokensEntree: reponse.usage?.prompt_tokens ?? 0,
+      tokensSortie: reponse.usage?.completion_tokens ?? 0,
+      coutMicroUsd: microUsd(reponse.usage?.cost),
+      dossierId: opts.mesure?.dossierId,
+      artisanId: opts.mesure?.artisanId,
+    });
+    return reponse.contenu;
   }
 
   throw derniere;
@@ -188,6 +239,8 @@ export async function openRouterChat(params: {
   signal?: AbortSignal;
   /** Budget total, reprises comprises. Défaut : `BUDGET_CHAT_MS`. */
   timeoutMs?: number;
+  /** Rattachement de la consommation (coût par dossier). Voir `MesureAppel`. */
+  mesure?: MesureAppel;
 }): Promise<string> {
   return postChat(
     {
@@ -197,7 +250,7 @@ export async function openRouterChat(params: {
       max_tokens: params.maxTokens ?? 1200,
       ...(params.jsonMode ? { response_format: { type: "json_object" } } : {}),
     },
-    { signal: params.signal, timeoutMs: params.timeoutMs ?? BUDGET_CHAT_MS },
+    { signal: params.signal, timeoutMs: params.timeoutMs ?? BUDGET_CHAT_MS, mesure: params.mesure },
   );
 }
 
@@ -214,6 +267,8 @@ export async function openRouterVision(params: {
   signal?: AbortSignal;
   /** Budget total, reprises comprises. Défaut : `BUDGET_VISION_MS`. */
   timeoutMs?: number;
+  /** Rattachement de la consommation (coût par dossier). Voir `MesureAppel`. */
+  mesure?: MesureAppel;
 }): Promise<string> {
   const { mime, dataUrl, filename } = params.file;
   const doc = mime.startsWith("image/")
@@ -231,6 +286,6 @@ export async function openRouterVision(params: {
       max_tokens: params.maxTokens ?? 1500,
       ...(params.jsonMode ? { response_format: { type: "json_object" } } : {}),
     },
-    { signal: params.signal, timeoutMs: params.timeoutMs ?? BUDGET_VISION_MS },
+    { signal: params.signal, timeoutMs: params.timeoutMs ?? BUDGET_VISION_MS, mesure: params.mesure },
   );
 }

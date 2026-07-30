@@ -101,6 +101,8 @@ export async function verifierMentions(params: {
   type: TypePiece;
   /** Mentions exigées, déjà interpolées aux valeurs du dossier. */
   mentions: readonly string[];
+  /** Rattachement du coût de contrôle au dossier. */
+  mesure?: { dossierId?: string | null; artisanId?: string | null };
 }): Promise<MentionsResult> {
   if (!isLlmConfigured()) return { ok: false, reason: "non-configure" };
   if (params.mentions.length === 0) return { ok: true, mentions: [] };
@@ -115,6 +117,7 @@ export async function verifierMentions(params: {
       file: params.doc,
       jsonMode: true,
       maxTokens: 2000,
+      mesure: { contexte: "mentions", ...params.mesure },
     });
     const parsed = reponseSchema.safeParse(extraireJson(raw));
     if (!parsed.success) {

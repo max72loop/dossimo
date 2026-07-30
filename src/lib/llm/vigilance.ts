@@ -222,6 +222,11 @@ export async function generateVigilancePoints(
       temperature: 0.3,
       maxTokens: 1800,
       model: VIGILANCE_MODEL,
+      mesure: {
+        contexte: "vigilance",
+        dossierId: data.dossier.id,
+        artisanId: data.dossier.artisan_id,
+      },
     });
 
     const parsed = outputSchema.safeParse(extractJson(raw));

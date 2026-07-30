@@ -44,7 +44,7 @@ est impossible à monter. **Le faire tourner après toute migration.**
 
 ## 3. Carte du schéma
 
-27 tables dans `public`, six domaines.
+29 tables dans `public`, sept domaines.
 
 | Domaine | Tables | Migrations |
 |---|---|---|
@@ -54,6 +54,7 @@ est impossible à monter. **Le faire tourner après toute migration.**
 | Dépôt bénéficiaire | `liens_depot`, `reminder_schedules`, `reminder_logs` | 0017, 0026-0029, 0041 |
 | Devis | `quote_gestures`, `quote_gesture_fields`, `quote_templates`, `generated_quotes`, `user_quote_templates` | 0021-0023, 0028 |
 | Prospection | `prospection_campagnes`, `prospects`, `prospection_messages`, `prospection_evenements`, `prospection_suppressions`, `prospects_dossimo` | 0032-0034, 0037, 0039, 0050 |
+| Mesure | `evenements_parcours`, `appels_llm` | 0051 |
 | Sécurité | `auth_rate_limits` | 0030, 0036 |
 
 **Aucune vue.** Tous les agrégats sont faits en TypeScript.
@@ -78,8 +79,9 @@ est impossible à monter. **Le faire tourner après toute migration.**
 - **RLS + policy de lecture** sur les référentiels (`regles_metier`,
   `pricing_tiers`, `plafonds_ressources`, `obliges`, `quote_*`).
 - **RLS SANS policy** = service-role uniquement. C'est **intentionnel** pour
-  `leads`, `prospects*`, `facture_compteurs`, `auth_rate_limits`. Une table sans
-  policy n'est pas une table oubliée.
+  `leads`, `prospects*`, `facture_compteurs`, `auth_rate_limits`,
+  `evenements_parcours`, `appels_llm`. Une table sans policy n'est pas une table
+  oubliée.
 
 Un seul accès `anon` dans tout le schéma : `pricing_tiers` en lecture
 (`0015`), pour que la vitrine et le checkout lisent la même grille.
@@ -231,6 +233,14 @@ Tant qu'on maintient à la main : le faire, sérieusement.
   point exact où la loi exige l'exactitude.
 - **`reminder_logs` est du code mort** (aucune écriture) ; `leads` est écrite mais
   jamais lue par l'app.
+- **Pas de purge sur `evenements_parcours` / `appels_llm`** (0051). Aucune donnée
+  nominative n'y entre, donc rien à faire exercer, mais les deux grossissent sans
+  limite : à borner quand le volume le justifiera.
+- **Le coût LLM est en dollars, le revenu en euros.** `appels_llm.cout_micro_usd`
+  vient de la facturation OpenRouter ; `/admin/tunnel` n'affiche donc aucune
+  colonne « marge », faute de source de taux de change. La calculer suppose
+  d'acter un taux **en donnée** (à côté de `pricing_tiers`), jamais en dur dans un
+  composant.
 
 ## 9. Checklist avant d'ouvrir une PR qui touche la base
 

@@ -97,6 +97,8 @@ export async function mapAhFields(
   fields: AcroFieldInfo[],
   facts: Fact[],
   signal?: AbortSignal,
+  /** Rattachement du coût d'appariement au dossier. */
+  mesure?: { dossierId?: string | null; artisanId?: string | null },
 ): Promise<FieldMapping[]> {
   const system =
     "Tu apparies les champs d'un formulaire officiel français (attestation sur l'honneur CEE remise par un obligé) aux données connues d'un dossier. " +
@@ -123,6 +125,7 @@ Réponds au format :
     temperature: 0,
     maxTokens: 1600,
     signal,
+    mesure: { contexte: "cerfa_oblige", ...mesure },
   });
 
   let parsed: unknown;

@@ -404,6 +404,7 @@ async function redigerReponse(
     ],
     temperature: 0.2,
     maxTokens: 300,
+    mesure: { contexte: "admin_nl_reponse" },
   });
   return raw.trim();
 }
@@ -428,6 +429,7 @@ export async function interrogerDonnees(question: string): Promise<Interrogation
       jsonMode: true,
       temperature: 0,
       maxTokens: 600,
+      mesure: { contexte: "admin_nl_plan" },
     });
     const parsed = planSchema.safeParse(extractJson(raw));
     if (!parsed.success) return { ok: false, error: "Je n'ai pas su traduire la question en requête." };

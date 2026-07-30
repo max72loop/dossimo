@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { choisirOblige, enregistrerRetourDepot, type RetourStatut } from "@/lib/dossier/oblige-actions";
 import { CARTE } from "@/components/ui/cartes";
+import { ChampReprise } from "@/components/dossier/reprise-depot";
 
 export function ObligeSuivi({
   dossierId,
@@ -15,12 +16,20 @@ export function ObligeSuivi({
   dossierId: string;
   obligeId: string | null;
   obliges: { id: string; nom: string }[];
-  retour: { statut: RetourStatut; motif: string | null; detail: string | null } | null;
+  retour: {
+    statut: RetourStatut;
+    motif: string | null;
+    detail: string | null;
+    reprise_demandee: boolean | null;
+    motif_reprise: string | null;
+  } | null;
 }) {
   const [selected, setSelected] = useState(obligeId ?? "");
   const [statut, setStatut] = useState<RetourStatut>(retour?.statut ?? "en_cours");
   const [motif, setMotif] = useState(retour?.motif ?? "");
   const [detail, setDetail] = useState(retour?.detail ?? "");
+  const [reprise, setReprise] = useState<boolean | null>(retour?.reprise_demandee ?? null);
+  const [motifReprise, setMotifReprise] = useState(retour?.motif_reprise ?? "");
   const [message, setMessage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -33,7 +42,14 @@ export function ObligeSuivi({
 
   async function saveRetour() {
     setSaving(true);
-    const res = await enregistrerRetourDepot({ dossierId, statut, motif, detail });
+    const res = await enregistrerRetourDepot({
+      dossierId,
+      statut,
+      motif,
+      detail,
+      repriseDemandee: reprise,
+      motifReprise,
+    });
     setSaving(false);
     setMessage(res.ok ? "Résultat enregistré." : res.error ?? "Erreur.");
   }
@@ -79,6 +95,15 @@ export function ObligeSuivi({
           <option value="abandonne">Abandonné</option>
         </select>
         {statut === "refuse" && <input className={input} value={motif} onChange={(e) => setMotif(e.target.value)} placeholder="Motif de refus (ex. mention manquante)" />}
+        {statut !== "abandonne" && (
+          <ChampReprise
+            demandee={reprise}
+            motif={motifReprise}
+            onDemandee={setReprise}
+            onMotif={setMotifReprise}
+            inputClass={input}
+          />
+        )}
         <textarea className={input} rows={2} value={detail} onChange={(e) => setDetail(e.target.value)} placeholder="Commentaire facultatif ou retour de l’organisme" />
         <button type="button" onClick={saveRetour} disabled={saving} className="mt-3 rounded bg-accent px-4 py-2 text-sm font-medium text-blanc-casse disabled:opacity-60">Enregistrer le résultat</button>
       </div>
