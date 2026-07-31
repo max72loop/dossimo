@@ -32,6 +32,7 @@ certaines choses sont écrites comme elles le sont.
 ## 2. Commandes
 
 ```bash
+npx supabase start                 # démarre la stack locale (Docker requis)
 npx supabase migration new <nom>   # nouvelle migration (numérotée)
 npx supabase db push               # applique les migrations au projet lié
 npx supabase db reset              # rejoue TOUT l'historique en local
@@ -41,6 +42,27 @@ npm run test                       # les règles métier ont des tests, les lanc
 `db reset` est le test de vérité de l'historique : s'il casse, le schéma n'est
 plus reproductible et un nouvel environnement (CI, nouveau poste, restauration)
 est impossible à monter. **Le faire tourner après toute migration.**
+
+Les tests de `supabase/tests/` ne sont pas dans `npm run test` : ce sont des
+scripts psql, chacun dans une transaction rollbackée. Les lancer contre la base
+locale (port 54322, mot de passe `postgres`) :
+
+```bash
+psql postgresql://postgres:postgres@127.0.0.1:54322/postgres \
+  -v ON_ERROR_STOP=1 -f supabase/tests/0013_pricing_parrainage_test.sql
+```
+
+Sans `psql` installé, passer par le conteneur (le port y est 5432, pas 54322) :
+
+```bash
+docker exec -i supabase_db_DOSSIMO psql \
+  postgresql://postgres:postgres@127.0.0.1:5432/postgres \
+  -v ON_ERROR_STOP=1 -f - < supabase/tests/0013_pricing_parrainage_test.sql
+```
+
+Chacun se termine par `ALL TESTS PASSED` ; toute autre sortie est un échec.
+**Aucun n'avait jamais été exécuté avant le 2026-07-31**, faute d'environnement
+local, et deux défauts dormaient dans le seul fichier `0013` (§ 5).
 
 ## 3. Carte du schéma
 
@@ -174,6 +196,27 @@ contacts aurait faussé l'A/B du sprint et déclenché sur eux la relance J+5 d'
 campagne conçue sans relance. **Leçon : deux systèmes qui puisent dans la même
 population doivent écrire leur passage au même endroit.**
 
+### L'auto-parrainage ne pouvait pas s'enregistrer (corrigé en `0055`)
+
+`apply_referral_code` promettait depuis `0012` de consigner l'auto-parrainage en
+`self_blocked`, mais la ligne qu'elle insérait portait `referrer_id = referee_id`,
+que `referrals_no_self_chk` interdisait : l'insert levait une `check_violation` et
+l'artisan qui saisissait son propre code recevait une erreur Postgres brute, que
+`src/lib/referral.ts` classait en `unknown`. Le garde-fou SIRET ajouté en `0048`
+échappait à la contrainte (`id` distincts) et écrivait bien sa ligne, mais celle-ci
+consommait alors l'unique créneau du filleul (`referrals_referee_unique_idx`) : une
+tentative bloquée interdisait à vie tout parrainage légitime sur ce compte. Une
+moitié de la règle échouait bruyamment, l'autre réussissait trop bien.
+
+`0055` autorise l'égalité pour le seul statut `self_blocked`, rend l'unicité par
+filleul partielle (les lignes bloquées ne comptent plus) et fait ignorer ces lignes
+par le contrôle « déjà parrainé ». **Leçon : le test le disait depuis le premier
+jour.** `supabase/tests/0013_pricing_parrainage_test.sql` échouait en T2 depuis
+`0013`, mais aucun environnement local n'existait pour l'exécuter. Le fichier
+n'était jamais passé en entier avant le 2026-07-31, et son T3 masquait à son tour
+la portée transactionnelle de `app.allow_pricing_write` (§ 8). Un test qu'on ne
+sait pas lancer ne protège rien.
+
 ## 6. Dérive de conventions — l'état des lieux
 
 Le schéma a deux âges. Ni l'un ni l'autre n'est « faux » ; il faut juste savoir
@@ -233,6 +276,17 @@ Tant qu'on maintient à la main : le faire, sérieusement.
   point exact où la loi exige l'exactitude.
 - **`reminder_logs` est du code mort** (aucune écriture) ; `leads` est écrite mais
   jamais lue par l'app.
+- **`app.allow_pricing_write` reste ouvert jusqu'à la fin de la TRANSACTION**, pas
+  de la fonction. Les six fonctions de pricing (`price_dossier`,
+  `apply_credits_to_dossier`, `claim_referee_discount`, `confirm_dossier_payment`,
+  `apply_referral_code`) le posent en `set_config(..., true)` et aucune ne le
+  referme. Tant qu'un appel RPC = une transaction (cas de PostgREST), le garde-fou
+  `protect_dossier_pricing` tient. Il cède dès que deux opérations partagent une
+  transaction : la seconde écrit librement `final_price_cents` et consorts.
+  Vérifié le 2026-07-31 (le test T3 de `0013_pricing_parrainage_test.sql` doit
+  refermer le drapeau à la main pour éprouver le trigger). Correctif propre : un
+  `set_config(..., 'off', true)` en sortie de chacune des cinq fonctions, à faire
+  en reproduisant leur état courant (règle 3 d'AGENTS.md), pas au fil de l'eau.
 - **Pas de purge sur `evenements_parcours` / `appels_llm`** (0051). Aucune donnée
   nominative n'y entre, donc rien à faire exercer, mais les deux grossissent sans
   limite : à borner quand le volume le justifiera.

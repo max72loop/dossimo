@@ -68,6 +68,16 @@ begin
   if dd.base_price_cents <> 4900 then raise exception 'FAIL T3: prix retarifé alors qu''il est figé'; end if;
 
   -- Garde-fou trigger : écriture directe des colonnes prix refusée (hors fonction)
+  --
+  -- Le drapeau doit être refermé À LA MAIN avant d'éprouver le garde-fou. Les
+  -- fonctions de pricing posent `app.allow_pricing_write` avec un `set_config`
+  -- LOCAL : il vaut jusqu'à la fin de la TRANSACTION, pas de la fonction. En
+  -- production chaque appel RPC a sa propre transaction, donc le garde-fou tient ;
+  -- ici tout le test partage une transaction, et les appels ci-dessus l'ont laissé
+  -- ouvert. Sans cette ligne, T3 mesure le drapeau, pas le trigger. Portée du
+  -- drapeau vérifiée le 2026-07-31, cf. supabase/README.md § 8.
+  perform set_config('app.allow_pricing_write', 'off', true);
+
   update public.dossiers set final_price_cents = 1 where id = d_ok;
   select final_price_cents into v_n from public.dossiers where id = d_ok;
   if v_n = 1 then raise exception 'FAIL T3: le trigger n''a pas protégé final_price_cents'; end if;
