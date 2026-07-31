@@ -57,6 +57,30 @@ export type TypeEvenementParcours =
 /** Pourquoi une lecture de devis a échoué. Un service tombé n'est pas un document illisible. */
 export type MotifEchecLecture = "non_configure" | "illisible" | "service_indisponible";
 
+// Cluster « refus » (migrations 0053 / 0054). Côté base, des `text + check` ;
+// ici, des unions. Les deux doivent rester en miroir.
+
+/** Dispositif dont un motif de refus RELÈVE, pas celui qui le rencontre le plus. */
+export type AideRefus = "maprimerenov" | "cee" | "les_deux";
+
+/**
+ * Profil du demandeur de diagnostic. Pas de `particulier` : l'aiguillage du
+ * cluster mène un particulier vers une page statique, sans aucune collecte
+ * (docs/cluster-refus.md § 3.4). L'absence de la valeur est la garde.
+ */
+export type ProfilRefus = "artisan_rge" | "autre";
+
+export type StatutDemandeRefus = "nouveau" | "en_cours" | "traite" | "abandonne";
+
+/**
+ * Contenu éditorial d'un motif. La FAQ est facultative : le JSON-LD `FAQPage`
+ * n'est émis que si elle existe réellement, même règle que `guide-page.tsx`.
+ */
+export interface ContenuMotifRefus {
+  sections: Array<{ heading: string; paragraphs: string[] }>;
+  faq?: Array<{ question: string; answer: string }>;
+}
+
 // Pricing + parrainage (migrations 0012 / 0013).
 export type DossierBillingStatus =
   | "draft"
@@ -479,6 +503,93 @@ export interface Database {
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["leads"]["Insert"]>;
+        Relationships: [];
+      };
+      /**
+       * Taxonomie des motifs de refus (migration 0053, contenu seedé en 0054).
+       * RLS sans policy : lue au build par le service-role, comme `regles_metier`
+       * l'est par `gestes-loader.ts`. Aucun accès `anon`.
+       */
+      refus_motifs: {
+        Row: {
+          id: string;
+          slug: string;
+          libelle: string;
+          aide: AideRefus;
+          description: string;
+          contestable: boolean;
+          publie: boolean;
+          meta_title: string;
+          meta_description: string;
+          contenu_json: ContenuMotifRefus;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          slug: string;
+          libelle: string;
+          aide: AideRefus;
+          description: string;
+          contestable?: boolean;
+          publie?: boolean;
+          meta_title: string;
+          meta_description: string;
+          contenu_json?: ContenuMotifRefus;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["refus_motifs"]["Insert"]>;
+        Relationships: [];
+      };
+      /**
+       * Demandes de diagnostic du cluster « refus » (migration 0053).
+       * RLS sans policy : service-role uniquement, comme `leads`.
+       */
+      refus_demandes: {
+        Row: {
+          id: string;
+          profil: ProfilRefus;
+          aide: AideRefus | null;
+          geste: string | null;
+          email: string;
+          telephone: string | null;
+          /** Déclarée, jamais calculée : aucun compte à rebours n'en est dérivé. */
+          date_notification: string | null;
+          motif_libre: string | null;
+          statut: StatutDemandeRefus;
+          consentement_contact_at: string | null;
+          consentements_version: string | null;
+          /** Instantané du texte exact affiché au moment du consentement. */
+          consentements_texte: Json;
+          utm_source: string | null;
+          utm_medium: string | null;
+          utm_campaign: string | null;
+          diagnostic: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          profil: ProfilRefus;
+          aide?: AideRefus | null;
+          geste?: string | null;
+          email: string;
+          telephone?: string | null;
+          date_notification?: string | null;
+          motif_libre?: string | null;
+          statut?: StatutDemandeRefus;
+          consentement_contact_at?: string | null;
+          consentements_version?: string | null;
+          consentements_texte?: Json;
+          utm_source?: string | null;
+          utm_medium?: string | null;
+          utm_campaign?: string | null;
+          diagnostic?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["refus_demandes"]["Insert"]>;
         Relationships: [];
       };
       pieces_justificatives: {
@@ -954,6 +1065,8 @@ export type RegleMetier = Database["public"]["Tables"]["regles_metier"]["Row"];
 export type Paiement = Database["public"]["Tables"]["paiements"]["Row"];
 export type Facture = Database["public"]["Tables"]["factures"]["Row"];
 export type Lead = Database["public"]["Tables"]["leads"]["Row"];
+export type RefusMotif = Database["public"]["Tables"]["refus_motifs"]["Row"];
+export type RefusDemande = Database["public"]["Tables"]["refus_demandes"]["Row"];
 export type PieceJustificative =
   Database["public"]["Tables"]["pieces_justificatives"]["Row"];
 export type LienDepot = Database["public"]["Tables"]["liens_depot"]["Row"];

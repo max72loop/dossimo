@@ -265,6 +265,68 @@ ombre douce. Pas de tirets cadratins dans la copie.
       conversion se fait exactement là où la loi exige l'exactitude.
 - [ ] Index manquants sur plusieurs clés étrangères.
 
+### Moteur : écarts relevés au sourçage du cluster « refus » (2026-07-30)
+
+Quatre écarts entre les textes et `src/lib/rules/`, tous constatés en sourçant les
+assertions de [`docs/refus/motifs-assertions.md`](docs/refus/motifs-assertions.md),
+où chacun porte sa référence.
+
+- [ ] **`chrono_offre_cee` refuse plus strictement que le texte.** L'article
+      R. 221-22 du code de l'énergie autorise la contractualisation du rôle actif et
+      incitatif **jusqu'à quatorze jours après la date d'engagement** lorsque le
+      bénéficiaire est une personne physique ou un syndicat de copropriétaires, à
+      condition qu'elle précède le début de réalisation. Le moteur classe
+      « bloquant » dès que l'offre suit le devis (assertion A3b).
+
+      **Pourquoi celui-ci passe devant les autres.** Les trois écarts suivants sont
+      des faux négatifs : le moteur laisse passer quelque chose que l'obligé ou
+      l'Anah rattrapera plus loin, et l'artisan apprend le problème par
+      l'instruction. Celui-ci est un **faux positif** : Dossimo annonce bloquant un
+      dossier que le texte déclare conforme, l'artisan renonce, et **le produit
+      porte la faute**. C'est le seul des cinq qui détruit de la valeur chez
+      l'artisan au lieu d'en laisser passer, et le seul qui contredit frontalement
+      la promesse anti-refus.
+
+      **Exposition en production, mesurée le 2026-07-30.** La règle est en ligne
+      depuis le 2026-07-22 (commit `ec421d3`), soit huit jours. Lecture seule sur
+      les 7 dossiers CEE en base : **aucun faux positif de ce type**. Aucun dossier
+      n'a d'offre CEE postérieure au devis, donc aucun n'a été bloqué à tort par
+      cette branche. Rien à rattraper auprès d'un artisan.
+
+      **Mais les 7 sont bloqués par l'autre branche** de la même règle : aucun ne
+      porte de date d'engagement de l'offre CEE, ce qui déclenche
+      « Date d'engagement de l'offre CEE manquante », de sévérité bloquante. Un
+      taux de 7 sur 7 ne se lit pas comme une conformité mauvaise mais comme un
+      champ que la saisie ne collecte pas ou que personne ne remplit. À vérifier
+      avant d'incriminer les dossiers, et à croiser avec le nettoyage des dossiers
+      de test encore en base.
+- [ ] **Le délai de sept jours francs n'est contrôlé nulle part.** Les fiches
+      BAR-EN-101 et BAR-EN-102 imposent, au § 3, un délai minimal de sept jours
+      francs entre l'acceptation du devis et le début des travaux. C'est une
+      condition de délivrance au même rang que la résistance thermique, et
+      `controlerDossier` dispose déjà des deux dates (A5, A6).
+- [ ] **Le non-cumul du chauffe-eau thermodynamique est absent du moteur.**
+      `eligibilite_non_cumul_solaire` couvre la PAC air/eau et le solaire thermique,
+      mais ignore le BAR-TH-148, que les fiches BAR-TH-171 et BAR-TH-148 excluent
+      explicitement l'une de l'autre au § 2 (A18, A19). La ligne « non-cumul CEE du
+      solaire » ci-dessous porte la même liste incomplète, ainsi que `CLAUDE.md` §13.
+- [ ] **La mention « Certification de l'isolant (ACERMI ou équivalent) » du seed
+      `regles_metier` (migration `0004`) est plus stricte que la fiche.** Le
+      BAR-EN-101 exige, en configuration de repli, un document du fabricant ou d'un
+      organisme accrédité selon la norme NF EN ISO/IEC 17065 par le COFRAC, sans
+      nommer l'ACERMI (A8). Exiger l'ACERMI en propre fait remonter un point de
+      vigilance là où la fiche est satisfaite. Même famille de défaut : le moteur
+      ignore aussi la tolérance qui rend un justificatif fabricant **valable un an
+      après sa date de fin de validité** (A25).
+- [ ] **La note de dimensionnement de la PAC n'est pas contrôlée** (A27). Le
+      BAR-TH-171 en fait une condition de délivrance : le professionnel la rédige
+      par rapport aux déperditions calculées, la PAC installée y est conforme, et
+      **elle est remise au bénéficiaire à l'engagement de l'opération**, puis
+      actualisée et remise à l'achèvement le cas échéant.
+      `controle-dossier.ts` se contente de la mentionner en passant dans le finding
+      sur la classe du régulateur, alors qu'elle porte une date et une remise
+      opposables.
+
 ### Produit
 
 - [ ] **Porter les quatre profils de revenus MaPrimeRénov'.** Le modèle n'en connaît que trois,
