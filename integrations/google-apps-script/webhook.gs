@@ -44,6 +44,9 @@ function doPost(event) {
     if (payload.type === "prospection_send") {
       return envoyerProspection(payload);
     }
+    if (payload.type === "refus_demande") {
+      return envoyerDemandeRefus(payload);
+    }
     return jsonResponse({ ok: false, error: "unsupported_type" });
   } catch (error) {
     console.error(error);
@@ -236,6 +239,80 @@ function envoyerNotificationLead(payload) {
       "Une question ? Répondez directement à cet e-mail : max@dossimo.pro.",
       "",
       "Max Landry, Dossimo",
+    ].join("\n"),
+  });
+
+  return jsonResponse({ ok: true });
+}
+
+/* Demande de diagnostic déposée sur /refus (cluster « refus », lot 1). */
+
+function envoyerDemandeRefus(payload) {
+  var NOTIFICATION_EMAIL = "max@dossimo.pro";
+  var email = String(payload.email || "").trim();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return jsonResponse({ ok: false, error: "invalid_email" });
+  }
+
+  var aide = clean(payload.aide) || "non précisée";
+  var geste = clean(payload.geste) || "—";
+  var telephone = clean(payload.telephone) || "—";
+  var dateNotification = clean(payload.date_notification) || "—";
+  // Le motif est plafonné à 4000 caractères côté application : `clean` coupe à
+  // 2000 et amputerait précisément le texte sur lequel le diagnostic se fait.
+  var motif = String(payload.motif_libre || "").trim().slice(0, 4000);
+  var origine = [clean(payload.utm_source), clean(payload.utm_medium), clean(payload.utm_campaign)]
+    .filter(function (v) { return v; })
+    .join(" / ") || "—";
+
+  MailApp.sendEmail({
+    to: NOTIFICATION_EMAIL,
+    replyTo: email,
+    name: "Dossimo",
+    subject: "Demande de diagnostic refus · " + email,
+    body: [
+      "Nouvelle demande déposée sur /refus.",
+      "",
+      "Email        : " + email,
+      "Téléphone    : " + telephone,
+      "Aide         : " + aide,
+      "Geste        : " + geste,
+      "Notifié le   : " + dateNotification,
+      "Origine      : " + origine,
+      "",
+      "Motif décrit :",
+      motif,
+    ].join("\n"),
+  });
+
+  // Confirmation à l'artisan. Aucun délai de réponse annoncé : le traitement est
+  // manuel, et un délai promis puis tenu de travers abîme plus qu'il ne rassure.
+  // La mention d'indépendance y figure, comme sur tout e-mail transactionnel
+  // (CLAUDE.md §2).
+  MailApp.sendEmail({
+    to: email,
+    replyTo: NOTIFICATION_EMAIL,
+    name: "Dossimo",
+    subject: "Votre demande de diagnostic est bien arrivée · Dossimo",
+    body: [
+      "Bonjour,",
+      "",
+      "Nous avons bien reçu ce que vous nous avez décrit de votre refus. Nous le",
+      "lisons et nous vous répondons par écrit à cette adresse : la réponse vous",
+      "dira sur quoi votre dossier a été jugé, et si la décision peut être reprise.",
+      "",
+      "Un élément à ajouter, la notification sous les yeux par exemple ? Répondez",
+      "simplement à cet e-mail.",
+      "",
+      "Rappel utile : les délais de recours qui vous sont opposables sont ceux que",
+      "porte votre notification. Si elle n'en mentionne aucun, aucun ne vous est",
+      "opposable.",
+      "",
+      "Max Landry, Dossimo",
+      "",
+      "Dossimo - service indépendant d'aide à la préparation de dossier, non",
+      "affilié à l'Anah ni à France Rénov'. Dossimo ne dépose pas le dossier et ne",
+      "perçoit pas la prime.",
     ].join("\n"),
   });
 

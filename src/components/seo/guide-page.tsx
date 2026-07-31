@@ -195,6 +195,25 @@ export function SeoGuidePage({ guide }: { guide: SeoGuide }) {
               </ul>
             </section>
 
+            {/*
+              Renvois hors guides (aujourd'hui le cluster « refus »), portés par
+              la donnée du guide et non par ce composant : trois guides sur dix
+              en ont, le bloc ne doit donc pas coiffer les dix.
+            */}
+            {guide.voirAussi?.length ? (
+              <section aria-labelledby="voir-aussi" className="mt-16 border-t border-filigrane pt-14">
+                <h2 id="voir-aussi" className="font-serif text-3xl font-semibold text-encre">Le refus est déjà tombé ?</h2>
+                <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                  {guide.voirAussi.map((lien) => (
+                    <Link key={lien.href} href={lien.href} className="group rounded-2xl bg-blanc-casse p-5 shadow-md transition hover:shadow-lg">
+                      <span className="font-semibold text-encre group-hover:text-tampon">{lien.label}</span>
+                      <span className="mt-2 block text-sm leading-relaxed text-ardoise">{lien.description}</span>
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            ) : null}
+
             <section aria-labelledby="autres-guides" className="mt-16 border-t border-filigrane pt-14">
               <h2 id="autres-guides" className="font-serif text-3xl font-semibold text-encre">Poursuivre la vérification</h2>
               <div className="mt-6 grid gap-3 sm:grid-cols-2">

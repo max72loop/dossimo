@@ -276,15 +276,29 @@ Une étape à la fois, diff montré et validé avant de passer à la suivante.
 
 ## 7. Checklist de livraison du lot 1
 
-- [ ] 8 à 10 motifs rédigés, sources primaires archivées, relus et passés à
-      `publie = true`
-- [ ] `npx supabase db reset` passe de bout en bout
-- [ ] `npm run test` passe (schéma Zod : cas conforme + cas de refus)
-- [ ] `database.types.ts` reflète la migration `0053`
-- [ ] RLS activée sans policy + `revoke` sur les deux tables neuves
-- [ ] Aucun nouvel accès `anon` dans le schéma
-- [ ] Bandeau d'indépendance visible sur chaque page du cluster
-- [ ] Nouvelles URL présentes dans le sitemap, `/refus/merci` en `noindex`
-- [ ] Maillage croisé effectif dans les deux sens avec « Refus & prévention »
-- [ ] **`webhook.gs` déployé à la main dans Apps Script** et testé sur un envoi réel
-- [ ] Section RGPD publiée dans `/confidentialite`, encart de renvoi sur `/refus`
+État au 2026-07-31.
+
+- [x] 8 à 10 motifs rédigés, sources primaires archivées, relus et passés à
+      `publie = true` — **onze** motifs
+- [x] `npx supabase db reset` passe de bout en bout
+- [x] `npm run test` passe (schéma Zod : cas conforme + cas de refus)
+- [x] `database.types.ts` reflète la migration `0053`
+- [x] RLS activée sans policy + `revoke` sur les deux tables neuves
+- [x] Aucun nouvel accès `anon` dans le schéma
+- [x] Bandeau d'indépendance visible sur chaque page du cluster — posé dans
+      `app/refus/layout.tsx`, donc aucune page ne peut l'oublier
+- [x] Nouvelles URL présentes dans le sitemap, `/refus/merci` en `noindex`
+- [x] Maillage croisé effectif dans les deux sens avec « Refus & prévention » —
+      aller par le champ `voirAussi` de `SeoGuide`, retour par
+      `components/refus/guides-prevention.tsx`, dérivé de la catégorie
+- [ ] **`webhook.gs` déployé à la main dans Apps Script** et testé sur un envoi
+      réel — le type `refus_demande` est écrit et appelé par la Server Action,
+      **le déploiement reste à faire** (hors cycle Vercel)
+- [x] Section RGPD publiée dans `/confidentialite`, encart de renvoi sur `/refus`
+
+**Une seule case ouverte, et elle est manuelle.** Tant que le script n'est pas
+redéployé, une demande est correctement enregistrée en base mais **aucun e-mail
+ne part** : ni l'alerte interne, ni la confirmation à l'artisan. L'application le
+journalise (`[refus] Webhook Apps Script refusé`) sans faire échouer la
+soumission, ce qui est le bon arbitrage côté visiteur mais suppose de surveiller
+`refus_demandes` d'ici là.

@@ -193,16 +193,22 @@ templates/cerfa/      # modèles maîtres Cerfa versionnés (+ archive/)
       pour `artisans`. Fait en `0045` (7 colonnes ouvertes, le reste verrouillé).
 - [x] Câbler `expire_old_credits` à un cron : fait (`vercel.json` →
       `/api/cron/expire-credits`, protégé par `CRON_SECRET`).
-- [ ] Purger `leads`, `prospects` et `auth_rate_limits` (CNIL : ~3 ans après le
-      dernier contact en prospection B2B).
+- [ ] Purger `leads`, `prospects`, `auth_rate_limits` et `refus_demandes`
+      (CNIL : ~3 ans après le dernier contact en prospection B2B). Pour
+      `refus_demandes`, la durée est annoncée au visiteur dans le libellé de
+      consentement et dans `/confidentialite` : elle est due.
 
 **Produit**
 
-- [ ] **Cluster « refus » (acquisition).** Pages `/refus` + formulaire de
-      diagnostic, découpé en deux lots (lot 1 en août 2026, lot 2 en septembre
-      conditionné aux demandes reçues). Périmètre, exclusions explicites et
-      ordre d'exécution dans **`docs/cluster-refus.md`** : c'est la référence du
-      chantier, à lire avant d'y toucher.
+- [ ] **Cluster « refus » (acquisition).** Lot 1 livré le 2026-07-31 : onze
+      motifs rédigés et publiés, pages `/refus`, `/refus/maprimerenov-refuse`,
+      `/refus/cee-rejete`, `/refus/motifs/[slug]`, `/refus/particulier`,
+      `/refus/merci`, formulaire de diagnostic, sitemap et maillage croisé.
+      **Reste à faire à la main : déployer `webhook.gs` dans Apps Script** (hors
+      cycle Vercel) et tester sur un envoi réel. Lot 2 en septembre, conditionné
+      aux demandes reçues. Périmètre, exclusions explicites et ordre d'exécution
+      dans **`docs/cluster-refus.md`** : c'est la référence du chantier, à lire
+      avant d'y toucher.
 - [ ] **Porter les quatre profils de revenus MaPrimeRénov'.** Le modèle n'en
       connaît que trois (`grande_precarite` / `precaire` / `classique`, calqués
       sur le CEE) alors que l'Anah en a quatre, et son `classique` confond

@@ -56,6 +56,18 @@ export interface SeoGuide {
    * réellement affichées : le balisage FAQ doit refléter le contenu visible.
    */
   faq?: Array<{ question: string; answer: string }>;
+  /**
+   * Renvois sortants vers des pages du site qui ne sont PAS des guides, rendus
+   * en fin d'article. Champ optionnel et additif : un guide sans `voirAussi`
+   * garde exactement son rendu.
+   *
+   * Il existe pour le maillage croisé avec le cluster « refus » : un artisan qui
+   * lit un guide de prévention vient souvent de se prendre un refus, et l'inverse
+   * est vrai. Ce maillage passe par une donnée du guide, jamais par un bloc codé
+   * en dur dans `guide-page.tsx`, qui coifferait alors les dix guides pour n'en
+   * concerner que trois (docs/cluster-refus.md § 3.5).
+   */
+  voirAussi?: Array<{ label: string; href: string; description: string }>;
   sources: Array<{ label: string; href: string }>;
 }
 
@@ -877,6 +889,20 @@ export const guides = {
           "Non. Dossimo est un service indépendant d’aide à la préparation de dossier, non affilié à l’Anah ni à France Rénov’. Il produit le pack documentaire cohérent et remonte les points de blocage avant le dépôt, mais c’est vous et votre client qui déposez le dossier et percevez la prime. Vous gardez la main sur votre client comme sur votre relation avec l’administration.",
       },
     ],
+    voirAussi: [
+      {
+        label: "MaPrimeRénov’ refusée : lire la décision avant de refaire le dossier",
+        href: "/refus/maprimerenov-refuse",
+        description:
+          "Le refus est déjà tombé : ce qui se corrige, ce qui ne se corrige pas, et le recours préalable devant le directeur général de l’Anah.",
+      },
+      {
+        label: "Les motifs de refus, un par un",
+        href: "/refus",
+        description:
+          "Chaque motif expliqué à partir du texte qui le fonde, avec ce qui le déclenche et ce qui l’évite.",
+      },
+    ],
     sources: [
       { label: "Les règles d’or d’un dossier MaPrimeRénov’ — France Rénov’", href: franceRenovDossier },
       { label: "Guide MaPrimeRénov’ rénovation par geste — France Rénov’", href: "https://france-renov.gouv.fr/preparer-projet/dossier-demande-aide/guide-geste" },
@@ -981,6 +1007,20 @@ export const guides = {
           "L’obligé ou son délégataire, c’est-à-dire l’acteur qui achètera les certificats. L’artisan ne l’émet pas, mais c’est lui qui subit le refus si la chronologie est mauvaise : c’est donc à lui de vérifier que l’engagement est bien intervenu avant de faire signer le devis.",
       },
     ],
+    voirAussi: [
+      {
+        label: "L’offre CEE a été engagée après le devis",
+        href: "/refus/motifs/offre-cee-posterieure-au-devis",
+        description:
+          "Le motif correspondant, et la fenêtre de quatorze jours que le code de l’énergie ouvre pour un bénéficiaire particulier.",
+      },
+      {
+        label: "Dossier CEE rejeté : ce que l’obligé a réellement contrôlé",
+        href: "/refus/cee-rejete",
+        description:
+          "Les points qui font tomber un dossier CEE, des dates de chronologie aux mentions de la preuve de réalisation.",
+      },
+    ],
     sources: [
       { label: "Questions-réponses officielles sur le dispositif CEE (ecologie.gouv.fr)", href: questionsCee },
       { label: "Catalogue officiel des fiches d’opérations standardisées CEE", href: catalogueCee },
@@ -1082,6 +1122,20 @@ export const guides = {
         question: "Ma qualification expire bientôt, dois-je attendre pour signer ?",
         answer:
           "Ne signez pas en comptant sur un renouvellement non acquis. Un audit ou une visite de contrôle ne se programment pas en quelques jours. Lancez la démarche de renouvellement avec de la marge et vérifiez la date d’échéance avant d’engager le chantier, plutôt qu’au moment de monter le dossier.",
+      },
+    ],
+    voirAussi: [
+      {
+        label: "La qualification RGE n’était pas valide à la date utile",
+        href: "/refus/motifs/qualification-rge-invalide-a-la-date",
+        description:
+          "Le motif correspondant : à quelle date la qualification s’apprécie, et ce qu’il reste à faire quand le refus est déjà tombé.",
+      },
+      {
+        label: "La qualification ne couvre pas le geste, ou le poseur n’est pas celui qui est qualifié",
+        href: "/refus/motifs/rge-hors-domaine-ou-sous-traitance",
+        description:
+          "Le cas de la sous-traitance, qui ne se voit pas sur le devis et coûte le plus cher.",
       },
     ],
     sources: [
