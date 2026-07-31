@@ -8,6 +8,7 @@ import { getStripe, isStripeConfigured } from "@/lib/stripe/client";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { emettreFacture } from "@/lib/factures/emettre";
+import { MENTION_INDEPENDANCE_WEB_ADRESSEE } from "@/lib/legal/mentions";
 import {
   priceDossier,
   claimRefereeDiscount,
@@ -36,14 +37,10 @@ function siteUrl(): string {
 }
 
 // Mention de non-affiliation affichée sur la page Stripe Checkout, sous le
-// bouton de paiement. Reprend mot pour mot le pied de page (site-footer.tsx) :
-// même positionnement, même engagement juridique, partout où le client paie
-// (CLAUDE.md §2). Stripe plafonne custom_text à 1200 caractères.
-const MENTION_INDEPENDANCE =
-  "Dossimo est un service indépendant d'aide à la préparation de dossier, " +
-  "non affilié à l'Anah ni à France Rénov'. Dossimo ne dépose jamais le " +
-  "dossier et ne perçoit jamais la prime : vous et votre client déposez " +
-  "vous-mêmes et conservez l'intégralité de la prime.";
+// bouton de paiement : même positionnement, même engagement juridique, partout
+// où le client paie (CLAUDE.md §2). Le texte vit dans `legal/mentions.ts`, avec
+// le pied de page et le cluster /refus, et n'est plus recopié ici.
+const MENTION_INDEPENDANCE = MENTION_INDEPENDANCE_WEB_ADRESSEE;
 
 async function garantirCodeLancement(stripe: ReturnType<typeof getStripe>) {
   if (Math.floor(Date.now() / 1000) > FIN_LANCEMENT_EPOCH) return;

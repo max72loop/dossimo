@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { Logo } from "@/components/ui/logo";
+import { MENTION_INDEPENDANCE_WEB } from "@/lib/legal/mentions";
 
 export function SiteFooter() {
   return (
@@ -63,11 +64,7 @@ export function SiteFooter() {
         */}
         <div className="mt-12 border-t border-filigrane pt-6">
           <p className="max-w-3xl text-xs leading-relaxed text-ardoise">
-            Dossimo est un service indépendant d&rsquo;aide à la préparation de
-            dossier, non affilié à l&rsquo;Anah ni à France Rénov&rsquo;. Dossimo
-            ne dépose jamais le dossier et ne perçoit jamais la prime :
-            l&rsquo;artisan et son client déposent eux-mêmes et conservent
-            l&rsquo;intégralité de la prime.
+            {MENTION_INDEPENDANCE_WEB}
           </p>
           <p className="mt-4 font-mono text-xs text-ardoise">
             © {new Date().getFullYear()} Dossimo.

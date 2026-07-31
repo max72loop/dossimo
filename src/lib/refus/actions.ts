@@ -1,7 +1,6 @@
 "use server";
 
 import { consumeAuthRateLimit } from "@/lib/auth/rate-limit";
-import { editeur } from "@/lib/legal/editeur";
 import { instantaneConsentements } from "@/lib/refus/consentements";
 import { demandeRefusSchema } from "@/lib/refus/schema";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -14,9 +13,6 @@ import type { Json } from "@/lib/database.types";
  * (migration 0053), comme `leads`. Aucune policy anonyme n'est ouverte sur une
  * table qui contient un e-mail, un téléphone et le récit d'un dossier refusé.
  */
-
-/** Adresse de repli, affichée quand la soumission ne peut pas aboutir. */
-export const EMAIL_REPLI = editeur.emailContact;
 
 export type SoumettreDemandeResult =
   | { ok: true }
@@ -109,5 +105,52 @@ export async function soumettreDemandeRefus(
     };
   }
 
+  // --- 4. E-mails ---
+  // Après l'écriture, jamais avant : la demande enregistrée est ce qui compte,
+  // l'e-mail n'est que le premier contact. Un échec d'envoi est journalisé mais
+  // ne fait PAS échouer la soumission, sinon un artisan dont la demande est bien
+  // en base recevrait un message d'erreur et la renverrait en double.
+  await notifierDemandeRefus({
+    email: d.email,
+    telephone: d.telephone,
+    aide: d.aide ?? null,
+    geste: d.geste,
+    date_notification: d.date_notification,
+    motif_libre: d.motif_libre,
+    utm_source: d.utm_source,
+    utm_medium: d.utm_medium,
+    utm_campaign: d.utm_campaign,
+  });
+
   return { ok: true };
+}
+
+/**
+ * Notification interne + confirmation à l'artisan, via le webhook Apps Script
+ * (pas de Resend : le compte est occupé par un autre projet). Même montage que
+ * `notifyGoogleAppsScript` dans `landing/actions.ts`, avec son propre `type` :
+ * le script n'expose aucun relais générique, il route sur ce champ.
+ */
+async function notifierDemandeRefus(demande: Record<string, string | null>): Promise<void> {
+  const webhookUrl = process.env.GOOGLE_APPS_SCRIPT_WEBHOOK_URL;
+  const webhookSecret = process.env.GOOGLE_APPS_SCRIPT_WEBHOOK_SECRET;
+  if (!webhookUrl || !webhookSecret) {
+    console.warn("[refus] Webhook Google Apps Script non configuré — e-mails ignorés.");
+    return;
+  }
+
+  try {
+    const response = await fetch(webhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ secret: webhookSecret, type: "refus_demande", ...demande }),
+      cache: "no-store",
+    });
+    const result = (await response.json()) as { ok?: boolean; error?: string };
+    if (!response.ok || !result.ok) {
+      console.error(`[refus] Webhook Apps Script refusé: ${result.error || response.status}`);
+    }
+  } catch (err) {
+    console.error("[refus] Webhook Google Apps Script échoué:", err);
+  }
 }
