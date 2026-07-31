@@ -28,7 +28,16 @@ export async function consumeAuthRateLimit(
   // est un simple `text` sans contrainte, toute clé d'usage y est valable. On
   // partage donc la même mécanique pour le formulaire public (`lead`) plutôt
   // que d'en dupliquer une seconde (README §1, règle 5).
-  action: "signin" | "signup" | "password-reset" | "password-change" | "email-change" | "lead",
+  action:
+    | "signin"
+    | "signup"
+    | "password-reset"
+    | "password-change"
+    | "email-change"
+    | "lead"
+    // Formulaire de diagnostic /refus. Même mécanique, mais verdict traité en
+    // MODE FERMÉ par l'appelant, contrairement à `lead` : cf. refus/actions.ts.
+    | "refus",
   identity: string,
   limit: number,
   windowSeconds = 15 * 60,

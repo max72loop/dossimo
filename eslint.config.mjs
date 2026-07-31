@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Généré par `npx supabase start` (runtime des Edge Functions), gitignoré :
+    // du code tiers minifié, qui ferait échouer `npm run lint` sur 154 erreurs.
+    "supabase/.temp/**",
   ]),
   {
     rules: {

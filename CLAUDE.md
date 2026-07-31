@@ -154,6 +154,12 @@ templates/cerfa/      # modèles maîtres Cerfa versionnés (+ archive/)
 - Code et identifiants en anglais, contenu utilisateur (PDF, e-mails, UI) en français.
 - Toute nouvelle règle métier passe par `regles_metier` ou `src/lib/rules/`,
   jamais dispersée dans les composants.
+- **Toute migration qui modifie le texte d'un motif de refus met à jour
+  `docs/refus/motifs-assertions.md` dans le même commit**, au même titre que
+  `database.types.ts` pour un changement de schéma. Ce fichier est la seule
+  source des sources : chaque affirmation réglementaire y porte le slug du motif
+  qu'elle soutient, sa référence exacte, la version du texte et sa date
+  d'applicabilité. Le texte des motifs vit en base, jamais recopié en markdown.
 - Chaque règle dure a un test avec un cas conforme et un cas de refus.
 - Migrations Supabase uniquement additives une fois en prod (pas de `DROP` sans plan).
 
@@ -192,6 +198,11 @@ templates/cerfa/      # modèles maîtres Cerfa versionnés (+ archive/)
 
 **Produit**
 
+- [ ] **Cluster « refus » (acquisition).** Pages `/refus` + formulaire de
+      diagnostic, découpé en deux lots (lot 1 en août 2026, lot 2 en septembre
+      conditionné aux demandes reçues). Périmètre, exclusions explicites et
+      ordre d'exécution dans **`docs/cluster-refus.md`** : c'est la référence du
+      chantier, à lire avant d'y toucher.
 - [ ] **Porter les quatre profils de revenus MaPrimeRénov'.** Le modèle n'en
       connaît que trois (`grande_precarite` / `precaire` / `classique`, calqués
       sur le CEE) alors que l'Anah en a quatre, et son `classique` confond
@@ -199,10 +210,14 @@ templates/cerfa/      # modèles maîtres Cerfa versionnés (+ archive/)
       Conséquence actuelle : le barème MPR du CESI ne seede que les deux profils
       représentables sans ambiguïté (migration `0042`), donc un ménage
       « classique » n'a aucune estimation. Tous les gestes sont concernés.
-- [ ] **Contrôler le non-cumul CEE du solaire.** Depuis 2026, BAR-TH-101 / 143 /
-      168 ne sont plus cumulables avec BAR-TH-171 et BAR-TH-172 (PAC air/eau et
-      eau/eau). Non détectable aujourd'hui : la règle est inter-dossiers, et le
-      moteur ne voit qu'un dossier à la fois.
+- [ ] **Contrôler le non-cumul CEE du solaire.** Depuis 2026, BAR-TH-101 / 124 /
+      143 / 168 **et BAR-TH-148 (chauffe-eau thermodynamique)** ne sont plus
+      cumulables avec BAR-TH-171 et BAR-TH-172 (PAC air/eau et eau/eau). Liste
+      relevée au § 2 des fiches elles-mêmes le 2026-07-30 : le BAR-TH-148 y
+      figurait et manquait ici comme dans le moteur. Non détectable aujourd'hui :
+      la règle est inter-dossiers, et le moteur ne voit qu'un dossier à la fois.
+      Trois autres écarts moteur relevés au même moment sont listés dans
+      `SUIVI-PROJET.md` (§ « Moteur : écarts relevés au sourçage »).
 - [ ] Implémenter le remplissage des Cerfa officiels CEE isolation avec `pdf-lib`,
       piloté par `version_formulaire` de `regles_metier`.
 - [ ] Mettre en place le processus de surveillance Cerfa (§8) et créer
