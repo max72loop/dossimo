@@ -66,7 +66,7 @@ local, et deux défauts dormaient dans le seul fichier `0013` (§ 5).
 
 ## 3. Carte du schéma
 
-29 tables dans `public`, sept domaines.
+31 tables dans `public`, huit domaines.
 
 | Domaine | Tables | Migrations |
 |---|---|---|
@@ -77,6 +77,7 @@ local, et deux défauts dormaient dans le seul fichier `0013` (§ 5).
 | Devis | `quote_gestures`, `quote_gesture_fields`, `quote_templates`, `generated_quotes`, `user_quote_templates` | 0021-0023, 0028 |
 | Prospection | `prospection_campagnes`, `prospects`, `prospection_messages`, `prospection_evenements`, `prospection_suppressions`, `prospects_dossimo` | 0032-0034, 0037, 0039, 0050 |
 | Mesure | `evenements_parcours`, `appels_llm` | 0051 |
+| Cluster refus | `refus_motifs`, `refus_demandes` | 0053, 0054 |
 | Sécurité | `auth_rate_limits` | 0030, 0036 |
 
 **Aucune vue.** Tous les agrégats sont faits en TypeScript.
@@ -265,8 +266,11 @@ Tant qu'on maintient à la main : le faire, sérieusement.
   URL et n'existe pas en base. Ni accès, ni rectification, ni effacement.
 - **Son nom est figé à vie** dans `factures.lignes_json`, que le trigger
   `factures_immuables` protège de tout UPDATE, y compris en service-role.
-- **Pas de purge** de `leads`, `prospects`, `auth_rate_limits` (CNIL : ~3 ans
-  après dernier contact en prospection B2B).
+- **Pas de purge** de `leads`, `prospects`, `auth_rate_limits` ni de
+  `refus_demandes` (CNIL : ~3 ans après dernier contact en prospection B2B).
+  Pour `refus_demandes`, la durée est **annoncée au visiteur** dans le libellé de
+  consentement et dans `/confidentialite` : elle est donc due, pas seulement
+  souhaitable.
 - **`expire_old_credits` n'est câblée à aucun cron** : `credit_balance_cents`
   dérive dès qu'un crédit expire.
 - **FK sans index** : `dossiers.tier_id`, `generated_quotes.*`,

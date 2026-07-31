@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import { LegalDoc, LegalSection } from "@/components/legal/legal-doc";
 import { editeur, derniereMajLegale } from "@/lib/legal/editeur";
@@ -51,6 +52,13 @@ export default function ConfidentialitePage() {
             coordonnées transmises volontairement pour être recontacté.
           </li>
           <li>
+            <strong>Demande de diagnostic de refus</strong>&nbsp;: e-mail,
+            téléphone si vous le donnez, dispositif et geste concernés, date de la
+            notification de refus si vous la connaissez, et la description libre du
+            motif que vous rédigez. Aucun document n&rsquo;est déposé sur ce
+            formulaire.
+          </li>
+          <li>
             <strong>Données de paiement</strong>&nbsp;: traitées directement par
             Stripe. Dossimo ne stocke aucune donnée de carte bancaire.
           </li>
@@ -75,6 +83,16 @@ export default function ConfidentialitePage() {
           <li>
             Réponse aux demandes via le formulaire de contact&nbsp;:{" "}
             <em>intérêt légitime</em> / <em>mesures précontractuelles</em>.
+          </li>
+          <li>
+            Diagnostic d&rsquo;une demande de refus déposée sur{" "}
+            <Link href="/refus" className="text-tampon underline-offset-4 hover:underline">
+              /refus
+            </Link>
+            , et réponse écrite à son auteur&nbsp;: <em>consentement</em>, recueilli
+            par une case à cocher dont le libellé exact est conservé avec la
+            demande. Retirable à tout moment, sans que cela remette en cause les
+            échanges déjà eus.
           </li>
           <li>
             Amélioration et sécurité du service&nbsp;: <em>intérêt légitime</em>.
@@ -120,6 +138,14 @@ export default function ConfidentialitePage() {
           (notamment obligations comptables et pièces justificatives des
           dispositifs d&rsquo;aide). Les données de prospect sont conservées au
           maximum trois ans à compter du dernier contact.
+        </p>
+        <p>
+          Les demandes de diagnostic déposées sur{" "}
+          <Link href="/refus" className="text-tampon underline-offset-4 hover:underline">
+            /refus
+          </Link>{" "}
+          suivent la même durée&nbsp;: trois ans à compter de notre dernier
+          contact.
         </p>
       </LegalSection>
 
