@@ -20,6 +20,7 @@ function regleCombles(over: Partial<RegleMetierResolue["condition"]> = {}): Regl
 /** Dossier conforme de référence (CEE combles), surchargable. */
 function dossier(over: {
   dispositif?: "cee" | "maprimerenov";
+  fiche?: "BAR-EN-101" | "BAR-EN-102";
   regle?: RegleMetierResolue | null;
   travaux?: Record<string, unknown>;
   dates?: Record<string, unknown>;
@@ -32,7 +33,7 @@ function dossier(over: {
     dossier: { dispositif: over.dispositif ?? "cee", created_at: "2026-06-01" },
     artisan: null,
     caracteristiques: {
-      fiche: "BAR-EN-101",
+      fiche: over.fiche ?? "BAR-EN-101",
       beneficiaire: {
         nom: "Martin", prenom: "Claire", adresse: "12 rue des Lilas",
         code_postal: "93100", commune: "Montreuil", email: null, telephone: null,
@@ -40,7 +41,7 @@ function dossier(over: {
       },
       logement: { type: "maison", annee_construction: 1985, residence: "principale", surface_habitable: 90, ...over.logement },
       travaux: {
-        type_isolation: "combles_perdus", fiche: "BAR-EN-101", surface_isolee_m2: 95,
+        type_isolation: "combles_perdus", fiche: over.fiche ?? "BAR-EN-101", surface_isolee_m2: 95,
         isolant_type: "laine de verre", isolant_marque: "Isover", isolant_reference: "IBR 300",
         resistance_thermique_r: 7.5, epaisseur_mm: 300, ...over.travaux,
       },
@@ -244,6 +245,36 @@ describe("controlerDossier — rôle actif et incitatif (offre CEE avant le devi
     expect(cs.some((c) => c.startsWith("chrono_offre_cee"))).toBe(false);
     expect(controlerDossier(dossier(over), AUJ).conforme).toBe(true);
   });
+});
+
+describe("controlerDossier — sept jours francs avant la pose", () => {
+  it.each(["BAR-EN-101", "BAR-EN-102"] as const)(
+    "%s : 5 jours entre devis et travaux refuse le dossier",
+    (fiche) => {
+      const cas = dossier({
+        fiche,
+        dates: { devis: "2026-03-10", debut_travaux: "2026-03-15" },
+      });
+      const r = controlerDossier(cas, AUJ);
+
+      expect(r.conforme).toBe(false);
+      expect(codes(cas)).toContain("chrono_delai_franc_isolation:bloquant");
+    },
+  );
+
+  it.each(["BAR-EN-101", "BAR-EN-102"] as const)(
+    "%s : 8 jours entre devis et travaux respecte les 7 jours francs",
+    (fiche) => {
+      const cas = dossier({
+        fiche,
+        dates: { devis: "2026-03-10", debut_travaux: "2026-03-18" },
+      });
+      const r = controlerDossier(cas, AUJ);
+
+      expect(r.conforme).toBe(true);
+      expect(codes(cas)).toContain("chrono_delai_franc_isolation:ok");
+    },
+  );
 });
 
 /** Règle CEE pompe à chaleur air/eau (forfait, sans etas_min figé). */

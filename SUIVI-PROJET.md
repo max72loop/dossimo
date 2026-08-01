@@ -321,11 +321,13 @@ où chacun porte sa référence. Le premier est corrigé.
       jours, et une déclaration d'antériorité sans date qui dégrade le bloquant en
       avertissement. **Aucun rattrapage possible sur les 6 dossiers legacy** : il
       n'existe aucun chemin d'édition de `dates_json` après création.
-- [ ] **Le délai de sept jours francs n'est contrôlé nulle part.** Les fiches
+- [x] **Le délai de sept jours francs est contrôlé.** Les fiches
       BAR-EN-101 et BAR-EN-102 imposent, au § 3, un délai minimal de sept jours
       francs entre l'acceptation du devis et le début des travaux. C'est une
       condition de délivrance au même rang que la résistance thermique, et
-      `controlerDossier` dispose déjà des deux dates (A5, A6).
+      `controlerDossier` bloque désormais jusqu'à J+7 et valide à partir de J+8,
+      les deux jours bornes étant exclus du décompte (A5, A6). Corrigé et testé
+      le 01/08/2026 sur les deux fiches.
 - [ ] **Le non-cumul du chauffe-eau thermodynamique est absent du moteur.**
       `eligibilite_non_cumul_solaire` couvre la PAC air/eau et le solaire thermique,
       mais ignore le BAR-TH-148, que les fiches BAR-TH-171 et BAR-TH-148 excluent

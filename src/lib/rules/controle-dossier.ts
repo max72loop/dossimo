@@ -21,6 +21,14 @@ const ANCIENNETE_MIN_DEFAUT = 2; // années (repli)
 const OFFRE_CEE_FENETRE_JOURS = 14;
 
 /**
+ * Délai imposé par les BAR-EN-101 et BAR-EN-102 § 3 entre l'acceptation du
+ * devis et la pose de l'isolant (assertions A5 et A6,
+ * `docs/refus/motifs-assertions.md`). Les deux jours bornes sont exclus : sept
+ * jours francs exigent donc au moins huit jours calendaires d'écart.
+ */
+const ISOLATION_DELAI_MIN_JOURS_FRANCS = 7;
+
+/**
  * R minimal par poste d'isolation — REPLI UNIQUEMENT, quand aucune règle active
  * n'existe pour le couple (dispositif, type_travaux). La source de vérité est
  * `regles_metier.condition_json.r_min` (migration 0004), éditable dans
@@ -96,6 +104,20 @@ function parseDate(s: string | null | undefined): Date | null {
 }
 
 const jour = 86_400_000;
+
+/** Écart en dates civiles, indépendant des changements d'heure été/hiver. */
+function ecartJoursCalendaires(debut: Date, fin: Date): number {
+  const debutUtc = Date.UTC(debut.getFullYear(), debut.getMonth(), debut.getDate());
+  const finUtc = Date.UTC(fin.getFullYear(), fin.getMonth(), fin.getDate());
+  return Math.round((finUtc - debutUtc) / jour);
+}
+
+function ajouterJoursCalendaires(date: Date, jours: number): string {
+  const resultat = new Date(
+    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate() + jours),
+  );
+  return resultat.toISOString().slice(0, 10);
+}
 
 /**
  * Contrôle déterministe d'un dossier (CEE ou MaPrimeRénov', tous gestes).
@@ -268,6 +290,40 @@ export function controlerDossier(
         titre: "Devis antérieur au début des travaux",
         detail: "L'engagement précède bien les travaux.",
       });
+    }
+
+    // BAR-EN-101 / BAR-EN-102 § 3 : sept jours FRANCS entre l'acceptation du
+    // devis et la pose de l'isolant (A5, A6). Ni le jour du devis ni celui du
+    // début ne comptent : J+8 est le premier démarrage conforme.
+    if (
+      dispositif === "cee" &&
+      dDebut >= dDevis &&
+      (c.fiche === "BAR-EN-101" || c.fiche === "BAR-EN-102")
+    ) {
+      const ecartJours = ecartJoursCalendaires(dDevis, dDebut);
+      const joursFrancs = Math.max(0, ecartJours - 1);
+
+      if (joursFrancs < ISOLATION_DELAI_MIN_JOURS_FRANCS) {
+        const premiereDateConforme = ajouterJoursCalendaires(
+          dDevis,
+          ISOLATION_DELAI_MIN_JOURS_FRANCS + 1,
+        );
+        add({
+          code: "chrono_delai_franc_isolation",
+          categorie: "chronologie",
+          severite: "bloquant",
+          titre: "Délai de sept jours francs non respecté",
+          detail: `La fiche ${c.fiche} § 3 impose sept jours francs entre l'acceptation du devis et la pose de l'isolant. Du ${dateFr(dates.devis)} au ${dateFr(dates.debut_travaux)}, le décompte donne ${joursFrancs} jour${joursFrancs > 1 ? "s" : ""} franc${joursFrancs > 1 ? "s" : ""}. Pour ce devis, les travaux ne pouvaient commencer qu'à partir du ${dateFr(premiereDateConforme)}.`,
+        });
+      } else {
+        add({
+          code: "chrono_delai_franc_isolation",
+          categorie: "chronologie",
+          severite: "ok",
+          titre: "Délai de sept jours francs respecté",
+          detail: `${joursFrancs} jours francs séparent l'acceptation du devis de la pose de l'isolant, conformément à la fiche ${c.fiche} § 3.`,
+        });
+      }
     }
   } else {
     add({

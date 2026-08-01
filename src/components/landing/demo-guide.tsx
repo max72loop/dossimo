@@ -1,13 +1,15 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { AlertTriangle, ArrowRight, Camera, CheckCircle2, FileText, PlayCircle } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
+import { useTactile } from "@/components/ui/use-tactile";
 
 import { analyserDevisInitial } from "@/lib/dossier/document-first-actions";
 import { saveGuestDraft } from "@/lib/dossier/guest-draft";
 import type { CeeIsolationInput } from "@/lib/dossier/cee-isolation";
+import { ACCEPT_DOCUMENT, ACCEPT_PHOTO } from "@/lib/piece/catalogue";
 
 const POINTS_A_VERIFIER: Array<{ key: keyof CeeIsolationInput; label: string }> = [
   { key: "client_nom", label: "le nom complet du client" },
@@ -19,13 +21,27 @@ const POINTS_A_VERIFIER: Array<{ key: keyof CeeIsolationInput; label: string }> 
 ];
 
 export function DemoGuide() {
+  const fichierRef = useRef<HTMLInputElement>(null);
   const photoRef = useRef<HTMLInputElement>(null);
-  const pdfRef = useRef<HTMLInputElement>(null);
+  const carteRef = useRef<HTMLDivElement>(null);
+  const tactile = useTactile();
   const [fileName, setFileName] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<{ valeurs: Partial<CeeIsolationInput>; champsTrouves: string[] } | null>(null);
   const [loadingStep, setLoadingStep] = useState("Je lis le devis");
+
+  /**
+   * Sur un téléphone, l'appareil photo occupe tout l'écran puis rend la main :
+   * l'artisan revient sur une page qu'il n'a pas fait défiler, et la carte se
+   * trouve sous la ligne de flottaison. Sans ce recentrage, il ne voit NI
+   * l'attente, NI le verdict, et croit que rien ne s'est passé. `nearest` ne
+   * bouge rien quand la carte est déjà visible (le cas sur un écran large).
+   */
+  useEffect(() => {
+    if (!loading && !result && !error) return;
+    carteRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [loading, result, error]);
 
   async function analyser(file?: File) {
     if (!file) return setError("Ajoutez votre devis en PDF ou prenez-le en photo.");
@@ -53,7 +69,12 @@ export function DemoGuide() {
     }
   }
 
-  function selectionner(file?: File) {
+  function selectionner(input: HTMLInputElement) {
+    const file = input.files?.[0];
+    // Le champ est remis à zéro tout de suite : sans cela, reprendre EXACTEMENT
+    // le même fichier après un échec ne déclenche aucun `change`, et l'écran
+    // reste figé sur l'erreur précédente.
+    input.value = "";
     if (!file) return;
     setFileName(file.name);
     void analyser(file);
@@ -84,42 +105,71 @@ export function DemoGuide() {
   }) : [];
 
   return (
-    <div className="mt-8 rounded-xl border border-filigrane bg-blanc-casse p-5 shadow-sm sm:p-7">
+    <div ref={carteRef} className="mt-8 rounded-xl border border-filigrane bg-blanc-casse p-5 shadow-sm sm:p-7">
       {!result ? (
         <>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <button type="button" disabled={loading} onClick={() => photoRef.current?.click()} className="flex min-h-28 flex-col items-center justify-center rounded-lg bg-accent px-5 text-center font-semibold text-blanc-casse shadow-sm transition hover:bg-accent-hover disabled:opacity-60">
-              <Camera className="mb-2 h-7 w-7" />Prendre une photo
-            </button>
-            <button type="button" disabled={loading} onClick={() => pdfRef.current?.click()} className="flex min-h-28 flex-col items-center justify-center rounded-lg border-2 border-filigrane bg-papier/50 px-5 text-center font-semibold text-encre transition hover:border-tampon disabled:opacity-60">
-              <FileText className="mb-2 h-7 w-7 text-tampon" />Choisir un PDF
-            </button>
-          </div>
-          <input ref={photoRef} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" className="sr-only" onChange={(event) => selectionner(event.target.files?.[0])} />
-          <input ref={pdfRef} type="file" accept="application/pdf" className="sr-only" onChange={(event) => selectionner(event.target.files?.[0])} />
-          {loading && <div className="mt-5 flex items-center gap-3 rounded-lg bg-info-bg px-4 py-4 text-sm font-semibold text-tampon" role="status"><Spinner className="h-5 w-5" />{loadingStep}…</div>}
-          {!loading && fileName && <p className="mt-3 text-center text-xs text-encre-claire">{fileName}</p>}
-          {error && <p className="mt-3 rounded border-l-4 border-erreur bg-erreur-bg px-4 py-3 text-sm text-erreur">{error}</p>}
-          <button type="button" onClick={() => void essayerExemple()} disabled={loading} className="mt-4 inline-flex h-11 w-full items-center justify-center gap-2 rounded border border-filigrane px-5 text-sm font-semibold text-tampon transition hover:bg-info-bg disabled:opacity-60"><PlayCircle className="h-4 w-4" />Essayer avec un exemple</button>
-          <Link
-            href="/dossiers/nouveau?mode=manuel"
-            className="mt-3 inline-flex h-11 w-full items-center justify-center text-sm font-semibold text-ardoise underline underline-offset-4 transition hover:text-encre"
-          >
-            Je n’ai pas de devis · commencer manuellement
-          </Link>
-          <p className="mt-3 text-xs text-encre-claire">Aucun compte et aucune carte bancaire. Un essai gratuit par navigateur.</p>
+          {/* L'attente prend la place des boutons au lieu de s'ajouter dessous :
+              sur 390 px, un bandeau posé sous deux boutons de 112 px tombe hors
+              de l'écran, c'est-à-dire exactement là où personne ne le lit. */}
+          {loading ? (
+            <div className="flex min-h-28 flex-col items-center justify-center rounded-lg bg-info-bg px-5 py-6 text-center" role="status">
+              <p className="flex items-center gap-3 text-sm font-semibold text-tampon">
+                <Spinner className="h-5 w-5" />
+                {loadingStep}…
+              </p>
+              {fileName && <p className="mt-2 max-w-full truncate text-xs text-encre-claire">{fileName}</p>}
+              <span className="mt-4 block h-1 w-32 animate-pulse rounded-full bg-tampon/40 motion-reduce:animate-none" aria-hidden="true" />
+            </div>
+          ) : (
+            <>
+              {error && (
+                <p role="alert" className="mb-4 rounded border-l-4 border-erreur bg-erreur-bg px-4 py-3 text-sm text-erreur">
+                  {error}
+                </p>
+              )}
+              <div className={`grid gap-3 ${tactile ? "sm:grid-cols-2" : ""}`}>
+                {/* `capture` force l'appareil photo : il n'a de sens que sur un
+                    écran tactile, et ne doit jamais coiffer l'unique chemin
+                    d'envoi, sans quoi la photo déjà rangée dans le téléphone
+                    devient inatteignable (DESIGN.md § Dépôt de fichiers). */}
+                {tactile && (
+                  <button type="button" onClick={() => photoRef.current?.click()} className="flex min-h-28 flex-col items-center justify-center rounded-lg bg-accent px-5 text-center font-semibold text-blanc-casse shadow-sm transition hover:bg-accent-hover">
+                    <Camera className="mb-2 h-7 w-7" aria-hidden="true" />Prendre une photo
+                  </button>
+                )}
+                <button type="button" onClick={() => fichierRef.current?.click()} className={`flex min-h-28 flex-col items-center justify-center rounded-lg px-5 text-center font-semibold transition ${tactile ? "border-2 border-filigrane bg-papier/50 text-encre hover:border-tampon" : "bg-accent text-blanc-casse shadow-sm hover:bg-accent-hover"}`}>
+                  <FileText className={`mb-2 h-7 w-7 ${tactile ? "text-tampon" : ""}`} aria-hidden="true" />
+                  {tactile ? "Choisir un fichier" : "Choisir un PDF ou une photo"}
+                  {tactile && <span className="mt-1 block text-xs font-normal text-ardoise">PDF ou photo déjà prise</span>}
+                </button>
+              </div>
+              {fileName && <p className="mt-3 truncate text-center text-xs text-encre-claire">{fileName}</p>}
+              <button type="button" onClick={() => void essayerExemple()} className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded border border-filigrane px-5 py-2 text-sm font-semibold text-tampon transition hover:bg-info-bg"><PlayCircle className="h-4 w-4 shrink-0" aria-hidden="true" />Essayer avec un exemple</button>
+              <Link
+                href="/dossiers/nouveau?mode=manuel"
+                className="mt-3 inline-flex min-h-11 w-full items-center justify-center px-2 py-2 text-center text-sm font-semibold text-ardoise underline underline-offset-4 transition hover:text-encre"
+              >
+                Je n’ai pas de devis · commencer manuellement
+              </Link>
+              <p className="mt-3 text-xs text-encre-claire">Aucun compte et aucune carte bancaire. Un essai gratuit par navigateur.</p>
+            </>
+          )}
+          <input ref={fichierRef} type="file" accept={ACCEPT_DOCUMENT} aria-label="Choisir un devis en PDF ou en photo" tabIndex={-1} className="sr-only" onChange={(event) => selectionner(event.target)} />
+          <input ref={photoRef} type="file" accept={ACCEPT_PHOTO} capture="environment" aria-label="Photographier le devis" tabIndex={-1} className="sr-only" onChange={(event) => selectionner(event.target)} />
         </>
       ) : (
         <div>
           <div className="rounded border border-succes/25 bg-succes-bg p-4">
-            <p className="flex items-center gap-2 text-sm font-semibold text-succes"><CheckCircle2 className="h-4 w-4" />{result.champsTrouves.length} informations lues sur votre devis</p>
+            <p className="flex items-start gap-2 text-sm font-semibold text-succes"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />{result.champsTrouves.length} informations lues sur votre devis</p>
             <p className="mt-1 text-xs text-ardoise">Le brouillon est conservé dans ce navigateur pour reprendre après l'inscription.</p>
           </div>
           <div className="mt-3 rounded border border-avertissement/25 bg-avertissement-bg p-4">
-            <p className="flex items-center gap-2 text-sm font-semibold text-avertissement"><AlertTriangle className="h-4 w-4" />À confirmer pour terminer le dossier</p>
+            <p className="flex items-start gap-2 text-sm font-semibold text-avertissement"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />À confirmer pour terminer le dossier</p>
             {manquants.length ? <ul className="mt-2 space-y-1 text-sm text-encre">{manquants.slice(0, 3).map((item) => <li key={item.key}>· {item.label}</li>)}</ul> : <p className="mt-2 text-sm text-encre">Les informations essentielles sont lisibles. Dossimo vous demandera seulement les compléments réglementaires.</p>}
           </div>
-          <Link href="/inscription?next=%2Fdossiers%2Fnouveau%3Freprise%3Dessai" className="mt-5 inline-flex h-12 items-center gap-2 rounded bg-encre px-6 text-sm font-semibold text-papier hover:bg-encre/90">Enregistrer et terminer mon dossier<ArrowRight className="h-4 w-4" strokeWidth={1.8} aria-hidden="true" /></Link>
+          {/* `min-h` et non `h` : sur 390 px le libellé passe à deux lignes, et une
+              hauteur figée le rognerait dès que le lecteur agrandit ses polices. */}
+          <Link href="/inscription?next=%2Fdossiers%2Fnouveau%3Freprise%3Dessai" className="mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded bg-encre px-5 py-3 text-center text-sm font-semibold text-papier hover:bg-encre/90">Enregistrer et terminer mon dossier<ArrowRight className="h-4 w-4 shrink-0" strokeWidth={1.8} aria-hidden="true" /></Link>
         </div>
       )}
     </div>
