@@ -184,7 +184,19 @@ export function RecapDocument({ data }: { data: DossierComplet }) {
           <View style={styles.col}>
             <Section title="Chronologie">
               {data.dossier.dispositif === "cee" ? (
-                <Row label="Offre CEE engagée" value={dateFr(dates.offre_cee)} />
+                <Row
+                  label="Offre CEE engagée"
+                  // Sans date mais avec antériorité déclarée, un « — » ferait
+                  // croire la question jamais posée. Le récap dit ce qui a été
+                  // déclaré, et le rapport de contrôle porte l'avertissement.
+                  value={
+                    dates.offre_cee
+                      ? dateFr(dates.offre_cee)
+                      : dates.offre_cee_anterieure_declaree === true
+                        ? "Avant le devis (déclaré, non daté)"
+                        : dateFr(dates.offre_cee)
+                  }
+                />
               ) : null}
               <Row label="Visite technique" value={dateFr(dates.visite_technique)} />
               <Row label="Devis signé" value={dateFr(dates.devis)} />

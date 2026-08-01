@@ -447,9 +447,20 @@ export const ceeIsolationSchema = z.object({
 
   // --- Chronologie (dates_json) — clé du contrôle anti-refus ---
   // Engagement de l'offre CEE (rôle actif et incitatif). Optionnel au schéma,
-  // car sans objet en MaPrimeRénov' ; en CEE, son absence ou sa postériorité au
-  // devis est un bloquant relevé par le moteur (`controlerDossier`).
+  // car sans objet en MaPrimeRénov' ; en CEE, son absence est un bloquant relevé
+  // par le moteur (`controlerDossier`), de même que sa postériorité au devis
+  // au-delà des quatorze jours de l'art. R. 221-22 du code de l'énergie.
   date_offre_cee: dateISOOptionnelle,
+  /**
+   * Repli quand l'artisan sait l'offre antérieure au devis sans en retrouver la
+   * date exacte. Une déclaration ne vaut pas une preuve : le moteur la traite en
+   * avertissement, jamais en conforme (`chrono_offre_cee`). Elle existe parce que
+   * bloquer un dossier réellement conforme sur une date oubliée, c'est le faux
+   * positif que le contrôle anti-refus est censé éviter.
+   */
+  offre_cee_anterieure: z
+    .enum(Object.keys(OUI_NON) as [keyof typeof OUI_NON])
+    .optional(),
   date_visite_technique: dateISOOptionnelle,
   date_devis: dateISO,
   date_debut_travaux: dateISOOptionnelle,
@@ -675,6 +686,7 @@ export const ceeIsolationDefaults: CeeIsolationInput = {
   solaire_marque: "",
   solaire_reference: "",
   date_offre_cee: "",
+  offre_cee_anterieure: undefined as unknown as keyof typeof OUI_NON,
   date_visite_technique: "",
   date_devis: "",
   date_debut_travaux: "",

@@ -194,6 +194,39 @@ describe("controlerDossier — rôle actif et incitatif (offre CEE avant le devi
     expect(codes(dossier(over))).toContain("chrono_offre_cee:bloquant");
   });
 
+  // Repli déclaratif : l'artisan sait l'offre antérieure au devis sans en
+  // retrouver la date. Ne vaut jamais conformité, mais ne bloque pas non plus.
+  it("date absente, antériorité déclarée : avertissement, pas bloquant", () => {
+    const over = { dates: { offre_cee: null, offre_cee_anterieure_declaree: true } };
+    const r = controlerDossier(dossier(over), AUJ);
+    expect(r.conforme).toBe(true);
+    expect(codes(dossier(over))).toContain("chrono_offre_cee:avertissement");
+    expect(codes(dossier(over))).not.toContain("chrono_offre_cee:ok");
+  });
+
+  it("date absente, antériorité niée : bloquant", () => {
+    const over = { dates: { offre_cee: null, offre_cee_anterieure_declaree: false } };
+    const r = controlerDossier(dossier(over), AUJ);
+    expect(r.conforme).toBe(false);
+    expect(codes(dossier(over))).toContain("chrono_offre_cee:bloquant");
+  });
+
+  it("date absente, question sans réponse : bloquant (déclaration à null)", () => {
+    const over = { dates: { offre_cee: null, offre_cee_anterieure_declaree: null } };
+    const r = controlerDossier(dossier(over), AUJ);
+    expect(r.conforme).toBe(false);
+    expect(codes(dossier(over))).toContain("chrono_offre_cee:bloquant");
+  });
+
+  it("la déclaration ne prend jamais le pas sur une date renseignée", () => {
+    // Offre à J+15 : bloquant, même si l'artisan a déclaré l'inverse par ailleurs.
+    const over = {
+      dates: { offre_cee: "2026-03-25", devis: "2026-03-10", offre_cee_anterieure_declaree: true },
+    };
+    expect(controlerDossier(dossier(over), AUJ).conforme).toBe(false);
+    expect(codes(dossier(over))).toContain("chrono_offre_cee:bloquant");
+  });
+
   it("même jour que le devis : conforme (l'offre n'a pas à précéder strictement)", () => {
     const over = { dates: { offre_cee: "2026-03-10", devis: "2026-03-10" } };
     expect(codes(dossier(over))).toContain("chrono_offre_cee:ok");

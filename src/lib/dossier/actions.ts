@@ -207,6 +207,16 @@ export async function createDossierCeeIsolation(
       source: artisan.source ?? null,
       dates_json: {
         offre_cee: d.date_offre_cee ?? null,
+        // Déclaration d'antériorité sans date, posée seulement quand la date
+        // manque. `null` = question sans réponse, `false` = antériorité niée :
+        // les deux restent bloquants, mais le moteur ne dit pas la même chose.
+        offre_cee_anterieure_declaree: d.date_offre_cee
+          ? null
+          : d.offre_cee_anterieure === "oui"
+            ? true
+            : d.offre_cee_anterieure === "non"
+              ? false
+              : null,
         visite_technique: d.date_visite_technique ?? null,
         devis: d.date_devis,
         debut_travaux: d.date_debut_travaux ?? null,

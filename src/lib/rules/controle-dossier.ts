@@ -168,7 +168,21 @@ export function controlerDossier(
   // Le jour où un bénéficiaire personne morale devient saisissable, elle doit lui
   // être refermée, le texte ne la lui offre pas.
   if (dispositif === "cee") {
-    if (!dOffreCee) {
+    if (!dOffreCee && dates.offre_cee_anterieure_declaree === true) {
+      // L'artisan sait l'offre antérieure au devis sans en retrouver la date.
+      // Une déclaration ne prouve rien face à un obligé, donc jamais « ok » ; mais
+      // bloquer un dossier réellement conforme sur une date oubliée serait le faux
+      // positif que ce moteur existe pour éviter. Avertissement, avec la pièce à
+      // produire nommée.
+      add({
+        code: "chrono_offre_cee",
+        categorie: "chronologie",
+        severite: "avertissement",
+        titre: "Antériorité de l'offre CEE déclarée, mais non datée",
+        detail:
+          "Vous avez déclaré l'offre CEE engagée avant le devis, sans en préciser la date. Le rôle actif et incitatif est donc probablement respecté, mais il n'est pas prouvé : face à l'obligé, c'est la date portée par le cadre de contribution qui fait foi. Retrouvez-la et renseignez-la avant le dépôt, c'est le premier point que l'instruction regarde.",
+      });
+    } else if (!dOffreCee) {
       add({
         code: "chrono_offre_cee",
         categorie: "chronologie",

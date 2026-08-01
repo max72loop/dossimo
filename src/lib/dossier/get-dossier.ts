@@ -176,12 +176,21 @@ export interface CeeIsolationCaracteristiques {
 export interface DossierDates {
   /**
    * Date d'engagement de l'offre CEE (le « coup de pouce », matérialisée par le
-   * cadre de contribution). Doit être ANTÉRIEURE au devis : c'est le rôle actif
-   * et incitatif, motif de refus CEE n° 1 et le seul irrattrapable. Sans objet en
-   * MaPrimeRénov'. Absente des dossiers antérieurs à l'introduction du contrôle
-   * (le moteur signale alors la date manquante en CEE).
+   * cadre de contribution). Antérieure au devis, ou postérieure de quatorze jours
+   * au plus et avant le début des travaux (art. R. 221-22 du code de l'énergie) :
+   * c'est le rôle actif et incitatif, motif de refus CEE n° 1 et le seul
+   * irrattrapable. Sans objet en MaPrimeRénov'. Absente des dossiers antérieurs à
+   * l'introduction du contrôle (le moteur signale alors la date manquante en CEE).
    */
   offre_cee: string | null;
+  /**
+   * Antériorité de l'offre déclarée par l'artisan faute de date exacte.
+   * `true` = déclarée antérieure au devis, `false` = déclarée postérieure,
+   * `null`/absent = question sans réponse ou jamais posée (dossiers d'avant le
+   * 2026-08-01). Ne vaut jamais conformité, seulement un avertissement : une
+   * déclaration n'est pas une preuve d'antériorité.
+   */
+  offre_cee_anterieure_declaree?: boolean | null;
   visite_technique: string | null;
   devis: string;
   debut_travaux: string | null;

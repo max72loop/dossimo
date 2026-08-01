@@ -307,6 +307,20 @@ où chacun porte sa référence. Le premier est corrigé.
       champ que la saisie ne collecte pas ou que personne ne remplit. À vérifier
       avant d'incriminer les dossiers, et à croiser avec le nettoyage des dossiers
       de test encore en base.
+
+      **Diagnostiqué le 2026-08-01, lecture seule sur les 7.** Le champ est bien
+      collecté, mais il est né avec la règle, dans le même commit (`da84210`, le
+      2026-07-22). Les 6 dossiers créés avant cette date n'ont même pas la clé
+      `offre_cee` dans leur `dates_json` : la question ne leur a jamais été posée.
+      Le 7e, créé le 2026-07-29, porte la clé à `null` : la question a été posée et
+      laissée vide. Ce n'est donc pas un champ manquant mais un champ facultatif
+      sans conséquence visible à la saisie, sur le point qui bloque le plus. Trois
+      correctifs en réponse : les deux champs de l'offre CEE ajoutés à
+      `ETAPES_DOSSIER` (ils en étaient absents, donc invisibles à
+      `etapesPourSaisie`), l'aide contextuelle réécrite avec la fenêtre de quatorze
+      jours, et une déclaration d'antériorité sans date qui dégrade le bloquant en
+      avertissement. **Aucun rattrapage possible sur les 6 dossiers legacy** : il
+      n'existe aucun chemin d'édition de `dates_json` après création.
 - [ ] **Le délai de sept jours francs n'est contrôlé nulle part.** Les fiches
       BAR-EN-101 et BAR-EN-102 imposent, au § 3, un délai minimal de sept jours
       francs entre l'acceptation du devis et le début des travaux. C'est une
