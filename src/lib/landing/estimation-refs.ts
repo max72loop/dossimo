@@ -58,6 +58,10 @@ export type ProfilPublic = keyof typeof PROFILS_PUBLICS;
 
 export const PROFILS_ORDRE: ProfilPublic[] = ["bleu", "jaune", "violet", "rose"];
 
+/** Statut explicite du profil rose dans l'estimateur, distinct d'un barème absent. */
+export const STATUT_PROFIL_ROSE =
+  "Non éligible MaPrimeRénov', éligible CEE.";
+
 /**
  * Gestes proposés au simulateur, et si le montant dépend d'une surface.
  * `valeur` est la clé réelle de `regles_metier` : aucun alias, aucune traduction.
@@ -123,4 +127,6 @@ export interface ResultatEstimation {
   lignes: LigneEstimation[];
   /** Somme des montants connus, `null` si aucun des deux n'est estimable. */
   total: number | null;
+  /** Distingue une inéligibilité réglementaire d'une estimation indisponible. */
+  statutEligibilite: "mpr_non_eligible_cee_eligible" | null;
 }

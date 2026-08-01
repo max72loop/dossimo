@@ -139,7 +139,12 @@ export function composerEstimation(
 
   const connus = lignes.map((l) => l.montant).filter((m): m is number => m != null);
 
-  return { lignes, total: connus.length > 0 ? connus.reduce((a, b) => a + b, 0) : null };
+  return {
+    lignes,
+    total: connus.length > 0 ? connus.reduce((a, b) => a + b, 0) : null,
+    statutEligibilite:
+      profilPublic === "rose" ? "mpr_non_eligible_cee_eligible" : null,
+  };
 }
 
 /**

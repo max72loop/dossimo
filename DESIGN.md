@@ -662,6 +662,7 @@ Deux lignes par décision, datées, pour ne pas re-débattre le passé.
 
 | Date | Décision | Pourquoi |
 |---|---|---|
+| 2026-08-01 | **Estimateur, profil rose** : le résultat porte un statut textuel autonome « Non éligible MaPrimeRénov', éligible CEE. » au-dessus des montants. La ligne MaPrimeRénov' conserve « — » et son explication ; le montant CEE reste calculé depuis `regles_metier`. Aucun nouveau token. | Une simple absence de montant ressemble à un barème manquant. Le statut nomme la distinction réglementaire violet/rose sans inventer de prime et permet de comprendre d'un coup d'œil que le dossier conserve une voie CEE. |
 | 2026-07-08 | Palette encre / gris / crème / **bleu** (`#35507f`), polices Unbounded + Inter + Source Serif. | Alignement sur le kit logo. L'accent passe du terracotta au bleu ; le token `terre-cuite` n'est pas renommé (dette assumée, cf. §2). |
 | 2026-07-19 | `DESIGN.md` devient la source de vérité ; `tokens.ts` source machine des couleurs + test de miroir ; règle inscrite dans `AGENTS.md`. | Coordonner landing → vitrine → espace artisan → PDF et empêcher la dérive des tokens par machine, pas par discipline. |
 | 2026-07-19 | Refonte = **rafraîchissement** : identité et polices conservées, accent bleu (token `terre-cuite` → `accent`), **cartes en ombre douce sur le web** (bordure conservée en PDF / impression). | Moderniser l'écran sans casser la lisibilité N/B du papier ni une identité récente. Deux traitements de carte selon la cible, choix produit assumé. |
