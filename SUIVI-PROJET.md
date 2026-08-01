@@ -272,9 +272,13 @@ ombre douce. Pas de tirets cadratins dans la copie.
 
 Quatre écarts entre les textes et `src/lib/rules/`, tous constatés en sourçant les
 assertions de [`docs/refus/motifs-assertions.md`](docs/refus/motifs-assertions.md),
-où chacun porte sa référence.
+où chacun porte sa référence. Le premier est corrigé.
 
-- [ ] **`chrono_offre_cee` refuse plus strictement que le texte.** L'article
+- [x] **`chrono_offre_cee` refuse plus strictement que le texte.** *Corrigé le
+      2026-08-01 : la fenêtre de quatorze jours est appliquée, un écart supérieur
+      ou des travaux déjà commencés restent bloquants, un début de travaux non
+      renseigné passe en avertissement. Quatre cas dans `controle-dossier.test.ts`.*
+      L'article
       R. 221-22 du code de l'énergie autorise la contractualisation du rôle actif et
       incitatif **jusqu'à quatorze jours après la date d'engagement** lorsque le
       bénéficiaire est une personne physique ou un syndicat de copropriétaires, à

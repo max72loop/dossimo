@@ -148,11 +148,43 @@ describe("controlerDossier — rôle actif et incitatif (offre CEE avant le devi
     expect(codes(dossier())).toContain("chrono_offre_cee:ok");
   });
 
-  it("offre CEE postérieure au devis : bloquant (motif de refus irrattrapable)", () => {
-    const over = { dates: { offre_cee: "2026-03-12", devis: "2026-03-10" } };
+  // Art. R. 221-22 du code de l'énergie (A3b, A3c) : pour un bénéficiaire
+  // personne physique ou un syndicat de copropriétaires, la contractualisation
+  // peut suivre l'engagement de quatorze jours au plus, et doit précéder le début
+  // de réalisation. Le moteur bloquait dès J+1 : faux positif, corrigé.
+  it("offre CEE à J+10 du devis, avant les travaux : conforme (fenêtre de 14 jours)", () => {
+    // Devis 2026-03-10, début des travaux 2026-04-01 dans la fixture.
+    const over = { dates: { offre_cee: "2026-03-20", devis: "2026-03-10" } };
+    const r = controlerDossier(dossier(over), AUJ);
+    expect(r.conforme).toBe(true);
+    expect(codes(dossier(over))).toContain("chrono_offre_cee:ok");
+  });
+
+  it("offre CEE à J+15 du devis : bloquant (fenêtre de 14 jours dépassée)", () => {
+    const over = { dates: { offre_cee: "2026-03-25", devis: "2026-03-10" } };
     const r = controlerDossier(dossier(over), AUJ);
     expect(r.conforme).toBe(false);
     expect(codes(dossier(over))).toContain("chrono_offre_cee:bloquant");
+  });
+
+  it("offre CEE dans les 14 jours mais après le début des travaux : bloquant", () => {
+    // La fenêtre se referme au début de réalisation, quel que soit l'écart.
+    const over = {
+      dates: { offre_cee: "2026-03-20", devis: "2026-03-10", debut_travaux: "2026-03-16" },
+    };
+    const r = controlerDossier(dossier(over), AUJ);
+    expect(r.conforme).toBe(false);
+    expect(codes(dossier(over))).toContain("chrono_offre_cee:bloquant");
+  });
+
+  it("offre CEE dans les 14 jours, début des travaux inconnu : avertissement", () => {
+    // Conforme (non bloquant), mais la seconde condition du texte est invérifiable.
+    const over = {
+      dates: { offre_cee: "2026-03-20", devis: "2026-03-10", debut_travaux: null },
+    };
+    const r = controlerDossier(dossier(over), AUJ);
+    expect(r.conforme).toBe(true);
+    expect(codes(dossier(over))).toContain("chrono_offre_cee:avertissement");
   });
 
   it("offre CEE non renseignée en CEE : bloquant (antériorité invérifiable)", () => {
