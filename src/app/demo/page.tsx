@@ -39,7 +39,10 @@ export default async function DemoPage({
       <header className="border-b border-filigrane bg-blanc-casse">
         <div className="mx-auto flex h-16 max-w-4xl items-center justify-between px-5 sm:px-8">
           <Logo />
-          <Link href="/" className="text-sm font-medium text-tampon underline underline-offset-4">Retour à l'accueil</Link>
+          {/* `min-h-11` : le lien seul faisait 20 px de haut, sous le plancher tactile
+              posé par DESIGN.md § Responsive et tactile. Le soulignement reste sur le
+              texte, la zone de touche déborde autour. */}
+          <Link href="/" className="inline-flex min-h-11 items-center text-sm font-medium text-tampon underline underline-offset-4">Retour à l'accueil</Link>
         </div>
       </header>
       <main className="mx-auto max-w-3xl px-5 py-12 sm:px-8 sm:py-16">

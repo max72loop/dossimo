@@ -8,6 +8,27 @@ const TVA_ISOLATION_DEFAUT = 0.055; // taux réduit rénovation énergétique (r
 const ANCIENNETE_MIN_DEFAUT = 2; // années (repli)
 
 /**
+ * Fenêtre ouverte par l'**article R. 221-22 du code de l'énergie** pour
+ * contractualiser le rôle actif et incitatif après la date d'engagement, lorsque
+ * le bénéficiaire est une personne physique ou un syndicat de copropriétaires
+ * (assertions A3b et A3c, `docs/refus/motifs-assertions.md`).
+ *
+ * Ce n'est PAS un paramètre de fiche : il vient du code de l'énergie, il vaut
+ * pour toutes les opérations standardisées, et il n'a donc rien à faire dans
+ * `regles_metier` (qui porte les seuils par couple dispositif + geste). Il reste
+ * ici, en dur, avec sa référence.
+ */
+const OFFRE_CEE_FENETRE_JOURS = 14;
+
+/**
+ * Délai imposé par les BAR-EN-101 et BAR-EN-102 § 3 entre l'acceptation du
+ * devis et la pose de l'isolant (assertions A5 et A6,
+ * `docs/refus/motifs-assertions.md`). Les deux jours bornes sont exclus : sept
+ * jours francs exigent donc au moins huit jours calendaires d'écart.
+ */
+const ISOLATION_DELAI_MIN_JOURS_FRANCS = 7;
+
+/**
  * R minimal par poste d'isolation — REPLI UNIQUEMENT, quand aucune règle active
  * n'existe pour le couple (dispositif, type_travaux). La source de vérité est
  * `regles_metier.condition_json.r_min` (migration 0004), éditable dans
@@ -84,6 +105,20 @@ function parseDate(s: string | null | undefined): Date | null {
 
 const jour = 86_400_000;
 
+/** Écart en dates civiles, indépendant des changements d'heure été/hiver. */
+function ecartJoursCalendaires(debut: Date, fin: Date): number {
+  const debutUtc = Date.UTC(debut.getFullYear(), debut.getMonth(), debut.getDate());
+  const finUtc = Date.UTC(fin.getFullYear(), fin.getMonth(), fin.getDate());
+  return Math.round((finUtc - debutUtc) / jour);
+}
+
+function ajouterJoursCalendaires(date: Date, jours: number): string {
+  const resultat = new Date(
+    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate() + jours),
+  );
+  return resultat.toISOString().slice(0, 10);
+}
+
 /**
  * Contrôle déterministe d'un dossier (CEE ou MaPrimeRénov', tous gestes).
  * @param today date de référence (injectable pour les tests).
@@ -135,30 +170,50 @@ export function controlerDossier(
   // Chronologie
   // ---------------------------------------------------------------------
 
-  // Rôle actif et incitatif (CEE) : l'offre CEE doit être engagée AVANT le devis.
-  // C'est le motif de refus CEE n° 1, et le seul irrattrapable — aucune pièce
-  // produite après coup ne rétablit une antériorité manquante. Sans objet en
-  // MaPrimeRénov'. Sans date d'offre, l'antériorité est invérifiable : le dossier
-  // sera refusé, donc bloquant plutôt qu'avertissement.
+  // Rôle actif et incitatif (CEE) : la contractualisation intervient au plus tard
+  // à la date d'engagement de l'opération, qui pour un particulier est la date
+  // d'acceptation du devis (A23). C'est le motif de refus CEE n° 1, et le seul
+  // irrattrapable : aucune pièce produite après coup ne rétablit une antériorité
+  // manquante. Sans objet en MaPrimeRénov'. Sans date d'offre, l'antériorité est
+  // invérifiable : le dossier sera refusé, donc bloquant plutôt qu'avertissement.
+  //
+  // MAIS l'article R. 221-22 du code de l'énergie n'écrit pas cette règle à
+  // l'absolu. Quand le bénéficiaire est une personne physique ou un syndicat de
+  // copropriétaires, la contractualisation peut intervenir jusqu'à quatorze jours
+  // après la date d'engagement, à la double condition qu'elle précède le début de
+  // réalisation (A3b, A3c). Le moteur bloquait dès J+1 : c'était un faux positif,
+  // le seul écart du sourçage du 30/07/2026 qui détruisait de la valeur chez
+  // l'artisan au lieu d'en laisser passer.
+  //
+  // Le modèle ne sait décrire qu'un bénéficiaire personne physique (`beneficiaire`
+  // porte nom, prénom et occupation) : la fenêtre est donc toujours ouverte ici.
+  // Le jour où un bénéficiaire personne morale devient saisissable, elle doit lui
+  // être refermée, le texte ne la lui offre pas.
   if (dispositif === "cee") {
-    if (!dOffreCee) {
+    if (!dOffreCee && dates.offre_cee_anterieure_declaree === true) {
+      // L'artisan sait l'offre antérieure au devis sans en retrouver la date.
+      // Une déclaration ne prouve rien face à un obligé, donc jamais « ok » ; mais
+      // bloquer un dossier réellement conforme sur une date oubliée serait le faux
+      // positif que ce moteur existe pour éviter. Avertissement, avec la pièce à
+      // produire nommée.
+      add({
+        code: "chrono_offre_cee",
+        categorie: "chronologie",
+        severite: "avertissement",
+        titre: "Antériorité de l'offre CEE déclarée, mais non datée",
+        detail:
+          "Vous avez déclaré l'offre CEE engagée avant le devis, sans en préciser la date. Le rôle actif et incitatif est donc probablement respecté, mais il n'est pas prouvé : face à l'obligé, c'est la date portée par le cadre de contribution qui fait foi. Retrouvez-la et renseignez-la avant le dépôt, c'est le premier point que l'instruction regarde.",
+      });
+    } else if (!dOffreCee) {
       add({
         code: "chrono_offre_cee",
         categorie: "chronologie",
         severite: "bloquant",
         titre: "Date d'engagement de l'offre CEE manquante",
         detail:
-          "Le rôle actif et incitatif exige que l'offre CEE (le « coup de pouce », matérialisée par le cadre de contribution) ait été proposée AVANT la signature du devis. Sans date d'engagement, l'antériorité ne peut pas être prouvée : c'est le premier motif de refus CEE, et il est irrattrapable.",
+          "Le rôle actif et incitatif exige que l'offre CEE (le « coup de pouce », matérialisée par le cadre de contribution) ait été contractualisée au plus tard à la date d'engagement de l'opération, ou dans les quatorze jours qui la suivent et avant le début des travaux. Sans date d'engagement, rien de tout cela n'est prouvable : c'est le premier motif de refus CEE, et il est irrattrapable.",
       });
-    } else if (dDevis && dOffreCee > dDevis) {
-      add({
-        code: "chrono_offre_cee",
-        categorie: "chronologie",
-        severite: "bloquant",
-        titre: "Offre CEE engagée après le devis",
-        detail: `L'offre CEE est datée du ${dateFr(dates.offre_cee)}, après le devis du ${dateFr(dates.devis)}. Le rôle actif et incitatif impose que l'offre précède le devis : une offre postérieure est un motif de refus irrattrapable.`,
-      });
-    } else {
+    } else if (!dDevis || dOffreCee <= dDevis) {
       add({
         code: "chrono_offre_cee",
         categorie: "chronologie",
@@ -167,6 +222,42 @@ export function controlerDossier(
         detail:
           "L'offre CEE a bien été engagée avant le devis : le rôle actif et incitatif est respecté.",
       });
+    } else {
+      const ecartJours = Math.round((dOffreCee.getTime() - dDevis.getTime()) / jour);
+
+      if (ecartJours > OFFRE_CEE_FENETRE_JOURS) {
+        add({
+          code: "chrono_offre_cee",
+          categorie: "chronologie",
+          severite: "bloquant",
+          titre: "Offre CEE engagée plus de quatorze jours après le devis",
+          detail: `L'offre CEE est datée du ${dateFr(dates.offre_cee)}, soit ${ecartJours} jours après le devis du ${dateFr(dates.devis)}. L'article R. 221-22 du code de l'énergie ne tolère la contractualisation après l'engagement que dans une limite de quatorze jours. Au-delà, l'antériorité est perdue et le motif de refus est irrattrapable.`,
+        });
+      } else if (dDebut && dOffreCee >= dDebut) {
+        add({
+          code: "chrono_offre_cee",
+          categorie: "chronologie",
+          severite: "bloquant",
+          titre: "Offre CEE engagée après le début des travaux",
+          detail: `L'offre CEE est datée du ${dateFr(dates.offre_cee)}, alors que les travaux ont commencé le ${dateFr(dates.debut_travaux)}. La fenêtre de quatorze jours ouverte par l'article R. 221-22 du code de l'énergie se referme au début de réalisation : une contractualisation qui ne le précède pas ne vaut pas rôle actif et incitatif.`,
+        });
+      } else if (!dDebut) {
+        add({
+          code: "chrono_offre_cee",
+          categorie: "chronologie",
+          severite: "avertissement",
+          titre: "Offre CEE postérieure au devis, début des travaux non renseigné",
+          detail: `L'offre CEE est datée du ${dateFr(dates.offre_cee)}, soit ${ecartJours} jours après le devis du ${dateFr(dates.devis)}. L'article R. 221-22 du code de l'énergie autorise ce délai, dans la limite de quatorze jours, pour un bénéficiaire personne physique ou un syndicat de copropriétaires, mais à la condition que la contractualisation précède le début de réalisation. Sans date de début de travaux, cette seconde condition n'est pas vérifiable : renseignez-la.`,
+        });
+      } else {
+        add({
+          code: "chrono_offre_cee",
+          categorie: "chronologie",
+          severite: "ok",
+          titre: "Offre CEE engagée dans la fenêtre de quatorze jours",
+          detail: `L'offre CEE est datée du ${dateFr(dates.offre_cee)}, soit ${ecartJours} jours après le devis du ${dateFr(dates.devis)}, et avant le début des travaux du ${dateFr(dates.debut_travaux)}. L'article R. 221-22 du code de l'énergie ouvre cette fenêtre de quatorze jours au bénéficiaire personne physique ou au syndicat de copropriétaires : le rôle actif et incitatif est respecté. Conservez la preuve de la date d'engagement, la fenêtre se referme au premier jour de chantier.`,
+        });
+      }
     }
   }
 
@@ -199,6 +290,40 @@ export function controlerDossier(
         titre: "Devis antérieur au début des travaux",
         detail: "L'engagement précède bien les travaux.",
       });
+    }
+
+    // BAR-EN-101 / BAR-EN-102 § 3 : sept jours FRANCS entre l'acceptation du
+    // devis et la pose de l'isolant (A5, A6). Ni le jour du devis ni celui du
+    // début ne comptent : J+8 est le premier démarrage conforme.
+    if (
+      dispositif === "cee" &&
+      dDebut >= dDevis &&
+      (c.fiche === "BAR-EN-101" || c.fiche === "BAR-EN-102")
+    ) {
+      const ecartJours = ecartJoursCalendaires(dDevis, dDebut);
+      const joursFrancs = Math.max(0, ecartJours - 1);
+
+      if (joursFrancs < ISOLATION_DELAI_MIN_JOURS_FRANCS) {
+        const premiereDateConforme = ajouterJoursCalendaires(
+          dDevis,
+          ISOLATION_DELAI_MIN_JOURS_FRANCS + 1,
+        );
+        add({
+          code: "chrono_delai_franc_isolation",
+          categorie: "chronologie",
+          severite: "bloquant",
+          titre: "Délai de sept jours francs non respecté",
+          detail: `La fiche ${c.fiche} § 3 impose sept jours francs entre l'acceptation du devis et la pose de l'isolant. Du ${dateFr(dates.devis)} au ${dateFr(dates.debut_travaux)}, le décompte donne ${joursFrancs} jour${joursFrancs > 1 ? "s" : ""} franc${joursFrancs > 1 ? "s" : ""}. Pour ce devis, les travaux ne pouvaient commencer qu'à partir du ${dateFr(premiereDateConforme)}.`,
+        });
+      } else {
+        add({
+          code: "chrono_delai_franc_isolation",
+          categorie: "chronologie",
+          severite: "ok",
+          titre: "Délai de sept jours francs respecté",
+          detail: `${joursFrancs} jours francs séparent l'acceptation du devis de la pose de l'isolant, conformément à la fiche ${c.fiche} § 3.`,
+        });
+      }
     }
   } else {
     add({

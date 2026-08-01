@@ -196,6 +196,9 @@ export function DossierCeeIsolationForm({
   const typeIsolation = useWatch({ control, name: "type_isolation" });
   const rMin = typeIsolation ? seuilsIsolation[typeIsolation] : undefined;
   const dispositif = useWatch({ control, name: "dispositif" });
+  // La déclaration d'antériorité de l'offre CEE ne remplace la date que si celle-ci
+  // manque : elle n'est demandée que dans ce cas.
+  const dateOffreCee = useWatch({ control, name: "date_offre_cee" });
   const geste = useWatch({ control, name: "geste" });
   const estPac = geste === "pac_air_eau";
   const estCet = geste === "cet";
@@ -805,13 +808,27 @@ export function DossierCeeIsolationForm({
               description="L'ordre des dates conditionne l'éligibilité, cœur du contrôle anti-refus."
             >
               {dispositif === "cee" && (
-                <TextField
-                  label="Date d'engagement de l'offre CEE"
-                  type="date"
-                  hint="Le « coup de pouce », matérialisé par le cadre de contribution. Doit être daté AVANT le devis : c'est le rôle actif et incitatif, motif de refus n° 1."
-                  error={errors.date_offre_cee}
-                  register={register("date_offre_cee")}
-                />
+                <>
+                  <TextField
+                    label="Date d'engagement de l'offre CEE"
+                    type="date"
+                    hint="Le « coup de pouce », matérialisé par le cadre de contribution : c'est le rôle actif et incitatif, motif de refus n° 1. Normalement daté avant le devis. S'il l'a suivi, la loi laisse quatorze jours, à condition que le chantier n'ait pas commencé."
+                    error={errors.date_offre_cee}
+                    register={register("date_offre_cee")}
+                  />
+                  {/* Repli quand la date exacte est perdue. Posé seulement dans ce
+                      cas : demander les deux quand la date est là n'apprend rien,
+                      et la réponse ne serait pas lue par le moteur. */}
+                  {!dateOffreCee && (
+                    <SelectField
+                      label="Cette offre a-t-elle été engagée avant le devis ?"
+                      options={OUI_NON}
+                      hint="À renseigner si vous ne retrouvez pas la date. Le dossier ne sera pas bloqué, mais restera signalé : devant l'obligé, c'est la date du cadre de contribution qui fait foi, pas la déclaration."
+                      error={errors.offre_cee_anterieure}
+                      register={register("offre_cee_anterieure")}
+                    />
+                  )}
+                </>
               )}
               <TextField label="Date de visite technique" type="date" error={errors.date_visite_technique} register={register("date_visite_technique")} />
               <TextField label="Date du devis signé" required type="date" hint="Doit précéder le début des travaux." error={errors.date_devis} register={register("date_devis")} />

@@ -122,8 +122,6 @@ export default async function Image() {
             paddingTop: 28,
           }}
         >
-          <span>Code DOSSIMO50 · −50 %</span>
-          <span style={{ color: FILIGRANE }}>·</span>
           <span>Contrôle anti-refus</span>
           <span style={{ color: FILIGRANE }}>·</span>
           <span>Pack prêt à déposer</span>

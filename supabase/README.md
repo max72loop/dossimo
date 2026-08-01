@@ -75,7 +75,7 @@ local, et deux défauts dormaient dans le seul fichier `0013` (§ 5).
 | Facturation | `factures`, `facture_compteurs`, `paiements` | 0001, 0014 |
 | Dépôt bénéficiaire | `liens_depot`, `reminder_schedules`, `reminder_logs` | 0017, 0026-0029, 0041 |
 | Devis | `quote_gestures`, `quote_gesture_fields`, `quote_templates`, `generated_quotes`, `user_quote_templates` | 0021-0023, 0028 |
-| Prospection | `prospection_campagnes`, `prospects`, `prospection_messages`, `prospection_evenements`, `prospection_suppressions`, `prospects_dossimo` | 0032-0034, 0037, 0039, 0050 |
+| Prospection | `prospection_campagnes`, `prospects`, `prospection_messages`, `prospection_evenements`, `prospection_suppressions`, `prospects_dossimo` | 0032-0034, 0037, 0039, 0050, 0056 |
 | Mesure | `evenements_parcours`, `appels_llm` | 0051 |
 | Cluster refus | `refus_motifs`, `refus_demandes` | 0053, 0054 |
 | Sécurité | `auth_rate_limits` | 0030, 0036 |

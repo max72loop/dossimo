@@ -20,6 +20,7 @@ function regleCombles(over: Partial<RegleMetierResolue["condition"]> = {}): Regl
 /** Dossier conforme de référence (CEE combles), surchargable. */
 function dossier(over: {
   dispositif?: "cee" | "maprimerenov";
+  fiche?: "BAR-EN-101" | "BAR-EN-102";
   regle?: RegleMetierResolue | null;
   travaux?: Record<string, unknown>;
   dates?: Record<string, unknown>;
@@ -32,7 +33,7 @@ function dossier(over: {
     dossier: { dispositif: over.dispositif ?? "cee", created_at: "2026-06-01" },
     artisan: null,
     caracteristiques: {
-      fiche: "BAR-EN-101",
+      fiche: over.fiche ?? "BAR-EN-101",
       beneficiaire: {
         nom: "Martin", prenom: "Claire", adresse: "12 rue des Lilas",
         code_postal: "93100", commune: "Montreuil", email: null, telephone: null,
@@ -40,7 +41,7 @@ function dossier(over: {
       },
       logement: { type: "maison", annee_construction: 1985, residence: "principale", surface_habitable: 90, ...over.logement },
       travaux: {
-        type_isolation: "combles_perdus", fiche: "BAR-EN-101", surface_isolee_m2: 95,
+        type_isolation: "combles_perdus", fiche: over.fiche ?? "BAR-EN-101", surface_isolee_m2: 95,
         isolant_type: "laine de verre", isolant_marque: "Isover", isolant_reference: "IBR 300",
         resistance_thermique_r: 7.5, epaisseur_mm: 300, ...over.travaux,
       },
@@ -148,17 +149,82 @@ describe("controlerDossier — rôle actif et incitatif (offre CEE avant le devi
     expect(codes(dossier())).toContain("chrono_offre_cee:ok");
   });
 
-  it("offre CEE postérieure au devis : bloquant (motif de refus irrattrapable)", () => {
-    const over = { dates: { offre_cee: "2026-03-12", devis: "2026-03-10" } };
+  // Art. R. 221-22 du code de l'énergie (A3b, A3c) : pour un bénéficiaire
+  // personne physique ou un syndicat de copropriétaires, la contractualisation
+  // peut suivre l'engagement de quatorze jours au plus, et doit précéder le début
+  // de réalisation. Le moteur bloquait dès J+1 : faux positif, corrigé.
+  it("offre CEE à J+10 du devis, avant les travaux : conforme (fenêtre de 14 jours)", () => {
+    // Devis 2026-03-10, début des travaux 2026-04-01 dans la fixture.
+    const over = { dates: { offre_cee: "2026-03-20", devis: "2026-03-10" } };
+    const r = controlerDossier(dossier(over), AUJ);
+    expect(r.conforme).toBe(true);
+    expect(codes(dossier(over))).toContain("chrono_offre_cee:ok");
+  });
+
+  it("offre CEE à J+15 du devis : bloquant (fenêtre de 14 jours dépassée)", () => {
+    const over = { dates: { offre_cee: "2026-03-25", devis: "2026-03-10" } };
     const r = controlerDossier(dossier(over), AUJ);
     expect(r.conforme).toBe(false);
     expect(codes(dossier(over))).toContain("chrono_offre_cee:bloquant");
+  });
+
+  it("offre CEE dans les 14 jours mais après le début des travaux : bloquant", () => {
+    // La fenêtre se referme au début de réalisation, quel que soit l'écart.
+    const over = {
+      dates: { offre_cee: "2026-03-20", devis: "2026-03-10", debut_travaux: "2026-03-16" },
+    };
+    const r = controlerDossier(dossier(over), AUJ);
+    expect(r.conforme).toBe(false);
+    expect(codes(dossier(over))).toContain("chrono_offre_cee:bloquant");
+  });
+
+  it("offre CEE dans les 14 jours, début des travaux inconnu : avertissement", () => {
+    // Conforme (non bloquant), mais la seconde condition du texte est invérifiable.
+    const over = {
+      dates: { offre_cee: "2026-03-20", devis: "2026-03-10", debut_travaux: null },
+    };
+    const r = controlerDossier(dossier(over), AUJ);
+    expect(r.conforme).toBe(true);
+    expect(codes(dossier(over))).toContain("chrono_offre_cee:avertissement");
   });
 
   it("offre CEE non renseignée en CEE : bloquant (antériorité invérifiable)", () => {
     const over = { dates: { offre_cee: null } };
     const r = controlerDossier(dossier(over), AUJ);
     expect(r.conforme).toBe(false);
+    expect(codes(dossier(over))).toContain("chrono_offre_cee:bloquant");
+  });
+
+  // Repli déclaratif : l'artisan sait l'offre antérieure au devis sans en
+  // retrouver la date. Ne vaut jamais conformité, mais ne bloque pas non plus.
+  it("date absente, antériorité déclarée : avertissement, pas bloquant", () => {
+    const over = { dates: { offre_cee: null, offre_cee_anterieure_declaree: true } };
+    const r = controlerDossier(dossier(over), AUJ);
+    expect(r.conforme).toBe(true);
+    expect(codes(dossier(over))).toContain("chrono_offre_cee:avertissement");
+    expect(codes(dossier(over))).not.toContain("chrono_offre_cee:ok");
+  });
+
+  it("date absente, antériorité niée : bloquant", () => {
+    const over = { dates: { offre_cee: null, offre_cee_anterieure_declaree: false } };
+    const r = controlerDossier(dossier(over), AUJ);
+    expect(r.conforme).toBe(false);
+    expect(codes(dossier(over))).toContain("chrono_offre_cee:bloquant");
+  });
+
+  it("date absente, question sans réponse : bloquant (déclaration à null)", () => {
+    const over = { dates: { offre_cee: null, offre_cee_anterieure_declaree: null } };
+    const r = controlerDossier(dossier(over), AUJ);
+    expect(r.conforme).toBe(false);
+    expect(codes(dossier(over))).toContain("chrono_offre_cee:bloquant");
+  });
+
+  it("la déclaration ne prend jamais le pas sur une date renseignée", () => {
+    // Offre à J+15 : bloquant, même si l'artisan a déclaré l'inverse par ailleurs.
+    const over = {
+      dates: { offre_cee: "2026-03-25", devis: "2026-03-10", offre_cee_anterieure_declaree: true },
+    };
+    expect(controlerDossier(dossier(over), AUJ).conforme).toBe(false);
     expect(codes(dossier(over))).toContain("chrono_offre_cee:bloquant");
   });
 
@@ -179,6 +245,36 @@ describe("controlerDossier — rôle actif et incitatif (offre CEE avant le devi
     expect(cs.some((c) => c.startsWith("chrono_offre_cee"))).toBe(false);
     expect(controlerDossier(dossier(over), AUJ).conforme).toBe(true);
   });
+});
+
+describe("controlerDossier — sept jours francs avant la pose", () => {
+  it.each(["BAR-EN-101", "BAR-EN-102"] as const)(
+    "%s : 5 jours entre devis et travaux refuse le dossier",
+    (fiche) => {
+      const cas = dossier({
+        fiche,
+        dates: { devis: "2026-03-10", debut_travaux: "2026-03-15" },
+      });
+      const r = controlerDossier(cas, AUJ);
+
+      expect(r.conforme).toBe(false);
+      expect(codes(cas)).toContain("chrono_delai_franc_isolation:bloquant");
+    },
+  );
+
+  it.each(["BAR-EN-101", "BAR-EN-102"] as const)(
+    "%s : 8 jours entre devis et travaux respecte les 7 jours francs",
+    (fiche) => {
+      const cas = dossier({
+        fiche,
+        dates: { devis: "2026-03-10", debut_travaux: "2026-03-18" },
+      });
+      const r = controlerDossier(cas, AUJ);
+
+      expect(r.conforme).toBe(true);
+      expect(codes(cas)).toContain("chrono_delai_franc_isolation:ok");
+    },
+  );
 });
 
 /** Règle CEE pompe à chaleur air/eau (forfait, sans etas_min figé). */

@@ -56,7 +56,7 @@ a ses propres contraintes dures, incompatibles avec les deux autres :
 État actuel : le gabarit de marque vit dans
 [`src/lib/prospection/message.ts`](src/lib/prospection/message.ts) (`GABARIT_HTML`) :
 bandeau encre + logo nuit (`/brand/dossimo-logo-nuit.png`), accent bleu, 3 étapes,
-encadré offre, bouton, pied légal.
+encadré « sans mandataire », bouton, pied légal.
 
 Deux dettes à connaître, non encore sous garde-fou :
 
@@ -65,7 +65,10 @@ Deux dettes à connaître, non encore sous garde-fou :
   c'est une troisième crème parasite, à réaligner sur `papier-fonce` (`#eae6dc`).
 - **Copie en double source** : le HTML (`GABARIT_HTML`) et le texte
   (`prospection_campagnes.corps`, en base). Toute modif de fond (offre, prix,
-  DOSSIMO50) se répercute **aux deux**.
+  positionnement) se répercute **aux deux** : un déploiement ne corrige que le
+  premier. Le retrait du code DOSSIMO50, le 01/08/2026, a demandé une migration
+  (`0056_prospection_retrait_dossimo50.sql`) en plus du code, et a laissé un
+  garde-fou qui bloque les envois quand les deux divergent.
 
 Pied légal **obligatoire** (LCEN art. 6 + lien de désinscription) via
 `mentionsLegales()` : c'est ce qui rend l'envoi licite, pas de la décoration.
@@ -318,11 +321,12 @@ contournements existent déjà et sont à résorber (un `const input = "…"` re
 ### Dépôt de fichiers
 
 Le geste central du produit : l'artisan verse ses pièces, le bénéficiaire
-photographie les siennes. Trois écrans le portent
+photographie les siennes. Quatre écrans le portent
 ([`pieces-justificatives.tsx`](src/components/dossier/pieces-justificatives.tsx),
 [`demarrage-assiste.tsx`](src/components/dossier/demarrage-assiste.tsx),
-[`depot-client.tsx`](src/components/depot/depot-client.tsx)) et suivent le même
-motif. Décision 2026-07-30.
+[`depot-client.tsx`](src/components/depot/depot-client.tsx),
+[`demo-guide.tsx`](src/components/landing/demo-guide.tsx)) et suivent le même
+motif. Décision 2026-07-30, étendue à l'essai public le 2026-08-01.
 
 - **Le fichier choisi se voit immédiatement.** Nom, poids, et une ligne à lui.
   Rien ne doit pouvoir être déposé sans que l'écran change : c'est le défaut qui
@@ -659,6 +663,10 @@ Deux lignes par décision, datées, pour ne pas re-débattre le passé.
 
 | Date | Décision | Pourquoi |
 |---|---|---|
+| 2026-08-01 | **Guides, famille « Actualités »** : `GUIDE_CATEGORIES` gagne une quatrième famille, placée **en tête** du hub `/guides`, pour les pages adossées à une échéance datée. Même gabarit `SeoGuide` que les guides de méthode (checklist, erreurs, exemple, FAQ, sources, CTA `/demo`), aucun composant ni token nouveau. | Une actualité a une date de péremption que les guides de méthode n'ont pas : reléguée en bas de page, elle arrive au lecteur après l'échéance qu'elle annonce. Passer par la donnée (`guides.ts`) plutôt que par une route dédiée conserve le maillage, le sitemap, le menu et le JSON-LD sans une ligne de plus. |
+| 2026-08-01 | **Essai public `/demo` aligné sur le motif § Dépôt de fichiers.** `capture` cesse de coiffer l'unique chemin d'envoi et repasse derrière `useTactile` avec un second `input` sans `capture` (accepte PDF **et** image) ; l'attente prend la place des boutons au lieu de s'ajouter dessous, et nomme le fichier lu ; l'erreur remonte au-dessus des boutons en `role="alert"` ; la carte est recentrée (`scrollIntoView` `nearest`) à chaque changement d'état ; le CTA final passe de `h-12` à `min-h-12 w-full` ; le lien « Retour à l'accueil » et les liens de la carte atteignent `min-h-11` ; les `input` `sr-only` gagnent `aria-label` + `tabIndex={-1}` et se vident après lecture. Aucun nouveau token. | Revue en viewport 390 px. Trois défauts tenaient au même endroit : sur un téléphone, `capture` rendait **inatteignable** la photo du devis déjà prise (seul chemin restant : un `accept` limité au PDF), le bandeau d'attente tombait sous deux boutons de 112 px donc hors écran juste après le retour de l'appareil photo, et le libellé du CTA passait à deux lignes dans une hauteur figée. Le motif du 2026-07-30 réglait déjà les trois : il n'avait été appliqué qu'aux trois écrans authentifiés, alors que `/demo` est la première surface que voit un artisan (AGENTS.md : « une bonne idée appliquée à une seule table »). |
+| 2026-08-01 | **Contrôle des sept jours francs** : pour BAR-EN-101 et BAR-EN-102, le rapport nomme explicitement le délai entre l'acceptation du devis et la pose de l'isolant, en `bloquant` s'il n'est pas respecté et en `ok` s'il l'est. Aucun nouveau token ni composant. | Une chronologie simplement « devis antérieur aux travaux » masque une condition plus stricte des fiches. Le finding doit dire le nombre de jours constaté et la première date conforme, afin que l'artisan puisse comprendre le refus sans interpréter lui-même le calcul en jours francs. |
+| 2026-08-01 | **Estimateur, profil rose** : le résultat porte un statut textuel autonome « Non éligible MaPrimeRénov', éligible CEE. » au-dessus des montants. La ligne MaPrimeRénov' conserve « — » et son explication ; le montant CEE reste calculé depuis `regles_metier`. Aucun nouveau token. | Une simple absence de montant ressemble à un barème manquant. Le statut nomme la distinction réglementaire violet/rose sans inventer de prime et permet de comprendre d'un coup d'œil que le dossier conserve une voie CEE. |
 | 2026-07-08 | Palette encre / gris / crème / **bleu** (`#35507f`), polices Unbounded + Inter + Source Serif. | Alignement sur le kit logo. L'accent passe du terracotta au bleu ; le token `terre-cuite` n'est pas renommé (dette assumée, cf. §2). |
 | 2026-07-19 | `DESIGN.md` devient la source de vérité ; `tokens.ts` source machine des couleurs + test de miroir ; règle inscrite dans `AGENTS.md`. | Coordonner landing → vitrine → espace artisan → PDF et empêcher la dérive des tokens par machine, pas par discipline. |
 | 2026-07-19 | Refonte = **rafraîchissement** : identité et polices conservées, accent bleu (token `terre-cuite` → `accent`), **cartes en ombre douce sur le web** (bordure conservée en PDF / impression). | Moderniser l'écran sans casser la lisibilité N/B du papier ni une identité récente. Deux traitements de carte selon la cible, choix produit assumé. |

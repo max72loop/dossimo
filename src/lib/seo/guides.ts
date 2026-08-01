@@ -5,6 +5,10 @@
  * ne serait jamais rendu, donc les deux doivent rester synchronisés.
  */
 export const GUIDE_CATEGORIES = [
+  // En tête du hub volontairement : ces pages sont datées et périssables, elles
+  // ne valent que tant que l'échéance est proche. Une actualité reléguée en bas
+  // de page arrive au lecteur après la date qu'elle annonce.
+  "Actualités",
   "Monter le dossier",
   "Devis & conformité",
   "Refus & prévention",
@@ -86,6 +90,229 @@ const anahModeEmploi =
   "https://www.anah.gouv.fr/anatheque/maprimerenov-mode-emploi";
 
 export const guides = {
+  demarchage2026: {
+    slug: "demarchage-telephonique-11-aout-2026",
+    metaTitle: "Démarchage téléphonique interdit le 11 août 2026",
+    title: "Démarchage téléphonique interdit le 11 août 2026, ce qui change pour les artisans",
+    description:
+      "Le 11 août 2026, la prospection téléphonique passe au consentement préalable, et la rénovation énergétique reste interdite d’appel quel que soit ce consentement. Ce qui change concrètement pour un artisan RGE, y compris quand il achète ses rendez-vous.",
+    eyebrow: "Actualité réglementaire · 11 août 2026",
+    category: "Actualités",
+    updated: "2026-08-01",
+    intro:
+      "À partir du 11 août 2026, un consommateur ne peut plus être démarché par téléphone s’il n’y a pas consenti au préalable. Pour un artisan RGE, l’essentiel n’est pourtant pas là : la prospection téléphonique en rénovation énergétique était déjà interdite, elle le reste, et le consentement du client n’y change rien. Ce qui bouge vraiment, c’est la charge de la preuve, l’étendue de l’interdiction et la responsabilité de celui qui a profité de l’appel, même s’il ne l’a pas passé lui-même.",
+    sections: [
+      {
+        heading: "Ce qui bascule le 11 août 2026",
+        paragraphs: [
+          "La loi du 30 juin 2025 contre les fraudes aux aides publiques inverse le principe du démarchage téléphonique, et son décret d’application du 23 juillet 2026 en fixe les modalités. Jusqu’au 10 août, le consommateur devait se signaler pour ne pas être appelé, en s’inscrivant sur une liste d’opposition. À compter du 11 août, il doit avoir dit oui avant d’être appelé. Le texte est explicite : il est interdit de démarcher par téléphone un consommateur qui n’a pas exprimé préalablement son consentement.",
+          "Ce consentement n’est pas une case cochée au hasard d’un formulaire. Il doit être libre, spécifique, éclairé, univoque et révocable, exprimé par un acte positif clair. Il vaut un an au maximum, ne peut pas être reconduit tacitement, et se retire à tout moment, y compris oralement pendant l’appel. Le professionnel doit en conserver la preuve trois ans et la mettre à disposition du consommateur qui la demande, sans l’obliger à créer un compte. La preuve pèse sur l’entreprise, jamais sur la personne appelée.",
+        ],
+      },
+      {
+        heading: "La rénovation énergétique n’entre pas dans ce régime : elle reste interdite",
+        paragraphs: [
+          "C’est le point le plus mal compris de la réforme, et celui qui concerne directement un artisan RGE. La prospection commerciale par téléphone portant sur la vente d’équipements ou la réalisation de travaux en vue d’économies d’énergie ou de production d’énergies renouvelables est interdite depuis 2020. Le 11 août 2026 ne la fait pas basculer dans le régime du consentement : elle reste une interdiction pure. Un client qui vous aurait donné son accord écrit pour être appelé ne rend pas l’appel licite pour autant.",
+          "Le périmètre s’élargit même dans deux directions. D’une part, l’interdiction couvre désormais aussi les travaux d’adaptation du logement au vieillissement et au handicap, ce qui rattrape les entreprises qui avaient déporté leur prospection vers MaPrimeAdapt’. D’autre part, elle ne vise plus le seul téléphone : les messages interpersonnels, les courriers électroniques et les réseaux sociaux entrent dans le champ. Le SMS envoyé à une liste achetée relève donc du même interdit que l’appel.",
+          "Une seule dérogation subsiste, et elle est étroite : la sollicitation qui intervient dans le cadre de l’exécution d’un contrat en cours et qui a un rapport avec l’objet de ce contrat, y compris pour des produits ou services afférents ou complémentaires. Appeler un client dont vous isolez les combles pour caler une date d’intervention est licite. L’appeler six mois après réception pour lui proposer une pompe à chaleur ne l’est pas : le contrat n’est plus en cours.",
+        ],
+      },
+      {
+        heading: "Le point qui vise l’artisan : les rendez-vous achetés",
+        paragraphs: [
+          "Beaucoup d’artisans ne démarchent pas eux-mêmes et achètent des rendez-vous ou des contacts à un apporteur d’affaires. La réforme ferme précisément cette porte : le professionnel qui a tiré profit de sollicitations illicites est présumé responsable du non-respect de ces dispositions. Autrement dit, ce n’est pas seulement le centre d’appel qui répond de l’appel, c’est l’entreprise qui a signé le chantier au bout.",
+          "Les conséquences ne sont pas seulement administratives. Le contrat conclu à la suite d’un démarchage réalisé en violation de ces règles est nul, et l’amende administrative peut atteindre 75 000 € pour une personne physique et 375 000 € pour une personne morale. Un contrat nul, pour un artisan, c’est un chantier réalisé, une prime qui ne peut pas être versée sur un contrat qui n’existe pas en droit, et un remboursement à assumer. Le risque ne se voit sur aucune pièce du dossier : il est en amont du devis.",
+          "Le réflexe à prendre est donc contractuel avant d’être commercial. Avant de racheter un lot de contacts, demandez par écrit comment ils ont été obtenus, exigez la preuve de l’origine, et refusez tout ce qui vient d’un appel sortant en rénovation énergétique. Une clause qui fait porter la conformité à l’apporteur ne vous exonère pas de la présomption, mais elle documente votre diligence.",
+        ],
+      },
+      {
+        heading: "Ce qui reste permis, et comment le tracer",
+        paragraphs: [
+          "Répondre à quelqu’un qui vous a sollicité reste évidemment possible. Le décret le confirme explicitement : le rappel qui fait suite à une demande expresse du consommateur en matière de rénovation énergétique, dans les cinq jours ouvrables, n’est pas une sollicitation commerciale. Un formulaire rempli sur votre site, un message laissé sur votre répondeur, une demande de devis transmise par un tiers à l’initiative du client entrent dans ce cadre. Ce qui compte est de pouvoir montrer que l’initiative venait d’en face, et à quelle date.",
+          "Restent tous les canaux qui n’ont jamais relevé du démarchage : la recommandation, le bouche-à-oreille, le référencement local, l’annuaire des professionnels RGE, les réseaux d’artisans, la relance de vos propres clients dans le cadre d’un contrat en cours. Hors rénovation énergétique, si vous prospectez par téléphone sur d’autres activités, le nouveau régime s’applique en entier : consentement d’un an non reconductible, preuve conservée trois ans, retrait possible à tout moment, et appels cantonnés aux jours et plages horaires encadrés, du lundi au vendredi de 10 h à 13 h et de 14 h à 20 h.",
+          "Enfin, la réforme vise la prospection des consommateurs. Un appel entre professionnels ne relève pas de ce régime, mais reste soumis au règlement général sur la protection des données : opposition possible, information de la personne, finalité déclarée. La frontière est plus mince qu’il n’y paraît chez les particuliers-employeurs et les très petites structures.",
+        ],
+      },
+      {
+        heading: "Le lien avec le dossier d’aides",
+        paragraphs: [
+          "Cette réforme n’est pas un texte de droit de la consommation posé à côté du dossier MaPrimeRénov’ ou CEE : elle est née d’une loi contre la fraude aux aides publiques, et elle s’articule avec des obligations qui touchent directement le montage. La même loi impose de mentionner le service public France Rénov’ sur les supports promotionnels, d’indiquer le label ou signe de qualité exigé pour les aides, d’identifier la sous-traitance et de vérifier ses qualifications, et resserre la chaîne de sous-traitance. Elle alourdit aussi les sanctions en matière de CEE.",
+          "La conséquence pratique tient en une phrase : un dossier impeccable posé sur un contrat nul ne vaut rien. Dossimo contrôle la conformité des pièces avant le dépôt, pas la licéité de la façon dont le chantier a été trouvé, et aucun contrôle documentaire ne rattrape un vice à l’origine du contrat. Dossimo est un service indépendant d’aide à la préparation de dossier, non affilié à l’Anah ni à France Rénov’ : il ne dépose jamais le dossier et ne touche jamais la prime.",
+        ],
+      },
+    ],
+    checklist: [
+      { title: "Arrêter tout appel sortant en rénovation énergétique", text: "L’interdiction est absolue et ne dépend d’aucun consentement. Elle couvre désormais aussi l’adaptation du logement au vieillissement et au handicap, et vise les SMS, e-mails et messages sur les réseaux sociaux, pas seulement le téléphone." },
+      { title: "Auditer l’origine de vos rendez-vous", text: "Demandez par écrit à chaque apporteur d’affaires comment les contacts ont été obtenus et exigez la preuve de cette origine : celui qui profite d’une sollicitation illicite est présumé responsable." },
+      { title: "Tracer la demande entrante", text: "Conservez la trace horodatée de la demande du client (formulaire, message, appel entrant). Le rappel dans les cinq jours ouvrables après une demande expresse n’est pas un démarchage." },
+      { title: "Vérifier ce que couvre « contrat en cours »", text: "La sollicitation reste licite si elle porte sur l’exécution d’un contrat en cours et se rattache à son objet. Un chantier réceptionné n’est plus un contrat en cours." },
+      { title: "Documenter le consentement hors rénovation énergétique", text: "Consentement explicite, spécifique, d’un an maximum, sans reconduction tacite, retirable à tout moment y compris oralement, preuve conservée trois ans et accessible au consommateur sans création de compte." },
+      { title: "Mettre les supports commerciaux à jour", text: "La même loi impose de mentionner le service public France Rénov’ et le signe de qualité exigé pour les aides sur vos supports promotionnels, et d’identifier vos sous-traitants et leurs qualifications." },
+    ],
+    errors: [
+      "Un appel sortant en rénovation énergétique est passé au motif que le client avait « donné son accord » : le consentement n’ouvre pas ce droit.",
+      "Des rendez-vous sont achetés sans preuve de la façon dont le contact a été obtenu.",
+      "Un ancien client est rappelé pour un nouveau geste, alors que le contrat précédent est réceptionné donc terminé.",
+      "La prospection est déportée vers le SMS ou l’e-mail, désormais visés par la même interdiction.",
+      "Le consentement recueilli sur un autre secteur est reconduit tacitement d’une année sur l’autre, ou sa preuve n’est pas conservée.",
+    ],
+    example: {
+      before: "Un centre d’appel obtient un rendez-vous chez un particulier pour une isolation, l’artisan signe le devis et monte le dossier CEE : le contrat est nul et la responsabilité est présumée peser sur l’entreprise qui en a profité.",
+      after: "Le particulier remplit le formulaire de contact de l’entreprise, la demande est horodatée, l’artisan rappelle dans les cinq jours ouvrables et conserve la trace de la demande entrante avec le dossier.",
+    },
+    faq: [
+      {
+        question: "Le démarchage téléphonique est-il totalement interdit le 11 août 2026 ?",
+        answer:
+          "Il devient interdit par défaut : un consommateur ne peut être appelé que s’il a donné un consentement préalable, libre, spécifique, éclairé et univoque, valable un an au maximum. Pour la rénovation énergétique, c’est plus strict encore : l’appel est interdit même avec le consentement du client, sauf dans le cadre de l’exécution d’un contrat en cours.",
+      },
+      {
+        question: "Puis-je encore appeler un particulier pour lui proposer une isolation s’il est d’accord ?",
+        answer:
+          "Non. La prospection téléphonique portant sur des travaux d’économies d’énergie ou de production d’énergies renouvelables est interdite depuis 2020 et le reste après le 11 août 2026. Ce n’est pas un régime d’opposition ni de consentement : c’est une interdiction, et le consentement du consommateur ne la lève pas.",
+      },
+      {
+        question: "J’achète mes rendez-vous à un apporteur d’affaires : suis-je concerné ?",
+        answer:
+          "Directement. Le professionnel qui a tiré profit de sollicitations illicites est présumé responsable du non-respect de ces dispositions. Le contrat signé à la suite d’un démarchage illicite est nul, et l’amende administrative peut atteindre 375 000 € pour une personne morale. Exigez par écrit l’origine des contacts avant d’acheter.",
+      },
+      {
+        question: "Puis-je rappeler quelqu’un qui a rempli mon formulaire de contact ?",
+        answer:
+          "Oui. Le décret du 23 juillet 2026 prévoit que le rappel faisant suite à une demande expresse du consommateur en matière de rénovation énergétique, dans les cinq jours ouvrables, n’est pas considéré comme une sollicitation commerciale. Conservez la trace horodatée de cette demande : c’est elle qui fait la différence.",
+      },
+      {
+        question: "Et le démarchage entre professionnels ?",
+        answer:
+          "Le régime du consentement préalable protège les consommateurs, pas les entreprises. Un appel entre professionnels n’y est pas soumis, mais reste encadré par le règlement général sur la protection des données : information de la personne contactée, finalité déclarée, droit d’opposition. La frontière est fine dès qu’il s’agit d’un particulier-employeur ou d’une très petite structure.",
+      },
+      {
+        question: "Bloctel disparaît-il ?",
+        answer:
+          "Le mécanisme perd sa fonction centrale : puisque l’appel est interdit sans consentement préalable, il n’y a plus lieu de s’inscrire sur une liste pour s’y opposer. Ne fondez plus votre conformité sur un filtrage de fichier : c’est la preuve du consentement, ou de la demande entrante, qui compte désormais.",
+      },
+    ],
+    sources: [
+      { label: "Code de la consommation, articles L. 223-1 et suivants, version en vigueur au 11 août 2026 (Légifrance)", href: "https://www.legifrance.gouv.fr/codes/section_lc/LEGITEXT000006069565/LEGISCTA000032221441/2026-08-11" },
+      { label: "Décret n° 2026-662 du 23 juillet 2026 relatif au recueil, à la conservation et au retrait du consentement (Légifrance)", href: "https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000054483939" },
+      { label: "Loi du 30 juin 2025 contre les fraudes aux aides publiques — economie.gouv.fr", href: "https://www.economie.gouv.fr/actualites/fraudes-aux-aides-publiques-de-nouvelles-mesures-pour-lutter-efficacement" },
+      { label: "Ce que la loi du 30 juin 2025 change en rénovation énergétique — ANIL", href: "https://www.anil.org/aj-loi-lutte-fraude-aides-publiqus-renovation-energetique/" },
+    ],
+  },
+  franceRenov2026: {
+    slug: "bascule-france-renov-17-aout-2026",
+    metaTitle: "France Rénov’ 17 août 2026 : compte unique, FranceConnect+",
+    title: "Bascule France Rénov’ du 17 août, compte unique et FranceConnect+, comment déposer après",
+    description:
+      "Les plateformes de l’Anah sont fermées du 3 au 17 août 2026, puis les aides passent par un compte personnel unique sur france-renov.gouv.fr, accessible uniquement via FranceConnect+. Ce que l’artisan doit anticiper avec son client.",
+    eyebrow: "Actualité réglementaire · 17 août 2026",
+    category: "Actualités",
+    updated: "2026-08-01",
+    intro:
+      "Du 3 au 17 août 2026, les plateformes france-renov.gouv.fr, maprimerenov.gouv.fr et monprojet.anah.gouv.fr sont en maintenance : ni création de compte, ni dépôt de demande, ni demande de paiement. Le 17 août, elles rouvrent sur un compte personnel unique hébergé par France Rénov’, dont l’accès passe obligatoirement par FranceConnect+. L’artisan ne dépose pas, mais c’est lui qui subit le calendrier : ce guide décrit ce qu’il faut caler avant, pendant et après la bascule.",
+    sections: [
+      {
+        heading: "Ce qui est fermé, et jusqu’à quand",
+        paragraphs: [
+          "La fenêtre de maintenance court du 3 au 17 août 2026 et concerne les trois plateformes ensemble : france-renov.gouv.fr, maprimerenov.gouv.fr et monprojet.anah.gouv.fr. Pendant cette période, il n’est possible ni de créer un compte, ni de déposer une demande d’aide, ni de demander un paiement. Ce n’est pas une lenteur passagère : les parcours sont coupés.",
+          "Pour un chantier en cours, cela déplace deux échéances. Une demande qui n’était pas déposée le 3 août ne le sera pas avant le 17, et une demande de paiement sur un chantier terminé attendra tout autant. Le calendrier de trésorerie de l’artisan et celui du client s’en trouvent décalés d’une quinzaine de jours, à un moment de l’année où l’entreprise est souvent en congés et où les relances passent mal.",
+        ],
+      },
+      {
+        heading: "Le piège de la quinzaine : ne pas démarrer en attendant",
+        paragraphs: [
+          "C’est le risque concret de cette fenêtre, et il est classique. MaPrimeRénov’ suppose que la demande soit déposée avant le démarrage des travaux. Un chantier calé fin juillet, une plateforme fermée, un client pressé et une équipe disponible en août : la tentation de commencer « puisque le dossier partira de toute façon » fait perdre l’aide, sans rattrapage.",
+          "La règle ne se suspend pas parce que le service est indisponible. Si la demande n’a pas pu être déposée, le chantier attend, ou il démarre en assumant que l’aide est perdue. C’est une décision à prendre avec le client, par écrit, avant le premier jour de chantier, et non un arbitrage à improviser une fois les échafaudages posés. Côté CEE, la chronologie propre au dispositif continue de courir de son côté : l’engagement de l’offre avant l’acceptation du devis et le délai d’envoi après facture ne dépendent pas des plateformes de l’Anah.",
+        ],
+      },
+      {
+        heading: "Ce qui ouvre le 17 août : un compte personnel unique",
+        paragraphs: [
+          "À compter du 17 août 2026, le ménage crée son compte personnel directement sur france-renov.gouv.fr, et ce compte unique couvre l’ensemble des aides de l’Anah : MaPrimeRénov’, MaPrimeAdapt’ et Ma Prime Logement Décent. Depuis son espace personnel, il est orienté automatiquement vers le parcours de dépôt correspondant à sa situation et retrouve toutes ses démarches au même endroit. France Rénov’ devient le point d’entrée unique.",
+          "Les ménages qui disposaient déjà d’un compte MaPrimeRénov’ ou Mon Projet Anah n’ont rien à ressaisir : leurs informations et leurs dossiers sont retrouvés automatiquement après confirmation de leur identité via FranceConnect+, ou par une procédure de sécurisation par courrier. Ce point est utile à connaître pour rassurer un client qui a un dossier en cours et qui verra son ancienne adresse ne plus répondre.",
+        ],
+      },
+      {
+        heading: "FranceConnect+ : la vraie contrainte de calendrier",
+        paragraphs: [
+          "La connexion devient obligatoire via FranceConnect+, présentée par l’Anah comme un moyen de renforcer la protection des usagers, de lutter contre les usurpations d’identité et de prévenir les tentatives de fraude. FranceConnect+ n’est pas FranceConnect : il n’accepte pas les comptes ordinaires du type impots.gouv.fr ou ameli, mais une identité numérique certifiée, aujourd’hui L’Identité Numérique La Poste ou France Identité.",
+          "C’est le point qui va coincer sur le terrain, parce qu’il ne se règle pas le jour du dépôt. Obtenir une identité numérique certifiée suppose une vérification d’identité, en ligne ou en agence selon le fournisseur, avec une pièce d’identité valide et un délai qui n’est pas maîtrisable. Un ménage âgé, peu équipé ou dont la carte d’identité est expirée peut y passer plusieurs semaines. La question à poser au premier rendez-vous n’est donc plus « avez-vous un compte MaPrimeRénov’ ? » mais « avez-vous une identité numérique certifiée ? », et il existe une procédure de sécurisation par courrier pour ceux qui ne peuvent pas passer par FranceConnect+.",
+        ],
+      },
+      {
+        heading: "Ce que la bascule ne change pas : c’est le ménage qui dépose",
+        paragraphs: [
+          "Le renforcement porte précisément sur la certitude que la personne connectée est bien le bénéficiaire. Se connecter à la place de son client avec son identité numérique est exactement ce que le dispositif cherche à empêcher, et c’est aussi ce qui expose l’artisan si le dossier est contesté plus tard. Une identité numérique certifiée est personnelle : elle ne se prête pas, pas plus qu’une carte d’identité.",
+          "Cette bascule confirme la logique que Dossimo a choisie dès le départ : produire le pack documentaire complet et vérifié, que l’artisan et son client déposent eux-mêmes. Dossimo ne dépose jamais le dossier et ne touche jamais la prime, un rôle réservé aux mandataires habilités par l’Anah que nous refusons d’endosser par choix. C’est un service indépendant d’aide à la préparation de dossier, non affilié à l’Anah ni à France Rénov’.",
+        ],
+      },
+    ],
+    checklist: [
+      { title: "Faire le point sur les dossiers non déposés", text: "Toute demande qui n’était pas déposée avant le 3 août attend le 17 : listez les chantiers concernés et prévenez les clients avant les congés, pas au retour." },
+      { title: "Ne pas démarrer les travaux pendant la fermeture", text: "La demande MaPrimeRénov’ se dépose avant le démarrage des travaux. L’indisponibilité de la plateforme ne suspend pas la règle : décalez le chantier ou actez par écrit avec le client que l’aide est abandonnée." },
+      { title: "Vérifier l’identité numérique du bénéficiaire", text: "Après le 17 août, l’accès passe par FranceConnect+, qui exige une identité numérique certifiée (L’Identité Numérique La Poste, France Identité). Posez la question dès le premier rendez-vous : l’obtention prend du temps." },
+      { title: "Prévoir le repli par courrier", text: "Les titulaires d’un compte existant retrouvent leurs dossiers après confirmation d’identité via FranceConnect+ ou par une procédure de sécurisation par courrier. Identifiez tôt les clients qui relèveront de ce second cas." },
+      { title: "Ne jamais se connecter à la place du client", text: "L’identité numérique est personnelle et le durcissement vise l’usurpation d’identité. Accompagnez le ménage, restez à côté de lui, ne prenez pas la main sur son espace." },
+      { title: "Ne pas relâcher la chronologie CEE", text: "Le calendrier CEE est indépendant des plateformes de l’Anah : offre engagée avant l’acceptation du devis, dossier envoyé dans les trois mois suivant la facture." },
+    ],
+    errors: [
+      "Un chantier démarre pendant la fermeture des plateformes alors que la demande MaPrimeRénov’ n’est pas déposée.",
+      "Le client découvre au moment du dépôt qu’il lui faut une identité numérique certifiée, qu’il n’a pas.",
+      "L’artisan se connecte à l’espace du bénéficiaire avec l’identité numérique de celui-ci.",
+      "Une demande de paiement est promise au client sur un chantier terminé, sans tenir compte de la fenêtre du 3 au 17 août.",
+      "Le dossier CEE est mis en attente « comme MaPrimeRénov’ », alors que ses propres délais continuent de courir.",
+    ],
+    example: {
+      before: "Chantier calé le 10 août, demande non déposée, plateforme fermée : les travaux démarrent en comptant déposer au retour de congés, et l’aide est perdue.",
+      after: "Le chantier est reporté après le 17 août, l’identité numérique du client est lancée dès le premier rendez-vous, la demande est déposée avant le premier jour de travaux.",
+    },
+    faq: [
+      {
+        question: "Que se passe-t-il entre le 3 et le 17 août 2026 ?",
+        answer:
+          "Les plateformes france-renov.gouv.fr, maprimerenov.gouv.fr et monprojet.anah.gouv.fr sont en maintenance technique. Pendant cette période, il n’est possible ni de créer un compte, ni de déposer une demande d’aide, ni de demander un paiement.",
+      },
+      {
+        question: "Puis-je commencer les travaux pendant la fermeture des plateformes ?",
+        answer:
+          "Pas si vous visez MaPrimeRénov’ : la demande se dépose avant le démarrage des travaux, et l’indisponibilité du service ne suspend pas cette exigence. Reportez le chantier après le 17 août, ou actez par écrit avec le client que l’aide ne sera pas demandée.",
+      },
+      {
+        question: "Qu’est-ce qui change exactement le 17 août ?",
+        answer:
+          "Le ménage crée désormais son compte personnel directement sur france-renov.gouv.fr, et ce compte unique couvre MaPrimeRénov’, MaPrimeAdapt’ et Ma Prime Logement Décent. Depuis son espace, il est orienté automatiquement vers le parcours de dépôt adapté à sa situation et retrouve toutes ses démarches au même endroit.",
+      },
+      {
+        question: "FranceConnect+ est-il vraiment obligatoire ?",
+        answer:
+          "Oui, la connexion à l’espace personnel passe par FranceConnect+, pour renforcer la sécurité et prévenir les usurpations d’identité. FranceConnect+ n’accepte pas les comptes ordinaires comme impots.gouv.fr : il repose sur une identité numérique certifiée, aujourd’hui L’Identité Numérique La Poste ou France Identité.",
+      },
+      {
+        question: "Mon client a déjà un compte MaPrimeRénov’, doit-il tout recréer ?",
+        answer:
+          "Non. Les titulaires d’un compte MaPrimeRénov’ ou Mon Projet Anah retrouvent automatiquement leurs informations et leurs dossiers après confirmation de leur identité via FranceConnect+, ou par une procédure de sécurisation par courrier s’ils ne peuvent pas passer par FranceConnect+.",
+      },
+      {
+        question: "Puis-je déposer le dossier à la place de mon client ?",
+        answer:
+          "Non, et c’est précisément ce que la bascule vise à empêcher. Une identité numérique certifiée est personnelle et ne se prête pas. Seuls les mandataires habilités par l’Anah déposent pour autrui. Dossimo a fait le choix inverse : il produit le pack complet et vérifié, que vous et votre client déposez vous-mêmes.",
+      },
+    ],
+    voirAussi: [
+      {
+        label: "Les travaux ont démarré avant l’engagement",
+        href: "/refus/motifs/travaux-demarres-avant-engagement",
+        description:
+          "Le motif de refus que la fermeture du 3 au 17 août rend le plus probable : ce qu’il recouvre exactement, et ce qui reste possible une fois le refus tombé.",
+      },
+    ],
+    sources: [
+      { label: "Compte personnel unique France Rénov’ au 17 août 2026 — communiqué de l’Anah", href: "https://www.anah.gouv.fr/presse/compter-du-17-aout-2026-france-renov-renforce-son-offre-de-services-avec-un-compte-personnel" },
+      { label: "FranceConnect+ et les identités numériques certifiées", href: "https://www.franceconnect.gouv.fr/franceconnect-plus/" },
+      { label: "France Rénov’, service public de la rénovation de l’habitat", href: "https://france-renov.gouv.fr" },
+      { label: "MaPrimeRénov’, mode d’emploi — Anah", href: anahModeEmploi },
+    ],
+  },
   dossierCee: {
     slug: "constituer-dossier-cee-conforme",
     metaTitle: "Constituer un dossier CEE conforme : le pack complet",

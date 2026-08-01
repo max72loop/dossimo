@@ -5,9 +5,11 @@
 > plafond, montée en charge progressive, file de validation humaine avant tout
 > envoi.
 >
-> Fenêtre de campagne : **du mercredi 15 juillet (après-midi) au vendredi 24
-> juillet 2026**, pour que le message arrive avant la fin du code DOSSIMO50, le
-> dimanche 26 (`src/lib/stripe/actions.ts`).
+> Fenêtre de campagne : ouverte le mercredi 15 juillet 2026 (après-midi),
+> repoussée au **30 septembre 2026** par
+> `supabase/scripts/prospection_campagne_relance.sql`. La fenêtre initiale
+> s'arrêtait au 24 juillet, calée sur la fin du code de lancement DOSSIMO50,
+> retiré du produit le 1er août 2026.
 
 ## 1. Principe directeur
 
@@ -200,16 +202,22 @@ Le bloc après `--` n'est pas décoratif : identité, source de l'adresse, oppos
 C'est lui qui rend l'envoi licite et qui, en pratique, transforme un signalement en
 spam en simple désinscription.
 
-Le message annonce « DOSSIMO50, jusqu'au 31 juillet », sans date de début : le code
-est actif depuis son introduction et expire le 31 (`src/lib/stripe/actions.ts`,
-`FIN_CODE_LANCEMENT`). Annoncer une ouverture au 21 aurait retardé la campagne
-d'une semaine et empêché toute montée en charge avant la fin de la promo.
+Le message n'annonce **aucun prix ni code promo**. Il en portait un jusqu'au
+1er août 2026 (« DOSSIMO50, jusqu'au 31 juillet ») ; l'offre a été retirée du
+produit, et la copie avec elle, par la migration
+`0056_prospection_retrait_dossimo50.sql`.
 
-La date vit à deux endroits que rien ne synchronise : `FIN_CODE_LANCEMENT` dans le
-code, et le corps de campagne dans `prospection_campagnes.corps` en base. Un
-déploiement ne corrige pas le second. Toute prolongation du code doit donc être
-répercutée à la main en base, sinon la campagne annonce une date d'expiration plus
-courte que la réalité — ce qui a été le cas entre le 15 et le 16 juillet 2026.
+Cet épisode a laissé deux garde-fous, parce qu'un corps stocké en base ne se
+corrige pas par un déploiement :
+
+- `preparerFile()` refuse de remplir la file si le corps de campagne porte une
+  mention périmée (`mentionPerimee`, `src/lib/prospection/message.ts`) ;
+- `envoyerProchain()` écarte en `echec` tout message déjà en file qui la porte,
+  son corps étant figé à la mise en file.
+
+La campagne s'arrête donc d'elle-même, bruyamment, plutôt que d'annoncer une
+remise que plus rien n'honore. C'est la version durcie de l'incident des 15 et
+16 juillet 2026, où le code avait été prolongé en base mais pas en ligne.
 
 ## 11. Mise en route
 

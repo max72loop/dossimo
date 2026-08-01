@@ -12,6 +12,7 @@ import {
   GESTES_ESTIMABLES,
   PROFILS_ORDRE,
   PROFILS_PUBLICS,
+  STATUT_PROFIL_ROSE,
   gesteAuM2,
   type ProfilPublic,
   type ResultatEstimation,
@@ -177,6 +178,11 @@ export function Estimateur() {
 
       {resultat && (
         <div className="mt-6 border-t border-filigrane pt-6" role="status">
+          {resultat.statutEligibilite === "mpr_non_eligible_cee_eligible" && (
+            <p className="mb-4 rounded border-l-4 border-tampon bg-info-bg px-4 py-3 text-sm font-semibold text-encre">
+              {STATUT_PROFIL_ROSE}
+            </p>
+          )}
           <ul className="grid gap-3 sm:grid-cols-2">
             {resultat.lignes.map((ligne) => (
               <li key={ligne.dispositif} className="rounded-xl bg-papier/70 px-4 py-3.5">

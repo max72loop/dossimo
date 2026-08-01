@@ -12,7 +12,6 @@ import {
   ScanSearch,
   ShieldCheck,
   Stamp,
-  TicketPercent,
   XCircle,
 } from "lucide-react";
 
@@ -25,7 +24,7 @@ import { VisiteGuidee } from "@/components/landing/visite-guidee";
 import { FOCUS, FOCUS_SOMBRE } from "@/components/ui/boutons";
 import { CTA_DEMO } from "@/lib/landing/copy";
 import { grillePublique } from "@/lib/landing/grille-publique";
-import { labelEuros, type GrilleAffichee } from "@/lib/pricing";
+import { type GrilleAffichee } from "@/lib/pricing";
 import {
   editorialOrganizationSchema,
   ORGANIZATION_ID,
@@ -42,10 +41,6 @@ export const metadata: Metadata = publicMetadata({
   description: SITE_DESCRIPTION,
   absoluteTitle: true,
 });
-
-function prixLancement(grille: GrilleAffichee): string {
-  return labelEuros(Math.round(grille.minCents / 2));
-}
 
 export default async function Home() {
   const grille = await grillePublique();
@@ -144,7 +139,7 @@ function TrustStrip() {
     { icon: Clock, stat: null, text: "Monté en minutes" },
     { icon: HandCoins, stat: "100 %", text: "de la prime conservée" },
     { icon: Ban, stat: "0 %", text: "de commission" },
-    { icon: TicketPercent, stat: "−50 %", text: "sur le premier dossier" },
+    { icon: ShieldCheck, stat: null, text: "Contrôlé avant dépôt" },
   ];
   return (
     <div className="border-b border-papier/10 bg-encre">
@@ -425,10 +420,6 @@ function Pricing({ grille }: { grille: GrilleAffichee | null }) {
             <SectionLabel sombre>Tarification transparente</SectionLabel>
             <h2 className="mt-5 font-serif text-3xl font-semibold leading-tight tracking-tight text-blanc-casse sm:text-4xl">Un forfait connu avant paiement. Jamais un pourcentage.</h2>
             <p className="mt-5 text-lg leading-relaxed text-papier/70">Le prix dépend du montant d’aide estimé. Il est affiché avant tout paiement, sans abonnement et sans frais caché.</p>
-            <p className="mt-6 inline-flex flex-wrap gap-2 rounded-lg border border-papier/20 bg-papier/10 px-4 py-3 text-sm font-semibold text-papier">
-              Code <span className="font-mono text-blanc-casse">DOSSIMO50</span> · 50 % sur le premier dossier
-              {grille ? " · dès " + prixLancement(grille) + " au lieu de " + grille.minLabel : ""}
-            </p>
           </div>
           {grille && grille.lignes.length > 0 && (
             <ul className="mt-10 grid gap-4 lg:grid-cols-3">

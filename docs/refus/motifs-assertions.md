@@ -181,11 +181,29 @@ qu'une assertion survit à la bascule BAR-TH-171 du 1er septembre (A21).
 ## 9. Écarts relevés entre les textes et le produit
 
 Cinq constats, ouverts en tickets dans
-[`SUIVI-PROJET.md`](../../SUIVI-PROJET.md).
+[`SUIVI-PROJET.md`](../../SUIVI-PROJET.md). Les deux premiers sont **corrigés**,
+les trois autres restent ouverts.
 
-1. **`chrono_offre_cee` refuse plus strictement que le texte** (A3b). Le plus
-   grave : un faux positif fait abandonner un dossier valide.
-2. **Le délai de sept jours francs n'est contrôlé nulle part** (A5, A6).
+1. ~~**`chrono_offre_cee` refuse plus strictement que le texte** (A3b). Le plus
+   grave : un faux positif fait abandonner un dossier valide.~~ **Corrigé le
+   01/08/2026.** `controlerDossier` applique désormais la fenêtre de quatorze
+   jours d'A3b : une offre postérieure au devis n'est bloquante que si l'écart
+   dépasse quatorze jours (A3b), ou si les travaux avaient déjà commencé (la
+   double condition du texte). Quand le début des travaux n'est pas renseigné, la
+   seconde condition est invérifiable et le finding passe en avertissement plutôt
+   que de trancher dans un sens ou dans l'autre. La fenêtre est ouverte sans
+   condition parce que le modèle ne sait décrire qu'un bénéficiaire personne
+   physique ; elle devra être refermée pour une personne morale, à qui le texte ne
+   l'offre pas. Quatre cas de test couvrent la correction dans
+   [`controle-dossier.test.ts`](../../src/lib/rules/controle-dossier.test.ts).
+2. ~~**Le délai de sept jours francs n'est contrôlé nulle part** (A5,
+   A6).~~ **Corrigé le 01/08/2026.** `controlerDossier` applique désormais le
+   délai aux seules fiches BAR-EN-101 et BAR-EN-102 : le jour d'acceptation du
+   devis et le jour de pose sont exclus du décompte, si bien que J+8 est le
+   premier démarrage conforme. Un écart plus court produit le finding bloquant
+   `chrono_delai_franc_isolation`. Deux cas paramétrés sur les deux fiches
+   couvrent J+5 refusé et J+8 accepté dans
+   [`controle-dossier.test.ts`](../../src/lib/rules/controle-dossier.test.ts).
 3. **Le non-cumul du chauffe-eau thermodynamique est absent du moteur**
    (A18, A19).
 4. **La mention ACERMI du seed `regles_metier` est plus stricte que la fiche**

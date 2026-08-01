@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 
 import { composerEstimation } from "@/lib/landing/estimation";
-import { estimationSchema, gesteAuM2 } from "@/lib/landing/estimation-refs";
+import {
+  estimationSchema,
+  gesteAuM2,
+  STATUT_PROFIL_ROSE,
+} from "@/lib/landing/estimation-refs";
 
 /**
  * Le simulateur public affiche des montants d'aide à des inconnus, sans compte
@@ -58,6 +62,10 @@ describe("estimation publique — profil rose (la règle qui protège)", () => {
     const r = composerEstimation(BAREME_M2, BAREME_FORFAIT, "rose", 95);
     expect(ligne(r, "maprimerenov").montant).toBeNull();
     expect(ligne(r, "maprimerenov").base).toContain("revenus supérieurs");
+    expect(r.statutEligibilite).toBe("mpr_non_eligible_cee_eligible");
+    expect(STATUT_PROFIL_ROSE).toBe(
+      "Non éligible MaPrimeRénov', éligible CEE.",
+    );
   });
 
   it("le violet, lui, obtient bien le montant du profil intermédiaire", () => {
@@ -69,6 +77,43 @@ describe("estimation publique — profil rose (la règle qui protège)", () => {
     const r = composerEstimation(BAREME_M2, BAREME_FORFAIT, "rose", 95);
     expect(ligne(r, "cee").montant).toBe(7 * 95);
   });
+
+  it.each(["bleu", "jaune", "violet"] as const)(
+    "le profil %s n'affiche pas le statut réservé au rose",
+    (profil) => {
+      expect(
+        composerEstimation(BAREME_M2, BAREME_FORFAIT, profil, 95)
+          .statutEligibilite,
+      ).toBeNull();
+    },
+  );
+});
+
+describe("estimation publique — profils et gestes MaPrimeRénov' 2026", () => {
+  const gestes = [
+    ["combles perdus", { par_m2: { grande_precarite: 25, precaire: 20, intermediaire: 15 } }, 100],
+    ["rampants de toiture", { par_m2: { grande_precarite: 25, precaire: 20, intermediaire: 15 } }, 100],
+    ["PAC air/eau", { forfait: { grande_precarite: 5000, precaire: 4000, intermediaire: 3000 } }, undefined],
+    ["chauffe-eau thermodynamique", { forfait: { grande_precarite: 1200, precaire: 800, intermediaire: 400 } }, undefined],
+    ["chauffage au bois", { forfait: { grande_precarite: 2500, precaire: 2000, intermediaire: 1000 } }, undefined],
+    ["chauffe-eau solaire", { forfait: { grande_precarite: 4000, precaire: 3000, intermediaire: 2000 }, plafond: 7000 }, undefined],
+  ] as const;
+
+  it.each(gestes)(
+    "%s : bleu, jaune et violet sont estimés ; rose reste non éligible MPR",
+    (_geste, bareme, surface) => {
+      for (const profil of ["bleu", "jaune", "violet"] as const) {
+        expect(
+          ligne(composerEstimation(null, bareme, profil, surface), "maprimerenov")
+            .montant,
+        ).not.toBeNull();
+      }
+
+      const rose = composerEstimation(null, bareme, "rose", surface);
+      expect(ligne(rose, "maprimerenov").montant).toBeNull();
+      expect(rose.statutEligibilite).toBe("mpr_non_eligible_cee_eligible");
+    },
+  );
 });
 
 describe("estimation publique — couples sans barème", () => {

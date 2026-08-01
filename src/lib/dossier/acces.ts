@@ -9,10 +9,9 @@ import type { DossierComplet } from "@/lib/dossier/get-dossier";
  * Règle : TOUT dossier nécessite un paiement ponctuel pour débloquer le
  * livrable. Il n'y a pas de dossier offert (le modèle « premier dossier
  * gratuit » a été abandonné) ; l'essai gratuit sans compte reste le produit
- * d'appel, mais il ne produit pas de pack téléchargeable. La réduction de
- * lancement (code DOSSIMO50) diminue le prix, elle ne débloque jamais un
- * livrable sans paiement confirmé. Un dossier est « débloqué » s'il a un
- * paiement `paye`.
+ * d'appel, mais il ne produit pas de pack téléchargeable. Une remise (parrainage,
+ * crédits) diminue le prix, elle ne débloque jamais un livrable sans paiement
+ * confirmé. Un dossier est « débloqué » s'il a un paiement `paye`.
  *
  * Utilisé côté serveur pour verrouiller à la fois les téléchargements PDF et le
  * détail affiché à l'écran (un simple bouton caché ne protège rien).

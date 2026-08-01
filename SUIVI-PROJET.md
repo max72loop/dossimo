@@ -167,8 +167,11 @@ tout envoi au LLM.
   table `pricing_tiers` (bornes en cents, inclusives) : Essentiel jusqu'à 999,99 € d'aide,
   Pivot de 1 000 à 5 000 €, Premium au-delà. Jamais en dur dans le code.
 - **Le premier dossier gratuit a été supprimé** le 14/07, remplacé par le code de lancement
-  **DOSSIMO50**, dont la source unique de vérité est `src/lib/lancement.ts` (prolongé au
-  31/07 après un incident de désynchronisation).
+  **DOSSIMO50**, lui-même **retiré du produit le 01/08** : coupon et code promo ne sont plus
+  créés, le champ code promo est fermé au Checkout, et toute la copie (landing, inscription,
+  CGV, paywall, image OG, prospection) est nettoyée. Le corps de campagne vivant en base, un
+  script SQL l'accompagne et un garde-fou bloque les envois qui porteraient encore le code.
+  **Plus aucune remise promotionnelle** : seuls subsistent le parrainage et les crédits.
 - **Parrainage actif** : code parrain, remise filleul de 30 € sur son premier dossier payant,
   crédits parrain cumulables expirant à 12 mois, grand-livre FIFO d'application des crédits.
 - **Garde-fou** : alerte si le prix dépasse 12 % de l'aide estimée.
@@ -269,9 +272,13 @@ ombre douce. Pas de tirets cadratins dans la copie.
 
 Quatre écarts entre les textes et `src/lib/rules/`, tous constatés en sourçant les
 assertions de [`docs/refus/motifs-assertions.md`](docs/refus/motifs-assertions.md),
-où chacun porte sa référence.
+où chacun porte sa référence. Le premier est corrigé.
 
-- [ ] **`chrono_offre_cee` refuse plus strictement que le texte.** L'article
+- [x] **`chrono_offre_cee` refuse plus strictement que le texte.** *Corrigé le
+      2026-08-01 : la fenêtre de quatorze jours est appliquée, un écart supérieur
+      ou des travaux déjà commencés restent bloquants, un début de travaux non
+      renseigné passe en avertissement. Quatre cas dans `controle-dossier.test.ts`.*
+      L'article
       R. 221-22 du code de l'énergie autorise la contractualisation du rôle actif et
       incitatif **jusqu'à quatorze jours après la date d'engagement** lorsque le
       bénéficiaire est une personne physique ou un syndicat de copropriétaires, à
@@ -300,11 +307,27 @@ où chacun porte sa référence.
       champ que la saisie ne collecte pas ou que personne ne remplit. À vérifier
       avant d'incriminer les dossiers, et à croiser avec le nettoyage des dossiers
       de test encore en base.
-- [ ] **Le délai de sept jours francs n'est contrôlé nulle part.** Les fiches
+
+      **Diagnostiqué le 2026-08-01, lecture seule sur les 7.** Le champ est bien
+      collecté, mais il est né avec la règle, dans le même commit (`da84210`, le
+      2026-07-22). Les 6 dossiers créés avant cette date n'ont même pas la clé
+      `offre_cee` dans leur `dates_json` : la question ne leur a jamais été posée.
+      Le 7e, créé le 2026-07-29, porte la clé à `null` : la question a été posée et
+      laissée vide. Ce n'est donc pas un champ manquant mais un champ facultatif
+      sans conséquence visible à la saisie, sur le point qui bloque le plus. Trois
+      correctifs en réponse : les deux champs de l'offre CEE ajoutés à
+      `ETAPES_DOSSIER` (ils en étaient absents, donc invisibles à
+      `etapesPourSaisie`), l'aide contextuelle réécrite avec la fenêtre de quatorze
+      jours, et une déclaration d'antériorité sans date qui dégrade le bloquant en
+      avertissement. **Aucun rattrapage possible sur les 6 dossiers legacy** : il
+      n'existe aucun chemin d'édition de `dates_json` après création.
+- [x] **Le délai de sept jours francs est contrôlé.** Les fiches
       BAR-EN-101 et BAR-EN-102 imposent, au § 3, un délai minimal de sept jours
       francs entre l'acceptation du devis et le début des travaux. C'est une
       condition de délivrance au même rang que la résistance thermique, et
-      `controlerDossier` dispose déjà des deux dates (A5, A6).
+      `controlerDossier` bloque désormais jusqu'à J+7 et valide à partir de J+8,
+      les deux jours bornes étant exclus du décompte (A5, A6). Corrigé et testé
+      le 01/08/2026 sur les deux fiches.
 - [ ] **Le non-cumul du chauffe-eau thermodynamique est absent du moteur.**
       `eligibilite_non_cumul_solaire` couvre la PAC air/eau et le solaire thermique,
       mais ignore le BAR-TH-148, que les fiches BAR-TH-171 et BAR-TH-148 excluent

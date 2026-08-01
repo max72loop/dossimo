@@ -84,21 +84,14 @@ describe("rendu des messages", () => {
     expect(corps).toContain("\n\n\nMax Landry, Dossimo");
   });
 
-  it("annonce l'offre quand elle est fournie, avec le prix et l'échéance reçus", () => {
-    const { corps } = messageEmail({
-      accroche: ACCROCHES.pac,
-      offre: { remise: "24,50 €", plein: "49 €", fin: "31 juillet 2026" },
-    });
-    expect(corps).toContain("24,50 € au lieu de 49 €");
-    expect(corps).toContain("DOSSIMO50");
-    expect(corps).toContain("jusqu'au 31 juillet 2026");
-  });
-
-  it("tait l'offre plutôt que d'inventer un prix quand elle est absente", () => {
-    // Offre expirée ou grille illisible : mieux vaut aucun tarif qu'un tarif faux.
-    const { corps } = messageEmail({ accroche: ACCROCHES.pac, offre: null });
+  it("n'annonce ni prix ni code promo : l'offre de lancement est retirée", () => {
+    // Le paragraphe d'offre a disparu le 01/08/2026 avec DOSSIMO50. Ce test est le
+    // garde-fou : un tarif recopié ici serait une deuxième source face à
+    // `pricing_tiers`, et un code promo une remise que Stripe ne connaît plus.
+    const { corps } = messageEmail({ accroche: ACCROCHES.pac });
     expect(corps).not.toContain("DOSSIMO50");
     expect(corps).not.toMatch(/au lieu de/);
+    expect(corps).not.toMatch(/\d+([.,]\d+)?\s*€/);
     // Le reste du message tient debout sans elle.
     expect(corps).toContain("Répondez-moi");
     expect(corps).toContain("STOP");
