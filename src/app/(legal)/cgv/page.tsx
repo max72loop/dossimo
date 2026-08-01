@@ -80,13 +80,7 @@ export default async function CgvPage() {
         </p>
       </LegalSection>
 
-      <LegalSection titre="4. Prix et offre de lancement">
-        <p>
-          Le code promotionnel DOSSIMO50 accorde une réduction de 50 % sur la
-          première transaction du Client. Il est utilisable jusqu&rsquo;au 31 juillet
-          2026 à 23 h 59, heure de Paris, puis expire automatiquement. Il ne peut
-          être échangé contre une somme d&rsquo;argent.
-        </p>
+      <LegalSection titre="4. Prix">
         <p>
           Les dossiers sont facturés selon un{" "}
           <strong>forfait fixe par dossier</strong>

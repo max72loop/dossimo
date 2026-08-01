@@ -167,8 +167,11 @@ tout envoi au LLM.
   table `pricing_tiers` (bornes en cents, inclusives) : Essentiel jusqu'à 999,99 € d'aide,
   Pivot de 1 000 à 5 000 €, Premium au-delà. Jamais en dur dans le code.
 - **Le premier dossier gratuit a été supprimé** le 14/07, remplacé par le code de lancement
-  **DOSSIMO50**, dont la source unique de vérité est `src/lib/lancement.ts` (prolongé au
-  31/07 après un incident de désynchronisation).
+  **DOSSIMO50**, lui-même **retiré du produit le 01/08** : coupon et code promo ne sont plus
+  créés, le champ code promo est fermé au Checkout, et toute la copie (landing, inscription,
+  CGV, paywall, image OG, prospection) est nettoyée. Le corps de campagne vivant en base, un
+  script SQL l'accompagne et un garde-fou bloque les envois qui porteraient encore le code.
+  **Plus aucune remise promotionnelle** : seuls subsistent le parrainage et les crédits.
 - **Parrainage actif** : code parrain, remise filleul de 30 € sur son premier dossier payant,
   crédits parrain cumulables expirant à 12 mois, grand-livre FIFO d'application des crédits.
 - **Garde-fou** : alerte si le prix dépasse 12 % de l'aide estimée.

@@ -1,7 +1,6 @@
 "use server";
 
 import { getDossier } from "@/lib/dossier/get-dossier";
-import { CODE_LANCEMENT, FIN_LANCEMENT_EPOCH, REMISE_LANCEMENT } from "@/lib/lancement";
 import { accesDossier } from "@/lib/dossier/acces";
 import { estimerPrime, raisonNonEstimable } from "@/lib/dossier/prime";
 import { getStripe, isStripeConfigured } from "@/lib/stripe/client";
@@ -41,28 +40,6 @@ function siteUrl(): string {
 // où le client paie (CLAUDE.md §2). Le texte vit dans `legal/mentions.ts`, avec
 // le pied de page et le cluster /refus, et n'est plus recopié ici.
 const MENTION_INDEPENDANCE = MENTION_INDEPENDANCE_WEB_ADRESSEE;
-
-async function garantirCodeLancement(stripe: ReturnType<typeof getStripe>) {
-  if (Math.floor(Date.now() / 1000) > FIN_LANCEMENT_EPOCH) return;
-  const existants = await stripe.promotionCodes.list({ code: CODE_LANCEMENT, active: true, limit: 1 });
-  const existant = existants.data[0];
-  if (existant?.expires_at === FIN_LANCEMENT_EPOCH) return;
-  if (existant) await stripe.promotionCodes.update(existant.id, { active: false });
-  // L'id change avec la date de fin : un coupon Stripe déjà créé garde son
-  // `redeem_by` d'origine (retrieve réussit, create est sauté), donc prolonger la
-  // fenêtre sans changer l'id laisserait le coupon expirer au 26 malgré un code
-  // promo au 31. Nouvel id => nouveau coupon avec le bon `redeem_by`.
-  const couponId = "dossimo-lancement-2026-50-31juillet";
-  try {
-    await stripe.coupons.retrieve(couponId);
-  } catch {
-    // `name` Stripe est plafonné à 40 caractères : le dépasser fait échouer la
-    // création du coupon (400), donc garantirCodeLancement() lèverait à chaque
-    // ouverture de paiement pendant toute la fenêtre de lancement.
-    await stripe.coupons.create({ id: couponId, percent_off: REMISE_LANCEMENT * 100, duration: "once", name: "Lancement Dossimo : 50% premier dossier", redeem_by: FIN_LANCEMENT_EPOCH });
-  }
-  await stripe.promotionCodes.create({ promotion: { type: "coupon", coupon: couponId }, code: CODE_LANCEMENT, expires_at: FIN_LANCEMENT_EPOCH, restrictions: { first_time_transaction: true } });
-}
 
 /**
  * Crée une session Stripe Checkout pour débloquer le pack d'un dossier (paiement
@@ -191,39 +168,18 @@ export async function creerSessionPaiementDossier(
 
   const { prenom, nom } = data.caracteristiques.beneficiaire;
 
-  // Code de lancement « 50 % premier dossier » : la restriction Stripe
-  // first_time_transaction ne mord PAS ici. La session ne porte pas de Customer
-  // stable (aucun `customer`/`customer_email`), donc Stripe crée un client neuf
-  // après chaque paiement : « aucun paiement antérieur » est toujours vrai et le
-  // coupon serait réutilisable sur chaque dossier de chaque artisan. On applique
-  // donc la règle sur NOTRE source de vérité : le champ code promo n'apparaît que
-  // pendant la fenêtre ET tant que l'artisan n'a réglé aucun dossier. Lecture en
-  // service-role pour un contrôle déterministe (indépendant de la RLS), et
-  // fail-closed : au moindre doute (erreur de lecture), pas de remise offerte.
-  const enLancement = Math.floor(Date.now() / 1000) <= FIN_LANCEMENT_EPOCH;
-  let promoAutorise = false;
-  if (enLancement) {
-    const { data: dejaPaye, error: errPaie } = await createAdminClient()
-      .from("paiements")
-      .select("id")
-      .eq("artisan_id", data.dossier.artisan_id ?? "")
-      .eq("statut", "paye")
-      .limit(1);
-    if (errPaie) {
-      console.error("[stripe] contrôle premier dossier:", errPaie.message);
-    } else {
-      promoAutorise = (dejaPaye?.length ?? 0) === 0;
-    }
-  }
-
   try {
     const stripe = getStripe();
-    await garantirCodeLancement(stripe);
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       // Force la page Checkout en français quel que soit le navigateur du client.
       locale: "fr",
-      allow_promotion_codes: promoAutorise,
+      // Aucun code promo saisissable sur la page Checkout. Les seules remises
+      // sont le parrainage et les crédits, appliqués côté serveur AVANT Stripe
+      // (`claimRefereeDiscount` ci-dessus) : le montant envoyé est déjà net. Une
+      // remise saisie chez Stripe s'appliquerait par-dessus, sans trace dans nos
+      // tables ni sur la facture émise depuis `paiements`.
+      allow_promotion_codes: false,
       // Case à cocher CGV obligatoire avant paiement. REQUIERT que l'URL des
       // CGV soit renseignée dans le Dashboard Stripe (Réglages > Informations
       // publiques > Conditions générales), EN TEST ET EN LIVE : sans elle,

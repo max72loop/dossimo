@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   corpsHtmlPourProspect,
   corpsPourProspect,
+  mentionPerimee,
   nettoyerPrenom,
   rendre,
   salutation,
@@ -27,6 +28,28 @@ describe("nettoyerPrenom — le garde-fou du « Bonjour SARL, »", () => {
     expect(salutation("jean")).toBe("Bonjour Jean,");
     expect(salutation("SAS Toiture du Nord")).toBe("Bonjour,");
     expect(salutation(null)).toBe("Bonjour,");
+  });
+});
+
+describe("mentionPerimee — une remise morte ne repart pas", () => {
+  it("repère le code de lancement, quelle que soit la casse", () => {
+    expect(mentionPerimee("le code DOSSIMO50, jusqu'au 31 juillet")).toBe("DOSSIMO50");
+    expect(mentionPerimee("code dossimo50")).toBe("DOSSIMO50");
+  });
+
+  it("laisse passer la copie à jour", () => {
+    expect(mentionPerimee("Un paiement fixe par dossier, jamais un pourcentage.")).toBeNull();
+  });
+
+  it("le gabarit HTML livré n'annonce plus l'offre retirée", () => {
+    // La jumelle en base est corrigée par la migration 0056 ; ici, on garde le
+    // gabarit du code sous surveillance : les deux copies doivent dire pareil.
+    const html = corpsHtmlPourProspect({
+      prenom: "jean",
+      source: "annuaire public des professionnels RGE",
+      unsubscribe_token: "tok-123",
+    });
+    expect(mentionPerimee(html)).toBeNull();
   });
 });
 

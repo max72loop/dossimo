@@ -81,6 +81,23 @@ export function lienPixel(token: string): string {
   return `${siteUrl()}/api/prospection/pixel?t=${token}`;
 }
 
+/**
+ * Mentions périmées qui ne doivent plus quitter la boîte.
+ *
+ * La copie du premier contact vit en base (`prospection_campagnes.corps`), donc un
+ * déploiement ne la corrige pas : le 01/08/2026, le retrait du code DOSSIMO50 des
+ * fichiers laissait la campagne automatique continuer à l'annoncer. Un e-mail qui
+ * promet une remise qu'aucun coupon Stripe n'honore est pire qu'un e-mail muet,
+ * d'où ce contrôle : on refuse d'envoyer et on le dit, plutôt que de promettre.
+ */
+const MENTIONS_PERIMEES = [/DOSSIMO50/i];
+
+/** La mention périmée trouvée dans un corps, ou `null` si le texte est sain. */
+export function mentionPerimee(texte: string): string | null {
+  const trouvee = MENTIONS_PERIMEES.find((motif) => motif.test(texte));
+  return trouvee ? trouvee.source : null;
+}
+
 export type VariablesMessage = Record<string, string>;
 
 /**
@@ -128,8 +145,10 @@ export function corpsPourProspect(
  *
  * La copie est la MÊME que celle du texte (`prospection_campagnes.corps`). Elle vit
  * ici en dur car la structure HTML n'est pas dérivable du texte brut. Corollaire à
- * ne pas oublier : toute modification de fond (offre, prix, date DOSSIMO50) doit
- * être répercutée AUX DEUX endroits, le corps en base ET ce gabarit. Les seules
+ * ne pas oublier : toute modification de fond (offre, prix, positionnement) doit
+ * être répercutée AUX DEUX endroits, le corps en base ET ce gabarit — le retrait de
+ * DOSSIMO50, le 01/08/2026, a demandé du SQL en plus de ce fichier
+ * (`supabase/migrations/0056_prospection_retrait_dossimo50.sql`). Les seules
  * parties variables par prospect sont les substitutions ci-dessous, dont le pixel
  * de suivi d'ouverture (`{{lien_pixel}}`), absent de la version texte.
  */
@@ -170,8 +189,8 @@ const GABARIT_HTML = `<!-- dossimo -->
     </td></tr></table>
     <p style="margin:0 0 24px;font-size:16px;line-height:1.62;">Vous restez ma&icirc;tre de votre client et de votre prime, &agrave; l'inverse d'un mandataire qui s'intercale et en capte une partie. Dossimo ne d&eacute;pose jamais &agrave; votre place et ne touche jamais la prime.</p>
     <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;margin:0 0 28px;"><tr><td style="background:#16202B;border-radius:10px;padding:20px 24px;">
-      <div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#9AA1A9;margin-bottom:8px;">Offre de lancement</div>
-      <div style="font-size:15px;line-height:1.55;color:#FBF9F3;">Votre premier dossier &agrave; <strong style="color:#fff;">moiti&eacute; prix</strong> avec le code <strong style="color:#fff;">DOSSIMO50</strong>, jusqu'au 31 juillet : <strong style="color:#fff;">24,50 &euro;</strong> au lieu de 49 &euro;. Un paiement, jamais un pourcentage sur la prime.</div>
+      <div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#9AA1A9;margin-bottom:8px;">Sans mandataire</div>
+      <div style="font-size:15px;line-height:1.55;color:#FBF9F3;">Un <strong style="color:#fff;">paiement fixe par dossier</strong>, connu avant de payer, jamais un pourcentage sur la prime. Vous gardez votre client et la prime enti&egrave;re.</div>
     </td></tr></table>
     <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;margin:0 0 8px;"><tr><td align="center">
       <table role="presentation" cellpadding="0" cellspacing="0"><tr><td style="border-radius:8px;background:#35507F;">

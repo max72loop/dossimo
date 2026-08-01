@@ -56,7 +56,7 @@ a ses propres contraintes dures, incompatibles avec les deux autres :
 État actuel : le gabarit de marque vit dans
 [`src/lib/prospection/message.ts`](src/lib/prospection/message.ts) (`GABARIT_HTML`) :
 bandeau encre + logo nuit (`/brand/dossimo-logo-nuit.png`), accent bleu, 3 étapes,
-encadré offre, bouton, pied légal.
+encadré « sans mandataire », bouton, pied légal.
 
 Deux dettes à connaître, non encore sous garde-fou :
 
@@ -65,7 +65,10 @@ Deux dettes à connaître, non encore sous garde-fou :
   c'est une troisième crème parasite, à réaligner sur `papier-fonce` (`#eae6dc`).
 - **Copie en double source** : le HTML (`GABARIT_HTML`) et le texte
   (`prospection_campagnes.corps`, en base). Toute modif de fond (offre, prix,
-  DOSSIMO50) se répercute **aux deux**.
+  positionnement) se répercute **aux deux** : un déploiement ne corrige que le
+  premier. Le retrait du code DOSSIMO50, le 01/08/2026, a demandé une migration
+  (`0056_prospection_retrait_dossimo50.sql`) en plus du code, et a laissé un
+  garde-fou qui bloque les envois quand les deux divergent.
 
 Pied légal **obligatoire** (LCEN art. 6 + lien de désinscription) via
 `mentionsLegales()` : c'est ce qui rend l'envoi licite, pas de la décoration.

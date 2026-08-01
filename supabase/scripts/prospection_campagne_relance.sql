@@ -20,10 +20,10 @@
 --     40/jour ;
 --   - campagne active et hors pause.
 --
--- ATTENTION COPIE : le `corps` en base annonce le code DOSSIMO50 « jusqu'au
--- 31 juillet ». Il reste juste jusqu'au 31/07. Pour tout envoi en août, il faut
--- réécrire cette phrase (et se souvenir que la date de fin du coupon vit AUSSI
--- dans src/lib/stripe/actions.ts : les deux ne se synchronisent pas).
+-- OBSOLÈTE SUR UN POINT (2026-08-01) : ce script laissait en base un `corps`
+-- annonçant le code DOSSIMO50. L'offre a été retirée du produit ; la copie est
+-- corrigée par la migration `0056_prospection_retrait_dossimo50.sql`. Les dates
+-- et le plafond ci-dessous, eux, restent valables.
 
 update public.prospection_campagnes
 set demarre_le    = date '2026-07-18',

@@ -19,6 +19,7 @@ import {
   corpsHtmlPourProspect,
   corpsPourProspect,
   lienDesinscription,
+  mentionPerimee,
 } from "@/lib/prospection/message";
 import { envoyerMessage } from "@/lib/prospection/envoi";
 
@@ -305,6 +306,17 @@ export async function preparerFile(
   if (!campagne) return { crees: 0, motif: "Aucune campagne active." };
   if (campagne.en_pause) return { crees: 0, motif: "Campagne en pause." };
 
+  // La copie en base annonce encore une offre retirée : on ne remplit pas la file
+  // avec. Corriger le corps de la campagne (script SQL) débloque la préparation.
+  const perimee = mentionPerimee(campagne.corps);
+  if (perimee) {
+    console.error(
+      `[prospection] copie périmée dans la campagne « ${campagne.nom} » : ${perimee}. ` +
+        `Aucun message préparé. Corriger prospection_campagnes.corps.`,
+    );
+    return { crees: 0, motif: `Copie périmée en base (${perimee}).` };
+  }
+
   const jour = jourParis(maintenant);
   const plafond = plafondDuJour({
     debut: campagne.demarre_le,
@@ -469,6 +481,31 @@ export async function envoyerProchain(
   };
   const prospect = message.prospects;
   if (!prospect) return { envoye: false, motif: "prospect introuvable" };
+
+  // Le corps est figé à la mise en file : un message préparé avant le retrait de
+  // l'offre la porte encore, même si la campagne a été corrigée depuis. On
+  // l'annule et on remet le prospect en jeu : `annule` est le seul statut que
+  // l'index d'unicité ignore, donc le seul qui laisse la prochaine préparation
+  // reprendre ce prospect avec la copie à jour. Pas de boucle possible : tant que
+  // la campagne est périmée, `preparerFile` ne crée plus rien.
+  const perimee = mentionPerimee(message.corps);
+  if (perimee) {
+    console.error(
+      `[prospection] message ${message.id} écarté : copie périmée (${perimee}).`,
+    );
+    const { error } = await supabase
+      .from("prospection_messages")
+      .update({ statut: "annule", erreur: `Copie périmée (${perimee}), message annulé avant envoi.` })
+      .eq("id", message.id);
+    if (error) console.error("[prospection] annulation copie périmée:", error.message);
+    const { error: errProspect } = await supabase
+      .from("prospects")
+      .update({ statut: "nouveau" })
+      .eq("id", message.prospect_id)
+      .eq("statut", "en_file");
+    if (errProspect) console.error("[prospection] remise en file:", errProspect.message);
+    return { envoye: false, motif: `copie périmée (${perimee})` };
+  }
 
   // Réservation optimiste : on ne repasse par ici que si personne n'a pris la ligne.
   const { data: reserve } = await supabase

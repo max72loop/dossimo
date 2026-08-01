@@ -133,9 +133,6 @@ export function SiteMenu({
             {connecte ? "Créer un dossier" : CTA_DEMO}
             <ArrowRight className="h-4 w-4" aria-hidden="true" />
           </Link>
-          <p className="mt-4 text-xs leading-relaxed text-ardoise">
-            Code DOSSIMO50 · 50 % sur le premier dossier
-          </p>
         </div>
       </div>
     </div>
