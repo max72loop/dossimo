@@ -13,13 +13,14 @@ import { VISITE } from "@/lib/landing/visite";
  * embarqué ») :
  *
  * 1. **Rien n'est chargé avant le clic.** L'`iframe` Supademo n'est montée qu'après
- *    une action explicite. Avant, on affiche une affiche locale — un faux cadre de
- *    navigateur dessiné avec les tokens, aucun actif à télécharger. Deux raisons :
- *    la vitrine ne paie pas le poids d'un lecteur tiers pour les visiteurs qui ne
- *    la regardent pas, et aucune requête ne part vers un tiers avant que le
- *    visiteur l'ait demandé. Le second point n'est pas cosmétique : Dossimo promet
- *    aux artisans un traitement sobre de leurs documents, une vitrine qui appelle
- *    un tiers dès le premier octet dirait le contraire.
+ *    une action explicite. Avant, on affiche une affiche locale : un faux cadre de
+ *    navigateur dessiné avec les tokens, et une capture de l'app servie depuis
+ *    `public/` (33 ko, chargée en différé), jamais la vignette de l'hébergeur.
+ *    Deux raisons : la vitrine ne paie pas le poids d'un lecteur tiers pour les
+ *    visiteurs qui ne la regardent pas, et aucune requête ne part vers un tiers
+ *    avant que le visiteur l'ait demandé. Le second point n'est pas cosmétique :
+ *    Dossimo promet aux artisans un traitement sobre de leurs documents, une
+ *    vitrine qui appelle un tiers dès le premier octet dirait le contraire.
  *
  * 2. **L'`iframe` n'est jamais le seul chemin.** Un lien direct reste offert : dans
  *    un navigateur qui bloque les cadres tiers, ou si Supademo tombe, la visite
@@ -67,10 +68,16 @@ export function VisiteGuidee({ className = "" }: { className?: string }) {
 }
 
 /**
- * Affiche locale : un faux cadre de navigateur qui reprend celui de la démo, pour
- * que le visiteur reconnaisse l'écran qu'il va voir. Dessinée avec les tokens, sans
- * capture à servir — une image de plus sur la vitrine coûterait ce que ce composant
- * cherche justement à éviter.
+ * Affiche locale : un faux cadre de navigateur dessiné avec les tokens, dans lequel
+ * est posée une vraie capture de l'app : l'écran des contrôles, celui qui porte la
+ * valeur du produit. Le visiteur voit donc ce qu'il va ouvrir avant de cliquer, ce
+ * qu'un aplat encre ne disait pas.
+ *
+ * La capture est servie depuis `public/` et dérivée par `scripts/visite-affiche.mjs`
+ * ([`lib/landing/visite.ts`](../../lib/landing/visite.ts) porte l'étape et le
+ * chemin) : c'est ce qui permet de montrer l'app sans appeler l'hébergeur avant le
+ * clic. Elle est **décorative** (`alt=""`) : le titre du bouton porte le sens, un
+ * lecteur d'écran n'a rien à gagner à se faire décrire une copie d'écran.
  */
 function Affiche({ onLancer }: { onLancer: () => void }) {
   return (
@@ -89,16 +96,37 @@ function Affiche({ onLancer }: { onLancer: () => void }) {
       <button
         type="button"
         onClick={onLancer}
-        className={`group flex flex-1 flex-col items-center justify-center gap-5 px-6 text-center transition-colors hover:bg-papier/[0.04] ${FOCUS_SOMBRE}`}
+        className={`group relative flex flex-1 flex-col justify-end overflow-hidden text-left ${FOCUS_SOMBRE}`}
       >
-        <span className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-papier text-encre transition-transform group-hover:scale-105 motion-reduce:transform-none">
-          <Play className="ml-0.5 h-6 w-6" fill="currentColor" aria-hidden="true" />
+        {/* eslint-disable-next-line @next/next/no-img-element -- capture statique de même origine, gardée hors du payload HTML (même parti que `Illustration`) */}
+        <img
+          src={VISITE.affiche.src}
+          alt=""
+          width={VISITE.affiche.largeur}
+          height={VISITE.affiche.hauteur}
+          loading="lazy"
+          decoding="async"
+          className="absolute inset-0 h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-[1.02] motion-reduce:transform-none"
+        />
+        {/* Voile encre : il rend le titre lisible sur une capture crème, et garde la
+            capture reconnaissable en haut. Sans lui, le texte blanc disparaît. */}
+        <span
+          aria-hidden="true"
+          className="absolute inset-0 bg-gradient-to-t from-encre via-encre/60 to-encre/15"
+        />
+        <span
+          aria-hidden="true"
+          className="absolute inset-0 flex items-center justify-center"
+        >
+          <span className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-papier text-encre shadow-lg transition-transform group-hover:scale-105 motion-reduce:transform-none sm:h-16 sm:w-16">
+            <Play className="ml-0.5 h-5 w-5 sm:h-6 sm:w-6" fill="currentColor" />
+          </span>
         </span>
-        <span className="max-w-md">
-          <span className="block font-serif text-xl font-semibold text-blanc-casse sm:text-2xl">
+        <span className="relative max-w-xl px-5 pb-5 sm:px-8 sm:pb-7">
+          <span className="block font-serif text-lg font-semibold text-blanc-casse sm:text-2xl">
             {VISITE.titre}
           </span>
-          <span className="mt-2 block text-sm text-papier/70">
+          <span className="mt-1 block text-xs text-papier/70 sm:mt-2 sm:text-sm">
             Lancer la visite guidée, sans compte et sans inscription.
           </span>
         </span>

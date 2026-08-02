@@ -265,13 +265,19 @@ Quatre règles, valables pour tout embarquement futur (vidéo, calendrier, chat)
   celui-ci : c'est la confusion qui a mis la visite en ligne cassée le 2026-07-30.
 
 - **Rien avant le clic.** Le tiers n'est monté qu'après une action explicite. Avant,
-  on affiche une **affiche locale** dessinée avec les tokens — ici un faux cadre de
-  navigateur, pas une capture à servir. La vitrine ne fait donc porter le poids d'un
-  lecteur tiers qu'à ceux qui le demandent, et aucune requête ne part vers un tiers
-  sans geste du visiteur. Ce second point tient à la promesse produit : Dossimo dit
-  aux artisans qu'il traite leurs documents sobrement, une vitrine qui appelle un
-  tiers au premier octet dirait l'inverse. Un test verrouille l'absence d'`iframe`
-  au rendu ([`visite-guidee.test.tsx`](src/components/landing/visite-guidee.test.tsx)).
+  on affiche une **affiche locale** : le cadre est dessiné avec les tokens (faux
+  cadre de navigateur), et la capture qu'il contient est **servie depuis
+  `public/`**, jamais depuis l'hébergeur. La vitrine ne fait donc porter le poids
+  d'un lecteur tiers qu'à ceux qui le demandent, et aucune requête ne part vers un
+  tiers sans geste du visiteur. Ce second point tient à la promesse produit :
+  Dossimo dit aux artisans qu'il traite leurs documents sobrement, une vitrine qui
+  appelle un tiers au premier octet dirait l'inverse. Une capture d'affiche n'est
+  **jamais déposée à la main** : elle est dérivée de la démo par
+  [`scripts/visite-affiche.mjs`](scripts/visite-affiche.mjs), bandeau applicatif
+  retiré (il porte le nom de l'entreprise connectée, cf. la décision du 2026-07-22
+  sur les données nominatives). Deux tests verrouillent l'ensemble : absence
+  d'`iframe` au rendu, et affiche servie par nous avec le fichier présent
+  ([`visite-guidee.test.tsx`](src/components/landing/visite-guidee.test.tsx)).
 - **L'`iframe` n'est jamais le seul chemin.** Un lien direct l'accompagne toujours :
   navigateur qui bloque les cadres tiers, tiers en panne, lecteur d'écran en
   difficulté — le contenu reste atteignable.
@@ -663,6 +669,7 @@ Deux lignes par décision, datées, pour ne pas re-débattre le passé.
 
 | Date | Décision | Pourquoi |
 |---|---|---|
+| 2026-08-02 | **Affiche de la visite guidée** : l'aplat encre au bouton lecture devient une **vraie capture de l'app** (l'écran des contrôles), servie depuis `public/visite/apercu.webp` (33 ko, `loading="lazy"`), sous un voile encre dégradé (`from-encre via-encre/60 to-encre/15`) qui rend le titre lisible sans effacer l'écran. Titre et sous-titre passent en bas à gauche, le bouton lecture reste centré, l'image glisse en `scale-[1.02]` au survol (`motion-reduce` respecté). La capture est **dérivée**, jamais déposée à la main : [`scripts/visite-affiche.mjs`](scripts/visite-affiche.mjs) la tire de la démo au numéro d'étape écrit dans `VISITE.affiche`, et retire le bandeau applicatif (nom de l'entreprise connectée) et la barre de défilement. Le motif §5 « Rien avant le clic » s'ouvre donc aux captures **servies par nous**, l'interdit restant l'appel au tiers. Aucun nouveau token. | L'affiche dessinée ne montrait rien : un rectangle encre uni derrière un bouton lecture, qui ne donnait aucune raison de cliquer et laissait croire à une vidéo générique. La règle qu'elle appliquait (« pas de capture à servir ») visait le poids et l'appel au tiers, pas la capture en soi : 33 ko en différé ne coûtent rien et ne partent pas chez l'hébergeur. L'écran retenu est celui des contrôles anti-refus, pas la page d'accueil (l'étape 1 de la démo montre… la vitrine elle-même) ni le récapitulatif (il porte encore le coupon DOSSIMO50, retiré le 2026-08-01). Le bandeau applicatif est coupé parce qu'il affiche le nom de l'entreprise : la vitrine est sans donnée nominative depuis le 2026-07-22, une copie d'écran ne fait pas exception. |
 | 2026-08-01 | **Guides, famille « Actualités »** : `GUIDE_CATEGORIES` gagne une quatrième famille, placée **en tête** du hub `/guides`, pour les pages adossées à une échéance datée. Même gabarit `SeoGuide` que les guides de méthode (checklist, erreurs, exemple, FAQ, sources, CTA `/demo`), aucun composant ni token nouveau. | Une actualité a une date de péremption que les guides de méthode n'ont pas : reléguée en bas de page, elle arrive au lecteur après l'échéance qu'elle annonce. Passer par la donnée (`guides.ts`) plutôt que par une route dédiée conserve le maillage, le sitemap, le menu et le JSON-LD sans une ligne de plus. |
 | 2026-08-01 | **Essai public `/demo` aligné sur le motif § Dépôt de fichiers.** `capture` cesse de coiffer l'unique chemin d'envoi et repasse derrière `useTactile` avec un second `input` sans `capture` (accepte PDF **et** image) ; l'attente prend la place des boutons au lieu de s'ajouter dessous, et nomme le fichier lu ; l'erreur remonte au-dessus des boutons en `role="alert"` ; la carte est recentrée (`scrollIntoView` `nearest`) à chaque changement d'état ; le CTA final passe de `h-12` à `min-h-12 w-full` ; le lien « Retour à l'accueil » et les liens de la carte atteignent `min-h-11` ; les `input` `sr-only` gagnent `aria-label` + `tabIndex={-1}` et se vident après lecture. Aucun nouveau token. | Revue en viewport 390 px. Trois défauts tenaient au même endroit : sur un téléphone, `capture` rendait **inatteignable** la photo du devis déjà prise (seul chemin restant : un `accept` limité au PDF), le bandeau d'attente tombait sous deux boutons de 112 px donc hors écran juste après le retour de l'appareil photo, et le libellé du CTA passait à deux lignes dans une hauteur figée. Le motif du 2026-07-30 réglait déjà les trois : il n'avait été appliqué qu'aux trois écrans authentifiés, alors que `/demo` est la première surface que voit un artisan (AGENTS.md : « une bonne idée appliquée à une seule table »). |
 | 2026-08-01 | **Contrôle des sept jours francs** : pour BAR-EN-101 et BAR-EN-102, le rapport nomme explicitement le délai entre l'acceptation du devis et la pose de l'isolant, en `bloquant` s'il n'est pas respecté et en `ok` s'il l'est. Aucun nouveau token ni composant. | Une chronologie simplement « devis antérieur aux travaux » masque une condition plus stricte des fiches. Le finding doit dire le nombre de jours constaté et la première date conforme, afin que l'artisan puisse comprendre le refus sans interpréter lui-même le calcul en jours francs. |

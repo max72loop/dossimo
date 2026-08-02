@@ -37,4 +37,23 @@ export const VISITE = {
   /** Rapport largeur/hauteur des captures de la démo (1920 × 945). */
   ratio: "1920 / 945",
   hebergeur: "Supademo",
+  /**
+   * Affiche montrée avant le clic : une **vraie capture de l'app**, servie
+   * depuis `public/` et non depuis l'hébergeur, pour que la règle « rien du
+   * tiers avant le clic » (DESIGN.md §5) tienne toujours.
+   *
+   * `etape` est le numéro d'étape de la démo dont la capture est reprise. Le
+   * fichier n'est pas déposé à la main : `node scripts/visite-affiche.mjs` le
+   * dérive de la démo, bandeau applicatif retiré (il porte le nom de
+   * l'entreprise connectée, et la vitrine est sans donnée nominative). **À
+   * relancer chaque fois que la démo est remplacée**, sinon l'affiche promet un
+   * écran que la visite ne montre plus. Les dimensions sont celles du fichier
+   * produit : elles évitent que le navigateur réserve une hauteur fausse.
+   */
+  affiche: {
+    src: "/visite/apercu.webp",
+    etape: 19,
+    largeur: 1600,
+    hauteur: 746,
+  },
 } as const;
