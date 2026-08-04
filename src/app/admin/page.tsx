@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { Send, BarChart3, Mails, Database, Compass, Scale, FileText, Filter, type LucideIcon } from "lucide-react";
+import { Send, BarChart3, Mails, Database, Compass, Scale, FileText, Filter, Contact, type LucideIcon } from "lucide-react";
 
 import { getAdminEmail } from "@/lib/auth/is-admin";
 
@@ -28,9 +28,15 @@ type Section = {
 /** Le sprint d'abord : c'est la console du moment (plan de lancement v3). */
 const SPRINT: Section[] = [
   {
+    href: "/admin/contacts",
+    titre: "Contacts",
+    aide: "Le fichier et son historique : qui a été appelé, mailé, whatsappé, et qui a répondu par quoi.",
+    icone: Contact,
+  },
+  {
     href: "/admin/sprint",
-    titre: "Sprint prospection",
-    aide: "Le lot du jour, à envoyer à la main. Premier contact, relance J+5, nurturing mensuel.",
+    titre: "Sprint prospection (ancien)",
+    aide: "Le lot du jour de l'A/B abandonné. Lit encore prospects_dossimo, remplacé par « Contacts ».",
     icone: Send,
   },
   {

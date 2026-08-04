@@ -446,12 +446,12 @@ function Pricing({ grille }: { grille: GrilleAffichee | null }) {
 }
 
 const FAQ_ITEMS = [
-  { q: "Combien de temps ça me prend ?", a: "Le temps d’envoyer votre devis et de relire les informations recopiées, soit quelques minutes. Dossimo se charge de vérifier les mentions, de comparer les pièces et d’assembler le pack." },
-  { q: "Qu’est-ce que je reçois exactement ?", a: "Un récapitulatif client prérempli, la checklist des pièces à fournir et un rapport de contrôle qui liste les points à corriger avant le dépôt." },
-  { q: "Dossimo dépose-t-il le dossier à ma place ?", a: "Non. Dossimo prépare et contrôle le pack. Vous et votre client effectuez le dépôt et conservez la maîtrise de la relation comme de la prime." },
-  { q: "En quoi est-ce différent d’un mandataire ?", a: "Dossimo facture un montant fixe par dossier, ne s’intercale pas avec votre client et ne touche jamais un pourcentage de la prime." },
-  { q: "Quels dispositifs sont couverts ?", a: "MaPrimeRénov’ et les CEE, avec leurs fiches d’opération et leurs mentions obligatoires." },
-  { q: "Que deviennent mon devis et ma facture ?", a: "Ils sont analysés pour extraire les informations utiles et contrôler la conformité. Dossimo ne les vend pas, ne les utilise pas pour entraîner un modèle et ne modifie jamais vos documents." },
+  { q: "Combien de temps ça me prend ?", a: "Deux moments vous demandent du temps : envoyer le devis, en PDF ou en photo depuis le chantier, puis relire les informations recopiées et corriger ce que le rapport signale. Entre les deux, la recopie, le contrôle des mentions, la comparaison avec la facture et l’assemblage du pack se font sans vous." },
+  { q: "Qu’est-ce que je reçois exactement ?", a: "Un récapitulatif client prérempli à partir de votre devis, la checklist des pièces à réunir, et un rapport de contrôle qui indique pour chaque point à corriger la pièce concernée, l’écart relevé et la correction attendue. Le pack d’exemple montre le rendu réel, avant tout paiement." },
+  { q: "Dossimo dépose-t-il le dossier à ma place ?", a: "Non, et c’est un choix. Le dépôt est réservé aux mandataires habilités, un rôle que Dossimo n’endosse pas. Dossimo prépare et contrôle le pack, vous et votre client le déposez, et vous gardez la maîtrise de la relation comme de la prime. Dossimo est un service indépendant d’aide à la préparation de dossier, non affilié à l’Anah ni à France Rénov’." },
+  { q: "En quoi est-ce différent d’un mandataire ?", a: "Un mandataire prend la main sur le dossier, s’intercale dans la relation avec votre client et peut se rémunérer sur la prime. Dossimo facture un forfait fixe par dossier, connu avant le paiement, ne s’intercale pas et ne perçoit aucun pourcentage : la prime revient intégralement à votre client." },
+  { q: "Quels dispositifs sont couverts ?", a: "MaPrimeRénov’ et les CEE. Côté travaux : isolation, pompe à chaleur air/eau et eau/eau, chauffe-eau thermodynamique ou solaire, chauffage bois. Chaque geste a ses propres mentions obligatoires et sa fiche d’opération, et Dossimo applique le contrôle correspondant." },
+  { q: "Que deviennent mon devis et ma facture ?", a: "Ils servent uniquement à préparer et contrôler votre dossier. Une copie du devis, de la facture ou de l’avis d’imposition est transmise à notre prestataire d’analyse pour en relever les seules informations utiles au contrôle ; les pièces d’identité et les RIB n’y sont jamais soumis. Vos documents ne sont ni revendus ni modifiés, et le détail figure dans la politique de confidentialité." },
 ] as const;
 
 function Faq() {

@@ -1,12 +1,16 @@
 # Envoi d'e-mails avec Google Apps Script
 
 Cette intégration envoie les e-mails depuis le compte Google qui déploie le
-script, sans SMTP, mot de passe d'application ni fournisseur externe. Un seul
-script, `webhook.gs`, sert deux usages :
+script, sans SMTP, mot de passe d'application ni fournisseur externe. **Tout
+l'e-mail sortant de Dossimo passe par ici**, à la seule exception des messages
+d'authentification, expédiés par Supabase Auth. Un seul script, `webhook.gs`,
+sert trois usages :
 
 - `landing_lead` : notification interne + confirmation au prospect qui laisse ses
   coordonnées sur la landing ;
-- `prospection_send` : un message de prospection, envoyé à un artisan.
+- `prospection_send` : un message de prospection, envoyé à un artisan ;
+- `refus_demande` : notification interne + confirmation à l'artisan qui dépose
+  une demande de diagnostic sur `/refus`.
 
 Un projet Apps Script n'a qu'un seul `doPost`. Ne déployez donc **que**
 `webhook.gs` : il route selon le champ `type`.
@@ -31,6 +35,46 @@ Un projet Apps Script n'a qu'un seul `doPost`. Ne déployez donc **que**
 
 Ne lancez pas `doPost` avec le bouton **Exécuter** de l'éditeur : ce bouton
 n'envoie pas de requête HTTP.
+
+## Après CHAQUE modification de `webhook.gs`
+
+Coller le fichier ne suffit pas. Il faut **Déployer > Gérer les déploiements >
+crayon > Version : Nouvelle version > Déployer**, sinon l'URL `/exec` continue de
+servir l'ancien code, indéfiniment.
+
+C'est le piège central de cette intégration : le dépôt et le déploiement en ligne
+peuvent diverger sans qu'aucun test, aucun build et aucun écran ne s'en aperçoive.
+Un `type` ajouté ici et pas là-bas reçoit `unsupported_type` ; l'application
+journalise l'erreur mais répond quand même « votre demande est bien arrivée »,
+parce que l'envoi d'e-mail n'est jamais bloquant (c'est voulu : on ne perd pas une
+demande à cause du courrier). Le message ne part simplement jamais.
+
+## Vérifier ce qui est réellement en ligne
+
+```bash
+# Valeurs à prendre dans Vercel > Settings > Environment Variables, jamais sur disque.
+GOOGLE_APPS_SCRIPT_WEBHOOK_URL=... GOOGLE_APPS_SCRIPT_WEBHOOK_SECRET=... \
+  node integrations/google-apps-script/verifier-deploiement.mjs
+```
+
+La sonde valide l'URL et le secret sans envoyer un seul e-mail. Elle ne dit pas
+quels `type` sont déployés : un vieux script répond pareil sur un type inconnu.
+Pour trancher sur un handler, il faut un envoi réel :
+
+```bash
+node integrations/google-apps-script/verifier-deploiement.mjs --envoyer max@dossimo.pro
+```
+
+Deux e-mails partent alors pour de bon. `ok: true` = handler en ligne,
+`unsupported_type` = le déploiement est en retard sur le dépôt.
+
+## Le secret manque en Preview
+
+`GOOGLE_APPS_SCRIPT_WEBHOOK_SECRET` n'est défini que sur l'environnement
+Production. Le code exige les deux variables : sur un déploiement de preview, les
+formulaires enregistrent bien en base mais n'envoient aucun e-mail (avertissement
+en journal). Tester un formulaire sur une preview ne prouve donc rien sur les
+e-mails.
 
 ## Garde-fous
 

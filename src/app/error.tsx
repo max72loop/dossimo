@@ -5,6 +5,7 @@ import Link from "next/link";
 
 import { Logo } from "@/components/ui/logo";
 import { BTN_PRINCIPAL, BTN_SECONDAIRE } from "@/components/ui/boutons";
+import { editeur } from "@/lib/legal/editeur";
 
 /**
  * Filet d'erreur de l'application (rendu DANS le layout racine : polices, tokens
@@ -29,6 +30,23 @@ export default function AppError({
     console.error("[app] erreur non gérée:", error);
   }, [error]);
 
+  // « Écrivez-nous » sans adresse est une invitation sans porte. La référence
+  // technique part dans le corps du message : c'est la seule chose qui permet de
+  // retrouver l'incident dans les journaux, et personne ne la recopie à la main.
+  const corpsMail = [
+    "Bonjour,",
+    "",
+    "Une erreur est survenue sur Dossimo.",
+    error.digest ? `Référence : ${error.digest}` : null,
+    "",
+    "Ce que je faisais à ce moment-là : ",
+  ]
+    .filter((l) => l !== null)
+    .join("\n");
+  const mailtoErreur = `mailto:${editeur.emailContact}?subject=${encodeURIComponent(
+    "Erreur sur Dossimo",
+  )}&body=${encodeURIComponent(corpsMail)}`;
+
   return (
     <div className="flex min-h-screen flex-col bg-papier">
       <header className="border-b border-filigrane">
@@ -47,8 +65,11 @@ export default function AppError({
           </h1>
           <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-ardoise">
             Le problème vient de chez nous, pas de vous. Rien n&rsquo;est perdu :
-            votre dossier est enregistré. Réessayez, et si l&rsquo;écran revient,
-            écrivez-nous, on regarde tout de suite.
+            votre dossier est enregistré. Réessayez, et si l&rsquo;écran revient,{" "}
+            <a href={mailtoErreur} className="text-tampon underline underline-offset-4">
+              écrivez-nous
+            </a>
+            , on regarde tout de suite.
           </p>
 
           {error.digest && (

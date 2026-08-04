@@ -57,6 +57,61 @@ export type TypeEvenementParcours =
 /** Pourquoi une lecture de devis a échoué. Un service tombé n'est pas un document illisible. */
 export type MotifEchecLecture = "non_configure" | "illisible" | "service_indisponible";
 
+// Refonte de la prospection (migrations 0057 / 0058). Côté base, des
+// `text + check` ; ici des unions. Les deux doivent rester en miroir.
+
+/** Canal d'un échange. WhatsApp reste un canal même si le compte est bloqué : l'historique existe. */
+export type CanalEchange = "email" | "whatsapp" | "telephone" | "sms" | "courrier";
+
+/** Sens de l'échange. C'est lui qui rend « qui répond par quel canal » calculable. */
+export type SensEchange = "sortant" | "entrant";
+
+export type NatureEchange =
+  // Sortant
+  | "premier"
+  | "relance"
+  | "nurturing"
+  | "appel"
+  // Entrant ou signal
+  | "ouverture"
+  | "clic"
+  | "reponse"
+  | "stop"
+  | "bounce"
+  | "rdv"
+  | "note";
+
+/**
+ * Comment l'échange s'est terminé. `echec_technique` vaut contact et jamais
+ * contact à refaire : l'envoi a pu partir malgré l'erreur (cf. migration 0050).
+ */
+export type IssueEchange =
+  | "sans_reponse"
+  | "repondeur"
+  | "faux_numero"
+  | "mauvaise_adresse"
+  | "interesse"
+  | "refus"
+  | "client"
+  | "echec_technique";
+
+/**
+ * État commercial d'un contact. Écrit UNIQUEMENT par le trigger de la 0057
+ * depuis les échanges, jamais saisi : c'est un fait observé, pas une opinion.
+ * « à relancer » n'en fait pas partie, c'est une colonne calculée de
+ * `contacts_synthese` parce qu'elle dépend du temps écoulé.
+ */
+export type EtatContact =
+  | "jamais_contacte"
+  | "contacte"
+  | "en_discussion"
+  | "client"
+  | "refus"
+  | "injoignable";
+
+/** Sur quoi porte une opposition. Le SIREN survit à un changement d'adresse. */
+export type TypeOpposition = "email" | "telephone" | "siren";
+
 // Cluster « refus » (migrations 0053 / 0054). Côté base, des `text + check` ;
 // ici, des unions. Les deux doivent rester en miroir.
 
@@ -251,6 +306,188 @@ export interface Database {
           contact_auto_statut?: "envoye" | "echec" | null;
         };
         Update: Partial<Database["public"]["Tables"]["prospects_dossimo"]["Insert"]>;
+        Relationships: [];
+      };
+
+      /**
+       * Refonte de la prospection (migration 0057). Remplace `prospects_dossimo`
+       * ET `prospects`, qui décrivaient les mêmes 2 990 artisans sous deux clés.
+       * Clé métier : le SIREN, parce que c'est la seule partagée avec l'annuaire
+       * RGE, donc la seule qui permette de répondre à « y a-t-il des nouveaux ».
+       *
+       * `etat`, `telephone`, `telephone_mobile`, `emails`, `email_principal` et
+       * `updated_at` sont tenus par des TRIGGERS : ne jamais les écrire à la
+       * main, la base les recalculera par-dessus.
+       */
+      contacts: {
+        Row: {
+          id: string;
+          siren: string;
+          /** Ancienne clé de `prospects_dossimo`, gardée pour la traçabilité. Jamais une clé ici. */
+          place_id: string | null;
+          denomination: string | null;
+          nom: string | null;
+          address: string | null;
+          code_postal: string | null;
+          city: string | null;
+          /** Normalisé par trigger : 10 chiffres, ou null si inexploitable. */
+          telephone: string | null;
+          /** Dérivé du téléphone par trigger : 06/07, donc joignable WhatsApp ou SMS. */
+          telephone_mobile: boolean | null;
+          emails: string[] | null;
+          email_principal: string | null;
+          email_valide: boolean | null;
+          website: string | null;
+          rge_domaines: string[] | null;
+          tranche_effectif: string | null;
+          score: number | null;
+          /** RGPD art. 14 : phrase reprise mot pour mot en pied de message. */
+          source: string;
+          premiere_vue_le: string;
+          derniere_vue_le: string;
+          sorti_du_rge_le: string | null;
+          etat: EtatContact;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          siren: string;
+          place_id?: string | null;
+          denomination?: string | null;
+          nom?: string | null;
+          address?: string | null;
+          code_postal?: string | null;
+          city?: string | null;
+          telephone?: string | null;
+          telephone_mobile?: boolean | null;
+          emails?: string[] | null;
+          email_principal?: string | null;
+          email_valide?: boolean | null;
+          website?: string | null;
+          rge_domaines?: string[] | null;
+          tranche_effectif?: string | null;
+          score?: number | null;
+          source: string;
+          premiere_vue_le: string;
+          derniere_vue_le: string;
+          sorti_du_rge_le?: string | null;
+          etat?: EtatContact;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["contacts"]["Insert"]>;
+        Relationships: [];
+      };
+
+      /**
+       * Journal des échanges, une ligne par échange et dans les DEUX SENS
+       * (migration 0057). Remplace les colonnes plates `date_envoi`,
+       * `date_relance`, `date_nurturing`, `contact_auto_le` et `reponse`, qui ne
+       * savaient représenter ni un second appel, ni le canal d'une réponse.
+       */
+      contact_echanges: {
+        Row: {
+          id: string;
+          contact_id: string;
+          canal: CanalEchange;
+          sens: SensEchange;
+          nature: NatureEchange;
+          issue: IssueEchange | null;
+          survenu_le: string;
+          /** true = la machine l'a fait ; false = un humain le déclare. */
+          automatique: boolean;
+          campagne_id: string | null;
+          message_id: string | null;
+          commentaire: string | null;
+          payload: Json;
+        };
+        Insert: {
+          id?: string;
+          contact_id: string;
+          canal: CanalEchange;
+          sens: SensEchange;
+          nature: NatureEchange;
+          issue?: IssueEchange | null;
+          survenu_le?: string;
+          automatique?: boolean;
+          campagne_id?: string | null;
+          message_id?: string | null;
+          commentaire?: string | null;
+          payload?: Json;
+        };
+        Update: Partial<Database["public"]["Tables"]["contact_echanges"]["Insert"]>;
+        Relationships: [
+          {
+            foreignKeyName: "contact_echanges_contact_id_fkey";
+            columns: ["contact_id"];
+            referencedRelation: "contacts";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      /**
+       * Preuve durable d'une opposition (migration 0057). Ne se purge JAMAIS et
+       * survit à la suppression du contact : c'est le seul rempart contre une
+       * re-sollicitation au prochain import. Généralise `prospection_suppressions`
+       * (e-mail seul) au téléphone et au SIREN, pour qu'un STOP reçu par appel
+       * laisse aussi une trace.
+       */
+      oppositions: {
+        Row: {
+          type: TypeOpposition;
+          valeur: string;
+          motif: string;
+          created_at: string;
+        };
+        Insert: {
+          type: TypeOpposition;
+          valeur: string;
+          motif: string;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["oppositions"]["Insert"]>;
+        Relationships: [];
+      };
+
+      /**
+       * Table de PRÉPARATION de l'annuaire RGE (migration 0057), vidée puis
+       * remplie à chaque extraction. Ne jamais y lire un état : la vérité est
+       * dans `contacts` une fois `rge_rapprocher()` appelée.
+       */
+      rge_import: {
+        Row: {
+          siren: string;
+          denomination: string | null;
+          nom: string | null;
+          address: string | null;
+          code_postal: string | null;
+          city: string | null;
+          telephone: string | null;
+          emails: string[] | null;
+          website: string | null;
+          rge_domaines: string[] | null;
+          tranche_effectif: string | null;
+          source: string | null;
+          importe_le: string;
+        };
+        Insert: {
+          siren: string;
+          denomination?: string | null;
+          nom?: string | null;
+          address?: string | null;
+          code_postal?: string | null;
+          city?: string | null;
+          telephone?: string | null;
+          emails?: string[] | null;
+          website?: string | null;
+          rge_domaines?: string[] | null;
+          tranche_effectif?: string | null;
+          source?: string | null;
+          importe_le?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["rge_import"]["Insert"]>;
         Relationships: [];
       };
       dossiers: {
@@ -985,11 +1222,69 @@ export interface Database {
         Relationships: [];
       };
     };
-    Views: Record<string, never>;
+    Views: {
+      /**
+       * Une ligne par contact, avec son historique agrégé (migration 0057).
+       * `a_relancer` et `jours_depuis_contact` sont calculés À LA LECTURE : ils
+       * dépendent du jour où on regarde, donc ils ne peuvent pas être stockés
+       * sans être périmés le lendemain.
+       */
+      contacts_synthese: {
+        Row: Database["public"]["Tables"]["contacts"]["Row"] & {
+          dernier_contact_le: string | null;
+          nb_sollicitations: number;
+          canaux_utilises: CanalEchange[] | null;
+          repondu_le: string | null;
+          /** Canal sur lequel le contact a répondu, pas celui sur lequel on l'a sollicité. */
+          canal_de_reponse: CanalEchange | null;
+          joignable_whatsapp: boolean | null;
+          joignable_email: boolean | null;
+          /** Canal du dernier contact sortant : celui qu'on ne veut pas répéter. */
+          dernier_canal: CanalEchange | null;
+          nb_reponses: number;
+          nb_appels: number;
+          a_relancer: boolean | null;
+          jours_depuis_contact: number | null;
+        };
+        Relationships: [];
+      };
+      /**
+       * Performance par canal (migration 0057). `taux_reponse` est NULL tant
+       * qu'aucun envoi n'est parti : on n'affiche pas un pourcentage calculé sur
+       * rien, même règle que `prixPack` qui rend « — » plutôt qu'un chiffre inventé.
+       */
+      stats_canal: {
+        Row: {
+          canal: CanalEchange;
+          touches: number;
+          repondeurs: number;
+          stops: number;
+          premiers: number;
+          relances: number;
+          ouvreurs: number;
+          taux_reponse: number | null;
+        };
+        Relationships: [];
+      };
+    };
     Functions: {
       prospection_desinscrire: {
         Args: { p_email: string; p_motif: string };
         Returns: undefined;
+      };
+      /**
+       * Rapproche `rge_import` et `contacts` sur le SIREN. Lève si `rge_import`
+       * est vide : un import vide marquerait les 3 293 contacts « sortis du RGE »
+       * d'un coup.
+       */
+      rge_rapprocher: {
+        Args: { p_jour?: string | null };
+        Returns: { nouveaux: number; revus: number; disparus: number }[];
+      };
+      /** Recalcul de masse de `contacts.etat`. Rattrapage, les triggers font le reste. */
+      contacts_rafraichir_etats: {
+        Args: Record<string, never>;
+        Returns: number;
       };
       consume_auth_rate_limit: {
         Args: {
