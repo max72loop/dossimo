@@ -75,12 +75,42 @@ local, et deux défauts dormaient dans le seul fichier `0013` (§ 5).
 | Facturation | `factures`, `facture_compteurs`, `paiements` | 0001, 0014 |
 | Dépôt bénéficiaire | `liens_depot`, `reminder_schedules`, `reminder_logs` | 0017, 0026-0029, 0041 |
 | Devis | `quote_gestures`, `quote_gesture_fields`, `quote_templates`, `generated_quotes`, `user_quote_templates` | 0021-0023, 0028 |
-| Prospection | `prospection_campagnes`, `prospects`, `prospection_messages`, `prospection_evenements`, `prospection_suppressions`, `prospects_dossimo` | 0032-0034, 0037, 0039, 0050, 0056 |
+| Prospection (en vigueur) | `contacts`, `contact_echanges`, `oppositions`, `rge_import` | 0057, 0058 |
+| Prospection (héritage, en sursis) | `prospection_campagnes`, `prospects`, `prospection_messages`, `prospection_evenements`, `prospection_suppressions`, `prospects_dossimo` | 0032-0034, 0037, 0039, 0050, 0056 |
 | Mesure | `evenements_parcours`, `appels_llm` | 0051 |
 | Cluster refus | `refus_motifs`, `refus_demandes` | 0053, 0054 |
 | Sécurité | `auth_rate_limits` | 0030, 0036 |
 
-**Aucune vue.** Tous les agrégats sont faits en TypeScript.
+**Deux vues, toutes deux issues de `0057`** : `contacts_synthese` (une ligne par
+contact avec son historique agrégé) et `stats_canal` (taux de réponse par canal).
+Partout ailleurs, les agrégats restent faits en TypeScript.
+
+Les deux portent `security_invoker = on`. **Ce n'est pas cosmétique** : par
+défaut une vue s'exécute avec les droits de son propriétaire et **contourne la
+RLS des tables qu'elle lit**. Une vue posée sur une table protégée sans ce
+réglage rouvre exactement ce que la RLS ferme. Toute nouvelle vue sur des données
+personnelles doit le porter, plus le `revoke` (§4).
+
+### La prospection est en cours de bascule
+
+`contacts` remplace `prospects_dossimo` **et** `prospects`, qui décrivaient les
+mêmes 2 990 artisans sous deux clés différentes. Les anciennes tables sont encore
+là parce que la campagne automatique de `0032` tourne toujours, et
+`src/lib/sprint/*` les lit encore. **Écrire tout code neuf contre `contacts` /
+`contact_echanges`.** Leur retrait fera l'objet d'une migration dédiée, avec un
+plan, une fois `src/lib/sprint/*` et `src/lib/prospection/*` basculés.
+
+Trois choses à savoir avant d'y toucher :
+
+- **La clé métier est le SIREN**, pas `place_id`. C'est la seule clé partagée
+  avec l'annuaire RGE, donc la seule qui permette de dire « celui-là est nouveau ».
+- **`contacts.etat` ne se saisit jamais.** Un trigger le recalcule depuis
+  `contact_echanges` et `oppositions`. L'écrire à la main, c'est se le faire
+  écraser au prochain échange.
+- **`telephone`, `telephone_mobile`, `emails`, `email_principal` et `updated_at`
+  sont normalisés par trigger** à chaque écriture. `prospects_dossimo.updated_at`
+  n'a jamais bougé depuis l'import du 2026-07-08, y compris sur ses 229 lignes
+  contactées, faute de trigger : on ne refait pas l'erreur.
 
 ### Deux pièges de nommage à connaître
 
@@ -196,6 +226,40 @@ source de vérité. Colonnes distinctes de `date_envoi` à dessein : y verser ce
 contacts aurait faussé l'A/B du sprint et déclenché sur eux la relance J+5 d'une
 campagne conçue sans relance. **Leçon : deux systèmes qui puisent dans la même
 population doivent écrire leur passage au même endroit.**
+
+### La refonte de la prospection appliquée à la main (corrigé en `0057`)
+
+Le 2026-08-02, cinq objets (`contacts`, `contact_echanges`, `oppositions`,
+`contacts_synthese`, `stats_canal`) ont été créés directement dans l'éditeur SQL
+Supabase, à partir d'un croquis de conception. C'est la règle n°1 enfreinte, et
+le même scénario que `0024` / `0025` : `supabase migration list` affichait encore
+`0056` comme dernière migration alors que la production avait cinq objets de plus.
+Tout environnement reconstruit par `db reset` aurait produit une base sans eux.
+
+Deux dégâts collatéraux, tous deux invisibles depuis l'éditeur :
+
+- **Le `revoke` de ceinture manquait.** La RLS était bien active (Supabase
+  l'active sur les tables créées depuis le tableau de bord), mais Supabase
+  accorde aussi `grant all` par défaut à `anon` / `authenticated` sur `public`.
+  La clé anon obtenait donc un `200` sur `contacts` là où `prospects_dossimo`
+  renvoyait `401`. Tables encore vides, donc rien n'a fuité, mais le backfill y
+  a versé 3 293 artisans juste après : une RLS désactivée par erreur aurait
+  suffi. C'est précisément le trou que `0039` avait bouché sur sa propre table.
+- **Les vues contournaient la RLS.** Créées sans `security_invoker`, elles
+  s'exécutaient avec les droits du propriétaire : `contacts_synthese` exposait
+  exactement ce que la RLS de `contacts` protège.
+
+Ni les triggers, ni les index nommés, ni la fonction `rge_rapprocher` n'avaient
+été posés, cette dernière ayant échoué à l'exécution (le croquis contenait un
+`...` littéral). `0057` décrit l'état final voulu de façon **idempotente**
+(`if not exists`, `create or replace`), donc elle ne recrée rien en production et
+crée tout sur un environnement neuf, exactement comme `0039`. `0058` reprend
+ensuite les données.
+
+**Leçon : l'éditeur SQL ne dit pas ce qu'il ne fait pas.** Il applique le SQL
+fourni et se tait sur tout ce qui manque autour (grants, `security_invoker`,
+triggers). Une migration relue porte ces garde-fous ; un copier-coller de
+conception, non.
 
 ### L'auto-parrainage ne pouvait pas s'enregistrer (corrigé en `0055`)
 

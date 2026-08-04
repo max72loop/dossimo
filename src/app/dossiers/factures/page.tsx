@@ -3,7 +3,7 @@ import { Download, FolderOpen, ReceiptText, TriangleAlert } from "lucide-react";
 
 import { listerFactures } from "@/lib/factures/get-facture";
 import type { LigneFacture } from "@/lib/factures/get-facture";
-import { mentionsIncompletes } from "@/lib/legal/editeur";
+import { editeur, mentionsIncompletes } from "@/lib/legal/editeur";
 import { formatEuros } from "@/lib/format/montant";
 import { createClient } from "@/lib/supabase/server";
 import { CARTE, CARTE_LISTE } from "@/components/ui/cartes";
@@ -71,7 +71,14 @@ export default async function FacturesPage() {
           </p>
           <p className="mt-2 text-sm text-ardoise">
             Rien n&apos;est perdu : elles restent enregistrées. Réessayez dans un
-            instant, et écrivez-nous si le problème persiste.
+            instant, et{" "}
+            <a
+              href={`mailto:${editeur.emailContact}?subject=${encodeURIComponent("Mes factures ne se chargent pas")}`}
+              className="text-tampon underline underline-offset-4"
+            >
+              écrivez-nous
+            </a>{" "}
+            si le problème persiste.
           </p>
           <Link href="/dossiers/factures" className={`mt-6 ${BTN_SECONDAIRE}`}>
             Réessayer

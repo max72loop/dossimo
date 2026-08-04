@@ -168,11 +168,19 @@ templates/cerfa/      # modèles maîtres Cerfa versionnés (+ archive/)
 - Variables dans `.env.local` (jamais committé), modèle dans `.env.example` :
   - `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
   - `SUPABASE_SERVICE_ROLE_KEY` (Server Actions uniquement, jamais côté client)
-  - `RESEND_API_KEY`
+  - `GOOGLE_APPS_SCRIPT_WEBHOOK_URL` + `GOOGLE_APPS_SCRIPT_WEBHOOK_SECRET` :
+    **tout l'e-mail sortant passe par là** (leads, demandes de refus,
+    prospection). Resend reste écarté, il n'y a plus de `RESEND_API_KEY`.
+    Les deux variables vont ensemble : avec une seule des deux, le code
+    n'envoie rien et se contente d'un avertissement en journal.
   - `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` (mode **test** en local et preview)
-  - `ANTHROPIC_API_KEY` (étape 3 du §9)
+  - `OPENROUTER_API_KEY` (+ `OPENROUTER_MODEL`, `OPENROUTER_VLM_MODEL`) : la
+    passerelle LLM du projet, pas d'appel direct à Anthropic.
 - Les clés service-role et Stripe live ne vivent que dans les variables Vercel
   (production). Aucun secret dans le code, les migrations ou les PDF de test.
+- Les e-mails d'authentification (confirmation, mot de passe oublié, changement
+  d'adresse) ne passent PAS par le webhook : c'est Supabase Auth qui les
+  expédie, avec le SMTP réglé dans son tableau de bord.
 
 ## 13. Prochaines tâches
 

@@ -354,19 +354,19 @@ function Explication() {
 const FAQ = [
   {
     q: "Quand le prix exact est-il connu ?",
-    a: "Dès que le montant d’aide du dossier peut être estimé. Le palier et le prix exact sont affichés avant le paiement.",
+    a: "Une fois le devis analysé et le montant d’aide estimé. Le palier retenu et le montant exact s’affichent avant tout paiement. Vous pouvez commencer un dossier et voir ce que Dossimo lit dans votre devis sans rien payer.",
   },
   {
     q: "Y a-t-il un abonnement ?",
-    a: "Non. Chaque paiement concerne un seul dossier, sans engagement récurrent.",
+    a: "Non. Chaque paiement couvre un seul dossier, sans engagement ni renouvellement automatique. Un mois sans chantier ne vous coûte rien.",
   },
   {
     q: "Dossimo prélève-t-il une part de la prime ?",
-    a: "Non. Le tarif est un forfait fixe. Dossimo ne reçoit jamais la prime et ne facture aucun pourcentage.",
+    a: "Non. Le tarif est un forfait fixe, facturé pour la préparation et le contrôle du dossier. La prime ne transite jamais par Dossimo : elle revient à votre client selon les règles du dispositif, et aucun pourcentage n’est facturé.",
   },
   {
     q: "Pourquoi plusieurs paliers ?",
-    a: "Le palier dépend du montant d’aide estimé, qui reflète généralement le niveau de contrôle et le nombre de pièces du dossier.",
+    a: "Le palier suit le montant d’aide estimé : plus l’aide est élevée, plus le dossier compte de pièces à réunir et de points à vérifier, et plus un refus coûte cher. Le niveau de contrôle, lui, est le même à tous les paliers.",
   },
 ] as const;
 

@@ -7,6 +7,7 @@ import { FormeAdresse, FormeContact, FormeEntreprise } from "@/components/artisa
 import { SectionParrainage, type CreditVue, type FilleulVue } from "@/components/artisan/profil-parrainage";
 import { SectionSecurite } from "@/components/artisan/profil-securite";
 import { getCurrentArtisan, getCurrentUser } from "@/lib/auth/get-artisan";
+import { editeur } from "@/lib/legal/editeur";
 import { formaterSiret } from "@/lib/artisan/siret";
 import { labelEuros } from "@/lib/pricing";
 import { getReferralOverview } from "@/lib/referral";
@@ -208,11 +209,17 @@ export default async function CompteArtisanPage() {
               Dossimo est un service indépendant d&apos;aide à la préparation de dossier, non
               affilié à l&apos;Anah ni à France Rénov&apos;. Pour fermer votre compte et supprimer
               vos données, écrivez à{" "}
+              {/*
+                Adresse lue dans `editeur`, jamais écrite en dur : cette carte a
+                longtemps affiché `contact@dossimo.app`, un domaine sans MX, donc
+                une demande d'effacement qui rebondissait sans que personne le
+                sache. Un droit RGPD ne s'exerce pas sur une boîte qui n'existe pas.
+              */}
               <a
-                href="mailto:contact@dossimo.app?subject=Suppression%20de%20mon%20compte"
+                href={`mailto:${editeur.emailRgpd}?subject=${encodeURIComponent("Suppression de mon compte")}`}
                 className="text-tampon underline-offset-4 hover:underline"
               >
-                contact@dossimo.app
+                {editeur.emailRgpd}
               </a>
               .
             </p>
