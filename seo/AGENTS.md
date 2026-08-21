@@ -76,8 +76,10 @@ avant de créer du neuf.
    lire `AGENTS.md` (racine) avant de toucher à quoi que ce soit d'autre.
 4. Livrer en **pull request uniquement** :
    - branche `seo/<slug-court>` ou `design/<slug-court>` ;
-   - `git push -o pull_request.create -o pull_request.title="..."` (création de PR
-     sans token, via l'option de push GitHub) ;
+   - pousser la branche (`git push -u origin seo/<slug>`) ; la PR est ouverte
+     immédiatement après, soit via `gh pr create` (GitHub CLI, si un token `gh`
+     est configuré), soit en livrant le lien GitHub `compare/main...seo/<slug>`
+     pour ouverture manuelle par Max ;
    - JAMAIS de push direct sur `main` pour du code ou du contenu de page ;
    - la description de PR cite le chiffre GSC qui justifie le changement.
 5. Créer la tâche : `pixel_write.py add "SEO dossimo — PR <slug>" --project Dossimo`.
