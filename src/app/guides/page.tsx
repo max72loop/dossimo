@@ -36,8 +36,8 @@ const SECTIONS: Array<{ heading: string; paragraphs: string[] }> = [
   {
     heading: "Comment ces guides sont organisés",
     paragraphs: [
-      "Trois familles répondent à trois moments du dossier. « Monter le dossier » cartographie ce qu’un pack complet doit contenir et qui fournit quoi, entre l’artisan et le bénéficiaire. « Devis & conformité » descend au niveau de la pièce : mentions obligatoires, description technique, montants comparables, modèles et ordres de grandeur de prix. « Refus & prévention » traite les points qui bloquent un dossier sans rattrapage possible, au premier rang desquels la chronologie CEE et la couverture de la qualification RGE.",
-      "S’y ajoutent deux familles. Les « Actualités » traitent une échéance datée, un texte qui entre en vigueur ou une plateforme qui change : elles ont une date de péremption, contrairement aux guides de méthode, et sont donc placées en tête. Les pages « Par geste » sont dérivées directement de notre table de règles métier ; elles ne répondent pas à la question « quelle méthode ? » mais à la question « mon chantier », en reprenant les exigences propres à un geste donné. Chaque page indique sa date de dernière vérification et renvoie aux sources officielles sur lesquelles elle s’appuie : France Rénov’, l’Anah, Légifrance, Service Public et le catalogue des fiches d’opérations standardisées. Quand une règle bouge, c’est la source qui fait foi, pas le guide.",
+      "Quatre familles répondent à quatre moments du dossier. « Monter le dossier » cartographie ce qu’un pack complet doit contenir et qui fournit quoi, entre l’artisan et le bénéficiaire. « Devis & conformité » descend au niveau de la pièce : mentions obligatoires, description technique, montants comparables, modèles et ordres de grandeur de prix. « Refus & prévention » traite les points qui bloquent un dossier sans rattrapage possible, au premier rang desquels la chronologie CEE et la couverture de la qualification RGE. « Déléguer votre dossier » s’adresse à l’artisan qui n’a plus le temps de monter le dossier lui-même : ce que ça coûte de le confier à un mandataire, ce que ça coûte de le rater, et comment garder la main sans y passer ses soirées.",
+      "S’y ajoutent deux familles. Les actualités réglementaires, qui traitent une échéance datée ou une plateforme qui change, vivent désormais sur une page pilier unique et permanente plutôt que sur des URL datées qui périment, listée juste au-dessus. Les pages « Par geste » sont dérivées directement de notre table de règles métier ; elles ne répondent pas à la question « quelle méthode ? » mais à la question « mon chantier », en reprenant les exigences propres à un geste donné. Chaque page indique sa date de dernière vérification et renvoie aux sources officielles sur lesquelles elle s’appuie : France Rénov’, l’Anah, Légifrance, Service Public et le catalogue des fiches d’opérations standardisées. Quand une règle bouge, c’est la source qui fait foi, pas le guide.",
     ],
   },
   {
@@ -187,6 +187,24 @@ export default async function GuidesHubPage() {
               </section>
             ))}
           </div>
+
+          <Link
+            href="/actualites-maprimerenov-cee"
+            className="group mb-14 flex flex-col rounded-2xl border-2 border-encre bg-blanc-casse p-6 shadow-md transition hover:shadow-lg sm:flex-row sm:items-center sm:justify-between"
+          >
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-tampon">Page pilier permanente</p>
+              <h2 className="mt-2 font-serif text-2xl font-semibold text-encre group-hover:text-tampon">
+                Évolutions MaPrimeRénov’ et CEE, suivi à jour
+              </h2>
+              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ardoise">
+                Chaque échéance réglementaire en une section datée, au même endroit, sans URL qui périme.
+              </p>
+            </div>
+            <span className="mt-5 inline-flex shrink-0 items-center gap-1.5 text-sm font-medium text-encre sm:mt-0">
+              Voir le suivi <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" aria-hidden="true" />
+            </span>
+          </Link>
 
           {groups.map((group) => (
             <section key={group.category} aria-labelledby={group.category} className="mt-14 first:mt-0">

@@ -86,6 +86,16 @@ export function SeoGuidePage({ guide }: { guide: SeoGuide }) {
                   <p className="text-xs font-semibold uppercase tracking-[0.14em] text-tampon">{guide.eyebrow}</p>
                   <h1 className="mt-3 max-w-3xl font-serif text-4xl font-semibold tracking-tight text-encre sm:text-5xl">{guide.title}</h1>
                   <p className="mt-5 max-w-3xl text-lg leading-relaxed text-ardoise">{guide.intro}</p>
+                  {guide.accesRapide ? (
+                    <Link
+                      href={guide.accesRapide.href}
+                      target={guide.accesRapide.href.startsWith("http") ? "_blank" : undefined}
+                      rel={guide.accesRapide.href.startsWith("http") ? "noreferrer" : undefined}
+                      className="mt-6 inline-flex items-center gap-2 rounded border-2 border-encre bg-blanc-casse px-5 py-3 font-medium text-encre transition hover:bg-papier-fonce"
+                    >
+                      {guide.accesRapide.label} <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                    </Link>
+                  ) : null}
                   <div className="mt-7 flex flex-wrap gap-x-6 gap-y-2 text-sm text-encre-claire">
                     <span>Vérifié le {dateVerification}</span>
                     <span>
@@ -205,6 +215,20 @@ export function SeoGuidePage({ guide }: { guide: SeoGuide }) {
                 <h2 id="voir-aussi" className="font-serif text-3xl font-semibold text-encre">Le refus est déjà tombé ?</h2>
                 <div className="mt-6 grid gap-3 sm:grid-cols-2">
                   {guide.voirAussi.map((lien) => (
+                    <Link key={lien.href} href={lien.href} className="group rounded-2xl bg-blanc-casse p-5 shadow-md transition hover:shadow-lg">
+                      <span className="font-semibold text-encre group-hover:text-tampon">{lien.label}</span>
+                      <span className="mt-2 block text-sm leading-relaxed text-ardoise">{lien.description}</span>
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            ) : null}
+
+            {guide.pourAllerPlusLoin?.liens.length ? (
+              <section aria-labelledby="pour-aller-plus-loin" className="mt-16 border-t border-filigrane pt-14">
+                <h2 id="pour-aller-plus-loin" className="font-serif text-3xl font-semibold text-encre">{guide.pourAllerPlusLoin.heading}</h2>
+                <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                  {guide.pourAllerPlusLoin.liens.map((lien) => (
                     <Link key={lien.href} href={lien.href} className="group rounded-2xl bg-blanc-casse p-5 shadow-md transition hover:shadow-lg">
                       <span className="font-semibold text-encre group-hover:text-tampon">{lien.label}</span>
                       <span className="mt-2 block text-sm leading-relaxed text-ardoise">{lien.description}</span>
