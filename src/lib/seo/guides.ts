@@ -12,6 +12,7 @@ export const GUIDE_CATEGORIES = [
   "Monter le dossier",
   "Devis & conformité",
   "Refus & prévention",
+  "Déléguer votre dossier",
   // Pages dérivées de `regles_metier` (cf. `gestes.ts`) : elles répondent à
   // l'intention « mon geste », pas « ma méthode ». Elles ne vivent pas dans
   // `guides` ci-dessous, qui reste l'éditorial écrit à la main.
@@ -72,6 +73,24 @@ export interface SeoGuide {
    * concerner que trois (docs/cluster-refus.md § 3.5).
    */
   voirAussi?: Array<{ label: string; href: string; description: string }>;
+  /**
+   * Second bloc de renvois sortants, distinct de `voirAussi` : celui-ci porte son
+   * propre titre au lieu du titre fixe « Le refus est déjà tombé ? » du composant,
+   * pour ne pas coiffer des liens qui n'ont rien à voir avec un refus (ex. renvoi
+   * vers `/exemple` et `/tarifs` depuis une page « déléguer votre dossier »).
+   * Champ additif : un guide sans `pourAllerPlusLoin` garde son rendu d'origine.
+   */
+  pourAllerPlusLoin?: {
+    heading: string;
+    liens: Array<{ label: string; href: string; description: string }>;
+  };
+  /**
+   * Lien d'accès rapide affiché juste sous l'intro, en tête de page. Pensé pour
+   * les pages « actualité » dont la requête est en réalité navigationnelle (ex.
+   * « mon compte anah ») : additif, un guide sans ce champ garde son en-tête
+   * d'origine.
+   */
+  accesRapide?: { label: string; href: string };
   sources: Array<{ label: string; href: string }>;
 }
 
@@ -201,13 +220,14 @@ export const guides = {
   },
   franceRenov2026: {
     slug: "bascule-france-renov-17-aout-2026",
-    metaTitle: "France Rénov’ 17 août 2026 : compte unique, FranceConnect+",
-    title: "Bascule France Rénov’ du 17 août, compte unique et FranceConnect+, comment déposer après",
+    metaTitle: "Compte France Rénov’ depuis le 17 août : accès, FranceConnect+, dépôt",
+    title: "Compte France Rénov’ depuis le 17 août : accès, FranceConnect+, dépôt",
     description:
       "Les plateformes de l’Anah sont fermées du 3 au 17 août 2026, puis les aides passent par un compte personnel unique sur france-renov.gouv.fr, accessible uniquement via FranceConnect+. Ce que l’artisan doit anticiper avec son client.",
     eyebrow: "Actualité réglementaire · 17 août 2026",
     category: "Actualités",
     updated: "2026-08-01",
+    accesRapide: { label: "Accéder à mon compte France Rénov’", href: "https://france-renov.gouv.fr" },
     intro:
       "Du 3 au 17 août 2026, les plateformes france-renov.gouv.fr, maprimerenov.gouv.fr et monprojet.anah.gouv.fr sont en maintenance : ni création de compte, ni dépôt de demande, ni demande de paiement. Le 17 août, elles rouvrent sur un compte personnel unique hébergé par France Rénov’, dont l’accès passe obligatoirement par FranceConnect+. L’artisan ne dépose pas, mais c’est lui qui subit le calendrier : ce guide décrit ce qu’il faut caler avant, pendant et après la bascule.",
     sections: [
@@ -312,6 +332,16 @@ export const guides = {
       { label: "France Rénov’, service public de la rénovation de l’habitat", href: "https://france-renov.gouv.fr" },
       { label: "MaPrimeRénov’, mode d’emploi — Anah", href: anahModeEmploi },
     ],
+    pourAllerPlusLoin: {
+      heading: "Pas envie de gérer ce compte à la place du client ?",
+      liens: [
+        {
+          label: "L’alternative au mandataire MaPrimeRénov’",
+          href: "/alternative-mandataire-maprimerenov",
+          description: "Préparer un pack vérifié et déposer vous-même, sans céder la relation client ni la prime à un mandataire.",
+        },
+      ],
+    },
   },
   dossierCee: {
     slug: "constituer-dossier-cee-conforme",
@@ -417,6 +447,31 @@ export const guides = {
       { label: "Catalogue officiel des fiches d’opérations standardisées CEE", href: catalogueCee },
       { label: "Mentions obligatoires d’une facture — Service Public", href: mentionsFacture },
     ],
+    pourAllerPlusLoin: {
+      heading: "Pas le temps de monter ce pack vous-même ?",
+      liens: [
+        {
+          label: "Déléguer le montage de vos dossiers CEE",
+          href: "/deleguer-montage-dossier-cee",
+          description: "Ce que recouvre chaque option de délégation, ce qu’elle coûte, et comment garder la main sur votre client.",
+        },
+        {
+          label: "Sous-traiter un dossier MaPrimeRénov’",
+          href: "/sous-traiter-dossier-maprimerenov",
+          description: "Ce qui peut être délégué sans risque, et ce qui reste toujours de votre responsabilité.",
+        },
+        {
+          label: "Combien de temps prend vraiment un dossier CEE",
+          href: "/temps-montage-dossier-cee",
+          description: "Où part réellement le temps sur un dossier, et comment le reprendre.",
+        },
+        {
+          label: "La checklist à relire avant de déposer",
+          href: "/checklist-avant-depot",
+          description: "Douze points de contrôle, communs aux deux dispositifs ou propres à chacun.",
+        },
+      ],
+    },
   },
   cumulMprCee: {
     slug: "cumul-maprimerenov-cee",
@@ -522,6 +577,16 @@ export const guides = {
       { label: "Questions-réponses officielles sur le dispositif CEE", href: questionsCee },
       { label: "Catalogue officiel des fiches d’opérations standardisées CEE", href: catalogueCee },
     ],
+    pourAllerPlusLoin: {
+      heading: "Pas le temps de monter ce pack vous-même ?",
+      liens: [
+        {
+          label: "Déléguer le montage de vos dossiers CEE",
+          href: "/deleguer-montage-dossier-cee",
+          description: "Ce que recouvre chaque option de délégation, ce qu’elle coûte, et comment garder la main sur votre client.",
+        },
+      ],
+    },
   },
   maprimerenov: {
     slug: "devis-maprimerenov-conforme",
@@ -626,6 +691,21 @@ export const guides = {
       { label: "Bien monter son dossier MaPrimeRénov’ — France Rénov’", href: franceRenovDossier },
       { label: "Mentions obligatoires d’une facture — Service Public", href: mentionsFacture },
     ],
+    pourAllerPlusLoin: {
+      heading: "Pas envie de gérer ce compte à la place du client ?",
+      liens: [
+        {
+          label: "L’alternative au mandataire MaPrimeRénov’",
+          href: "/alternative-mandataire-maprimerenov",
+          description: "Préparer un pack vérifié et déposer vous-même, sans céder la relation client ni la prime à un mandataire.",
+        },
+        {
+          label: "Sous-traiter un dossier MaPrimeRénov’",
+          href: "/sous-traiter-dossier-maprimerenov",
+          description: "Ce qui peut être délégué sans risque, et ce qui reste toujours de votre responsabilité.",
+        },
+      ],
+    },
   },
   cee: {
     slug: "devis-cee-conforme",
@@ -730,6 +810,16 @@ export const guides = {
       { label: "Questions-réponses officielles sur le dispositif CEE", href: questionsCee },
       { label: "Mentions obligatoires d’une facture — Service Public", href: mentionsFacture },
     ],
+    pourAllerPlusLoin: {
+      heading: "Pas le temps de monter ce pack vous-même ?",
+      liens: [
+        {
+          label: "Combien de temps prend vraiment un dossier CEE",
+          href: "/temps-montage-dossier-cee",
+          description: "Où part réellement le temps sur un dossier, et comment le reprendre.",
+        },
+      ],
+    },
   },
   modeleCee: {
     slug: "modele-devis-cee",
@@ -908,6 +998,16 @@ export const guides = {
       { label: "Catalogue officiel des fiches d’opérations standardisées CEE", href: catalogueCee },
       { label: "Mentions obligatoires d’une facture — Service Public", href: mentionsFacture },
     ],
+    pourAllerPlusLoin: {
+      heading: "Pas le temps de monter ce pack vous-même ?",
+      liens: [
+        {
+          label: "Déléguer le montage de vos dossiers CEE",
+          href: "/deleguer-montage-dossier-cee",
+          description: "Ce que recouvre chaque option de délégation, ce qu’elle coûte, et comment garder la main sur votre client.",
+        },
+      ],
+    },
   },
   mentions: {
     slug: "mentions-obligatoires-devis-rge",
@@ -1018,6 +1118,21 @@ export const guides = {
       { label: "Bonnes pratiques des professionnels MaPrimeRénov’", href: franceRenovDevis },
       { label: "Mentions obligatoires d’une facture — Service Public", href: mentionsFacture },
     ],
+    pourAllerPlusLoin: {
+      heading: "Pas le temps de monter ce pack vous-même ?",
+      liens: [
+        {
+          label: "Sous-traiter un dossier MaPrimeRénov’",
+          href: "/sous-traiter-dossier-maprimerenov",
+          description: "Ce qui peut être délégué sans risque, et ce qui reste toujours de votre responsabilité.",
+        },
+        {
+          label: "La checklist à relire avant de déposer",
+          href: "/checklist-avant-depot",
+          description: "Douze points de contrôle, communs aux deux dispositifs ou propres à chacun.",
+        },
+      ],
+    },
   },
   refus: {
     slug: "eviter-refus-maprimerenov",
@@ -1135,6 +1250,21 @@ export const guides = {
       { label: "Guide MaPrimeRénov’ rénovation par geste — France Rénov’", href: "https://france-renov.gouv.fr/preparer-projet/dossier-demande-aide/guide-geste" },
       { label: "Mode d’emploi MaPrimeRénov’ 2026 — Anah", href: anahModeEmploi },
     ],
+    pourAllerPlusLoin: {
+      heading: "Pas envie de gérer ce risque vous-même ?",
+      liens: [
+        {
+          label: "L’alternative au mandataire MaPrimeRénov’",
+          href: "/alternative-mandataire-maprimerenov",
+          description: "Préparer un pack vérifié et déposer vous-même, sans céder la relation client ni la prime à un mandataire.",
+        },
+        {
+          label: "Ce que coûte réellement un dossier refusé",
+          href: "/cout-dossier-refuse",
+          description: "Temps repris, client à rassurer, prime perdue : ce que le refus déplace vers l’artisan.",
+        },
+      ],
+    },
   },
   rai: {
     slug: "offre-cee-avant-le-devis",
@@ -1252,6 +1382,21 @@ export const guides = {
       { label: "Questions-réponses officielles sur le dispositif CEE (ecologie.gouv.fr)", href: questionsCee },
       { label: "Catalogue officiel des fiches d’opérations standardisées CEE", href: catalogueCee },
     ],
+    pourAllerPlusLoin: {
+      heading: "Pas le temps de sécuriser ce point vous-même ?",
+      liens: [
+        {
+          label: "Combien de temps prend vraiment un dossier CEE",
+          href: "/temps-montage-dossier-cee",
+          description: "Où part réellement le temps sur un dossier, et comment le reprendre.",
+        },
+        {
+          label: "Ce que coûte réellement un dossier refusé",
+          href: "/cout-dossier-refuse",
+          description: "Temps repris, client à rassurer, prime perdue : ce que le refus déplace vers l’artisan.",
+        },
+      ],
+    },
   },
   rge: {
     slug: "qualification-rge-valide-geste",
@@ -1370,10 +1515,637 @@ export const guides = {
       { label: "Bien monter son dossier MaPrimeRénov’ — France Rénov’", href: franceRenovDossier },
       { label: "Mode d’emploi MaPrimeRénov’ 2026 — Anah", href: anahModeEmploi },
     ],
+    pourAllerPlusLoin: {
+      heading: "Pas le temps de sécuriser ce point vous-même ?",
+      liens: [
+        {
+          label: "Ce que coûte réellement un dossier refusé",
+          href: "/cout-dossier-refuse",
+          description: "Temps repris, client à rassurer, prime perdue : ce que le refus déplace vers l’artisan.",
+        },
+        {
+          label: "La checklist à relire avant de déposer",
+          href: "/checklist-avant-depot",
+          description: "Douze points de contrôle, communs aux deux dispositifs ou propres à chacun.",
+        },
+      ],
+    },
+  },
+  deleguerCee: {
+    slug: "deleguer-montage-dossier-cee",
+    metaTitle: "Déléguer le montage de vos dossiers CEE · Dossimo",
+    title: "Déléguer le montage de vos dossiers CEE, sans déléguer votre client",
+    description:
+      "Sous-traiter la constitution d’un dossier CEE ne veut pas dire passer par un mandataire. Ce que recouvre chaque option, ce qu’elle coûte réellement, et comment garder la main sur votre client et votre prime.",
+    eyebrow: "Solution artisan RGE · Délégation CEE",
+    category: "Déléguer votre dossier",
+    updated: "2026-08-21",
+    intro:
+      "Un dossier CEE tient sur une poignée de pièces, mais sur des délais qui ne pardonnent pas : l’offre engagée avant l’acceptation du devis, sept jours francs avant la pose de l’isolant, trois mois pour envoyer le dossier après la facture. Sur une tournée de chantiers, c’est souvent ce calendrier, plus que la technique, qui fait déraper les dossiers. Déléguer leur montage est une option raisonnable. Encore faut-il savoir à qui, et ce que chaque option vous fait perdre en échange du temps gagné.",
+    sections: [
+      {
+        heading: "Trois façons de déléguer, trois pertes différentes",
+        paragraphs: [
+          "La première option, la plus répandue, consiste à passer par un mandataire habilité qui dépose le dossier à votre place et perçoit la prime pour la reverser, en partie, au client. C’est confortable sur le papier : vous n’avez plus rien à monter. Le revers est structurel, pas accidentel. Le mandataire devient l’interlocuteur de votre client sur le sujet de l’aide, négocie sa commission sur le montant de la prime, et peut orienter le chantier vers l’obligé avec lequel il travaille plutôt que vers le meilleur montage pour le client.",
+          "La deuxième option consiste à embaucher ou former une personne en interne pour suivre les dossiers. Elle règle le problème de fond, mais seulement au-delà d’un certain volume : en dessous, le coût fixe d’un poste dédié dépasse largement ce qu’il fait gagner en dossiers sécurisés.",
+          "La troisième consiste à confier la préparation documentaire, pas le dépôt, à un service qui produit le pack et vous le remet vérifié. C’est la position que Dossimo a choisie : générer les pièces depuis une saisie unique du chantier, contrôler leur cohérence, et vous laisser déposer vous-même auprès de l’obligé. Vous gardez le contact avec votre client, et la prime continue de transiter par la relation commerciale que vous avez construite avec lui.",
+        ],
+      },
+      {
+        heading: "Ce qu’un mandataire prend, au-delà de la commission affichée",
+        paragraphs: [
+          "La commission d’un mandataire est en général le point le plus visible et le plus négocié. Ce qui l’est moins, c’est le déplacement de la relation client. Une fois le mandataire dans la boucle, c’est lui qui répond aux questions du bénéficiaire sur le montant de l’aide, lui qui gère les relances si une pièce manque, lui qui décide du calendrier de versement. Un artisan qui veut rester le point de contact unique de son client, du premier rendez-vous jusqu’au chèque, perd cette continuité dès qu’un tiers dépose en son nom.",
+          "Il y a aussi un effet moins souvent mesuré : un mandataire qui traite des volumes importants a intérêt à orienter les dossiers vers les obligés et les fiches qui lui rapportent le plus, pas nécessairement vers ce qui optimise la prime du client précis que vous avez en face de vous. Ce n’est pas une malversation, c’est une logique de volume. Elle joue rarement en votre faveur sur un chantier atypique.",
+        ],
+      },
+      {
+        heading: "Ce qui reste à votre charge, quelle que soit l’option choisie",
+        paragraphs: [
+          "Déléguer le montage ne délègue jamais la responsabilité du geste ni celle de la qualification. Que le dossier soit préparé par vous, par un mandataire ou par un service comme Dossimo, c’est votre certificat RGE qui est engagé, votre devis qui décrit les travaux, et votre facture qui les clôture. Aucune délégation ne dispense de la visite technique préalable, du respect du délai de sept jours francs en isolation, ni de la cohérence entre le devis et la facture, qui reste la première cause de refus documentaire.",
+          "C’est précisément la partie qu’un service de préparation documentaire peut sécuriser sans prendre votre place : vérifier que ce que vous avez déjà produit se recoupe, avant que l’obligé ne le fasse à votre désavantage. La différence avec un mandataire tient dans ce mot : vérifier, pas remplacer.",
+        ],
+      },
+      {
+        heading: "Comment choisir sans se tromper de problème",
+        paragraphs: [
+          "La bonne question n’est pas « qui va le plus vite ? » mais « qu’est-ce que je suis prêt à céder pour aller plus vite ? ». Si le problème est le temps passé à collecter et vérifier des pièces, un service de préparation documentaire le résout sans toucher à votre relation client. Si le problème est de ne pas savoir monter un dossier CEE du tout, la formation ou l’accompagnement ponctuel réglera la cause plutôt que le symptôme. Le mandataire ne devient une réponse cohérente que si vous acceptez, en connaissance de cause, de ne plus être l’interlocuteur de votre client sur ce sujet.",
+          "Dossimo est un service indépendant d’aide à la préparation de dossier, non affilié à l’Anah ni à France Rénov’. Il ne dépose jamais le dossier et ne touche jamais la prime, un choix stratégique qui vous laisse la main sur le dépôt et la relation client, avec un pack vérifié plutôt qu’un dossier de plus à monter seul.",
+        ],
+      },
+    ],
+    checklist: [
+      { title: "Chiffrer le temps réel passé par dossier", text: "Collecte des pièces, relectures, corrections après un premier refus : additionnez avant de comparer au coût d’une délégation." },
+      { title: "Distinguer préparation et dépôt", text: "Confier la préparation documentaire ne veut pas dire confier le dépôt. Ce sont deux services différents, avec des conséquences différentes sur votre relation client." },
+      { title: "Vérifier ce qu’un mandataire prend réellement", text: "Commission sur la prime, mais aussi la main sur la relation client et sur le choix de l’obligé. Demandez-le par écrit avant de signer." },
+      { title: "Garder la responsabilité du geste au clair", text: "Aucune délégation ne dispense de la qualification RGE, de la visite technique préalable et du délai de sept jours francs avant la pose." },
+      { title: "Tester sur un dossier avant de généraliser", text: "Avant de basculer toute votre activité vers une solution, faites-la tourner sur un chantier réel et comparez le résultat à votre pratique actuelle." },
+    ],
+    errors: [
+      "Un mandataire est choisi uniquement sur le taux de commission, sans regarder qui reste l’interlocuteur du client.",
+      "La préparation documentaire est confondue avec le dépôt, alors que ce sont deux services aux conséquences différentes.",
+      "Un service externe est chargé du dossier sans que la qualification RGE ni la visite technique préalable ne soient vérifiées de votre côté.",
+      "La délégation est décidée après plusieurs refus, plutôt qu’en amont sur un chantier test.",
+      "Le coût du temps passé en interne n’a jamais été chiffré, ce qui rend toute comparaison impossible.",
+    ],
+    example: {
+      before: "Un mandataire dépose le dossier, prélève sa commission sur la prime, et devient le contact du client pour tout ce qui touche à l’aide.",
+      after: "Le pack est généré et vérifié à partir d’une saisie unique, l’artisan et son client le déposent eux-mêmes, la relation et la prime restent entre leurs mains.",
+    },
+    faq: [
+      {
+        question: "Déléguer la préparation d’un dossier CEE, est-ce la même chose que passer par un mandataire ?",
+        answer:
+          "Non. Un mandataire dépose le dossier à votre place et perçoit la prime pour la reverser, ce qui déplace la relation client vers lui. Un service de préparation documentaire génère et vérifie les pièces, mais c’est vous et votre client qui déposez et qui restez en contact direct avec l’obligé.",
+      },
+      {
+        question: "Qu’est-ce qui reste de ma responsabilité si je délègue le montage ?",
+        answer:
+          "Le geste, la qualification RGE et la chronologie CEE restent de votre ressort quelle que soit l’option choisie : c’est votre certificat qui est engagé, votre devis et votre facture qui sont contrôlés. La délégation porte sur la production et la vérification des pièces, jamais sur ces obligations de fond.",
+      },
+      {
+        question: "À partir de combien de dossiers par an la délégation devient-elle rentable ?",
+        answer:
+          "Cela dépend surtout de ce que coûte, chez vous, un dossier refusé : temps repris, prime perdue, client mécontent. Un seul refus évité compense souvent plusieurs mois d’un service de préparation documentaire, ce qui rend le calcul favorable bien avant le volume qui justifierait un poste dédié en interne.",
+      },
+    ],
+    sources: [
+      { label: "Bonnes pratiques professionnels et mandataires — France Rénov’", href: franceRenovDevis },
+      { label: "Questions-réponses officielles sur le dispositif CEE", href: questionsCee },
+      { label: "Catalogue officiel des fiches d’opérations standardisées CEE", href: catalogueCee },
+    ],
+    pourAllerPlusLoin: {
+      heading: "Voir ce que produit une préparation vérifiée",
+      liens: [
+        {
+          label: "Le pack complet en exemple",
+          href: "/exemple",
+          description: "Le récapitulatif, la checklist et le rapport de contrôle générés depuis une saisie unique, sur un chantier fictif.",
+        },
+        {
+          label: "Grille tarifaire",
+          href: "/tarifs",
+          description: "Un prix fixe par dossier, sans abonnement ni commission sur la prime.",
+        },
+      ],
+    },
+  },
+  alternativeMandataire: {
+    slug: "alternative-mandataire-maprimerenov",
+    metaTitle: "Alternative au mandataire MaPrimeRénov’ pour artisans",
+    title: "L’alternative au mandataire MaPrimeRénov’ pour un artisan qui veut garder son client",
+    description:
+      "Un mandataire dépose le dossier et prend sa commission sur la prime. Il existe une autre voie : préparer un pack vérifié et déposer vous-même, sans céder la relation client ni le montant de l’aide.",
+    eyebrow: "Solution artisan RGE · MaPrimeRénov’",
+    category: "Déléguer votre dossier",
+    updated: "2026-08-21",
+    intro:
+      "Un mandataire habilité par l’Anah dépose la demande à votre place et perçoit la prime, qu’il reverse ensuite en déduisant sa commission, en général assise sur le montant de l’aide. C’est un rôle que la réglementation autorise et encadre, mais que Dossimo refuse d’endosser par choix : dès qu’un mandataire dépose, c’est lui qui devient l’interlocuteur du dossier auprès du client, pas vous. Il existe une autre façon de se décharger de la partie administrative sans céder ce rôle.",
+    sections: [
+      {
+        heading: "Ce que fait, et ne fait pas, un mandataire habilité",
+        paragraphs: [
+          "Le mandataire administratif ou financier, habilité par l’Anah, dépose la demande MaPrimeRénov’ pour le compte du bénéficiaire, éventuellement perçoit la prime en tiers de confiance, puis la reverse. Ce service a un coût, presque toujours une commission calculée sur le montant de l’aide obtenue, ce qui crée un lien financier direct entre ce que le mandataire facture et ce que le ménage reçoit réellement sur son compte.",
+          "Ce que le mandataire ne fait pas, structurellement, c’est rester à votre place dans la relation avec le client. Une fois le dossier déposé en son nom, c’est lui qui répond aux questions sur l’avancement, lui qui gère une éventuelle demande de pièce complémentaire, lui qui explique un refus le cas échéant. L’artisan redevient un simple exécutant du chantier, dissocié du dossier d’aide qui a pourtant motivé la décision du client.",
+        ],
+      },
+      {
+        heading: "Pourquoi ce choix pèse plus qu’il n’y paraît au moment de la signature",
+        paragraphs: [
+          "Au moment du devis, la commission d’un mandataire paraît un détail : le client se concentre sur le reste à charge final, pas sur qui gère la paperasse. Le coût réel apparaît plus tard, quand le client rappelle pour savoir où en est son dossier et que l’artisan doit le renvoyer vers un tiers qu’il ne maîtrise pas. C’est un moment de friction qui abîme la relation que l’artisan a mis des mois à construire, souvent pour un service que l’artisan aurait pu piloter lui-même avec les bons outils.",
+          "Il y a aussi un enjeu de contrôle sur le montant final. Un mandataire dont le revenu dépend du volume traité a rarement le temps d’optimiser chaque dossier individuellement. Un artisan qui connaît son client, son logement et son projet dans le détail a objectivement plus d’informations pour cela, à condition de ne pas perdre un temps disproportionné à apprendre les règles d’un dispositif qui change par arrêté.",
+        ],
+      },
+      {
+        heading: "La troisième voie : préparer sans déposer à la place du client",
+        paragraphs: [
+          "Entre monter seul chaque dossier et le céder à un mandataire, il existe une position intermédiaire : faire produire et vérifier le pack documentaire par un service indépendant, puis déposer vous-même avec votre client. C’est le choix que fait Dossimo. Depuis le 17 août 2026, le dépôt passe par le compte personnel unique du bénéficiaire sur france-renov.gouv.fr, sécurisé par FranceConnect+ : c’est le client qui se connecte avec son identité numérique, pas un tiers en son nom, ce qui est cohérent avec cette approche.",
+          "Le pack généré reprend le récapitulatif du dossier, la checklist des pièces attendues et un rapport de contrôle qui remonte les points de vigilance avant l’envoi. Ce que vous perdez en rapidité de dépôt clé en main, vous le regagnez en ne partageant la commission avec personne et en restant l’interlocuteur unique de votre client, de la signature du devis jusqu’au versement de l’aide.",
+        ],
+      },
+      {
+        heading: "Ce que ça change concrètement pour le reste à charge du client",
+        paragraphs: [
+          "Sur un chantier identique, la différence entre les deux voies se joue essentiellement sur la commission. Un mandataire prélève un pourcentage de la prime obtenue, quel que soit le temps réellement passé sur le dossier. Un service de préparation documentaire facture un prix fixe par dossier, indépendant du montant de l’aide, ce qui ne crée aucune incitation à orienter le montage vers ce qui rapporte le plus au prestataire plutôt que vers ce qui optimise la prime du client.",
+          "Dossimo est un service indépendant d’aide à la préparation de dossier, non affilié à l’Anah ni à France Rénov’. Il ne dépose jamais le dossier et ne touche jamais la prime : c’est un choix stratégique, pas une limite technique, qui laisse à l’artisan et à son client la main sur le dépôt et sur l’intégralité de l’aide.",
+        ],
+      },
+    ],
+    checklist: [
+      { title: "Demander le taux de commission par écrit", text: "Avant de recommander un mandataire à un client, faites-vous préciser le pourcentage prélevé sur la prime, pas seulement le principe du service." },
+      { title: "Identifier qui reste l’interlocuteur du dossier", text: "Un mandataire qui dépose devient le contact du client sur l’aide. Vérifiez si c’est ce que vous voulez avant de l’orienter vers cette option." },
+      { title: "Vérifier l’identité numérique du client avant le 17 août", text: "Le dépôt passe désormais par FranceConnect+ et une identité numérique certifiée. Anticipez cette étape avec votre client, quelle que soit la voie choisie." },
+      { title: "Comparer un prix fixe à une commission proportionnelle", text: "Sur une prime importante, une commission en pourcentage coûte souvent plus cher qu’un tarif fixe de préparation documentaire." },
+      { title: "Garder la main sur les pièces techniques", text: "Devis, facture, caractéristiques du geste : produites et vérifiées en amont, elles restent cohérentes quelle que soit la voie de dépôt retenue ensuite." },
+    ],
+    errors: [
+      "Le client découvre la commission du mandataire seulement au moment du versement de la prime.",
+      "L’artisan renvoie systématiquement les questions du client vers le mandataire, sans plus suivre le dossier.",
+      "Aucune identité numérique certifiée n’a été anticipée avant la date de dépôt.",
+      "Un service de préparation documentaire est confondu avec un mandataire, alors que l’un dépose à votre place et l’autre non.",
+      "Le choix entre les deux voies est fait sans avoir comparé le coût réel sur le montant précis de la prime attendue.",
+    ],
+    example: {
+      before: "Le mandataire dépose le dossier, prélève sa commission sur la prime, et devient le point de contact du client pour toute la suite.",
+      after: "Le pack est préparé et vérifié en amont, le client se connecte lui-même à son compte France Rénov’ pour déposer, l’artisan reste son seul interlocuteur.",
+    },
+    faq: [
+      {
+        question: "Un mandataire MaPrimeRénov’ est-il obligatoire pour déposer un dossier ?",
+        answer:
+          "Non. Le recours à un mandataire est une option, pas une obligation. Le bénéficiaire peut déposer lui-même sa demande depuis son compte personnel sur france-renov.gouv.fr, avec l’artisan à ses côtés pour préparer les pièces techniques du dossier.",
+      },
+      {
+        question: "Quelle est la différence entre un mandataire et un service de préparation de dossier ?",
+        answer:
+          "Le mandataire dépose la demande au nom du bénéficiaire et perçoit généralement la prime pour la reverser, en général contre une commission. Un service de préparation documentaire génère et vérifie les pièces du dossier, mais c’est le bénéficiaire et l’artisan qui déposent eux-mêmes et qui reçoivent l’intégralité de l’aide.",
+      },
+      {
+        question: "Pourquoi Dossimo ne devient-il pas mandataire, puisque ça simplifierait le dépôt ?",
+        answer:
+          "Par choix stratégique, pas par contrainte. Devenir mandataire déplacerait la relation client vers Dossimo, exactement ce que ce guide déconseille à un artisan qui veut la garder. Le pack complet et vérifié reste déposé par l’artisan et son client, qui conservent ainsi la main sur leur relation et sur la prime.",
+      },
+    ],
+    sources: [
+      { label: "Bonnes pratiques professionnels et mandataires — France Rénov’", href: franceRenovDevis },
+      { label: "Compte personnel unique France Rénov’ au 17 août 2026 — communiqué de l’Anah", href: "https://www.anah.gouv.fr/presse/compter-du-17-aout-2026-france-renov-renforce-son-offre-de-services-avec-un-compte-personnel" },
+      { label: "Mode d’emploi MaPrimeRénov’ 2026 — Anah", href: anahModeEmploi },
+    ],
+    pourAllerPlusLoin: {
+      heading: "Voir ce que produit une préparation vérifiée",
+      liens: [
+        {
+          label: "Le pack complet en exemple",
+          href: "/exemple",
+          description: "Le récapitulatif, la checklist et le rapport de contrôle générés depuis une saisie unique, sur un chantier fictif.",
+        },
+        {
+          label: "Grille tarifaire",
+          href: "/tarifs",
+          description: "Un prix fixe par dossier, indépendant du montant de la prime.",
+        },
+      ],
+    },
+  },
+  sousTraiterMpr: {
+    slug: "sous-traiter-dossier-maprimerenov",
+    metaTitle: "Sous-traiter le montage d’un dossier MaPrimeRénov’",
+    title: "Qui peut monter un dossier MaPrimeRénov’ à votre place, et jusqu’où",
+    description:
+      "Devis, description technique, qualification RGE : une partie du dossier reste indéplaçable. Ce qui peut être sous-traité sans risque, ce qui ne le peut pas, et à qui confier chaque partie.",
+    eyebrow: "Solution artisan RGE · MaPrimeRénov’",
+    category: "Déléguer votre dossier",
+    updated: "2026-08-21",
+    intro:
+      "Un dossier MaPrimeRénov’ complet mêle des pièces que seul l’artisan peut produire, comme le devis détaillé geste par geste, et des pièces purement administratives, comme le rassemblement des justificatifs du bénéficiaire. La confusion entre les deux est ce qui fait le plus perdre de temps : on tente de sous-traiter ce qui ne se délègue pas, ou on garde en interne ce qui pourrait être vérifié ailleurs en quelques minutes.",
+    sections: [
+      {
+        heading: "Ce qui ne se sous-traite pas, quelle que soit la solution choisie",
+        paragraphs: [
+          "Le devis reste la pièce sur laquelle l’aide est instruite, et lui seul rattache le geste à sa qualification RGE. Personne d’autre que l’entreprise qui exécute les travaux ne peut engager cette qualification, la décrire avec les bonnes caractéristiques techniques, ni certifier que la visite préalable exigée par certaines fiches a bien eu lieu. Un tiers, mandataire ou service de préparation documentaire, peut relire et vérifier ce devis, mais ne peut jamais le produire à votre place sans exposer le dossier à une incohérence entre ce qui est écrit et ce qui a réellement été fait.",
+          "La facture suit la même logique : elle doit reprendre à l’identique les mentions du devis, et c’est l’entreprise qui l’a exécuté qui l’établit. Ce socle technique reste donc, dans toutes les configurations, à la charge de l’artisan.",
+        ],
+      },
+      {
+        heading: "Ce qui peut être délégué sans risque",
+        paragraphs: [
+          "À l’inverse, une part importante du dossier est purement administrative et peut être confiée sans toucher au fond technique : rassembler les justificatifs d’identité, de propriété et d’occupation du bénéficiaire, vérifier que l’adresse du chantier correspond exactement à celle de la demande, contrôler que les montants du devis et de la future facture concordent ligne à ligne, ou encore relire l’ensemble des pièces pour repérer une incohérence avant l’envoi.",
+          "C’est cette part-là que Dossimo prend en charge, à partir d’une saisie unique des données du chantier que vous renseignez vous-même : le pack de pièces est généré et contrôlé, sans qu’aucune information technique n’ait été produite par quelqu’un d’autre que vous.",
+        ],
+      },
+      {
+        heading: "Le cas particulier de la sous-traitance de chantier",
+        paragraphs: [
+          "Quand une partie des travaux est elle-même sous-traitée à une autre entreprise, la règle se durcit : c’est l’entreprise qui exécute réellement le geste qui doit détenir la qualification RGE correspondante, pas le donneur d’ordre qui a signé le devis principal. Un devis qui mentionne votre qualification alors qu’un sous-traitant non qualifié a posé le geste ne protège pas le dossier, même si le reste des pièces est irréprochable.",
+          "Cette vérification, en revanche, se sous-traite très bien à un service de contrôle documentaire : c’est exactement le type d’incohérence qu’un rapprochement automatique entre les pièces fait remonter avant le dépôt plutôt qu’après un refus.",
+        ],
+      },
+      {
+        heading: "Choisir le bon niveau de délégation",
+        paragraphs: [
+          "La question à se poser n’est pas « puis-je sous-traiter ce dossier » mais « quelle partie de ce dossier engage ma qualification, et laquelle est purement administrative ». La première reste toujours de votre ressort. La seconde peut être confiée à un tiers, à condition de choisir un service qui vérifie plutôt qu’un mandataire qui se substitue à vous dans la relation avec le client.",
+          "Dossimo est un service indépendant d’aide à la préparation de dossier, non affilié à l’Anah ni à France Rénov’. Il ne dépose jamais le dossier et ne touche jamais la prime : la partie qui vous engage reste entre vos mains, la partie administrative est prise en charge et vérifiée.",
+        ],
+      },
+    ],
+    checklist: [
+      { title: "Séparer le technique de l’administratif", text: "Devis, description du geste et qualification restent de votre ressort. Justificatifs du bénéficiaire, cohérence des montants et relecture croisée peuvent être délégués." },
+      { title: "Vérifier la qualification du sous-traitant réel", text: "Si un geste est sous-traité, c’est l’entreprise qui l’exécute qui doit détenir la qualification correspondante, pas le donneur d’ordre." },
+      { title: "Ne jamais confier la rédaction du devis technique", text: "Un tiers peut relire et signaler une incohérence, jamais rédiger à votre place la description du geste qui engage votre qualification." },
+      { title: "Choisir un contrôle, pas une substitution", text: "Un service qui vérifie vos pièces ne vous retire rien. Un mandataire qui dépose à votre place vous retire la relation avec le client." },
+      { title: "Tracer qui a produit quoi", text: "En cas de contrôle, il doit être possible de retrouver qui a rédigé chaque pièce du dossier et sur quelle base." },
+    ],
+    errors: [
+      "Le devis technique est rédigé par un tiers qui n’a pas réalisé la visite préalable exigée par la fiche.",
+      "Un geste sous-traité est couvert par la qualification du donneur d’ordre plutôt que par celle de l’entreprise qui l’a réellement posé.",
+      "Toute la partie administrative reste gérée en interne alors qu’elle pourrait être déléguée sans risque.",
+      "Un service de contrôle est confondu avec un mandataire qui déposerait le dossier à la place de l’artisan.",
+      "Aucune trace ne permet de savoir qui a produit quelle pièce du dossier.",
+    ],
+    example: {
+      before: "L’ensemble du dossier, technique et administratif, est monté en interne au fil de l’eau, sans relecture d’ensemble avant l’envoi.",
+      after: "Le devis et la qualification restent produits par l’artisan, la collecte des pièces du bénéficiaire et la vérification croisée sont déléguées à un service qui contrôle sans se substituer.",
+    },
+    faq: [
+      {
+        question: "Peut-on faire rédiger son devis MaPrimeRénov’ par un tiers ?",
+        answer:
+          "Non, pas sans risque. Le devis engage la qualification RGE de l’entreprise qui réalise les travaux, et lui seul peut attester que la visite technique préalable exigée par certaines fiches a eu lieu. Un tiers peut le relire et signaler une incohérence, jamais le produire à la place de l’artisan.",
+      },
+      {
+        question: "Quelle partie du dossier peut vraiment être déléguée ?",
+        answer:
+          "La collecte des justificatifs du bénéficiaire, la vérification de la cohérence entre les pièces et la relecture d’ensemble avant l’envoi. C’est la part administrative du dossier, distincte de la description technique du geste qui reste de la responsabilité de l’artisan.",
+      },
+      {
+        question: "Que se passe-t-il si un sous-traitant n’a pas la bonne qualification RGE ?",
+        answer:
+          "Le geste qu’il a réalisé n’ouvre pas droit à l’aide, même si le devis global porte la qualification du donneur d’ordre. C’est l’entreprise qui exécute réellement les travaux qui doit détenir le signe de qualité correspondant : vérifiez-le avant de signer, pas au moment du dépôt.",
+      },
+    ],
+    sources: [
+      { label: "Bien monter son dossier MaPrimeRénov’ — France Rénov’", href: franceRenovDossier },
+      { label: "Annuaire officiel des professionnels RGE (France Rénov’)", href: annuaireRge },
+      { label: "Mode d’emploi MaPrimeRénov’ 2026 — Anah", href: anahModeEmploi },
+    ],
+    pourAllerPlusLoin: {
+      heading: "Voir ce que produit une préparation vérifiée",
+      liens: [
+        {
+          label: "Le pack complet en exemple",
+          href: "/exemple",
+          description: "Le récapitulatif, la checklist et le rapport de contrôle générés depuis une saisie unique, sur un chantier fictif.",
+        },
+        {
+          label: "Grille tarifaire",
+          href: "/tarifs",
+          description: "Un prix fixe par dossier, sans abonnement ni commission sur la prime.",
+        },
+      ],
+    },
+  },
+  tempsMontageCee: {
+    slug: "temps-montage-dossier-cee",
+    metaTitle: "Combien de temps prend un dossier CEE, vraiment",
+    title: "Combien de temps prend vraiment un dossier CEE",
+    description:
+      "Trois mois pour l’envoyer après la facture, mais un temps de préparation qui dépend surtout des allers-retours. Où part réellement le temps sur un dossier CEE, et comment le reprendre.",
+    eyebrow: "Solution artisan RGE · Délégation CEE",
+    category: "Déléguer votre dossier",
+    updated: "2026-08-21",
+    intro:
+      "Le dispositif CEE laisse trois mois pour envoyer un dossier après la date de la facture. Ce délai paraît large, et c’est justement pour ça qu’il se consomme sans qu’on s’en rende compte : ce n’est pas la constitution des pièces qui prend du temps, ce sont les allers-retours provoqués par une pièce oubliée, une mention incohérente ou un justificatif du bénéficiaire qui n’arrive jamais du premier coup.",
+    sections: [
+      {
+        heading: "Le temps ne se perd pas où on croit qu’il se perd",
+        paragraphs: [
+          "Réunir les pièces produites par l’artisan lui-même, devis conforme, facture, certificat RGE, attestation sur l’honneur, photos avant et après, prend en réalité peu de temps quand elles sont préparées au fil du chantier. Le temps se perd ailleurs : dans les relances pour obtenir une pièce d’identité ou un RIB du bénéficiaire, dans la correction d’une surface qui diffère de deux mètres carrés entre le devis et la facture, ou dans la recherche a posteriori d’une photo d’avant travaux qui n’a pas été prise au bon moment.",
+          "Chacun de ces incidents, pris isolément, coûte peu. Répétés sur une tournée de dossiers, ils expliquent pourquoi un délai de trois mois se retrouve parfois dépassé, alors que le contenu du dossier, lui, était prêt depuis longtemps.",
+        ],
+      },
+      {
+        heading: "Ce que change une saisie unique, en temps réel",
+        paragraphs: [
+          "Le point qui consomme le plus de temps est la relecture croisée : rapprocher le devis, la facture, l’attestation sur l’honneur et les photos pour vérifier qu’ils racontent la même histoire. Fait à la main, ce rapprochement demande de rouvrir plusieurs documents, poste par poste, et de comparer des valeurs qu’on a soi-même saisies plusieurs fois, avec le risque d’erreur que cela comporte.",
+          "Générer les pièces depuis une seule saisie du chantier supprime une bonne partie de ce temps, parce que l’incohérence entre deux documents devient structurellement difficile à produire par accident : la surface, la référence produit ou la performance ne sont saisies qu’une fois et reportées partout où elles doivent apparaître.",
+        ],
+      },
+      {
+        heading: "Le vrai coût du temps, ce n’est pas les heures",
+        paragraphs: [
+          "Le temps passé sur un dossier CEE n’est presque jamais le vrai problème : c’est ce qu’il empêche de faire pendant ce temps-là, chiffrer un nouveau chantier, relancer un client, avancer sur un devis en attente. Un dossier qui traîne trois semaines de plus qu’il ne devrait n’a coûté que quelques heures cumulées, mais il a occupé un créneau mental disproportionné par rapport à ces heures.",
+          "C’est cette charge mentale, plus que le temps brut, qui pousse le plus d’artisans à chercher une solution de délégation. Elle se traite en réduisant le nombre d’allers-retours, pas en accélérant chaque étape prise isolément.",
+        ],
+      },
+      {
+        heading: "Reprendre la main sur le calendrier",
+        paragraphs: [
+          "Le réflexe qui protège le mieux le délai de trois mois consiste à réunir les pièces au fur et à mesure du chantier, pas après la facture : prendre la photo avant travaux au moment du devis, demander les justificatifs du bénéficiaire dès le premier rendez-vous, dater l’engagement de l’offre CEE avant la signature. Un service qui contrôle la cohérence à chaque étape, plutôt qu’une seule fois à la fin, resserre encore ce calendrier.",
+          "Dossimo génère le pack de pièces depuis une saisie unique et le contrôle avant l’envoi, ce qui réduit le nombre d’allers-retours plutôt que le temps de saisie lui-même. C’est un service indépendant d’aide à la préparation de dossier, non affilié à l’Anah ni à France Rénov’ : il ne dépose jamais le dossier et ne touche jamais la prime.",
+        ],
+      },
+    ],
+    checklist: [
+      { title: "Chronométrer un dossier réel une fois", text: "Notez le temps passé sur votre prochain dossier CEE, poste par poste. C’est souvent la seule façon de voir où il part vraiment." },
+      { title: "Prendre les photos au bon moment", text: "Avant et après travaux, au moment du chantier, pas au moment du dépôt : une photo manquante après coup ne se remplace pas." },
+      { title: "Demander les pièces du bénéficiaire dès le premier rendez-vous", text: "C’est la partie du dossier sur laquelle l’artisan a le moins de prise et celle qui provoque le plus de relances tardives." },
+      { title: "Rapprocher devis et facture avant l’envoi", text: "Une seule mention divergente déclenche un aller-retour qui peut coûter plus de temps que la préparation initiale du dossier." },
+      { title: "Compter le coût du temps, pas seulement celui de la délégation", text: "Comparez le temps réellement passé à ce que coûterait un service qui vérifie les pièces avant l’envoi." },
+    ],
+    errors: [
+      "Le dossier est constitué après la facture plutôt qu’au fil du chantier, ce qui concentre tous les aller-retours sur la fin du délai.",
+      "Les photos avant travaux ne sont pas prises au bon moment et ne peuvent plus être produites après coup.",
+      "Les pièces du bénéficiaire sont demandées tardivement, ce qui allonge le délai sans que l’artisan puisse agir dessus.",
+      "Une incohérence entre devis et facture n’est détectée qu’au moment du dépôt, provoquant un nouvel aller-retour.",
+      "Le temps passé sur les dossiers n’a jamais été mesuré, ce qui empêche de savoir si une délégation serait rentable.",
+    ],
+    example: {
+      before: "Les pièces sont réunies dans la dernière semaine du délai de trois mois, une incohérence est découverte, le dossier part en retard.",
+      after: "Les pièces sont produites depuis une saisie unique dès le chantier, la cohérence est vérifiée en continu, le dossier part sans relance.",
+    },
+    faq: [
+      {
+        question: "Combien de temps faut-il vraiment pour monter un dossier CEE ?",
+        answer:
+          "La production des pièces elle-même prend peu de temps quand elle est faite au fil du chantier. Ce qui allonge réellement le délai, ce sont les allers-retours provoqués par une pièce manquante ou une incohérence entre documents, découverts trop tard.",
+      },
+      {
+        question: "Le délai de trois mois après la facture est-il suffisant ?",
+        answer:
+          "Oui dans l’absolu, mais il se consomme vite si la collecte des pièces du bénéficiaire ne commence qu’après le chantier. Réunir les justificatifs dès le premier rendez-vous et vérifier la cohérence en continu, plutôt qu’en une seule fois à la fin, garde une vraie marge sur ce délai.",
+      },
+      {
+        question: "Une saisie unique fait-elle vraiment gagner du temps sur un dossier CEE ?",
+        answer:
+          "Elle réduit surtout le nombre d’allers-retours, qui est ce qui coûte le plus cher en temps réel. Une surface ou une référence produit saisie une seule fois et reportée automatiquement sur toutes les pièces ne peut plus diverger entre le devis et la facture, ce qui supprime la relecture croisée manuelle.",
+      },
+    ],
+    sources: [
+      { label: "Questions-réponses officielles sur le dispositif CEE", href: questionsCee },
+      { label: "Catalogue officiel des fiches d’opérations standardisées CEE", href: catalogueCee },
+      { label: "Mentions obligatoires d’une facture — Service Public", href: mentionsFacture },
+    ],
+    pourAllerPlusLoin: {
+      heading: "Voir ce que produit une préparation vérifiée",
+      liens: [
+        {
+          label: "Le pack complet en exemple",
+          href: "/exemple",
+          description: "Le récapitulatif, la checklist et le rapport de contrôle générés depuis une saisie unique, sur un chantier fictif.",
+        },
+        {
+          label: "Grille tarifaire",
+          href: "/tarifs",
+          description: "Un prix fixe par dossier, sans abonnement ni commission sur la prime.",
+        },
+      ],
+    },
+  },
+  coutDossierRefuse: {
+    slug: "cout-dossier-refuse",
+    metaTitle: "Ce que coûte un dossier de prime refusé à l’artisan",
+    title: "Ce que coûte réellement un dossier refusé, à l’artisan plus qu’au client",
+    description:
+      "Un refus ne coûte pas que la prime. Temps repris, client à rassurer, chantier parfois entamé sur une aide qui ne viendra jamais : ce que le refus déplace vers l’artisan, et comment le prévenir avant le devis.",
+    eyebrow: "Solution artisan RGE · Prévention",
+    category: "Déléguer votre dossier",
+    updated: "2026-08-21",
+    intro:
+      "Une offre CEE engagée après l’acceptation du devis fait tomber la prime sans recours possible, quelle que soit la qualité du chantier. Ce genre de refus ne coûte pas que le montant de l’aide : il coûte le temps déjà passé sur le dossier, la conversation à avoir avec un client qui comptait sur cette prime pour financer une partie de ses travaux, et parfois la crédibilité de l’artisan qui la lui avait annoncée.",
+    sections: [
+      {
+        heading: "Le refus se voit sur la prime, il se paie ailleurs",
+        paragraphs: [
+          "Le montant refusé est la partie visible du coût, celle qu’on chiffre facilement. La partie invisible est plus lourde : le temps déjà investi à constituer le dossier ne se récupère pas, que le refus soit corrigible ou non. Quand il ne l’est pas, comme une chronologie CEE mal respectée, ce temps est purement perdu, sans même la possibilité de reprendre le dossier autrement.",
+          "S’ajoute le temps de la conversation avec le client, qui n’est pas neutre non plus. Expliquer qu’une aide annoncée ne viendra pas, ou viendra amputée, demande du tact et prend du temps sur un chantier qui, lui, avance sans attendre la décision.",
+        ],
+      },
+      {
+        heading: "Le coût qui ne se voit sur aucune facture",
+        paragraphs: [
+          "Un client à qui l’artisan a annoncé un montant d’aide qui ne se concrétise pas retient rarement que le refus vient d’un texte réglementaire complexe. Il retient que l’artisan s’est trompé sur un point qui touchait directement à son budget. C’est un coût de réputation qui ne figure sur aucune ligne comptable, mais qui pèse sur les recommandations et le bouche-à-oreille, le premier canal d’acquisition de la plupart des artisans RGE.",
+          "Il y a enfin un coût de trésorerie spécifique aux chantiers déjà réalisés sur la promesse d’une aide : si le refus tombe après les travaux, l’artisan se retrouve parfois à devoir renégocier le solde avec un client qui n’a plus la prime en face pour le régler.",
+        ],
+      },
+      {
+        heading: "Les motifs qui coûtent le plus cher sont ceux qui ne se corrigent pas",
+        paragraphs: [
+          "Tous les refus ne se valent pas. Une pièce manquante ou une mention incomplète se corrige et permet de redéposer, ce qui limite le coût au temps de la correction. Un fait déjà accompli, comme un chantier démarré avant l’accusé de réception de la demande côté MaPrimeRénov’, ou une offre CEE contractualisée après le devis, ne se rattrape jamais sur ce dossier précis : le coût est intégralement perdu, y compris le temps de préparation initial.",
+          "C’est cette catégorie de motifs, la chronologie, qui mérite le plus d’attention avant le devis, précisément parce qu’elle est la seule dont le coût ne se limite pas à un délai supplémentaire.",
+        ],
+      },
+      {
+        heading: "Prévenir coûte moins cher que corriger",
+        paragraphs: [
+          "Le calcul qui justifie un contrôle en amont est simple à poser une fois qu’on l’a fait une seule fois : comparer le coût d’une vérification systématique avant le dépôt au coût cumulé d’un seul refus évité, temps perdu, conversation difficile avec le client et confiance entamée compris. Dans la plupart des cas, la vérification coûte nettement moins cher que le refus qu’elle prévient.",
+          "Dossimo vérifie la cohérence du dossier avant le dépôt et remonte les points de vigilance pendant qu’il est encore temps d’agir, pas après la décision. C’est un service indépendant d’aide à la préparation de dossier, non affilié à l’Anah ni à France Rénov’, qui ne dépose jamais le dossier et ne touche jamais la prime.",
+        ],
+      },
+    ],
+    checklist: [
+      { title: "Distinguer les refus corrigibles des refus sur fait accompli", text: "Une pièce manquante se corrige. Une chronologie mal respectée, comme une offre CEE engagée après le devis, ne se rattrape jamais sur ce dossier." },
+      { title: "Ne jamais annoncer un montant d’aide avant contrôle", text: "Un montant annoncé trop tôt et non confirmé abîme la confiance du client bien plus qu’un délai supplémentaire assumé dès le départ." },
+      { title: "Chiffrer le coût réel d’un refus déjà vécu", text: "Temps de préparation perdu, temps de la conversation avec le client, éventuelle renégociation du solde : additionnez-les avant de sous-estimer le risque." },
+      { title: "Sécuriser la chronologie avant le devis", text: "Offre CEE engagée avant l’acceptation du devis, demande MaPrimeRénov’ déposée avant le début des travaux : ces deux points se jouent avant la signature, jamais après." },
+      { title: "Vérifier avant d’envoyer, pas après un premier refus", text: "Le contrôle a le même coût qu’il intervienne avant ou après un refus, mais un seul des deux moments évite réellement la perte." },
+    ],
+    errors: [
+      "Un montant de prime est annoncé au client avant que la chronologie CEE ou MaPrimeRénov’ n’ait été vérifiée.",
+      "Un chantier démarre avant l’accusé de réception de la demande MaPrimeRénov’ par l’Anah.",
+      "L’offre CEE est engagée après l’acceptation du devis, ce qui fait tomber la prime sans recours.",
+      "Le coût d’un refus n’est jamais mesuré au-delà du montant de la prime perdue.",
+      "Le contrôle de cohérence n’intervient qu’après un premier refus, jamais en amont du devis.",
+    ],
+    example: {
+      before: "Le devis annonce un montant d’aide avant vérification, l’offre CEE est engagée après signature, le refus tombe et le client doit être recontacté.",
+      after: "La chronologie est vérifiée avant le devis, le montant annoncé au client correspond à ce que le dossier peut réellement obtenir, aucun refus sur fait accompli.",
+    },
+    faq: [
+      {
+        question: "Un dossier refusé, ça coûte quoi exactement à l’artisan ?",
+        answer:
+          "Au-delà du montant de la prime perdue, ça coûte le temps déjà passé à constituer le dossier, le temps de la conversation avec un client qui comptait sur cette aide, et parfois la confiance qu’il accordait à l’artisan pour le reste du chantier.",
+      },
+      {
+        question: "Tous les refus sont-ils rattrapables ?",
+        answer:
+          "Non. Un refus sur pièce manquante ou mention incomplète se corrige et permet de redéposer. Un refus sur un fait déjà accompli, comme un chantier démarré trop tôt ou une offre CEE contractualisée après le devis, ne se rattrape jamais sur ce dossier précis.",
+      },
+      {
+        question: "Comment éviter d’annoncer un montant d’aide qui ne se confirme pas ?",
+        answer:
+          "En vérifiant la chronologie et la cohérence du dossier avant le devis, pas après. C’est précisément le moment où la plupart des motifs de refus, notamment ceux liés aux dates, sont encore évitables plutôt qu’à corriger.",
+      },
+    ],
+    sources: [
+      { label: "Questions-réponses officielles sur le dispositif CEE", href: questionsCee },
+      { label: "Bien monter son dossier MaPrimeRénov’ — France Rénov’", href: franceRenovDossier },
+      { label: "Mode d’emploi MaPrimeRénov’ 2026 — Anah", href: anahModeEmploi },
+    ],
+    voirAussi: [
+      {
+        label: "MaPrimeRénov’ refusée : lire la décision avant de refaire le dossier",
+        href: "/refus/maprimerenov-refuse",
+        description: "Ce qui se corrige, ce qui ne se corrige pas, et la voie de recours devant le directeur général de l’Anah.",
+      },
+      {
+        label: "Dossier CEE rejeté : ce que l’obligé a réellement contrôlé",
+        href: "/refus/cee-rejete",
+        description: "Les points que l’obligé vérifie réellement, fiche par fiche, et ceux qui sont irrattrapables.",
+      },
+    ],
+    pourAllerPlusLoin: {
+      heading: "Voir ce que produit une préparation vérifiée",
+      liens: [
+        {
+          label: "Le pack complet en exemple",
+          href: "/exemple",
+          description: "Le récapitulatif, la checklist et le rapport de contrôle générés depuis une saisie unique, sur un chantier fictif.",
+        },
+        {
+          label: "Grille tarifaire",
+          href: "/tarifs",
+          description: "Un prix fixe par dossier, très en dessous du coût d’un seul refus évité.",
+        },
+      ],
+    },
+  },
+  checklistAvantDepot: {
+    slug: "checklist-avant-depot",
+    metaTitle: "Checklist de contrôle avant dépôt, MaPrimeRénov’ et CEE",
+    title: "La checklist à relire avant de déposer, MaPrimeRénov’ et CEE",
+    description:
+      "Douze points de contrôle, communs aux deux dispositifs ou propres à chacun, à relire avant l’envoi d’un dossier. De quoi repérer en quelques minutes ce qu’un instructeur mettrait des semaines à révéler par un refus.",
+    eyebrow: "Solution artisan RGE · Contrôle avant dépôt",
+    category: "Déléguer votre dossier",
+    updated: "2026-08-21",
+    intro:
+      "Un dossier MaPrimeRénov’ ou CEE ne se juge jamais pièce par pièce mais dans son ensemble : c’est le rapprochement entre le devis, la facture et les justificatifs qui détermine si le dossier passe, pas la qualité de chaque document pris isolément. Cette checklist rassemble les points qu’un instructeur vérifie réellement, dans l’ordre où ils valent d’être relus avant l’envoi.",
+    sections: [
+      {
+        heading: "D’abord la chronologie, parce qu’elle ne se corrige jamais après coup",
+        paragraphs: [
+          "Avant toute autre vérification, contrôlez les dates. Côté CEE, l’offre doit avoir été engagée au plus tard à la date d’acceptation du devis, avec une tolérance de quatorze jours pour un bénéficiaire particulier à condition que le chantier n’ait pas commencé. Côté MaPrimeRénov’, la demande doit avoir été déposée, et son accusé de réception obtenu, avant le début des travaux. Ces deux points sont les seuls du dossier qu’aucune pièce complémentaire ne peut réparer une fois le chantier engagé.",
+          "En isolation, ajoutez le délai de sept jours francs minimum entre l’acceptation du devis et la pose de l’isolant, exigé par les fiches CEE concernées. Un chantier posé trop vite après la signature fait tomber le dossier, même si toutes les autres pièces sont parfaites.",
+        ],
+      },
+      {
+        heading: "Ensuite la cohérence entre les pièces",
+        paragraphs: [
+          "Une fois la chronologie validée, rapprochez le devis et la facture ligne à ligne : surface, quantité, marque, référence du produit posé, résistance thermique ou performance annoncée doivent être identiques d’un document à l’autre. La moindre divergence, même de quelques centimètres carrés, est ce que l’instructeur, qui ne visite jamais le chantier, cherche en priorité à recouper.",
+          "Vérifiez ensuite que l’adresse du chantier, écrite en entier avec son complément le cas échéant, correspond exactement à celle de la demande d’aide, et que le nom du bénéficiaire figurant sur les pièces est bien celui déclaré comme demandeur.",
+        ],
+      },
+      {
+        heading: "Puis la qualification et les justificatifs techniques",
+        paragraphs: [
+          "Contrôlez que la qualification RGE couvre précisément le domaine du geste facturé, à la date qui compte pour le dispositif concerné, et que c’est bien l’entreprise qui a exécuté les travaux qui la détient, y compris en cas de sous-traitance. Vérifiez la présence et la date de la visite technique préalable quand la fiche CEE l’exige, ainsi que les photos avant et après travaux, qui ne se produisent pas rétroactivement une fois le chantier terminé.",
+          "Relisez enfin l’attestation sur l’honneur : elle doit être co-signée par l’artisan et le bénéficiaire, et reprendre des valeurs identiques à celles du devis et de la facture, jamais une reformulation approximative.",
+        ],
+      },
+      {
+        heading: "Enfin les pièces du bénéficiaire, et le cas des situations particulières",
+        paragraphs: [
+          "Terminez par les pièces qui dépendent du bénéficiaire : identité, RIB, justificatif de propriété et d’occupation, complétés du bail et de l’engagement de location pour un bailleur, ou du procès-verbal d’assemblée générale et de la quote-part pour une copropriété. C’est la partie sur laquelle l’artisan a le moins de prise, donc celle qu’il vaut mieux avoir réclamée dès le premier rendez-vous plutôt qu’au moment du dépôt.",
+          "Une relecture menée dans cet ordre, chronologie d’abord, cohérence ensuite, qualification puis pièces du bénéficiaire, prend quelques minutes une fois automatisée et évite la plupart des refus documentaires. C’est cette relecture que Dossimo effectue systématiquement sur chaque dossier généré, avant que l’artisan ne l’envoie. Dossimo est un service indépendant d’aide à la préparation de dossier, non affilié à l’Anah ni à France Rénov’ : il ne dépose jamais le dossier et ne touche jamais la prime.",
+        ],
+      },
+    ],
+    checklist: [
+      { title: "Chronologie CEE", text: "Offre engagée avant l’acceptation du devis, ou dans les quatorze jours pour un particulier si le chantier n’a pas démarré. Sept jours francs avant la pose en isolation." },
+      { title: "Chronologie MaPrimeRénov’", text: "Demande déposée et accusé de réception obtenu avant le début des travaux." },
+      { title: "Cohérence devis / facture", text: "Surface, marque, référence et performance identiques d’un document à l’autre, à l’unité près." },
+      { title: "Adresse et identité", text: "Adresse du chantier écrite en entier, identique à celle de la demande. Nom du demandeur cohérent sur toutes les pièces." },
+      { title: "Qualification RGE", text: "Domaine couvrant le geste facturé, valide à la date utile, détenue par l’entreprise qui a réellement exécuté les travaux." },
+      { title: "Preuves techniques", text: "Visite préalable datée quand elle est exigée, photos avant et après, attestation sur l’honneur co-signée et cohérente." },
+      { title: "Pièces du bénéficiaire", text: "Identité, RIB, justificatifs de propriété et d’occupation, complétés selon le cas par le bail ou le procès-verbal de copropriété." },
+    ],
+    errors: [
+      "La relecture se fait pièce par pièce plutôt que par rapprochement entre les documents.",
+      "Une date d’engagement ou de dépôt est vérifiée après le début du chantier, quand elle ne se corrige plus.",
+      "Une divergence de quelques centimètres carrés entre devis et facture n’est pas repérée avant l’envoi.",
+      "La qualification RGE du sous-traitant réel n’est pas distinguée de celle du donneur d’ordre.",
+      "Les pièces du bénéficiaire sont réclamées au moment du dépôt plutôt que dès le premier rendez-vous.",
+    ],
+    example: {
+      before: "Chaque pièce est considérée correcte isolément, et le dossier part sans relecture d’ensemble entre les documents.",
+      after: "Le dossier est relu dans l’ordre chronologie, cohérence, qualification, pièces du bénéficiaire, et chaque écart est corrigé avant l’envoi.",
+    },
+    faq: [
+      {
+        question: "Quel est le premier point à vérifier avant de déposer un dossier ?",
+        answer:
+          "La chronologie, avant toute autre chose. L’offre CEE engagée après le devis ou un chantier démarré avant l’accusé de réception MaPrimeRénov’ sont les deux seuls défauts qu’aucune pièce complémentaire ne peut réparer une fois le chantier commencé.",
+      },
+      {
+        question: "Faut-il une checklist différente pour MaPrimeRénov’ et pour le CEE ?",
+        answer:
+          "Les deux partagent un socle commun, la cohérence entre devis et facture et la qualification RGE, mais divergent sur la chronologie et certaines pièces techniques. Sur un chantier qui cumule les deux aides, les deux jeux de contrôles doivent être passés en parallèle, pas fusionnés.",
+      },
+      {
+        question: "Cette checklist remplace-t-elle un contrôle automatisé ?",
+        answer:
+          "Elle donne l’ordre et les points à ne pas manquer, mais un contrôle automatisé les applique systématiquement sur chaque dossier, sans dépendre de la vigilance du moment. Dossimo l’effectue à partir d’une saisie unique du chantier et remonte les écarts avant l’envoi.",
+      },
+    ],
+    sources: [
+      { label: "Bien monter son dossier MaPrimeRénov’ — France Rénov’", href: franceRenovDossier },
+      { label: "Questions-réponses officielles sur le dispositif CEE", href: questionsCee },
+      { label: "Mentions obligatoires d’une facture — Service Public", href: mentionsFacture },
+    ],
+    pourAllerPlusLoin: {
+      heading: "Voir ce que produit une préparation vérifiée",
+      liens: [
+        {
+          label: "Le pack complet en exemple",
+          href: "/exemple",
+          description: "Le récapitulatif, la checklist et le rapport de contrôle générés depuis une saisie unique, sur un chantier fictif.",
+        },
+        {
+          label: "Grille tarifaire",
+          href: "/tarifs",
+          description: "Un prix fixe par dossier, sans abonnement ni commission sur la prime.",
+        },
+      ],
+    },
   },
 } satisfies Record<string, SeoGuide>;
 
-export const guideList = Object.values(guides);
+/**
+ * Guides listés au hub, dans le sitemap et pré-rendus par `app/[slug]`. Les
+ * actualités datées en sont exclues : elles vivent désormais en sections
+ * ancrées de la page pilier permanente `/actualites-maprimerenov-cee`, et leurs
+ * anciennes URL redirigent en 301 vers cette page (`next.config.ts`). Les objets
+ * restent dans `guides` ci-dessus pour que la page pilier réutilise leur contenu
+ * sans le dupliquer.
+ */
+export const guideList = Object.values(guides).filter((guide) => guide.category !== "Actualités");
+
+/**
+ * Actualités réglementaires, dans l'ordre chronologique de leur échéance. Seule
+ * source de contenu pour `/actualites-maprimerenov-cee` : ajouter une actualité
+ * ici l'ajoute à la page pilier sans jamais créer de nouvelle URL datée.
+ */
+export const actualites: SeoGuide[] = [guides.demarchage2026, guides.franceRenov2026];
 
 /**
  * Index slug → guide, construit une seule fois. Sert à la route dynamique

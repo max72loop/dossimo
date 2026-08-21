@@ -3,12 +3,26 @@ import path from "node:path";
 
 const nextConfig: NextConfig = {
   async redirects() {
-    return ["dossimo.pro", "www.dossimo.pro"].map((host) => ({
+    const domaine = ["dossimo.pro", "www.dossimo.pro"].map((host) => ({
       source: "/:path*",
       has: [{ type: "host" as const, value: host }],
       destination: "https://dossimo.app/:path*",
       permanent: true,
     }));
+    // Les actualités réglementaires datées ont été absorbées par la page pilier
+    // permanente `/actualites-maprimerenov-cee` (une section ancrée par actualité,
+    // cf. `src/lib/seo/guides.ts` → `actualites`). Ces deux URL restaient indexées
+    // sous leur ancienne adresse : on redirige plutôt que de laisser un 404 perdre
+    // le signal déjà acquis par Google.
+    const actualites = [
+      { source: "/bascule-france-renov-17-aout-2026", anchor: "bascule-france-renov-17-aout-2026" },
+      { source: "/demarchage-telephonique-11-aout-2026", anchor: "demarchage-telephonique-11-aout-2026" },
+    ].map(({ source, anchor }) => ({
+      source,
+      destination: `/actualites-maprimerenov-cee#${anchor}`,
+      permanent: true,
+    }));
+    return [...domaine, ...actualites];
   },
   // Les Server Actions reçoivent des justificatifs jusqu'à 15 Mo. La limite reste
   // volontairement proche de ce maximum afin de contenir l'impact d'une requête
