@@ -603,6 +603,12 @@ export interface Database {
           { foreignKeyName: "appels_llm_artisan_id_fkey"; columns: ["artisan_id"]; referencedRelation: "artisans"; referencedColumns: ["id"] },
         ];
       };
+      auth_rate_limits: {
+        Row: { action: string; key_hash: string; window_started_at: string; attempts: number };
+        Insert: { action: string; key_hash: string; window_started_at?: string; attempts?: number };
+        Update: Partial<Database["public"]["Tables"]["auth_rate_limits"]["Insert"]>;
+        Relationships: [];
+      };
       quote_gestures: {
         Row: { id: string; slug: string; label: string; category: string; mpr_eligible: boolean; cee_eligible: boolean; cee_fiche_reference: string | null; active: boolean; valid_from: string; valid_until: string | null; created_at: string; updated_at: string };
         Insert: { id?: string; slug: string; label: string; category: string; mpr_eligible?: boolean; cee_eligible?: boolean; cee_fiche_reference?: string | null; active?: boolean; valid_from?: string; valid_until?: string | null; created_at?: string; updated_at?: string };

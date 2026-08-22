@@ -262,8 +262,14 @@ ombre douce. Pas de tirets cadratins dans la copie.
 - [ ] Borner par colonne le `grant update` sur `dossiers`, comme `0031` l'a fait pour `artisans`.
 - [ ] Câbler `expire_old_credits` à un cron (la route `/api/cron/expire-credits` existe déjà) :
       sans lui, `credit_balance_cents` dérive dès qu'un crédit expire.
-- [ ] Purger `leads`, `prospects` et `auth_rate_limits` (CNIL : ~3 ans après le dernier contact
-      en prospection B2B).
+- [x] Purger `leads`, `prospects` et `auth_rate_limits` (CNIL : ~3 ans après le dernier contact
+      en prospection B2B). **Fait en deux temps** : la purge des pièces sensibles par
+      `/api/cron/purge-pieces` + `src/lib/piece/retention.ts` (commit `0987c3a`, 90 j après
+      livraison / 180 j de plafond), puis la purge prospection par `/api/cron/purge-prospection`
+      + `src/lib/prospection/retention.ts` : contacts dormants 3 ans après leur dernier contact
+      sortant sans aucune réponse (jamais sollicités et `oppositions` exclus), leads au plafond
+      de 3 ans sauf convertis, lignes du rate limiter à 7 jours. Les tables héritage
+      `prospects*`, en sursis, restent hors périmètre (migration dédiée prévue).
 - [ ] `paiements.montant` est un `numeric` alors que la convention est l'entier en cents, et la
       conversion se fait exactement là où la loi exige l'exactitude.
 - [ ] Index manquants sur plusieurs clés étrangères.

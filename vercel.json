@@ -8,6 +8,10 @@
     {
       "path": "/api/cron/purge-pieces",
       "schedule": "30 3 * * *"
+    },
+    {
+      "path": "/api/cron/purge-prospection",
+      "schedule": "0 4 * * *"
     }
   ]
 }
