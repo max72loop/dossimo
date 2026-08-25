@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AlertCircle, Mail } from "lucide-react";
 
 import { FOCUS } from "@/components/ui/boutons";
 import { CHAMP_ERREUR, CHAMP_HINT, CHAMP_INPUT, CHAMP_LABEL } from "@/components/ui/champs";
 import { Spinner } from "@/components/ui/spinner";
+import { obtenirJetonOuverture } from "@/lib/forms/timing-action";
 import { CONSENTEMENT_CONTACT } from "@/lib/refus/consentements";
 import { EMAIL_REPLI } from "@/lib/refus/contact";
 import { soumettreDemandeRefus } from "@/lib/refus/actions";
@@ -34,6 +35,12 @@ const AIDE_NON_PRECISEE = "";
 export function DiagnosticForm({ utm }: { utm?: Record<string, string | undefined> }) {
   const router = useRouter();
   const [status, setStatus] = useState<"idle" | "loading">("idle");
+  // Jeton d'ouverture signé, obtenu au montage (`src/lib/forms/timing-action.ts`) :
+  // horodate la première seconde où le formulaire est réellement affiché.
+  const [openedAt, setOpenedAt] = useState<string | null>(null);
+  useEffect(() => {
+    obtenirJetonOuverture().then(setOpenedAt);
+  }, []);
   const [aide, setAide] = useState<string>(AIDE_NON_PRECISEE);
   const [geste, setGeste] = useState("");
   const [email, setEmail] = useState("");
@@ -64,6 +71,7 @@ export function DiagnosticForm({ utm }: { utm?: Record<string, string | undefine
         motif_libre: motifLibre,
         consentement_contact: consentement,
         website,
+        opened_at: openedAt ?? undefined,
         utm_source: utm?.utm_source ?? null,
         utm_medium: utm?.utm_medium ?? null,
         utm_campaign: utm?.utm_campaign ?? null,

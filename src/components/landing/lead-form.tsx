@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AlertCircle, CheckCircle2 } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 
 import { FOCUS } from "@/components/ui/boutons";
 import { CHAMP_INPUT, CHAMP_LABEL } from "@/components/ui/champs";
+import { obtenirJetonOuverture } from "@/lib/forms/timing-action";
 import { submitLead } from "@/lib/landing/actions";
 
 export function LeadForm() {
@@ -15,6 +16,13 @@ export function LeadForm() {
   const [telephone, setTelephone] = useState("");
   const [website, setWebsite] = useState("");
   const [error, setError] = useState<string | null>(null);
+  // Jeton d'ouverture signé, obtenu au montage : la landing est pré-rendue en
+  // statique, un jeton fourni par la page serait figé à l'heure du build
+  // (src/lib/forms/timing-action.ts).
+  const [openedAt, setOpenedAt] = useState<string | null>(null);
+  useEffect(() => {
+    obtenirJetonOuverture().then(setOpenedAt);
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -22,7 +30,13 @@ export function LeadForm() {
     setError(null);
 
     try {
-      const result = await submitLead({ email, entreprise, telephone, website });
+      const result = await submitLead({
+        email,
+        entreprise,
+        telephone,
+        website,
+        opened_at: openedAt ?? undefined,
+      });
       if (result.ok) {
         setStatus("done");
       } else {

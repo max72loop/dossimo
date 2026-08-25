@@ -3,6 +3,8 @@
 import { z } from "zod";
 
 import { consumeAuthRateLimit } from "@/lib/auth/rate-limit";
+import { emailEstRecevable } from "@/lib/forms/anti-spam";
+import { verifierOuvertureFormulaire } from "@/lib/forms/timing";
 import { estimerAidePublique } from "@/lib/landing/estimation";
 import {
   estimationSchema,
@@ -40,6 +42,9 @@ const leadSchema = z.object({
     (v) => (typeof v === "string" ? v.trim() : v),
     z.string().max(0).optional().or(z.literal("")),
   ),
+  // Jeton d'ouverture signé (src/lib/forms/timing.ts), posé en champ caché.
+  // Vérifié dans la Server Action, pas ici : sa fraîcheur exige le secret serveur.
+  opened_at: z.string().optional(),
 });
 
 export type SubmitLeadResult =
@@ -56,7 +61,20 @@ export async function submitLead(input: unknown): Promise<SubmitLeadResult> {
     };
   }
 
-  const { email, entreprise, telephone, message } = parsed.data;
+  const { email, entreprise, telephone, message, opened_at } = parsed.data;
+
+  // --- 0. Délai d'ouverture ---
+  // Un jeton trop récent (formulaire rempli en moins de quelques secondes) est
+  // un signal de bot, pas un humain rapide. Comme pour le honeypot, on ne
+  // distingue pas la panne du secret (`indisponible`) d'un cas normal : on ne
+  // veut PAS perdre un lead pour une panne d'infra qui n'est pas de son fait,
+  // seul un jeton effectivement trop jeune bloque.
+  if (verifierOuvertureFormulaire(opened_at) === "trop-tot") {
+    return {
+      ok: false,
+      error: "Le formulaire vient tout juste de s'afficher. Patientez un instant puis réessayez.",
+    };
+  }
 
   // --- 1. Anti-flood, borné par IP ---
   // Le honeypot (`website`) écarte les robots opportunistes mais ne borne pas un
@@ -75,6 +93,17 @@ export async function submitLead(input: unknown): Promise<SubmitLeadResult> {
     return {
       ok: false,
       error: "Trop de demandes envoyées depuis votre connexion. Réessayez dans quelques minutes.",
+    };
+  }
+
+  // --- 1bis. E-mail recevable (MX + jetables) ---
+  // Une adresse sans MX ne recevra jamais le premier contact : la capturer ne
+  // sert à rien et pollue la file de relance. Vérifié après le quota, pas
+  // avant : la résolution DNS coûte plus cher qu'une lecture de compteur.
+  if (!(await emailEstRecevable(email))) {
+    return {
+      ok: false,
+      error: "Cette adresse e-mail ne semble pas pouvoir recevoir de message. Vérifiez la saisie.",
     };
   }
 

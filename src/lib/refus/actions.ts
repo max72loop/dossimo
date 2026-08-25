@@ -1,6 +1,8 @@
 "use server";
 
 import { consumeAuthRateLimit } from "@/lib/auth/rate-limit";
+import { emailEstRecevable } from "@/lib/forms/anti-spam";
+import { verifierOuvertureFormulaire } from "@/lib/forms/timing";
 import { instantaneConsentements } from "@/lib/refus/consentements";
 import { demandeRefusSchema } from "@/lib/refus/schema";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -42,6 +44,23 @@ export async function soumettreDemandeRefus(
   // Le champ invisible est validé par le schéma (max 0 caractère), donc un robot
   // qui le remplit est déjà sorti plus haut. Rien à refaire ici.
 
+  // --- 1bis. Délai d'ouverture, EN MODE FERMÉ ---
+  // Même logique que le quota juste en dessous : un jeton absent, forgé ou trop
+  // récent n'est jamais un humain qui a simplement été rapide (le seuil est de
+  // quelques secondes), donc on refuse dans les trois cas plutôt que de laisser
+  // passer une soumission qu'on ne peut pas distinguer d'un bot.
+  const ouverture = verifierOuvertureFormulaire(d.opened_at);
+  if (ouverture !== "ok") {
+    return {
+      ok: false,
+      repliEmail: true,
+      error:
+        ouverture === "trop-tot"
+          ? "Le formulaire vient tout juste de s'afficher. Patientez un instant puis réessayez."
+          : "Le formulaire est momentanément indisponible. Écrivez-nous directement, votre demande sera traitée de la même façon.",
+    };
+  }
+
   // --- 2. Anti-flood, borné par IP, EN MODE FERMÉ ---
   //
   // Différence assumée avec `submitLead` (src/lib/landing/actions.ts), qui laisse
@@ -66,6 +85,18 @@ export async function soumettreDemandeRefus(
         verdict === "quota"
           ? "Trop de demandes envoyées depuis votre connexion. Réessayez dans quelques minutes, ou écrivez-nous directement."
           : "Le formulaire est momentanément indisponible. Écrivez-nous directement, votre demande sera traitée de la même façon.",
+    };
+  }
+
+  // --- 2bis. E-mail recevable (MX + jetables) ---
+  // Un domaine sans MX ne pourra jamais recevoir la réponse rédigée à la main :
+  // la demande serait de toute façon sans issue. Vérifié après le quota, pas
+  // avant : la résolution DNS coûte plus cher qu'une lecture de compteur.
+  if (!(await emailEstRecevable(d.email))) {
+    return {
+      ok: false,
+      repliEmail: true,
+      error: "Cette adresse e-mail ne semble pas pouvoir recevoir de réponse. Vérifiez la saisie.",
     };
   }
 

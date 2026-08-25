@@ -83,6 +83,14 @@ export const demandeRefusSchema = z
       z.string().max(0).optional().or(z.literal("")),
     ),
 
+    /**
+     * Jeton d'ouverture signé (`src/lib/forms/timing.ts`), posé en champ caché.
+     * Optionnel ici : sa présence et sa fraîcheur ne sont PAS du ressort du
+     * schéma (elles exigent le secret serveur), mais de la Server Action, qui
+     * le vérifie avant l'écriture.
+     */
+    opened_at: z.string().optional(),
+
     utm_source: texteFacultatif(120),
     utm_medium: texteFacultatif(120),
     utm_campaign: texteFacultatif(120),

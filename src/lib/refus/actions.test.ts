@@ -16,6 +16,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const insert = vi.fn();
 const consumeAuthRateLimit = vi.fn();
+const verifierOuvertureFormulaire = vi.fn();
+const emailEstRecevable = vi.fn();
 
 vi.mock("@/lib/supabase/admin", () => ({
   createAdminClient: () => ({ from: () => ({ insert }) }),
@@ -23,6 +25,14 @@ vi.mock("@/lib/supabase/admin", () => ({
 
 vi.mock("@/lib/auth/rate-limit", () => ({
   consumeAuthRateLimit: (...args: unknown[]) => consumeAuthRateLimit(...args),
+}));
+
+vi.mock("@/lib/forms/timing", () => ({
+  verifierOuvertureFormulaire: (...args: unknown[]) => verifierOuvertureFormulaire(...args),
+}));
+
+vi.mock("@/lib/forms/anti-spam", () => ({
+  emailEstRecevable: (...args: unknown[]) => emailEstRecevable(...args),
 }));
 
 const { soumettreDemandeRefus } = await import("@/lib/refus/actions");
@@ -42,6 +52,7 @@ function demande(sur: Record<string, unknown> = {}) {
       "Refus notifié parce que la date de visite technique ne figure sur aucune pièce du dossier.",
     consentement_contact: true,
     website: "",
+    opened_at: "jeton-valide",
     ...sur,
   };
 }
@@ -51,6 +62,10 @@ beforeEach(() => {
   insert.mockResolvedValue({ error: null });
   consumeAuthRateLimit.mockReset();
   consumeAuthRateLimit.mockResolvedValue("ok");
+  verifierOuvertureFormulaire.mockReset();
+  verifierOuvertureFormulaire.mockReturnValue("ok");
+  emailEstRecevable.mockReset();
+  emailEstRecevable.mockResolvedValue(true);
 });
 
 describe("soumettreDemandeRefus", () => {
@@ -68,6 +83,33 @@ describe("soumettreDemandeRefus", () => {
     // traitement manuel noyée, ce sont des artisans qui attendent une réponse
     // qui n'arrivera pas.
     consumeAuthRateLimit.mockResolvedValue("erreur");
+
+    const result = await soumettreDemandeRefus(demande());
+
+    expect(result).toMatchObject({ ok: false, repliEmail: true });
+    expect(insert).not.toHaveBeenCalled();
+  });
+
+  it("refuse et propose l'e-mail de repli quand le formulaire est soumis trop vite", async () => {
+    verifierOuvertureFormulaire.mockReturnValue("trop-tot");
+
+    const result = await soumettreDemandeRefus(demande());
+
+    expect(result).toMatchObject({ ok: false, repliEmail: true });
+    expect(insert).not.toHaveBeenCalled();
+  });
+
+  it("refuse AUSSI quand le jeton d'ouverture est indisponible (mode fermé)", async () => {
+    verifierOuvertureFormulaire.mockReturnValue("indisponible");
+
+    const result = await soumettreDemandeRefus(demande());
+
+    expect(result).toMatchObject({ ok: false, repliEmail: true });
+    expect(insert).not.toHaveBeenCalled();
+  });
+
+  it("refuse une adresse dont le domaine ne peut pas recevoir de réponse", async () => {
+    emailEstRecevable.mockResolvedValue(false);
 
     const result = await soumettreDemandeRefus(demande());
 
