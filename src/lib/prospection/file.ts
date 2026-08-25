@@ -22,6 +22,7 @@ import {
   mentionPerimee,
 } from "@/lib/prospection/message";
 import { envoyerMessage } from "@/lib/prospection/envoi";
+import { choisirAccroche } from "@/lib/sprint/accroches";
 
 /**
  * File d'envoi : préparation (la veille ou le matin), puis envoi au compte-gouttes.
@@ -38,6 +39,49 @@ import { envoyerMessage } from "@/lib/prospection/envoi";
  */
 
 type Client = ReturnType<typeof createAdminClient>;
+
+/** `place_id` collé dans les notes d'import (`… place_id=<id>`). Absent sur un CSV admin. */
+export function placeIdDepuisNotes(notes: string | null | undefined): string | null {
+  return /place_id=(\S+)$/.exec(notes ?? "")?.[1] ?? null;
+}
+
+/**
+ * Accroche métier pour un lot de prospects, lue sur `prospects_dossimo.rge_domaines`
+ * via le `place_id` des notes. Un CSV admin n'en a pas : il retombe sur le générique
+ * (choisirAccroche([])). On ne devine jamais un métier.
+ */
+async function accrochesPourProspects(
+  supabase: Client,
+  prospects: { id: string; notes: string | null }[],
+): Promise<Map<string, { objet: string; texte: string }>> {
+  const parPlace = new Map<string, string>();
+  for (const p of prospects) {
+    const placeId = placeIdDepuisNotes(p.notes);
+    if (placeId) parPlace.set(placeId, p.id);
+  }
+
+  const domainesParProspect = new Map<string, string[] | null>();
+  if (parPlace.size > 0) {
+    const { data, error } = await supabase
+      .from("prospects_dossimo")
+      .select("place_id, rge_domaines")
+      .in("place_id", [...parPlace.keys()]);
+    if (error) {
+      throw new Error(`Lecture des domaines RGE : ${error.message}`);
+    }
+    for (const row of data ?? []) {
+      const prospectId = parPlace.get(row.place_id);
+      if (prospectId) domainesParProspect.set(prospectId, row.rge_domaines);
+    }
+  }
+
+  const result = new Map<string, { objet: string; texte: string }>();
+  for (const p of prospects) {
+    const { accroche } = choisirAccroche(domainesParProspect.get(p.id) ?? null);
+    result.set(p.id, { objet: accroche.objet, texte: accroche.texte });
+  }
+  return result;
+}
 
 export async function campagneActive(
   supabase: Client = createAdminClient(),
@@ -350,14 +394,21 @@ export async function preparerFile(
   const lot = retenus.slice(0, aCreer);
   if (lot.length === 0) return { crees: 0, motif: "Aucun prospect disponible." };
 
-  const messages = lot.map((p) => ({
-    campagne_id: campagne.id,
-    prospect_id: p.id,
-    objet: campagne.objet,
-    corps: corpsPourProspect(campagne.corps, p),
-    scheduled_on: jour,
-    statut: "en_attente" as const,
-  }));
+  const accroches = await accrochesPourProspects(supabase, lot);
+  const messages = lot.map((p) => {
+    const accroche = accroches.get(p.id);
+    return {
+      campagne_id: campagne.id,
+      prospect_id: p.id,
+      objet: accroche?.objet ?? campagne.objet,
+      corps: corpsPourProspect(campagne.corps, {
+        ...p,
+        accroche: accroche?.texte,
+      }),
+      scheduled_on: jour,
+      statut: "en_attente" as const,
+    };
+  });
 
   const { data: crees, error } = await supabase
     .from("prospection_messages")
@@ -507,6 +558,14 @@ export async function envoyerProchain(
     return { envoye: false, motif: `copie périmée (${perimee})` };
   }
 
+  // Accroche AVANT la réservation : un échec SQL ici ne doit pas marquer le
+  // message `envoye` sans l'avoir envoyé.
+  const accrocheHtml = (
+    await accrochesPourProspects(supabase, [
+      { id: message.prospect_id, notes: prospect.notes },
+    ])
+  ).get(message.prospect_id)?.texte;
+
   // Réservation optimiste : on ne repasse par ici que si personne n'a pris la ligne.
   const { data: reserve } = await supabase
     .from("prospection_messages")
@@ -522,7 +581,12 @@ export async function envoyerProchain(
     to: prospect.email,
     objet: message.objet,
     corps: message.corps,
-    corpsHtml: corpsHtmlPourProspect(prospect),
+    corpsHtml: corpsHtmlPourProspect({
+      prenom: prospect.prenom,
+      source: prospect.source,
+      unsubscribe_token: prospect.unsubscribe_token,
+      accroche: accrocheHtml,
+    }),
     lienDesinscription: lienDesinscription(prospect.unsubscribe_token),
   });
 
@@ -591,7 +655,7 @@ async function marquerContactDansFichier(
   messageId: string,
   campagneId: string,
 ): Promise<void> {
-  const placeId = /place_id=(\S+)$/.exec(notes ?? "")?.[1];
+  const placeId = placeIdDepuisNotes(notes);
   if (!placeId) return;
 
   // L'update rend le SIREN, qui est la clé du nouveau modèle. Passer par lui

@@ -1,0 +1,8 @@
+-- Copie courte + {{accroche}} : NE PAS JOUER À LA MAIN.
+--
+-- Source de vérité : `supabase/migrations/0059_prospection_corps_accroche.sql`.
+-- Appliquer avec `npx supabase db push` (AGENTS.md : jamais l'éditeur SQL
+-- pour une copie qui doit rejouer au `db reset`).
+--
+-- Ce fichier existait comme script de données. Il est conservé pour le
+-- retrouver, et pointe vers la migration.

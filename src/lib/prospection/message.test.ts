@@ -69,7 +69,7 @@ describe("rendre — aucun message ne part incomplet", () => {
 
 describe("corpsPourProspect", () => {
   const gabarit =
-    "{{salutation}}\n\nEssai : {{lien_demo}}\n\n--\n{{mentions_legales}}\nVotre adresse : {{source}}.\nDésinscription : {{lien_desinscription}}";
+    "{{salutation}}\n\n{{accroche}}\n\nEssai : {{lien_demo}}\n\n--\n{{mentions_legales}}\nVotre adresse : {{source}}.\nDésinscription : {{lien_desinscription}}";
 
   it("porte l'identité, la source de l'adresse et le lien de désinscription", () => {
     const corps = corpsPourProspect(gabarit, {
@@ -86,6 +86,19 @@ describe("corpsPourProspect", () => {
     // LCEN art. 6 : l'expéditeur doit être identifiable.
     expect(corps).toContain("Max Landry (EI)");
     expect(corps).toContain("non affilié à l'Anah");
+    // Sans métier fourni, l'accroche générique tient le corps.
+    expect(corps).toContain("Une mention obligatoire absente du devis");
+  });
+
+  it("injecte l'accroche métier quand elle est fournie", () => {
+    const corps = corpsPourProspect(gabarit, {
+      prenom: "jean",
+      source: "annuaire public des professionnels RGE",
+      unsubscribe_token: "tok-123",
+      accroche: "Sur un dossier PAC, une efficacité saisonnière (ETAS) absente du devis ou une fiche mal choisie, et c'est le refus.",
+    });
+    expect(corps).toContain("ETAS");
+    expect(corps).not.toContain("Une mention obligatoire absente du devis");
   });
 });
 
@@ -106,8 +119,19 @@ describe("corpsHtmlPourProspect — version HTML à la marque", () => {
     expect(html).toContain("/desinscription/tok-123");
     expect(html).toContain("Tester en 2 minutes");
     expect(html).toContain(prospect.source);
+    expect(html).toContain("R&eacute;pondez-moi");
+    expect(html).not.toContain("DOSSIMO50");
     // Aucune variable de gabarit ne doit subsister.
     expect(html).not.toMatch(/\{\{\s*\w+\s*\}\}/);
+  });
+
+  it("porte l'accroche métier dans le premier paragraphe", () => {
+    const html = corpsHtmlPourProspect({
+      ...prospect,
+      accroche: "Sur un devis d'isolation, une résistance thermique ou une certification ACERMI absente, et la prime saute.",
+    });
+    expect(html).toContain("ACERMI");
+    expect(html).toContain("prime perdue");
   });
 
   it("embarque le pixel de suivi d'ouverture, attribué au bon prospect", () => {
