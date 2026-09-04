@@ -15,13 +15,18 @@ import {
   XCircle,
 } from "lucide-react";
 
+import { BarreCtaMobile, SENTINELLE_CTA_HERO } from "@/components/landing/cta-persistant";
 import { Estimateur } from "@/components/landing/estimateur";
 import { EtapePicto, Illustration } from "@/components/landing/illustrations";
 import { LeadForm } from "@/components/landing/lead-form";
 import { SiteFooter } from "@/components/landing/site-footer";
 import { SiteHeader } from "@/components/landing/site-header";
 import { VisiteGuidee } from "@/components/landing/visite-guidee";
-import { FOCUS, FOCUS_SOMBRE } from "@/components/ui/boutons";
+import {
+  CTA_VITRINE_ENCRE,
+  CTA_VITRINE_ENCRE_SECONDAIRE,
+  FOCUS,
+} from "@/components/ui/boutons";
 import { CTA_DEMO } from "@/lib/landing/copy";
 import { grillePublique } from "@/lib/landing/grille-publique";
 import { type GrilleAffichee } from "@/lib/pricing";
@@ -49,7 +54,7 @@ export default async function Home() {
     <div className="flex min-h-full flex-col bg-papier pb-20 md:pb-0">
       <JsonLd grille={grille} />
       <a href="#contenu" className="skip-link">Aller au contenu principal</a>
-      <SiteHeader />
+      <SiteHeader ctaSentinelle={SENTINELLE_CTA_HERO} />
       <main id="contenu" className="flex-1" tabIndex={-1}>
         <Hero />
         <TrustStrip />
@@ -63,7 +68,7 @@ export default async function Home() {
         <Faq />
         <Contact />
       </main>
-      <MobileConversionBar />
+      <BarreCtaMobile sentinelle={SENTINELLE_CTA_HERO} />
       <SiteFooter />
     </div>
   );
@@ -99,11 +104,14 @@ function Hero() {
             compare la facture et prépare le pack complet. Vous relisez, vous déposez.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
-            <Link href="/demo" className={"group inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-papier px-6 text-sm font-semibold text-encre transition-colors hover:bg-blanc-casse " + FOCUS_SOMBRE}>
+            {/* La sentinelle du CTA persistant : tant que ce bouton est à
+                l'écran, celui de l'en-tête et la barre collante s'effacent
+                (DESIGN.md §5). */}
+            <Link id={SENTINELLE_CTA_HERO} href="/demo" className={CTA_VITRINE_ENCRE}>
               {CTA_DEMO}
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
             </Link>
-            <Link href="/exemple" className={"inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border border-papier/30 px-6 text-sm font-medium text-papier transition-colors hover:bg-papier/10 " + FOCUS_SOMBRE}>
+            <Link href="/exemple" className={CTA_VITRINE_ENCRE_SECONDAIRE}>
               Voir un pack réel
             </Link>
           </div>
@@ -135,22 +143,40 @@ function Hero() {
 }
 
 function TrustStrip() {
+  // Quatre promesses, UNE anatomie : un repère, une valeur, ce qu'elle recouvre.
+  // La version précédente ne donnait de valeur qu'à deux items sur quatre
+  // (« 100 % », « 0 % ») et laissait les deux autres retomber en petit texte
+  // centré : la ligne alternait deux colonnes lourdes et deux légères, sans
+  // rythme ni point d'entrée pour le regard.
+  //
+  // Les valeurs non chiffrées le restent. Inventer « en 5 minutes » pour
+  // égaliser la colonne aurait été un chiffre inventé, ce que DESIGN.md §6
+  // interdit au même titre qu'un montant : l'anatomie devait devenir régulière,
+  // pas la promesse devenir quantifiée.
   const items = [
-    { icon: Clock, stat: null, text: "Monté en minutes" },
-    { icon: HandCoins, stat: "100 %", text: "de la prime conservée" },
-    { icon: Ban, stat: "0 %", text: "de commission" },
-    { icon: ShieldCheck, stat: null, text: "Contrôlé avant dépôt" },
+    { icon: Clock, valeur: "En minutes", texte: "le dossier est monté" },
+    { icon: HandCoins, valeur: "100 %", texte: "de la prime conservée" },
+    { icon: Ban, valeur: "0 %", texte: "de commission" },
+    { icon: ShieldCheck, valeur: "Avant dépôt", texte: "les risques sont remontés" },
   ];
   return (
-    <div className="border-b border-papier/10 bg-encre">
+    // `border-y` et non `border-b` : le bandeau et le hero partagent le fond
+    // encre, sans filet en haut ils se lisaient comme un seul bloc.
+    <div className="border-y border-papier/10 bg-encre">
       <Shell>
-        <ul className="grid grid-cols-2 divide-x divide-y divide-papier/10 lg:grid-cols-4 lg:divide-y-0">
+        {/* Les filets viennent de `gap-px` sur un fond clair, pas de `divide-*`.
+            `divide-x` borde tous les enfants sauf le premier, donc en deux
+            colonnes il posait un filet au bord gauche de la grille (3ᵉ item) et
+            `divide-y` un filet en haut du 2ᵉ : deux traits parasites, visibles
+            au téléphone seulement. La gouttière, elle, reste juste à toutes les
+            largeurs. */}
+        <ul className="grid grid-cols-2 gap-px bg-papier/10 lg:grid-cols-4">
           {items.map((item) => (
-            <li key={item.text} className="flex min-h-24 items-center gap-3 px-3 py-4 sm:px-6">
-              <item.icon className="h-5 w-5 shrink-0 text-accent-clair" strokeWidth={1.5} aria-hidden="true" />
-              <p className="text-sm leading-snug text-papier/75">
-                {item.stat && <span className="block font-serif text-xl font-semibold text-blanc-casse">{item.stat}</span>}
-                {item.text}
+            <li key={item.texte} className="flex flex-col gap-3 bg-encre px-4 py-6 sm:px-6">
+              <item.icon className="h-5 w-5 text-accent-clair" strokeWidth={1.5} aria-hidden="true" />
+              <p>
+                <span className="block font-serif text-xl font-semibold leading-tight text-blanc-casse">{item.valeur}</span>
+                <span className="mt-1 block text-sm leading-snug text-papier/70">{item.texte}</span>
               </p>
             </li>
           ))}
@@ -434,10 +460,10 @@ function Pricing({ grille }: { grille: GrilleAffichee | null }) {
             </ul>
           )}
           <div className="mt-10 flex flex-col gap-3 border-t border-papier/15 pt-8 sm:flex-row">
-            <Link href="/demo" className={"group inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-papier px-6 text-sm font-semibold text-encre hover:bg-blanc-casse " + FOCUS_SOMBRE}>
+            <Link href="/demo" className={CTA_VITRINE_ENCRE}>
               {CTA_DEMO}<ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
             </Link>
-            <a href="#contact" className={"inline-flex min-h-12 items-center justify-center rounded-lg border border-papier/25 px-6 text-sm font-medium text-papier hover:bg-papier/10 " + FOCUS_SOMBRE}>Poser une question</a>
+            <a href="#contact" className={CTA_VITRINE_ENCRE_SECONDAIRE}>Poser une question</a>
           </div>
         </div>
       </Shell>
@@ -491,16 +517,6 @@ function Contact() {
         <div className="rounded-2xl bg-papier p-6 shadow-lg sm:p-8"><LeadForm /></div>
       </Shell>
     </section>
-  );
-}
-
-function MobileConversionBar() {
-  return (
-    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-encre/15 bg-blanc-casse/95 p-3 shadow-[0_-8px_24px_rgba(22,32,43,0.12)] backdrop-blur md:hidden">
-      <Link href="/demo" className={"flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-accent px-5 py-3 text-center text-sm font-semibold text-blanc-casse " + FOCUS}>
-        {CTA_DEMO}<ArrowRight className="h-4 w-4" aria-hidden="true" />
-      </Link>
-    </div>
   );
 }
 

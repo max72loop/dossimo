@@ -12,7 +12,7 @@ import {
 
 import { SiteHeader } from "@/components/landing/site-header";
 import { SiteFooter } from "@/components/landing/site-footer";
-import { FOCUS } from "@/components/ui/boutons";
+import { CTA_VITRINE_ENCRE_SECONDAIRE, FOCUS } from "@/components/ui/boutons";
 import { CTA_DEMO } from "@/lib/landing/copy";
 import { publicMetadata } from "@/lib/seo/site";
 
@@ -96,7 +96,7 @@ export default function ExemplePage() {
               </a>
               <Link
                 href="/demo"
-                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border border-papier/30 px-6 py-3 text-sm font-medium text-papier transition-colors hover:bg-papier/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-papier"
+                className={CTA_VITRINE_ENCRE_SECONDAIRE}
               >
                 {CTA_DEMO}
                 <ArrowRight className="h-4 w-4" />

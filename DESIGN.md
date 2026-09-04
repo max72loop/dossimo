@@ -170,6 +170,13 @@ identique.
   depuis le chantier. Toute vue se conçoit d'abord en étroit ; points de rupture
   Tailwind (`sm/md/lg/xl`) par-dessus, jamais l'inverse.
 - **Rythme vertical** : espacement inter-sections cohérent (échelle à figer, §8).
+- **Filets d'une grille : `gap-px` sur fond teinté, jamais `divide-*`.** Les
+  utilitaires `divide-x` / `divide-y` bordent *tous les enfants sauf le premier*,
+  ce qui n'a de sens que sur une seule rangée ou une seule colonne. Dès que la
+  grille passe à la ligne, ils posent des filets parasites au bord (en deux
+  colonnes : un trait à gauche du 3ᵉ item, un trait en haut du 2ᵉ). La gouttière
+  d'un pixel sur un fond teinté, elle, reste juste à toutes les largeurs et suit
+  les points de rupture sans correctif.
 
 ### Formes
 
@@ -491,7 +498,25 @@ auth (`(auth)/layout.tsx`, centré `max-w-md`), admin, legal.
   `role="dialog"`), et une barre CTA collante en bas sur la vitrine mobile.
 - **Pied** : porte la mention légale obligatoire (aujourd'hui répétée, à centraliser).
 - **CTA vitrine ≠ actions app** : la vitrine a ses propres boutons (plus hauts, plus
-  arrondis), l'app utilise `boutons.ts`. Divergence assumée, à garder explicite.
+  arrondis), l'app utilise `BTN_PRINCIPAL`. Divergence assumée, mais **une seule
+  source**, dans le même [`boutons.ts`](src/components/ui/boutons.ts) :
+  `CTA_VITRINE` (bleu accent sur fond clair), `CTA_VITRINE_ENCRE` (crème sur
+  encre), `CTA_VITRINE_ENCRE_SECONDAIRE` (contour sur encre) et
+  `CTA_VITRINE_COMPACT` (barre d'en-tête, seule la hauteur change). Les deux
+  habillages sont une **inversion**, pas deux décisions : le bleu de marque ne va
+  jamais sur encre (1,95:1, cf. « Logo » plus bas), donc l'action principale s'y
+  renverse en crème. Forme, hauteur, graisse, transition et anneau de focus sont
+  identiques des deux côtés.
+- **Un seul bouton plein à l'écran — dans l'espace comme dans le temps.** Le CTA
+  persistant de la vitrine (bouton d'en-tête sur ordinateur, barre collante en bas
+  sur téléphone) s'efface tant que le CTA du hero est visible, via
+  [`cta-persistant.tsx`](src/components/landing/cta-persistant.tsx). C'est la
+  **page** qui déclare sa sentinelle : sans sentinelle, le CTA persistant ne bouge
+  pas, parce que le même en-tête coiffe les guides et les pages légales où il est
+  le seul chemin vers l'action. L'élément reste monté et garde sa place (aucun
+  saut de mise en page quand il revient), et `inert` accompagne l'opacité :
+  effacé à l'œil ne suffit pas, il doit aussi sortir du parcours clavier et de
+  l'arbre d'accessibilité.
 
 ### Tables et densité de données
 
@@ -625,6 +650,8 @@ vérité, partagée entre les supports.
       l'admin**. Ne restent que : les flèches **décoratives déjà `aria-hidden`** des
       CTA de la vitrine (traitement propre à la landing, §5) et les flèches en
       commentaires de code. `≠` (« ≠ écart ») conservé (typographie, cf. journal).
+- [x] **Source unique des CTA de la vitrine** et règle « un seul bouton plein par
+      écran » appliquée au CTA persistant — 2026-09-04 (§5).
 - [ ] Centraliser la mention légale du pied de page (§5).
 - [ ] Stratégie responsive des tables (§5).
 - [ ] Convention toast vs message inline, et son placement (§5).
@@ -674,6 +701,8 @@ Deux lignes par décision, datées, pour ne pas re-débattre le passé.
 
 | Date | Décision | Pourquoi |
 |---|---|---|
+| 2026-09-04 | **CTA de la vitrine : une source, deux fonds, un seul bouton plein à l'écran.** Les classes du CTA principal, recopiées en six exemplaires (hero et bandeau tarifs de la landing, deux fois sur `/tarifs`, une fois sur `/visite`, une fois sur `/exemple`), remontent dans [`boutons.ts`](src/components/ui/boutons.ts) : `CTA_VITRINE`, `CTA_VITRINE_ENCRE`, `CTA_VITRINE_ENCRE_SECONDAIRE`, `CTA_VITRINE_COMPACT`. Le bouton d'en-tête et la barre collante mobile s'effacent tant que le CTA du hero est à l'écran, par un observateur d'intersection sur une sentinelle déclarée par la page ([`cta-persistant.tsx`](src/components/landing/cta-persistant.tsx)) ; sans sentinelle, rien ne bouge. `MobileConversionBar` quitte `app/page.tsx` pour ce module. Aucun nouveau token, aucune couleur nouvelle. | Deux défauts au même endroit. (1) La landing affichait en permanence **deux boutons pleins portant le même libellé vers la même page** : sur ordinateur celui de l'en-tête doublait celui du hero, sur téléphone la barre collante le doublait à quelques centimètres. La règle « un seul bouton plein par écran » était écrite en tête de `boutons.ts` depuis le 2026-07-19 et n'avait jamais été appliquée à la vitrine, qui n'utilise pas `BTN_PRINCIPAL`. (2) Les six copies avaient déjà dérivé de trois façons : la variante de `/tarifs` avait perdu `transition-colors` (survol qui claque au lieu de fondre), son action secondaire portait `border-papier/25` là où les autres portaient `/30`, et `/exemple` recopiait l'anneau de focus à la main au lieu d'importer `FOCUS_SOMBRE`. C'est l'histoire de `FOCUS_SOMBRE` du 2026-07-29, rejouée sur le bouton qu'elle habillait. Le défaut sera revenu une troisième fois si la prochaine page vitrine recopie la chaîne au lieu d'importer la constante. |
+| 2026-09-04 | **Bandeau de preuve du hero : une anatomie pour les quatre items.** Chaque colonne porte désormais un repère, une valeur en serif et la ligne qui la complète — « En minutes / le dossier est monté », « 100 % / de la prime conservée », « 0 % / de commission », « Avant dépôt / les risques sont remontés ». Les filets passent de `divide-x` / `divide-y` à une gouttière `gap-px` sur fond `papier/10`, et le bandeau gagne un filet haut (`border-y`). Aucun nouveau token, aucun chiffre ajouté. | Deux items sur quatre seulement portaient une valeur ; les deux autres retombaient en petit texte centré, si bien que la ligne alternait deux colonnes lourdes et deux légères sans offrir de point d'entrée au regard — de la donnée empilée sans hiérarchie. Les valeurs non chiffrées le **restent** : inventer « en 5 minutes » pour égaliser la colonne aurait été un chiffre inventé (§6), c'est l'anatomie qui devait devenir régulière, pas la promesse devenir quantifiée. Les filets, eux, étaient faux au téléphone : `divide-*` borde tous les enfants sauf le premier, ce qui pose un trait au bord gauche de la grille sur le 3ᵉ item et un trait en haut du 2ᵉ dès que la grille passe à deux colonnes. La gouttière d'un pixel est juste à toutes les largeurs, sans correctif par point de rupture. |
 | 2026-08-04 | **404 globale** : le bloc de texte isolé devient une carte flottante en deux volets sur desktop, empilée sur mobile. Le volet illustré encre combine un grand `404` typographique et `FolderSearch` de Lucide ; le volet de reprise conserve un seul bouton plein (« Retour à l'accueil ») et l'accès secondaire aux dossiers. Aucun nouveau token ni actif. | L'écran précédent était fonctionnel et accessible, mais sa petite colonne centrée se perdait dans un grand vide et ne portait presque aucune signature visuelle au-delà du logo. La nouvelle composition donne un point focal et distingue clairement l'impasse de navigation d'une erreur applicative, sans dramatiser la 404 en rouge ni ajouter de poids réseau. |
 | 2026-08-02 | **Affiche de la visite guidée** : l'aplat encre au bouton lecture devient une **vraie capture de l'app** (l'écran des contrôles), servie depuis `public/visite/apercu.webp` (33 ko, `loading="lazy"`), sous un voile encre dégradé (`from-encre via-encre/60 to-encre/15`) qui rend le titre lisible sans effacer l'écran. Titre et sous-titre passent en bas à gauche, le bouton lecture reste centré, l'image glisse en `scale-[1.02]` au survol (`motion-reduce` respecté). La capture est **dérivée**, jamais déposée à la main : [`scripts/visite-affiche.mjs`](scripts/visite-affiche.mjs) la tire de la démo au numéro d'étape écrit dans `VISITE.affiche`, et retire le bandeau applicatif (nom de l'entreprise connectée) et la barre de défilement. Le motif §5 « Rien avant le clic » s'ouvre donc aux captures **servies par nous**, l'interdit restant l'appel au tiers. Aucun nouveau token. | L'affiche dessinée ne montrait rien : un rectangle encre uni derrière un bouton lecture, qui ne donnait aucune raison de cliquer et laissait croire à une vidéo générique. La règle qu'elle appliquait (« pas de capture à servir ») visait le poids et l'appel au tiers, pas la capture en soi : 33 ko en différé ne coûtent rien et ne partent pas chez l'hébergeur. L'écran retenu est celui des contrôles anti-refus, pas la page d'accueil (l'étape 1 de la démo montre… la vitrine elle-même) ni le récapitulatif (il porte encore le coupon DOSSIMO50, retiré le 2026-08-01). Le bandeau applicatif est coupé parce qu'il affiche le nom de l'entreprise : la vitrine est sans donnée nominative depuis le 2026-07-22, une copie d'écran ne fait pas exception. |
 | 2026-08-01 | **Guides, famille « Actualités »** : `GUIDE_CATEGORIES` gagne une quatrième famille, placée **en tête** du hub `/guides`, pour les pages adossées à une échéance datée. Même gabarit `SeoGuide` que les guides de méthode (checklist, erreurs, exemple, FAQ, sources, CTA `/demo`), aucun composant ni token nouveau. | Une actualité a une date de péremption que les guides de méthode n'ont pas : reléguée en bas de page, elle arrive au lecteur après l'échéance qu'elle annonce. Passer par la donnée (`guides.ts`) plutôt que par une route dédiée conserve le maillage, le sitemap, le menu et le JSON-LD sans une ligne de plus. |

@@ -1,9 +1,10 @@
 import Link from "next/link";
 
 import { getCurrentUser } from "@/lib/auth/get-artisan";
+import { CtaPersistant } from "@/components/landing/cta-persistant";
 import { SiteMenu } from "@/components/landing/site-menu";
 import { Logo } from "@/components/ui/logo";
-import { FOCUS } from "@/components/ui/boutons";
+import { CTA_VITRINE_COMPACT, FOCUS } from "@/components/ui/boutons";
 import { CTA_DEMO } from "@/lib/landing/copy";
 import { guideList } from "@/lib/seo/guides";
 
@@ -23,7 +24,13 @@ const NAV = [
 // (server-only), et tout composant client qui voulait juste afficher le logo faisait
 // entrer ce code dans son bundle, ce qui mettait la page en 500.
 
-export async function SiteHeader() {
+/**
+ * `ctaSentinelle` : identifiant du CTA de hero que ce bouton d'en-tête double.
+ * Renseigné, le bouton s'efface tant que ce CTA est à l'écran (DESIGN.md §5,
+ * un seul bouton plein par écran). Omis — le cas de toutes les pages coiffées
+ * par cet en-tête sauf la landing — le bouton ne bouge jamais.
+ */
+export async function SiteHeader({ ctaSentinelle }: { ctaSentinelle?: string } = {}) {
   const user = await getCurrentUser();
 
   return (
@@ -54,12 +61,11 @@ export async function SiteHeader() {
           >
             {user ? "Mon espace" : "Connexion"}
           </Link>
-          <Link
-            href={user ? "/dossiers/nouveau" : "/demo"}
-            className={`hidden h-10 items-center rounded bg-accent px-5 text-sm font-medium text-blanc-casse transition-colors hover:bg-accent-hover md:inline-flex ${FOCUS}`}
-          >
-            {user ? "Nouveau dossier" : CTA_DEMO}
-          </Link>
+          <CtaPersistant sentinelle={ctaSentinelle} className="hidden md:block">
+            <Link href={user ? "/dossiers/nouveau" : "/demo"} className={CTA_VITRINE_COMPACT}>
+              {user ? "Nouveau dossier" : CTA_DEMO}
+            </Link>
+          </CtaPersistant>
           <SiteMenu nav={NAV} guides={guideList} connecte={Boolean(user)} />
         </div>
       </div>

@@ -5,7 +5,10 @@ import { ArrowRight, CheckCircle2, FileCheck2, ScanSearch, Upload } from "lucide
 import { SiteFooter } from "@/components/landing/site-footer";
 import { SiteHeader } from "@/components/landing/site-header";
 import { VisiteGuidee } from "@/components/landing/visite-guidee";
-import { FOCUS_SOMBRE } from "@/components/ui/boutons";
+import {
+  CTA_VITRINE_ENCRE,
+  CTA_VITRINE_ENCRE_SECONDAIRE,
+} from "@/components/ui/boutons";
 import { CTA_DEMO } from "@/lib/landing/copy";
 import { publicMetadata } from "@/lib/seo/site";
 
@@ -102,14 +105,14 @@ export default function VisitePage() {
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
               <Link
                 href="/demo"
-                className={"group inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-papier px-6 text-sm font-semibold text-encre transition-colors hover:bg-blanc-casse " + FOCUS_SOMBRE}
+                className={CTA_VITRINE_ENCRE}
               >
                 {CTA_DEMO}
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
               </Link>
               <Link
                 href="/exemple"
-                className={"inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border border-papier/30 px-6 text-sm font-medium text-papier transition-colors hover:bg-papier/10 " + FOCUS_SOMBRE}
+                className={CTA_VITRINE_ENCRE_SECONDAIRE}
               >
                 Voir un pack réel
               </Link>

@@ -13,7 +13,10 @@ import {
 
 import { SiteFooter } from "@/components/landing/site-footer";
 import { SiteHeader } from "@/components/landing/site-header";
-import { FOCUS_SOMBRE } from "@/components/ui/boutons";
+import {
+  CTA_VITRINE_ENCRE,
+  CTA_VITRINE_ENCRE_SECONDAIRE,
+} from "@/components/ui/boutons";
 import { CTA_DEMO } from "@/lib/landing/copy";
 import { grillePublique } from "@/lib/landing/grille-publique";
 import type { GrilleAffichee } from "@/lib/pricing";
@@ -104,26 +107,14 @@ function Hero({ grille }: { grille: GrilleAffichee | null }) {
             votre client.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <Link
-              href="/demo"
-              className={
-                "group inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-papier px-6 text-sm font-semibold text-encre hover:bg-blanc-casse " +
-                FOCUS_SOMBRE
-              }
-            >
+            <Link href="/demo" className={CTA_VITRINE_ENCRE}>
               {CTA_DEMO}
               <ArrowRight
                 className="h-4 w-4 transition-transform group-hover:translate-x-0.5"
                 aria-hidden="true"
               />
             </Link>
-            <Link
-              href="/exemple"
-              className={
-                "inline-flex min-h-12 items-center justify-center rounded-lg border border-papier/25 px-6 text-sm font-medium text-papier hover:bg-papier/10 " +
-                FOCUS_SOMBRE
-              }
-            >
+            <Link href="/exemple" className={CTA_VITRINE_ENCRE_SECONDAIRE}>
               Voir ce qui est inclus
             </Link>
           </div>
@@ -413,13 +404,7 @@ function FinalCta() {
             L&rsquo;essai commence sans paiement. Le tarif n&rsquo;apparaît qu&rsquo;une
             fois le dossier estimable.
           </p>
-          <Link
-            href="/demo"
-            className={
-              "group mt-8 inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-papier px-6 text-sm font-semibold text-encre hover:bg-blanc-casse " +
-              FOCUS_SOMBRE
-            }
-          >
+          <Link href="/demo" className={CTA_VITRINE_ENCRE + " mt-8"}>
             {CTA_DEMO}
             <ArrowRight
               className="h-4 w-4 transition-transform group-hover:translate-x-0.5"
