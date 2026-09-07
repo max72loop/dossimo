@@ -45,6 +45,17 @@ export async function SiteHeader() {
               {item.label}
             </Link>
           ))}
+          {/* Entrée du cluster « refus » (plus d'un tiers des URLs du site, sinon
+              orphelin du maillage). Hors de NAV : ce tableau nourrit la section
+              « Le produit » du menu, où ce lien n'a pas sa place — il a la
+              sienne, avec les pages ciblées, dans SiteMenu. Visible à partir de
+              `lg` seulement : la barre est déjà pleine à `md`. */}
+          <Link
+            href="/refus"
+            className={`hidden text-sm text-ardoise underline-offset-4 transition hover:text-encre hover:underline lg:inline ${FOCUS}`}
+          >
+            Dossier refusé ?
+          </Link>
         </nav>
 
         <div className="flex items-center gap-3 sm:gap-5">
