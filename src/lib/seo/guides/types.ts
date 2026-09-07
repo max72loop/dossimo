@@ -9,14 +9,20 @@ export const GUIDE_CATEGORIES = [
   // ne valent que tant que l'échéance est proche. Une actualité reléguée en bas
   // de page arrive au lecteur après la date qu'elle annonce.
   "Actualités",
+  // Pages dérivées de `regles_metier` (cf. `gestes.ts`) : elles répondent à
+  // l'intention « mon geste » (« conditions BAR-TH-171 », « pièces PAC
+  // air/eau »), pas « ma méthode ». Elles ne vivent pas dans `guides`, qui
+  // reste l'éditorial écrit à la main.
+  //
+  // Remontées en deuxième position le 2026-09-07. Elles étaient en queue parce
+  // qu'aucune n'était publiée ; la place qu'on leur donnait ne coûtait donc
+  // rien. Dès qu'elles existent, l'ordre doit suivre ce que `gestes.ts` dit
+  // déjà de l'intention de l'artisan : il cherche son geste avant la méthode.
+  "Par geste",
   "Monter le dossier",
   "Devis & conformité",
   "Refus & prévention",
   "Déléguer votre dossier",
-  // Pages dérivées de `regles_metier` (cf. `gestes.ts`) : elles répondent à
-  // l'intention « mon geste », pas « ma méthode ». Elles ne vivent pas dans
-  // `guides` ci-dessous, qui reste l'éditorial écrit à la main.
-  "Par geste",
 ] as const;
 
 export type GuideCategory = (typeof GUIDE_CATEGORIES)[number];
