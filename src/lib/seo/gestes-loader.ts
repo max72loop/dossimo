@@ -1,7 +1,7 @@
 import "server-only";
 
 import type { SeoGuide } from "@/lib/seo/guides";
-import { GESTES, regleToGeste, type RegleSeo } from "@/lib/seo/gestes";
+import { formesSansAccent, GESTES, regleToGeste, type RegleSeo } from "@/lib/seo/gestes";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 /**
@@ -42,12 +42,28 @@ export async function getGesteGuides(): Promise<SeoGuide[]> {
     if (error || !data) return [];
 
     const regles = data as RegleSeo[];
-    return GESTES.map((config) =>
+    const projetes = GESTES.map((config) =>
       regleToGeste(
         config,
         regles.filter((regle) => regle.type_travaux === config.typeTravaux),
       ),
     ).filter((geste): geste is SeoGuide => geste !== null);
+
+    // Garde-fou de publication (2026-09-07). Les libellés de `regles_metier`
+    // sont sans accents sur plusieurs gestes : sans conséquence en interne,
+    // impubliable sur une page indexée. Un geste dont la page porte encore une
+    // de ces formes n'est pas publié — il disparaît du hub, du sitemap et de
+    // `generateStaticParams`, exactement comme quand la liste était tenue vide
+    // à la main. La différence : il se publie tout seul le jour où la donnée
+    // est corrigée, et une donnée sale ne peut plus atteindre Google par oubli.
+    return projetes.filter((geste) => {
+      const fautes = formesSansAccent(geste);
+      if (fautes.length === 0) return true;
+      console.warn(
+        `[seo/gestes] ${geste.slug} non publié — accents manquants dans regles_metier : ${fautes.join(", ")}`,
+      );
+      return false;
+    });
   } catch {
     return [];
   }

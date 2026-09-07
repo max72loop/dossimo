@@ -68,23 +68,80 @@ export const GESTES_CATALOGUE: GesteConfig[] = [
 ];
 
 /**
- * Gestes RÉELLEMENT publiés : route `[slug]`, sitemap et hub `/guides` ne
- * connaissent que cette liste.
+ * Gestes candidats à la publication : route `[slug]`, sitemap et hub `/guides`
+ * ne connaissent que cette liste.
  *
- * Volontairement VIDE aujourd'hui. Ce qui bloque n'est pas le code mais la
- * donnée : les libellés de `regles_metier` sont dépourvus d'accents sur tous
- * les gestes (« Efficacite energetique saisonniere », « modele », « a compter
- * du » — migrations 0004, 0005, 0009, 0010, 0011, 0042). C'est sans
- * conséquence en interne, mais impubliable sur une page indexée.
+ * Être ici ne suffit PLUS à être publié. Ce qui bloquait la publication n'était
+ * pas le code mais la donnée : les libellés de `regles_metier` sont dépourvus
+ * d'accents sur tous les gestes (« Efficacite energetique saisonniere »,
+ * « modele », « a compter du » — migrations 0004, 0005, 0009, 0010, 0011,
+ * 0042). Sans conséquence en interne, impubliable sur une page indexée.
  *
- * Ce garde-fou existe parce que l'absence de base masquait le problème en
- * local (aucune page geste rendue) alors qu'un déploiement, lui, a bien accès
- * à Supabase et publierait le texte tel quel.
- *
- * Pour publier une fois les accents corrigés en base : remplacer par
- * `GESTES_CATALOGUE`. Rien d'autre à toucher.
+ * Jusqu'au 2026-09-07 le garde-fou était cette liste, tenue vide à la main.
+ * Il est désormais MÉCANIQUE : `gestes-loader` écarte tout geste dont la page
+ * projetée porte encore une forme sans accent (`formesSansAccent` ci-dessous).
+ * Un geste devient donc publiable le jour où sa donnée est propre, sans qu'il
+ * faille se souvenir de revenir toucher ce fichier — et une donnée encore sale
+ * ne peut pas atteindre Google même si on l'oublie.
  */
-export const GESTES: GesteConfig[] = [];
+export const GESTES: GesteConfig[] = GESTES_CATALOGUE;
+
+/**
+ * Formes fautives relevées dans les seeds de `regles_metier` le 2026-09-07, par
+ * extraction sur les migrations 0004, 0009, 0010, 0011 et 0042. Liste FERMÉE et
+ * fondée sur des chaînes réellement présentes : on ne devine pas un accent
+ * manquant, on reconnaît ceux qu'on a constatés.
+ *
+ * Les formes correctes ne peuvent pas déclencher de faux positif : la recherche
+ * porte sur l'orthographe sans accent exacte, bornée aux limites de mot —
+ * « référence » ne correspond jamais à `\breference\b`.
+ */
+const FORMES_SANS_ACCENT = [
+  "efficacite",
+  "energetique",
+  "saisonniere",
+  "regime",
+  "temperature",
+  "modele",
+  "reference",
+  "detaille",
+  "beneficiaire",
+  "exigee",
+  "systeme",
+  "regulateur",
+  "caracteristiques",
+  "memes",
+  "MaPrimeRenov",
+  "a compter",
+] as const;
+
+const MOTIF_SANS_ACCENT = new RegExp(
+  `\\b(${FORMES_SANS_ACCENT.join("|")})\\b`,
+  "gi",
+);
+
+/** Toutes les chaînes d'une valeur, quelle que soit sa profondeur. */
+function collecterTextes(valeur: unknown, acc: string[]): string[] {
+  if (typeof valeur === "string") acc.push(valeur);
+  else if (Array.isArray(valeur)) for (const v of valeur) collecterTextes(v, acc);
+  else if (valeur && typeof valeur === "object")
+    for (const v of Object.values(valeur)) collecterTextes(v, acc);
+  return acc;
+}
+
+/**
+ * Formes sans accent trouvées dans une page de geste projetée, dédoublonnées.
+ * Tableau vide = la page est publiable.
+ *
+ * On balaie la page ENTIÈRE plutôt que les seuls champs venus de la base :
+ * l'éditorial de `GESTES_CATALOGUE` est écrit à la main et propre, donc le
+ * balayage large ne coûte rien et couvre les champs qu'un futur `regleToGeste`
+ * ajouterait sans qu'on pense à étendre ce contrôle.
+ */
+export function formesSansAccent(guide: SeoGuide): string[] {
+  const textes = collecterTextes(guide, []).join("\n");
+  return [...new Set(textes.match(MOTIF_SANS_ACCENT) ?? [])];
+}
 
 /** Forme utile d'une ligne `regles_metier`, une fois le JSONB lu. */
 interface PieceRequise {

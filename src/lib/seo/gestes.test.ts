@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { GESTES, GESTES_CATALOGUE, regleToGeste, type RegleSeo } from "@/lib/seo/gestes";
+import {
+  formesSansAccent,
+  GESTES,
+  GESTES_CATALOGUE,
+  regleToGeste,
+  type RegleSeo,
+} from "@/lib/seo/gestes";
 
 /**
  * Lignes conformes au seed de `regles_metier` pour la pompe à chaleur air/eau
@@ -72,6 +78,61 @@ describe("catalogue et publication des gestes", () => {
     for (const geste of GESTES) {
       expect(GESTES_CATALOGUE).toContainEqual(geste);
     }
+  });
+});
+
+describe("formesSansAccent — garde-fou de publication", () => {
+  // Cas de refus : la donnée réelle de `regles_metier` telle que les seeds
+  // l'ont écrite. C'est exactement ce qui doit rester hors ligne.
+  it("refuse une page dont la donnée porte encore des formes sans accent", () => {
+    const geste = regleToGeste(CONFIG, REGLES_PAC)!;
+    const fautes = formesSansAccent(geste);
+
+    expect(fautes.length).toBeGreaterThan(0);
+    expect(fautes.map((f) => f.toLowerCase())).toEqual(
+      expect.arrayContaining(["efficacite", "energetique", "modele"]),
+    );
+  });
+
+  // Cas conforme : la même donnée, accentuée. C'est l'état visé en base, et le
+  // jour où la migration passe, la page se publie sans toucher au code.
+  it("laisse passer la même page une fois la donnée accentuée", () => {
+    const accentue = JSON.parse(
+      JSON.stringify(REGLES_PAC)
+        .replace(/Efficacite/g, "Efficacité")
+        .replace(/energetique/g, "énergétique")
+        .replace(/saisonniere/g, "saisonnière")
+        .replace(/regime/g, "régime")
+        .replace(/temperature/g, "température")
+        .replace(/modele/g, "modèle")
+        .replace(/reference/g, "référence")
+        .replace(/a compter/g, "à compter")
+        .replace(/MaPrimeRenov/g, "MaPrimeRénov"),
+    ) as RegleSeo[];
+
+    expect(formesSansAccent(regleToGeste(CONFIG, accentue)!)).toEqual([]);
+  });
+
+  // Le contrôle porte sur l'orthographe sans accent exacte : une forme correcte
+  // ne doit jamais être signalée, sinon le garde-fou bloquerait une donnée saine.
+  it("ne signale pas les formes correctement accentuées", () => {
+    const propre = regleToGeste(CONFIG, REGLES_PAC)!;
+    const fautes = formesSansAccent({
+      ...propre,
+      intro: "Référence, régime de température et modèle du système sont exigés.",
+      checklist: [],
+      errors: [],
+      sources: [],
+      sections: [],
+      faq: [],
+      example: { before: "", after: "" },
+      title: "Bénéficiaire, caractéristiques, mêmes pièces",
+      metaTitle: "",
+      description: "",
+      eyebrow: "",
+    });
+
+    expect(fautes).toEqual([]);
   });
 });
 
