@@ -528,22 +528,33 @@ function JsonLd({ grille }: { grille: GrilleAffichee | null }) {
       "@type": "FAQPage",
       mainEntity: FAQ_ITEMS.map((item) => ({ "@type": "Question", name: item.q, acceptedAnswer: { "@type": "Answer", text: item.a } })),
     },
-    ...(grille ? [{
+    // Le Service est émis EN TOUTES CIRCONSTANCES. Il vivait entièrement dans le
+    // `grille ? … : []` ci-dessous : quand la grille tarifaire ne remontait pas de
+    // la base, le seul nœud qui dit ce que Dossimo FAIT disparaissait du balisage,
+    // et il ne restait qu'Organization + WebSite + FAQPage. Le prix, lui, reste
+    // conditionnel — on ne publie jamais un montant qu'on n'a pas (AGENTS.md).
+    {
       "@context": "https://schema.org",
       "@type": "Service",
       name: "Préparation et contrôle de dossier MaPrimeRénov’ / CEE",
+      serviceType: "Préparation et contrôle de conformité de dossiers d’aide à la rénovation énergétique",
+      description:
+        "Dossimo prépare et contrôle les dossiers MaPrimeRénov’ et CEE des artisans RGE avant dépôt : pack documentaire prérempli depuis une saisie unique, puis contrôle des points qui déclenchent un refus. Dossimo ne dépose pas le dossier et ne perçoit pas la prime.",
       provider: { "@id": ORGANIZATION_ID },
       areaServed: "FR",
-      offers: grille.lignes.map((line) => ({
-        "@type": "Offer",
-        name: line.name,
-        description: line.aidLabel,
-        priceCurrency: "EUR",
-        price: line.priceLabel.replace(/[^\d,]/g, "").replace(",", "."),
-        url: SITE_URL + "/#tarifs",
-        availability: "https://schema.org/InStock",
-      })),
-    }] : []),
+      audience: { "@type": "Audience", audienceType: "Artisans RGE" },
+      ...(grille ? {
+        offers: grille.lignes.map((line) => ({
+          "@type": "Offer",
+          name: line.name,
+          description: line.aidLabel,
+          priceCurrency: "EUR",
+          price: line.priceLabel.replace(/[^\d,]/g, "").replace(",", "."),
+          url: SITE_URL + "/#tarifs",
+          availability: "https://schema.org/InStock",
+        })),
+      } : {}),
+    },
   ];
   return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(data) }} />;
 }

@@ -48,6 +48,22 @@ export function editorialOrganizationSchema() {
     },
     description:
       "Service indépendant d’aide à la préparation et au contrôle de conformité de dossiers MaPrimeRénov’ et CEE pour les artisans RGE.",
+    /**
+     * Rattachement de l'entité à son domaine. « Dossimo » est un nom disputé —
+     * une variété de tomate, un cheval de course, une société britannique
+     * homonyme — et rien n'indiquait à une machine de quel Dossimo il s'agit.
+     * `sameAs` serait le rattachement le plus fort, mais il exige des profils
+     * publics qui n'existent pas encore : y mettre des URL inventées serait pire
+     * que de n'avoir rien. `legalName` est volontairement absent (décision
+     * DESIGN.md du 2026-07-22 : aucune donnée nominative dans le JSON-LD).
+     */
+    knowsAbout: [
+      "MaPrimeRénov’",
+      "Certificats d’économies d’énergie (CEE)",
+      "Conformité des dossiers d’aide à la rénovation énergétique",
+      "Artisans RGE",
+    ],
+    areaServed: { "@type": "Country", name: "France" },
     publishingPrinciples: PUBLISHING_PRINCIPLES_URL,
   };
 }
