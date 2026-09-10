@@ -94,9 +94,15 @@ function Hero() {
             Vos dossiers de prime,{" "}
             <span className="text-accent-clair">montés sans vos soirées.</span>
           </h1>
+          {/* Premier paragraphe après le H1, donc le plus pondéré à l'extraction.
+              Il nommait le geste sans jamais nommer ni le dispositif ni la cible :
+              « MaPrimeRénov' & CEE · artisans RGE » n'existe qu'au-dessus, dans le
+              <p> de SectionLabel, invisible pour une machine. Les nouveaux mots
+              sont les seuls ajouts ; les verbes et le rythme sont inchangés. */}
           <p className="mt-6 max-w-2xl text-lg leading-relaxed text-papier/75">
-            Envoyez le devis. Dossimo recopie les informations, contrôle les mentions,
-            compare la facture et prépare le pack complet. Vous relisez, vous déposez.
+            Vous êtes artisan RGE. Envoyez le devis : Dossimo recopie les informations,
+            contrôle les mentions de conformité, compare la facture et prépare le pack
+            MaPrimeRénov&rsquo; ou CEE complet. Vous relisez, vous déposez.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
             <Link href="/demo" className={"group inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-papier px-6 text-sm font-semibold text-encre transition-colors hover:bg-blanc-casse " + FOCUS_SOMBRE}>
