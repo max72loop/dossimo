@@ -360,7 +360,12 @@ function Estimation() {
           <div className="mt-8 overflow-hidden rounded-2xl bg-papier shadow-md">
             <Illustration src="/illustrations/maison-renovee.svg" className="aspect-[16/9] w-full object-cover" />
           </div>
-          <p className="mt-5 text-sm leading-relaxed text-ardoise">Dossimo est un service indépendant d&rsquo;aide à la préparation de dossier, non affilié à l&rsquo;Anah ni à France Rénov&rsquo;. L’estimation ne vaut pas décision d’attribution.</p>
+          {/* La phrase de définition précède la mention obligatoire, et non
+              l'inverse : sans elle, la phrase qui suivait immédiatement le mot
+              « simulateur » était la mention légale, et les moteurs recollaient
+              les deux en « service indépendant de simulation ». La mention reste
+              au mot près (DESIGN.md §7). */}
+          <p className="mt-5 text-sm leading-relaxed text-ardoise">Dossimo prépare et contrôle les dossiers MaPrimeRénov&rsquo; et CEE des artisans RGE avant dépôt. Dossimo est un service indépendant d&rsquo;aide à la préparation de dossier, non affilié à l&rsquo;Anah ni à France Rénov&rsquo;. L’estimation ne vaut pas décision d’attribution.</p>
         </div>
         <Estimateur />
       </Shell>
