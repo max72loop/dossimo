@@ -73,15 +73,6 @@ function Shell({ children, className = "" }: { children: React.ReactNode; classN
   return <div className={"mx-auto max-w-7xl px-5 sm:px-8 " + className}>{children}</div>;
 }
 
-function SectionLabel({ children, sombre = false }: { children: React.ReactNode; sombre?: boolean }) {
-  return (
-    <p className={"flex items-center gap-2.5 font-mono text-xs uppercase tracking-[0.14em] " + (sombre ? "text-accent-clair" : "text-tampon")}>
-      <span className={"h-2 w-2 rounded-full " + (sombre ? "bg-accent-clair" : "bg-tampon")} />
-      {children}
-    </p>
-  );
-}
-
 function Hero() {
   return (
     <section className="relative isolate overflow-hidden bg-encre">
@@ -89,8 +80,7 @@ function Hero() {
       <div aria-hidden="true" className="absolute -right-12 top-16 h-64 w-64 rounded-full border border-accent-clair/10" />
       <Shell className="relative grid min-h-[620px] items-center gap-10 py-14 lg:grid-cols-[1.08fr_0.92fr] lg:py-16">
         <div className="relative z-10 max-w-3xl">
-          <SectionLabel sombre>MaPrimeRénov&rsquo; & CEE · artisans RGE</SectionLabel>
-          <h1 className="mt-5 max-w-3xl font-serif text-4xl font-semibold leading-[1.04] tracking-tight text-blanc-casse sm:text-5xl lg:text-6xl">
+          <h1 className="max-w-3xl font-serif text-4xl font-semibold leading-[1.04] tracking-tight text-blanc-casse sm:text-5xl lg:text-6xl">
             Vos dossiers de prime,{" "}
             <span className="text-accent-clair">montés sans vos soirées.</span>
           </h1>
@@ -172,8 +162,7 @@ function Parcours() {
       <Shell>
         <div className="grid items-end gap-6 lg:grid-cols-[1fr_0.75fr]">
           <div>
-            <SectionLabel>Comment ça marche</SectionLabel>
-            <h2 className="mt-5 max-w-3xl font-serif text-3xl font-semibold leading-tight tracking-tight text-encre sm:text-4xl">
+            <h2 className="max-w-3xl font-serif text-3xl font-semibold leading-tight tracking-tight text-encre sm:text-4xl">
               Un document entre. Un dossier complet en sort.
             </h2>
           </div>
@@ -244,8 +233,7 @@ function Livrable() {
           </div>
         </div>
         <div>
-          <SectionLabel>Ce que vous recevez</SectionLabel>
-          <h2 className="mt-5 font-serif text-3xl font-semibold leading-tight tracking-tight text-encre sm:text-4xl">
+          <h2 className="font-serif text-3xl font-semibold leading-tight tracking-tight text-encre sm:text-4xl">
             Pas un tableau de bord de plus.{" "}
             <span className="text-tampon">Un pack à utiliser.</span>
           </h2>
@@ -276,8 +264,7 @@ function Difference() {
     <section id="difference" className="bg-encre py-20 sm:py-24">
       <Shell>
         <div className="mx-auto max-w-3xl text-center">
-          <div className="flex justify-center"><SectionLabel sombre>La différence Dossimo</SectionLabel></div>
-          <h2 className="mt-5 font-serif text-3xl font-semibold leading-tight tracking-tight text-blanc-casse sm:text-4xl">
+          <h2 className="font-serif text-3xl font-semibold leading-tight tracking-tight text-blanc-casse sm:text-4xl">
             La paperasse disparaît. Pas votre relation client.
           </h2>
           <p className="mt-5 text-lg leading-relaxed text-papier/70">
@@ -324,8 +311,7 @@ function Gestes() {
       <Shell>
         <div className="grid items-center gap-10 lg:grid-cols-[0.9fr_1.1fr]">
           <div>
-            <SectionLabel>Chaque geste a ses règles</SectionLabel>
-            <h2 className="mt-5 font-serif text-3xl font-semibold leading-tight tracking-tight text-encre sm:text-4xl">Le bon contrôle pour le bon chantier.</h2>
+            <h2 className="font-serif text-3xl font-semibold leading-tight tracking-tight text-encre sm:text-4xl">Le bon contrôle pour le bon chantier.</h2>
             <p className="mt-5 text-lg leading-relaxed text-ardoise">Mentions techniques, qualification RGE et fiches d’opération changent selon les travaux. Dossimo applique le parcours correspondant.</p>
             <Link href="/guides" className={"mt-7 inline-flex items-center gap-2 text-sm font-semibold text-tampon underline underline-offset-4 " + FOCUS}>
               Parcourir tous les guides <ArrowRight className="h-4 w-4" aria-hidden="true" />
@@ -354,8 +340,7 @@ function Estimation() {
     <section id="estimation" className="bg-blanc-casse py-20 sm:py-24">
       <Shell className="grid items-start gap-12 lg:grid-cols-[1fr_0.9fr] lg:gap-16">
         <div>
-          <SectionLabel>Combien est en jeu</SectionLabel>
-          <h2 className="mt-5 font-serif text-3xl font-semibold leading-tight tracking-tight text-encre sm:text-4xl">Estimez d’abord l’aide. Jugez ensuite le prix.</h2>
+          <h2 className="font-serif text-3xl font-semibold leading-tight tracking-tight text-encre sm:text-4xl">Estimez d’abord l’aide. Jugez ensuite le prix.</h2>
           <p className="mt-5 text-lg leading-relaxed text-ardoise">Un dossier refusé peut faire perdre l’aide entière. Le simulateur utilise les mêmes règles métier que le moteur Dossimo, sans montant de communication inventé.</p>
           <div className="mt-8 overflow-hidden rounded-2xl bg-papier shadow-md">
             <Illustration src="/illustrations/maison-renovee.svg" className="aspect-[16/9] w-full object-cover" />
@@ -379,16 +364,14 @@ function Confiance() {
       <Shell>
         <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
           <div>
-            <SectionLabel>Confidentialité</SectionLabel>
-            <h2 className="mt-5 font-serif text-3xl font-semibold leading-tight tracking-tight text-encre sm:text-4xl">Vos documents restent vos documents.</h2>
+            <h2 className="font-serif text-3xl font-semibold leading-tight tracking-tight text-encre sm:text-4xl">Vos documents restent vos documents.</h2>
             <p className="mt-5 text-lg leading-relaxed text-ardoise">Un devis contient des informations sensibles sur votre client et son chantier. Dossimo limite leur utilisation à la préparation et au contrôle du dossier.</p>
             <div className="mt-8 overflow-hidden rounded-2xl bg-blanc-casse shadow-md">
               <Illustration src="/illustrations/controle.svg" className="aspect-[16/10] w-full object-cover" />
             </div>
           </div>
           <div>
-            <SectionLabel>Vos documents</SectionLabel>
-            <ul className="mt-5 grid gap-4">
+            <ul className="grid gap-4">
               {proofs.map((proof) => (
                 <li key={proof.title} className="flex items-start gap-4 rounded-2xl bg-blanc-casse p-5 shadow-md">
                   <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-info-bg text-tampon">
@@ -417,8 +400,7 @@ function Pricing({ grille }: { grille: GrilleAffichee | null }) {
       <Shell>
         <div className="overflow-hidden rounded-2xl bg-encre p-7 shadow-lg sm:p-12 lg:p-14">
           <div className="max-w-3xl">
-            <SectionLabel sombre>Tarification transparente</SectionLabel>
-            <h2 className="mt-5 font-serif text-3xl font-semibold leading-tight tracking-tight text-blanc-casse sm:text-4xl">Un forfait connu avant paiement. Jamais un pourcentage.</h2>
+            <h2 className="font-serif text-3xl font-semibold leading-tight tracking-tight text-blanc-casse sm:text-4xl">Un forfait connu avant paiement. Jamais un pourcentage.</h2>
             <p className="mt-5 text-lg leading-relaxed text-papier/70">Le prix dépend du montant d’aide estimé. Il est affiché avant tout paiement, sans abonnement et sans frais caché.</p>
           </div>
           {grille && grille.lignes.length > 0 && (
@@ -458,8 +440,7 @@ function Faq() {
   return (
     <section id="faq" className="bg-papier py-20 sm:py-24">
       <div className="mx-auto max-w-3xl px-5 sm:px-8">
-        <SectionLabel>Questions fréquentes</SectionLabel>
-        <h2 className="mt-5 font-serif text-3xl font-semibold tracking-tight text-encre sm:text-4xl">Ce qu’il faut savoir avant d’envoyer un devis.</h2>
+        <h2 className="font-serif text-3xl font-semibold tracking-tight text-encre sm:text-4xl">Ce qu’il faut savoir avant d’envoyer un devis.</h2>
         <div className="mt-10 divide-y divide-filigrane border-y border-filigrane">
           {FAQ_ITEMS.map((item) => (
             <details key={item.q} className="group py-5">
@@ -480,8 +461,7 @@ function Contact() {
     <section id="contact" className="bg-blanc-casse py-20 sm:py-24">
       <Shell className="grid items-start gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
         <div>
-          <SectionLabel>Votre prochain dossier</SectionLabel>
-          <h2 className="mt-5 font-serif text-3xl font-semibold leading-tight tracking-tight text-encre sm:text-4xl">Pas de devis sous la main aujourd’hui ?</h2>
+          <h2 className="font-serif text-3xl font-semibold leading-tight tracking-tight text-encre sm:text-4xl">Pas de devis sous la main aujourd’hui ?</h2>
           <p className="mt-5 text-lg leading-relaxed text-ardoise">Laissez votre email. Nous vous recontacterons pour monter votre prochain dossier avec vous.</p>
           <div className="mt-8 flex items-center gap-3 rounded-xl bg-info-bg p-4 text-sm text-encre">
             <ShieldCheck className="h-5 w-5 shrink-0 text-tampon" strokeWidth={1.5} aria-hidden="true" />
