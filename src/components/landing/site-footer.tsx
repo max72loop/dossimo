@@ -43,6 +43,7 @@ export function SiteFooter() {
                 <li><Link href="/#faq" className="transition-colors hover:text-encre">Questions fréquentes</Link></li>
                 <li><Link href="/mentions-obligatoires-devis-rge" className="transition-colors hover:text-encre">Mentions devis RGE</Link></li>
                 <li><Link href="/eviter-refus-maprimerenov" className="transition-colors hover:text-encre">Éviter un refus</Link></li>
+                <li><Link href="/refus" className="transition-colors hover:text-encre">Dossier refusé ?</Link></li>
                 <li><Link href="/#contact" className="transition-colors hover:text-encre">Contact</Link></li>
               </ul>
             </div>

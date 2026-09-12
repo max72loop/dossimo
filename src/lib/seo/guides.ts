@@ -1509,6 +1509,12 @@ export const guides = {
         description:
           "Le cas de la sous-traitance, qui ne se voit pas sur le devis et coûte le plus cher.",
       },
+      {
+        label: "Les motifs de refus, un par un",
+        href: "/refus",
+        description:
+          "Chaque motif expliqué à partir du texte qui le fonde, avec ce qui le déclenche et ce qui l’évite.",
+      },
     ],
     sources: [
       { label: "Annuaire officiel des professionnels RGE (France Rénov’)", href: annuaireRge },

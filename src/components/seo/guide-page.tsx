@@ -3,8 +3,11 @@ import Link from "next/link";
 
 import { SiteFooter } from "@/components/landing/site-footer";
 import { SiteHeader } from "@/components/landing/site-header";
+import { estGeleSeo } from "@/lib/seo/gel-seo";
 import { formatGuideDate, guideList, type SeoGuide } from "@/lib/seo/guides";
 import {
+  AUTHOR_ID,
+  AUTHOR_NAME,
   EDITORIAL_ORGANIZATION_URL,
   ORGANIZATION_ID,
   PUBLISHING_PRINCIPLES_URL,
@@ -15,6 +18,12 @@ import {
 export function SeoGuidePage({ guide }: { guide: SeoGuide }) {
   const pageUrl = `${SITE_URL}/${guide.slug}`;
   const dateVerification = formatGuideDate(guide.updated);
+  /*
+   * Ce gabarit coiffe aussi les pages gelées de `seo/hermes.md` : celles-ci
+   * gardent leur rendu SEO d'origine (auteur « équipe éditoriale », maillage
+   * complet, JSON-LD inchangé) jusqu'à la fin du gel — cf. `gel-seo.ts`.
+   */
+  const gele = estGeleSeo(guide.slug);
   const jsonLd: Array<Record<string, unknown>> = [
     {
       "@context": "https://schema.org",
@@ -26,12 +35,22 @@ export function SeoGuidePage({ guide }: { guide: SeoGuide }) {
       dateModified: guide.updated,
       inLanguage: "fr-FR",
       image: `${SITE_URL}/opengraph-image`,
-      author: {
-        "@type": "Organization",
-        "@id": ORGANIZATION_ID,
-        name: "Dossimo",
-        url: EDITORIAL_ORGANIZATION_URL,
-      },
+      // Auteur incarné (E-E-A-T) : une personne identifiable, pas une entité
+      // anonyme. Le `Person` complet est publié sur /a-propos, référencé ici.
+      author: gele
+        ? {
+            "@type": "Organization",
+            "@id": ORGANIZATION_ID,
+            name: "Dossimo",
+            url: EDITORIAL_ORGANIZATION_URL,
+          }
+        : {
+            "@type": "Person",
+            "@id": AUTHOR_ID,
+            name: AUTHOR_NAME,
+            url: AUTHOR_ID,
+            worksFor: { "@id": ORGANIZATION_ID },
+          },
       publisher: {
         "@type": "Organization",
         "@id": ORGANIZATION_ID,
@@ -54,6 +73,26 @@ export function SeoGuidePage({ guide }: { guide: SeoGuide }) {
 
   // FAQPage à part : ne l'émettre que si des questions sont réellement affichées,
   // sinon le balisage ne refléterait pas le contenu visible de la page.
+  /*
+   * Maillage par famille plutôt que « tous vers tous » : quinze liens
+   * identiques sous chaque guide aplatissent le signal (un guide « devis CEE »
+   * pesait autant vers « temps de montage » que vers « modèle de devis »).
+   * Trois ou quatre voisins de la même famille + le pilier `/guides` le
+   * concentrent sur les requêtes réellement voisines. Les pages qui manquent
+   * de voisins (famille à deux guides, pages « Par geste » absentes de
+   * `guideList`) sont complétées jusqu'à quatre par le début de l'ordre
+   * éditorial : les guides de montage, pertinents pour tous.
+   */
+  const memeFamille = guideList.filter(
+    (item) => item.slug !== guide.slug && item.category === guide.category,
+  );
+  const autresFamilles = guideList.filter(
+    (item) => item.slug !== guide.slug && item.category !== guide.category,
+  );
+  const guidesVoisins = gele
+    ? guideList.filter((item) => item.slug !== guide.slug)
+    : [...memeFamille, ...autresFamilles].slice(0, 4);
+
   if (guide.faq?.length) {
     jsonLd.push({
       "@context": "https://schema.org",
@@ -98,12 +137,25 @@ export function SeoGuidePage({ guide }: { guide: SeoGuide }) {
                   ) : null}
                   <div className="mt-7 flex flex-wrap gap-x-6 gap-y-2 text-sm text-encre-claire">
                     <span>Vérifié le {dateVerification}</span>
-                    <span>
-                      Relecture :{" "}
-                      <Link href="/methode-editoriale" className="underline underline-offset-4 hover:text-encre">
-                        équipe éditoriale Dossimo
-                      </Link>
-                    </span>
+                    {gele ? (
+                      <span>
+                        Relecture :{" "}
+                        <Link href="/methode-editoriale" className="underline underline-offset-4 hover:text-encre">
+                          équipe éditoriale Dossimo
+                        </Link>
+                      </span>
+                    ) : (
+                      <span>
+                        Relecture :{" "}
+                        <Link href="/a-propos#auteur" className="underline underline-offset-4 hover:text-encre">
+                          {AUTHOR_NAME}, fondateur de Dossimo
+                        </Link>
+                        {" · "}
+                        <Link href="/methode-editoriale" className="underline underline-offset-4 hover:text-encre">
+                          méthode
+                        </Link>
+                      </span>
+                    )}
                   </div>
                 </div>
                 {guide.hero ? (
@@ -241,13 +293,21 @@ export function SeoGuidePage({ guide }: { guide: SeoGuide }) {
             <section aria-labelledby="autres-guides" className="mt-16 border-t border-filigrane pt-14">
               <h2 id="autres-guides" className="font-serif text-3xl font-semibold text-encre">Poursuivre la vérification</h2>
               <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                {guideList.filter((item) => item.slug !== guide.slug).map((item) => (
+                {guidesVoisins.map((item) => (
                   <Link key={item.slug} href={`/${item.slug}`} className="group rounded-2xl bg-blanc-casse p-5 shadow-md transition hover:shadow-lg">
                     <span className="font-semibold text-encre group-hover:text-tampon">{item.title}</span>
                     <span className="mt-2 block text-sm leading-relaxed text-ardoise">{item.description}</span>
                   </Link>
                 ))}
               </div>
+              {gele ? null : (
+                <Link
+                  href="/guides"
+                  className="mt-6 inline-flex items-center gap-2 font-medium text-tampon underline underline-offset-4 hover:text-encre"
+                >
+                  Tous les guides, famille par famille <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                </Link>
+              )}
             </section>
 
             <aside className="mt-16 rounded bg-encre p-7 text-papier sm:p-9">

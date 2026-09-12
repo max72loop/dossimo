@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 
+import { editeur } from "@/lib/legal/editeur";
+
 export const SITE_URL = "https://dossimo.app";
 export const SITE_NAME = "Dossimo";
 /**
@@ -15,6 +17,31 @@ export const SITE_DESCRIPTION =
 export const ORGANIZATION_ID = `${SITE_URL}/#organization`;
 export const EDITORIAL_ORGANIZATION_URL = `${SITE_URL}/a-propos`;
 export const PUBLISHING_PRINCIPLES_URL = `${SITE_URL}/methode-editoriale`;
+
+/**
+ * L'auteur incarné des guides (E-E-A-T) : sur un sujet réglementaire et
+ * financier, Google attend une personne identifiable derrière « équipe
+ * éditoriale ». Le nom vient de `editeur.ts` (source unique de l'identité de
+ * l'éditeur), jamais recopié : si l'entité change, tout suit.
+ */
+export const AUTHOR_ID = `${SITE_URL}/a-propos#auteur`;
+export const AUTHOR_NAME = editeur.directeurPublication;
+
+/**
+ * Schéma `Person` de l'auteur, référencé par `@id` depuis les articles. Aucun
+ * diplôme ni parcours inventé : seuls des faits publiés ailleurs sur le site
+ * (fondateur, éditeur du service, méthode de vérification).
+ */
+export function editorialPersonSchema() {
+  return {
+    "@type": "Person",
+    "@id": AUTHOR_ID,
+    name: AUTHOR_NAME,
+    url: AUTHOR_ID,
+    jobTitle: "Fondateur de Dossimo",
+    worksFor: { "@id": ORGANIZATION_ID },
+  };
+}
 
 /**
  * Carte de partage (routes générées par `app/opengraph-image.tsx` et
@@ -49,6 +76,7 @@ export function editorialOrganizationSchema() {
     description:
       "Service indépendant d’aide à la préparation et au contrôle de conformité de dossiers MaPrimeRénov’ et CEE pour les artisans RGE.",
     publishingPrinciples: PUBLISHING_PRINCIPLES_URL,
+    founder: { "@id": AUTHOR_ID },
   };
 }
 

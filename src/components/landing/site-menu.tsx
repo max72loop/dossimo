@@ -106,6 +106,22 @@ export function SiteMenu({
             </MenuLien>
           </MenuSection>
 
+          {/* Le cluster /refus : lié depuis le menu comme depuis le footer, pour
+              que Googlebot (et l'artisan pressé) le découvre par le maillage et
+              plus seulement par le sitemap. Les onze motifs restent accessibles
+              depuis le hub, pas listés ici. */}
+          <MenuSection titre="Dossier refusé ?">
+            <MenuLien href="/refus" onClick={fermer} accent>
+              Comprendre les motifs de refus
+            </MenuLien>
+            <MenuLien href="/refus/maprimerenov-refuse" onClick={fermer}>
+              MaPrimeRénov&rsquo; refusée
+            </MenuLien>
+            <MenuLien href="/refus/cee-rejete" onClick={fermer}>
+              Dossier CEE rejeté
+            </MenuLien>
+          </MenuSection>
+
           <MenuSection titre="Guides & ressources">
             <MenuLien href="/guides" onClick={fermer} accent>
               Tous les guides

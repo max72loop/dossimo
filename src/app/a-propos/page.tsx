@@ -3,8 +3,11 @@ import Link from "next/link";
 import { ArrowRight, CheckCircle2, ShieldCheck } from "lucide-react";
 
 import { EditorialPage } from "@/components/seo/editorial-page";
+import { editeur } from "@/lib/legal/editeur";
 import {
+  AUTHOR_NAME,
   editorialOrganizationSchema,
+  editorialPersonSchema,
   ORGANIZATION_ID,
   publicMetadata,
   serializeJsonLd,
@@ -46,6 +49,10 @@ export default function AProposPage() {
     },
     {
       "@context": "https://schema.org",
+      ...editorialPersonSchema(),
+    },
+    {
+      "@context": "https://schema.org",
       "@type": "BreadcrumbList",
       itemListElement: [
         { "@type": "ListItem", position: 1, name: "Accueil", item: SITE_URL },
@@ -78,6 +85,50 @@ export default function AProposPage() {
             <p>
               Dossimo organise les informations une seule fois, rapproche les documents entre
               eux et montre ce qui doit encore être confirmé avant le dépôt.
+            </p>
+          </div>
+        </section>
+
+        {/*
+          L'auteur incarné (E-E-A-T) : cible de l'ancre `#auteur` posée par le
+          bloc « Relecture » des guides et par le JSON-LD `Person`. Rien ici
+          n'est inventé : identité de `lib/legal/editeur.ts`, méthode décrite
+          sur /methode-editoriale, et aucune qualification qui n'existe pas.
+        */}
+        <section id="auteur" aria-labelledby="auteur-titre" className="scroll-mt-24">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-tampon">L’auteur</p>
+          <h2 id="auteur-titre" className="mt-2 font-serif text-3xl font-semibold text-encre">
+            Qui écrit et vérifie ces pages
+          </h2>
+          <div className="mt-5 space-y-4 text-lg leading-relaxed text-ardoise">
+            <p>
+              Les guides et les pages consacrées aux refus sont écrits et relus par{" "}
+              <strong className="font-semibold text-encre">{AUTHOR_NAME}</strong>, fondateur de
+              Dossimo, qui édite le service en son nom propre. C’est lui qui construit le moteur
+              de contrôle du produit : les règles publiées ici sont celles que le logiciel
+              applique réellement aux dossiers, pas une rédaction à côté.
+            </p>
+            <p>
+              Chaque affirmation réglementaire est rapprochée des textes officiels cités en bas
+              de page, et chaque guide porte la date de sa dernière vérification. Quand une
+              valeur n’est pas connue avec certitude, elle n’est pas publiée : la{" "}
+              <Link
+                href="/methode-editoriale"
+                className="underline underline-offset-4 hover:text-encre"
+              >
+                méthode éditoriale
+              </Link>{" "}
+              décrit ces règles en détail.
+            </p>
+            <p>
+              Une erreur repérée dans un guide se signale à{" "}
+              <a
+                href={`mailto:${editeur.emailContact}`}
+                className="underline underline-offset-4 hover:text-encre"
+              >
+                {editeur.emailContact}
+              </a>
+              . Elle est corrigée sur la page concernée, avec sa date de vérification.
             </p>
           </div>
         </section>

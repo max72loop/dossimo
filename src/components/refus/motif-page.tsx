@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { articleEtFilAriane, faqPage } from "@/lib/refus/jsonld";
 import { LIBELLE_AIDE, type RefusMotif } from "@/lib/refus/motifs-loader";
+import { guidePreventionDuMotif } from "@/lib/refus/prevention";
 import { formatGuideDate } from "@/lib/seo/guides";
 import { serializeJsonLd } from "@/lib/seo/site";
 
@@ -33,6 +34,7 @@ export function MotifPage({
   if (motif.faq.length > 0) jsonLd.push(faqPage(motif.faq));
 
   const Icone = motif.contestable ? RefreshCw : ShieldAlert;
+  const guidePrevention = guidePreventionDuMotif(motif.slug);
 
   return (
     <article>
@@ -118,6 +120,29 @@ export function MotifPage({
                 </div>
               ))}
             </dl>
+          </section>
+        )}
+
+        {guidePrevention && (
+          <section aria-labelledby="prevenir-motif" className="mt-16 border-t border-filigrane pt-14">
+            <h2 id="prevenir-motif" className="font-serif text-3xl font-semibold text-encre">
+              Éviter ce motif sur le prochain dossier
+            </h2>
+            <p className="mt-4 max-w-3xl leading-relaxed text-ardoise">
+              Ce motif se joue avant le dépôt, pas après. Le guide ci-dessous détaille le contrôle
+              qui l’attrape pendant qu’il se corrige encore.
+            </p>
+            <Link
+              href={`/${guidePrevention.slug}`}
+              className="group mt-6 block max-w-2xl rounded-2xl bg-blanc-casse p-5 shadow-md transition hover:shadow-lg"
+            >
+              <span className="font-semibold text-encre group-hover:text-tampon">
+                {guidePrevention.title}
+              </span>
+              <span className="mt-2 block text-sm leading-relaxed text-ardoise">
+                {guidePrevention.description}
+              </span>
+            </Link>
           </section>
         )}
 
