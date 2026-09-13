@@ -21,7 +21,11 @@ export async function publierModeleDevis(input: { gestureId: string; validFrom: 
   if (!lines || !mentions) return { ok: false as const, error: "Le JSON des lignes ou des mentions est invalide." };
   if (!input.validFrom || !input.sourceUrl) return { ok: false as const, error: "Date d’effet et source officielle requises." };
   const supabase = createAdminClient();
-  const { data: current } = await supabase.from("quote_templates").select("version").eq("gesture_id", input.gestureId).order("version", { ascending: false }).limit(1).maybeSingle();
+  // La version max non vérifiée faisait repartir la numérotation à 1 en cas de
+  // panne de lecture : la « nouvelle » v1 écrasait logiquement l'existante et le
+  // badge « en vigueur » désignait le mauvais modèle. On refuse de publier.
+  const { data: current, error: erreurVersion } = await supabase.from("quote_templates").select("version").eq("gesture_id", input.gestureId).order("version", { ascending: false }).limit(1).maybeSingle();
+  if (erreurVersion) return { ok: false as const, error: `Version courante illisible : ${erreurVersion.message}` };
   const { error } = await supabase.from("quote_templates").insert({ gesture_id: input.gestureId, version: (current?.version ?? 0) + 1, lines: lines as never, mandatory_mentions: mentions as never, valid_from: input.validFrom, valid_until: input.validUntil || null, active: true, placeholder: !input.reviewed, source_url: input.sourceUrl, reviewed_by: input.reviewed ? adminEmail : null, reviewed_at: input.reviewed ? new Date().toISOString() : null, notes: input.notes || null });
   if (error) return { ok: false as const, error: "Publication impossible." };
   revalidatePath("/admin/devis"); revalidatePath("/devis");

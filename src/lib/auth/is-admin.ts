@@ -19,7 +19,16 @@ export async function getAdminEmail(): Promise<string | null> {
   const supabase = await createClient();
   const {
     data: { user },
+    error,
   } = await supabase.auth.getUser();
+  // Une panne d'authentification refuse l'accès, comme un utilisateur inconnu :
+  // c'est déjà ce que produisait `user === null`, mais en silence. Cette console
+  // écrit dans `regles_metier` en service-role — le seul défaut acceptable ici
+  // est de fermer la porte, jamais de l'ouvrir, et jamais sans le dire.
+  if (error) {
+    console.error("[admin] identité illisible, accès refusé:", error.message);
+    return null;
+  }
   if (!user || !allow.includes(user.id)) return null;
   return user.email?.toLowerCase() ?? user.id;
 }

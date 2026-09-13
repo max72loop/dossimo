@@ -7,7 +7,12 @@ import { getAdminEmail } from "@/lib/auth/is-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { jourParis } from "@/lib/prospection/cadence";
 import { parserProspects } from "@/lib/prospection/csv";
-import { campagneActive, preparerFile } from "@/lib/prospection/file";
+import {
+  TAILLE_SALVE,
+  campagneActive,
+  envoyerSalve,
+  preparerFile,
+} from "@/lib/prospection/file";
 
 /**
  * Actions de la console de prospection.
@@ -58,10 +63,30 @@ export async function importerProspects(formData: FormData): Promise<never> {
 
   // Deux filtres avant écriture : les adresses déjà connues (réimport du même
   // fichier) et celles qui se sont opposées. Une opposition survit à tout import.
-  const [{ data: existants }, { data: supprimes }] = await Promise.all([
+  const [
+    { data: existants, error: erreurExistants },
+    { data: supprimes, error: erreurSupprimes },
+  ] = await Promise.all([
     supabase.from("prospects").select("email").in("email", emails),
     supabase.from("prospection_suppressions").select("email").in("email", emails),
   ]);
+
+  // Une lecture muette rend `opposes` vide, donc réimporte des adresses qui se
+  // sont opposées, donc les redémarche. Ce n'est pas un compteur faux, c'est une
+  // sollicitation illicite : on refuse l'import entier plutôt que d'écrire à
+  // l'aveugle. Une opposition survit à tout (AGENTS.md, « fail loudly »).
+  if (erreurSupprimes) {
+    retour(
+      `Import refusé : impossible de vérifier les désinscriptions (${erreurSupprimes.message}).`,
+      "erreur",
+    );
+  }
+  if (erreurExistants) {
+    retour(
+      `Import refusé : impossible de vérifier les doublons (${erreurExistants.message}).`,
+      "erreur",
+    );
+  }
 
   const connus = new Set((existants ?? []).map((p) => p.email.toLowerCase()));
   const opposes = new Set((supprimes ?? []).map((s) => s.email.toLowerCase()));
@@ -96,23 +121,64 @@ export async function preparerFileAction(): Promise<never> {
   );
 }
 
-/** Valide toute la file du jour : ces messages deviennent envoyables. */
+/**
+ * Valide la file en attente : ces messages deviennent envoyables.
+ *
+ * `lte` et non `eq` sur `scheduled_on`, comme le sélecteur d'envoi
+ * (`envoyerProchain`). L'asymétrie précédente était fatale : un lot préparé un
+ * jour et non validé le jour même sortait de l'écran, le bouton se grisait, et
+ * l'index unique `prospection_un_message_par_prospect` interdisait de recréer
+ * ces messages. Les 40 messages du 26/08/2026 étaient ainsi devenus
+ * définitivement invalidables, et leurs prospects perdus pour la campagne.
+ */
 export async function validerFile(): Promise<never> {
   await garde();
   const supabase = createAdminClient();
   const campagne = await campagneActive(supabase);
   if (!campagne) retour("Aucune campagne active.", "erreur");
 
+  const jour = jourParis(new Date());
   const { data, error } = await supabase
     .from("prospection_messages")
     .update({ statut: "valide" })
     .eq("campagne_id", campagne.id)
-    .eq("scheduled_on", jourParis(new Date()))
+    .lte("scheduled_on", jour)
     .eq("statut", "en_attente")
-    .select("id");
+    .select("id, scheduled_on");
 
   if (error) retour(`Validation refusée : ${error.message}`, "erreur");
-  retour(`${data?.length ?? 0} message(s) validé(s), envoi étalé sur la journée.`);
+
+  const lignes = data ?? [];
+  const retard = lignes.filter((m) => m.scheduled_on !== jour).length;
+  retour(
+    `${lignes.length} message(s) validé(s)` +
+      (retard > 0 ? `, dont ${retard} en retard rattrapé(s)` : "") +
+      ". Cliquez « Envoyer maintenant » pour les faire partir.",
+  );
+}
+
+/**
+ * Envoie une salve de messages sur-le-champ, sans attendre le planificateur.
+ *
+ * La fenêtre horaire est levée ici, et seulement ici : l'admin qui clique sait
+ * quelle heure il est. Tous les autres garde-fous tiennent (pause, plafond du
+ * jour, dates de campagne, copie périmée, exclusions).
+ */
+export async function envoyerMaintenant(): Promise<never> {
+  await garde();
+  const { envoyes, motifArret } = await envoyerSalve({
+    taille: TAILLE_SALVE,
+    forcerHorsFenetre: true,
+  });
+
+  if (envoyes === 0) {
+    retour(`Aucun message parti : ${motifArret ?? "raison inconnue"}.`, "erreur");
+  }
+  retour(
+    `${envoyes} message(s) parti(s)` +
+      (motifArret ? `, puis arrêt : ${motifArret}` : "") +
+      ".",
+  );
 }
 
 /**
@@ -125,7 +191,7 @@ export async function ecarterMessage(formData: FormData): Promise<never> {
   if (!id) retour("Message introuvable.", "erreur");
 
   const supabase = createAdminClient();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("prospection_messages")
     .update({ statut: "annule", erreur: "écarté à la relecture" })
     .eq("id", id)
@@ -133,11 +199,23 @@ export async function ecarterMessage(formData: FormData): Promise<never> {
     .select("prospect_id")
     .maybeSingle();
 
-  if (data?.prospect_id) {
-    await supabase
-      .from("prospects")
-      .update({ statut: "exclu" })
-      .eq("id", data.prospect_id);
+  // « Message écarté. » s'affichait quoi qu'il arrive. Un écartement raté et
+  // annoncé réussi, c'est le message douteux qui part quand même au prochain
+  // tick, alors que la relecture l'avait justement arrêté.
+  if (error) retour(`Écartement refusé : ${error.message}`, "erreur");
+  if (!data) {
+    retour("Message introuvable ou déjà parti : rien n'a été écarté.", "erreur");
+  }
+
+  const { error: erreurProspect } = await supabase
+    .from("prospects")
+    .update({ statut: "exclu" })
+    .eq("id", data.prospect_id);
+  if (erreurProspect) {
+    retour(
+      `Message écarté, mais le prospect n'a pas pu être exclu : ${erreurProspect.message}`,
+      "erreur",
+    );
   }
 
   retour("Message écarté.");

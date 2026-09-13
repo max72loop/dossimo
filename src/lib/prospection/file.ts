@@ -9,6 +9,7 @@ import type {
   TypeEvenementProspection,
 } from "@/lib/database.types";
 import {
+  FENETRE,
   dansLaFenetre,
   debutJourParis,
   estSousLivraison,
@@ -86,11 +87,15 @@ async function accrochesPourProspects(
 export async function campagneActive(
   supabase: Client = createAdminClient(),
 ): Promise<CampagneProspection | null> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("prospection_campagnes")
     .select("*")
     .eq("actif", true)
     .maybeSingle();
+  // Une panne de lecture n'est PAS « aucune campagne active » : les confondre
+  // fait afficher « Aucune campagne » sur la console et renvoyer un tick vert
+  // qui n'envoie rien, exactement le silence qu'on cherche à supprimer.
+  if (error) throw new Error(`Lecture de la campagne active : ${error.message}`);
   return data ?? null;
 }
 
@@ -103,6 +108,20 @@ export interface EtatFile {
   valides: number;
   echecs: number;
   prospectsDisponibles: number;
+  /**
+   * Pourquoi la file ne s'écoule pas, en clair, ou `null` si rien ne bloque.
+   *
+   * Existe parce que `tick` répond 200 avec un motif que personne ne lit : le
+   * 27/08/2026, 40 messages validés sont restés en file toute la journée sans
+   * que la console n'en dise un mot. Calculé avec les mêmes prédicats que
+   * `envoyerProchain`, jamais avec une seconde copie des seuils.
+   */
+  blocage: string | null;
+}
+
+/** Formate une borne de `FENETRE` (minutes depuis minuit) en « 9h30 ». */
+function heureFenetre(minutes: number): string {
+  return `${Math.floor(minutes / 60)}h${String(minutes % 60).padStart(2, "0")}`;
 }
 
 export async function etatFile(maintenant = new Date()): Promise<EtatFile> {
@@ -120,16 +139,35 @@ export async function etatFile(maintenant = new Date()): Promise<EtatFile> {
       valides: 0,
       echecs: 0,
       prospectsDisponibles: 0,
+      blocage: "Aucune campagne active.",
     };
   }
 
-  const compte = async (statut: StatutMessageProspection) => {
-    const { count } = await supabase
+  /**
+   * `borne: "dus"` compte comme le sélecteur d'envoi (`scheduled_on <= jour`),
+   * donc backlog compris ; `"jour"` ne compte que la journée.
+   *
+   * `en_attente` et `valide` se comptent en « dus » depuis que `validerFile`
+   * rattrape les jours précédents : sans cela, le bouton « Valider les N
+   * messages » affichait 0 et se grisait pendant que 40 messages du 26/08
+   * attendaient, invisibles et impossibles à débloquer autrement qu'en base.
+   * Les échecs restent sur la journée : leur libellé dit « aujourd'hui ».
+   */
+  const compte = async (
+    statut: StatutMessageProspection,
+    borne: "jour" | "dus" = "jour",
+  ) => {
+    const requete = supabase
       .from("prospection_messages")
       .select("id", { count: "exact", head: true })
       .eq("campagne_id", campagne.id)
-      .eq("scheduled_on", jour)
       .eq("statut", statut);
+    const { count, error } =
+      borne === "dus"
+        ? await requete.lte("scheduled_on", jour)
+        : await requete.eq("scheduled_on", jour);
+    if (error)
+      throw new Error(`Comptage des messages (${statut}) : ${error.message}`);
     return count ?? 0;
   };
 
@@ -141,32 +179,58 @@ export async function etatFile(maintenant = new Date()): Promise<EtatFile> {
   // L'admin voyait de la marge là où il n'y en avait plus. Les compteurs de file
   // ci-dessous restent sur `scheduled_on` à dessein : eux décrivent la file du
   // jour, pas ce qui sort de la boîte.
-  const { count: partisAujourdhui } = await supabase
+  const { count: partisAujourdhui, error: erreurPartis } = await supabase
     .from("prospection_messages")
     .select("id", { count: "exact", head: true })
     .eq("campagne_id", campagne.id)
     .gte("sent_at", debutJourParis(maintenant).toISOString())
     .eq("statut", "envoye");
+  if (erreurPartis)
+    throw new Error(`Comptage des envois du jour : ${erreurPartis.message}`);
 
-  const { count: disponibles } = await supabase
+  const { count: disponibles, error: erreurDisponibles } = await supabase
     .from("prospects")
     .select("id", { count: "exact", head: true })
     .eq("statut", "nouveau");
+  if (erreurDisponibles)
+    throw new Error(`Comptage des prospects : ${erreurDisponibles.message}`);
+
+  const plafond = plafondDuJour({
+    debut: campagne.demarre_le,
+    fin: campagne.termine_le,
+    jour,
+    capMax: campagne.daily_cap_max,
+  });
+  const envoyes = partisAujourdhui ?? 0;
+  const valides = await compte("valide", "dus");
+
+  // Même ordre que les garde-fous de `envoyerProchain`, pour que l'écran nomme
+  // exactement ce que le prochain envoi rencontrera.
+  let blocage: string | null = null;
+  if (campagne.en_pause) {
+    blocage = "Campagne en pause : aucun message ne part, même à la main.";
+  } else if (plafond === 0) {
+    blocage = `Jour non couvert par la campagne (du ${campagne.demarre_le} au ${campagne.termine_le}).`;
+  } else if (envoyes >= plafond) {
+    blocage = `Plafond du jour atteint (${envoyes}/${plafond}).`;
+  } else if (valides === 0) {
+    blocage = "Aucun message validé : préparez la file, puis validez-la.";
+  } else if (!dansLaFenetre(maintenant)) {
+    blocage =
+      `Hors fenêtre d'envoi (${heureFenetre(FENETRE.debut)}-${heureFenetre(FENETRE.fin)}) : ` +
+      `l'envoi automatique est suspendu, l'envoi manuel passe outre.`;
+  }
 
   return {
     campagne,
     jour,
-    plafond: plafondDuJour({
-      debut: campagne.demarre_le,
-      fin: campagne.termine_le,
-      jour,
-      capMax: campagne.daily_cap_max,
-    }),
-    envoyes: partisAujourdhui ?? 0,
-    enAttente: await compte("en_attente"),
-    valides: await compte("valide"),
+    plafond,
+    envoyes,
+    enAttente: await compte("en_attente", "dus"),
+    valides,
     echecs: await compte("echec"),
     prospectsDisponibles: disponibles ?? 0,
+    blocage,
   };
 }
 
@@ -223,26 +287,34 @@ export async function bilanFinDeJournee(
     capMax: campagne.daily_cap_max,
   });
 
-  const { count: envoyes } = await supabase
+  // Ce bilan décide de rougir ou non le run GitHub : un comptage faux vaut soit
+  // une alerte fantôme, soit le silence qu'il existe pour rompre. On échoue.
+  const { count: envoyes, error: erreurEnvoyes } = await supabase
     .from("prospection_messages")
     .select("id", { count: "exact", head: true })
     .eq("campagne_id", campagne.id)
     .gte("sent_at", debutJourParis(maintenant).toISOString())
     .eq("statut", "envoye");
+  if (erreurEnvoyes)
+    throw new Error(`Bilan, comptage des envois : ${erreurEnvoyes.message}`);
 
-  const { count: restantsDus } = await supabase
+  const { count: restantsDus, error: erreurRestants } = await supabase
     .from("prospection_messages")
     .select("id", { count: "exact", head: true })
     .eq("campagne_id", campagne.id)
     .eq("statut", "valide")
     .lte("scheduled_on", jour);
+  if (erreurRestants)
+    throw new Error(`Bilan, comptage des restants : ${erreurRestants.message}`);
 
-  const { count: enAttente } = await supabase
+  const { count: enAttente, error: erreurAttente } = await supabase
     .from("prospection_messages")
     .select("id", { count: "exact", head: true })
     .eq("campagne_id", campagne.id)
     .eq("scheduled_on", jour)
     .eq("statut", "en_attente");
+  if (erreurAttente)
+    throw new Error(`Bilan, comptage des en attente : ${erreurAttente.message}`);
 
   return {
     jour,
@@ -372,23 +444,29 @@ export async function preparerFile(
     return { crees: 0, motif: "Hors fenêtre de campagne (week-end ou dates)." };
   }
 
-  const { count: dejaPrevus } = await supabase
+  // Un comptage muet ferait repartir `aCreer` du plafond entier et rejouerait
+  // une file déjà préparée : l'idempotence de cette fonction tient à ce nombre.
+  const { count: dejaPrevus, error: erreurPrevus } = await supabase
     .from("prospection_messages")
     .select("id", { count: "exact", head: true })
     .eq("campagne_id", campagne.id)
     .eq("scheduled_on", jour)
     .in("statut", ["en_attente", "valide", "envoye"]);
+  if (erreurPrevus)
+    throw new Error(`Comptage de la file du jour : ${erreurPrevus.message}`);
 
   const aCreer = plafond - (dejaPrevus ?? 0);
   if (aCreer <= 0) return { crees: 0, motif: "Plafond du jour déjà atteint." };
 
   // On tire large : une partie des candidats sera écartée par les exclusions.
-  const { data: candidats } = await supabase
+  const { data: candidats, error: erreurCandidats } = await supabase
     .from("prospects")
     .select("*")
     .eq("statut", "nouveau")
     .order("created_at", { ascending: true })
     .limit(aCreer * 3 + 20);
+  if (erreurCandidats)
+    throw new Error(`Lecture des prospects : ${erreurCandidats.message}`);
 
   const retenus = await filtrerExclus(supabase, candidats ?? []);
   const lot = retenus.slice(0, aCreer);
@@ -464,19 +542,34 @@ export type ResultatTick =
   | { envoye: false; motif: string }
   | { envoye: true; messageId: string; destinataire: string };
 
+export interface OptionsEnvoi {
+  /**
+   * Lève la seule fenêtre horaire, et rien d'autre.
+   *
+   * Réservé à l'envoi déclenché à la main depuis la console : un humain qui
+   * clique à 21h sait quelle heure il est, là où le planificateur, lui, ne le
+   * sait pas. Tous les autres garde-fous restent en vigueur — campagne absente,
+   * pause, dates de campagne, plafond du jour, copie périmée, réservation
+   * optimiste. `/api/prospection/tick` ne passe JAMAIS cette option : l'envoi
+   * automatique reste borné à la fenêtre.
+   */
+  forcerHorsFenetre?: boolean;
+}
+
 /**
- * Envoie AU PLUS un message. Appelée toutes les dix minutes pendant la fenêtre :
- * c'est ce rythme, et non un envoi en rafale, qui fait ressembler la campagne à
- * un humain qui écrit ses mails l'un après l'autre.
+ * Envoie AU PLUS un message. Appelée en boucle par le workflow, qui espace ses
+ * appels de quelques minutes : c'est ce rythme, et non un envoi en rafale, qui
+ * fait ressembler la campagne à un humain qui écrit ses mails l'un après l'autre.
  */
 export async function envoyerProchain(
   maintenant = new Date(),
+  options: OptionsEnvoi = {},
 ): Promise<ResultatTick> {
   const supabase = createAdminClient();
   const campagne = await campagneActive(supabase);
   if (!campagne) return { envoye: false, motif: "aucune campagne active" };
   if (campagne.en_pause) return { envoye: false, motif: "campagne en pause" };
-  if (!dansLaFenetre(maintenant)) {
+  if (!options.forcerHorsFenetre && !dansLaFenetre(maintenant)) {
     return { envoye: false, motif: "hors fenêtre d'envoi" };
   }
 
@@ -617,6 +710,72 @@ export async function envoyerProchain(
   ]);
 
   return { envoye: true, messageId: message.id, destinataire: prospect.email };
+}
+
+/** Taille par défaut d'une salve déclenchée à la main. */
+export const TAILLE_SALVE = 5;
+
+/**
+ * Pause entre deux envois d'une même salve, en millisecondes.
+ *
+ * Le goutte-à-goutte du workflow espace ses appels de 2 à 6 MINUTES ; une salve
+ * manuelle compresse à quelques secondes, puisqu'elle doit rendre la main à
+ * l'admin dans la durée d'une requête. C'est précisément pour cela qu'une salve
+ * est bornée à cinq messages et non à la file entière : cinq envois espacés de
+ * quelques secondes restent un profil d'écriture plausible, quarante non.
+ */
+const PAUSE_SALVE_MS = { min: 2_000, max: 5_000 } as const;
+
+/**
+ * Budget de temps d'une salve. Au-delà, on rend la main plutôt que de se faire
+ * couper par la limite d'exécution de la fonction — un message coupé en plein
+ * envoi resterait réservé en `envoye` sans être parti.
+ */
+const BUDGET_SALVE_MS = 45_000;
+
+export interface ResultatSalve {
+  envoyes: number;
+  /** Ce qui a arrêté la salve avant son terme, ou `null` si elle est allée au bout. */
+  motifArret: string | null;
+}
+
+/**
+ * Envoie une salve de messages, à la demande.
+ *
+ * Existe parce que valider la file n'envoyait rien : l'envoi dépendait
+ * entièrement d'un cron GitHub que le workflow documente lui-même comme décalé
+ * d'une à deux heures. Le 27/08/2026 son unique passage est tombé à 20h12, hors
+ * fenêtre, et 40 messages validés sont restés en file. La console peut désormais
+ * écouler la file elle-même ; le cron n'est plus qu'un filet.
+ *
+ * S'arrête au premier refus et le rapporte : plafond atteint, file vide, pause.
+ */
+export async function envoyerSalve(
+  options: { taille?: number } & OptionsEnvoi = {},
+): Promise<ResultatSalve> {
+  const taille = options.taille ?? TAILLE_SALVE;
+  const debut = Date.now();
+  let envoyes = 0;
+
+  for (let i = 0; i < taille; i++) {
+    if (i > 0) {
+      const { min, max } = PAUSE_SALVE_MS;
+      await new Promise((r) =>
+        setTimeout(r, min + Math.floor(Math.random() * (max - min + 1))),
+      );
+      if (Date.now() - debut > BUDGET_SALVE_MS) {
+        return { envoyes, motifArret: "temps imparti écoulé, relancez la salve" };
+      }
+    }
+
+    const resultat = await envoyerProchain(new Date(), {
+      forcerHorsFenetre: options.forcerHorsFenetre,
+    });
+    if (!resultat.envoye) return { envoyes, motifArret: resultat.motif };
+    envoyes += 1;
+  }
+
+  return { envoyes, motifArret: null };
 }
 
 /**
