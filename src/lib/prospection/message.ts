@@ -14,7 +14,7 @@
 
 import { editeur } from "@/lib/legal/editeur";
 import { MENTION_INDEPENDANCE_PHRASE } from "@/lib/legal/mentions";
-import { ACCROCHES } from "@/lib/sprint/accroches";
+import { ACCROCHES } from "@/lib/prospection/accroches";
 
 /** Mots qui trahissent une raison sociale glissée dans la colonne prénom. */
 const FORMES_JURIDIQUES =

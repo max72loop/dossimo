@@ -23,7 +23,7 @@ import {
   mentionPerimee,
 } from "@/lib/prospection/message";
 import { envoyerMessage } from "@/lib/prospection/envoi";
-import { choisirAccroche } from "@/lib/sprint/accroches";
+import { choisirAccroche } from "@/lib/prospection/accroches";
 
 /**
  * File d'envoi : préparation (la veille ou le matin), puis envoi au compte-gouttes.
@@ -691,7 +691,7 @@ export async function envoyerProchain(
       .update({ statut: "echec", erreur: resultat.erreur })
       .eq("id", message.id);
     // Même raison : le fichier de prospection doit le compter comme démarché,
-    // sinon le sprint manuel le rappellerait demain.
+    // sinon la console « Contacts » le proposerait à relancer demain.
     await marquerContactDansFichier(supabase, prospect.notes, "echec", maintenant, message.id, campagne.id);
     return { envoye: false, motif: `échec d'envoi : ${resultat.erreur}` };
   }
@@ -790,11 +790,13 @@ export async function envoyerSalve(
  * fichier, et ce qui exposait un artisan à être redémarché à la main.
  *
  * POURQUOI LES DEUX, ET NON LE SEUL NOUVEAU
- * `prospects_dossimo` reste lu par `src/lib/sprint/*` et par les scripts de
- * tirage tant que la bascule n'est pas terminée. Cesser d'y écrire maintenant
- * recréerait exactement l'angle mort que la 0050 a bouché, dans l'autre sens.
- * Les deux écritures partent donc ensemble, jusqu'au retrait des anciennes
- * tables.
+ * `prospects_dossimo` reste lu ici même (`accrochesPourProspects`, via `rge_domaines`),
+ * par `src/lib/mesure/tunnel-charge.ts` (étape « contacts » du tunnel) et par
+ * les scripts SQL de tirage, tant que la bascule n'est pas terminée. Les
+ * consoles du sprint manuel, elles, ont été retirées le 2026-09-13 : « Contacts »
+ * les remplace. Cesser d'y écrire maintenant recréerait exactement l'angle mort
+ * que la 0050 a bouché, dans l'autre sens. Les deux écritures partent donc
+ * ensemble, jusqu'au retrait des anciennes tables.
  *
  * Délibérément NON bloquantes : le message est déjà parti, échouer ici ne le
  * rattrape pas et masquerait un envoi réussi. Non silencieuses non plus

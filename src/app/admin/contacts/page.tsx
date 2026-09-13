@@ -10,6 +10,7 @@ import {
   type FiltreContacts,
 } from "@/lib/contacts/liste";
 import { ContactsListe } from "@/components/admin/contacts-liste";
+import { CONSOLE_MAIN, EnTeteConsole } from "@/components/admin/en-tete-console";
 import type { CanalEchange, EtatContact } from "@/lib/database.types";
 
 export const metadata = { title: "Contacts · Admin" };
@@ -96,12 +97,11 @@ export default async function ContactsPage({
     }`;
 
   return (
-    <main className="mx-auto max-w-5xl px-6 py-10">
-      <h1 className="font-serif text-2xl font-semibold tracking-tight text-encre">Contacts</h1>
-      <p className="mt-1 text-sm text-ardoise">
-        Le fichier de prospection et son historique. Un échange enregistré ici met à jour l&apos;état du
-        contact tout seul : l&apos;état ne se saisit pas, il se déduit de ce qui s&apos;est passé.
-      </p>
+    <main className={CONSOLE_MAIN}>
+      <EnTeteConsole
+        titre="Contacts"
+        aide="Le fichier de prospection et son historique. Un échange enregistré ici met à jour l'état du contact tout seul : l'état ne se saisit pas, il se déduit de ce qui s'est passé."
+      />
 
       {/* Compteurs par état */}
       <dl className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">

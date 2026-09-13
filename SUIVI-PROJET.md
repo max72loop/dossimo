@@ -136,8 +136,11 @@ bibliothèque de devis avec modèles personnels et export PDF/DOCX.
 
 ### Admin
 
-Accueil des consoles, édition des règles, gestion des modèles de devis, console de données
-(nettoyage des dossiers de test), pilotage, prospection, sprint de lancement et son pilotage.
+Sommaire avec les chiffres du jour et barre de navigation commune, en trois rubriques :
+prospection (contacts, file e-mail), pilotage (tunnel d'entreprise, retours de dépôt), produit
+et données (règles métier, modèles de devis, inventaire et nettoyage). Les consoles du sprint
+bicanal (lot du jour, cinq chiffres) ont été retirées le 2026-09-13, remplacées par Contacts ;
+leur croisement par source utm vit dans le Tunnel.
 **Requête en langage naturel** : la question devient un plan de requête structuré (jamais de
 SQL généré), sur liste blanche de tables et colonnes, avec masquage des colonnes PII avant
 tout envoi au LLM.

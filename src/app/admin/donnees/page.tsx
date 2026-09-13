@@ -1,9 +1,8 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
 
 import { getAdminEmail } from "@/lib/auth/is-admin";
 import { chargerInventaire } from "@/lib/admin/inventaire";
+import { EnTeteConsole } from "@/components/admin/en-tete-console";
 
 import { QuestionDonnees } from "./question-donnees";
 import { TableNettoyage } from "./table-nettoyage";
@@ -23,18 +22,12 @@ export default async function DonneesPage() {
   const { dossiers, resume } = await chargerInventaire();
 
   return (
+    // Seule console hors `CONSOLE_MAIN` : le tableau d'inventaire a besoin de la largeur.
     <main className="mx-auto max-w-[1280px] px-5 py-10 sm:px-8">
-      <Link href="/admin/regles" className="inline-flex items-center gap-1 text-sm text-tampon underline-offset-4 hover:underline">
-        <ArrowLeft className="h-4 w-4" strokeWidth={1.8} aria-hidden="true" />
-        Règles métier
-      </Link>
-      <h1 className="mt-4 font-serif text-3xl font-semibold text-encre">Nettoyage des données</h1>
-      <p className="mt-2 max-w-2xl text-sm text-ardoise">
-        Inventaire de tous les dossiers. Les lignes pré-signalées ressemblent à des saisies de test
-        (e-mail de test, champs bidon, dossier vide jamais livré). Rien n&apos;est supprimé
-        automatiquement : coche ce que tu veux effacer, puis confirme. La suppression retire aussi
-        les fichiers Storage liés.
-      </p>
+      <EnTeteConsole
+        titre="Données"
+        aide="Inventaire de tous les dossiers. Les lignes pré-signalées ressemblent à des saisies de test (e-mail de test, champs bidon, dossier vide jamais livré). Rien n'est supprimé automatiquement : coche ce que tu veux effacer, puis confirme. La suppression retire aussi les fichiers Storage liés."
+      />
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Metric label="Dossiers" value={resume.total} />

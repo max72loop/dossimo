@@ -5,10 +5,10 @@ import type { StatutDossier, TypeEvenementParcours } from "@/lib/database.types"
  * dépôt → accepté sans reprise.
  *
  * Deux consoles mesuraient déjà des bouts de cette ligne sans se parler :
- * `/admin/sprint/pilotage` s'arrête au dossier payé, `/admin/pilotage` commence
- * au dépôt. Entre les deux, l'essai n'existait nulle part. Ce module recolle la
- * ligne entière, et surtout la juge sur ce qui compte : le nombre de dossiers
- * PAYÉS puis ACCEPTÉS SANS REPRISE.
+ * le pilotage du sprint (retiré le 2026-09-13) s'arrêtait au dossier payé,
+ * `/admin/pilotage` commence au dépôt. Entre les deux, l'essai n'existait nulle
+ * part. Ce module recolle la ligne entière, et surtout la juge sur ce qui
+ * compte : le nombre de dossiers PAYÉS puis ACCEPTÉS SANS REPRISE.
  *
  * ---------------------------------------------------------------------------
  * Ce que ce tunnel n'est pas
@@ -122,9 +122,10 @@ function dans(date: string | null | undefined, depuis: string | null): boolean {
 export function agregerTunnel(d: DonneesTunnel, depuis: string | null): Tunnel {
   // --- Étape 1 : contact -----------------------------------------------------
   // Les deux voies de démarchage écrivent dans des colonnes distinctes (0050).
-  // On additionne : le chevauchement (quelqu'un démarché deux fois) est déjà
-  // surveillé par `/admin/sprint/pilotage`, qui l'affiche comme une anomalie. Le
-  // dupliquer ici en le corrigeant en douce masquerait le problème.
+  // On additionne : le chevauchement (quelqu'un démarché deux fois) est une
+  // anomalie à voir, pas à corriger en douce ici. Le pilotage du sprint la
+  // comptait ; depuis son retrait (2026-09-13), c'est l'historique par contact
+  // dans `/admin/contacts` qui la rend visible.
   const contacts = d.contacts.filter(
     (c) => dans(c.date_envoi, depuis) || dans(c.contact_auto_le, depuis),
   ).length;

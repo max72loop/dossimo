@@ -1,22 +1,32 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
 
 import { getAdminEmail } from "@/lib/auth/is-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { CONSOLE_MAIN, EnTeteConsole } from "@/components/admin/en-tete-console";
 
-export const metadata = { title: "Pilotage produit · Admin"};
+export const metadata = { title: "Retours de dépôt · Admin" };
 
 const label: Record<string, string> = { en_cours: "En cours", accepte: "Accepté", refuse: "Refusé", abandonne: "Abandonné" };
 
 export default async function PilotagePage() {
   if (!(await getAdminEmail())) notFound();
   const admin = createAdminClient();
-  const [{ data: dossiers }, { data: retours }, { data: obliges }] = await Promise.all([
+  const [
+    { data: dossiers, error: erreurDossiers },
+    { data: retours, error: erreurRetours },
+    { data: obliges, error: erreurObliges },
+  ] = await Promise.all([
     admin.from("dossiers").select("id, oblige_id, created_at").order("created_at", { ascending: false }),
     admin.from("retours_depot").select("dossier_id, statut, motif"),
     admin.from("obliges").select("id, nom"),
   ]);
+  // Ce tableau de bord sert à décider. Dégradé en `?? []`, il affichait zéro
+  // dossier et zéro refus au lieu de signaler que la base était injoignable :
+  // un tableau de bord qui ment est pire que pas de tableau de bord.
+  const panne = erreurDossiers ?? erreurRetours ?? erreurObliges;
+  if (panne) {
+    throw new Error(`Lecture du pilotage terrain : ${panne.message}`);
+  }
   const dossierRows = dossiers ?? [];
   const retourRows = retours ?? [];
   const avecOblige = dossierRows.filter((d) => d.oblige_id).length;
@@ -29,10 +39,8 @@ export default async function PilotagePage() {
     const nom = d.oblige_id ? obligeParId.get(d.oblige_id) ?? "Obligé supprimé" : "Non choisi";
     parOblige.set(nom, (parOblige.get(nom) ?? 0) + 1);
   }
-  return <main className="mx-auto max-w-4xl px-8 py-10">
-    <Link href="/admin/regles" className="inline-flex items-center gap-1 text-sm text-tampon underline-offset-4 hover:underline"><ArrowLeft className="h-4 w-4" strokeWidth={1.8} aria-hidden="true" />Règles métier</Link>
-    <h1 className="mt-4 font-serif text-3xl font-semibold text-encre">Pilotage terrain</h1>
-    <p className="mt-2 text-sm text-ardoise">Données déclarées après dépôt. Elles orientent les revues de règles ; elles ne prouvent pas seules une exigence réglementaire.</p>
+  return <main className={CONSOLE_MAIN}>
+    <EnTeteConsole titre="Retours de dépôt" aide="Ce que les artisans déclarent après dépôt : issue, motif de refus, obligé choisi. Ces données orientent les revues de règles ; elles ne prouvent pas seules une exigence réglementaire." />
     <div className="mt-6 grid gap-4 sm:grid-cols-3"><Metric label="Dossiers créés" value={dossierRows.length} /><Metric label="Obligé renseigné" value={`${avecOblige}/${dossierRows.length}`} /><Metric label="Retours reçus" value={retourRows.length} /></div>
     <section className="mt-8 rounded-2xl bg-blanc-casse p-5 shadow-lg"><h2 className="font-serif text-lg font-semibold text-encre">Résultat des dépôts</h2><div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">{Object.entries(comptes).map(([s, n]) => <Metric key={s} label={label[s]} value={n} />)}</div></section>
     <section className="mt-6 grid gap-6 md:grid-cols-2"><List title="Dossiers par obligé" items={[...parOblige.entries()].sort((a,b) => b[1]-a[1])} empty="Aucun dossier." /><List title="Motifs de refus déclarés" items={[...motifs.entries()].sort((a,b) => b[1]-a[1])} empty="Aucun refus déclaré." /></section>

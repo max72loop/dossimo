@@ -1,7 +1,7 @@
 import "server-only";
 
 import { createAdminClient } from "@/lib/supabase/admin";
-import { choisirAccroche } from "@/lib/sprint/accroches";
+import { choisirAccroche } from "@/lib/prospection/accroches";
 import type { CanalEchange, EtatContact } from "@/lib/database.types";
 
 /**

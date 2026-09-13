@@ -1,8 +1,7 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
-import { ArrowLeft, ArrowRight } from "lucide-react";
 
 import { getAdminEmail } from "@/lib/auth/is-admin";
+import { AvertissementProduction, CONSOLE_MAIN, EnTeteConsole } from "@/components/admin/en-tete-console";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
   RegleEditor,
@@ -20,12 +19,19 @@ export default async function AdminReglesPage() {
   // Lecture de TOUTES les règles (y compris inactives) via service-role : la RLS
   // publique ne montre que les règles actives. L'accès est déjà restreint admin.
   const supabase = createAdminClient();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("regles_metier")
     .select("id, dispositif, type_travaux, version, actif, version_formulaire, condition_json, pieces_requises_json, points_vigilance_json")
     .order("dispositif")
     .order("type_travaux")
     .order("version", { ascending: false });
+
+  // Sans ce contrôle, une panne de lecture affichait « Aucune règle enregistrée.
+  // Le contrôle utilise ses valeurs codées par défaut » — un message faux et
+  // rassurant sur la console qui pilote les contrôles anti-refus en production.
+  if (error) {
+    throw new Error(`Lecture des règles métier : ${error.message}`);
+  }
 
   const rows: RegleRow[] = (data ?? []).map((r) => ({
     id: r.id,
@@ -44,35 +50,16 @@ export default async function AdminReglesPage() {
   }));
 
   return (
-    <main className="mx-auto max-w-4xl px-8 py-10">
-      <Link
-        href="/dossiers"
-        className="inline-flex items-center gap-1 text-sm text-tampon underline-offset-4 transition hover:underline"
+    <main className={CONSOLE_MAIN}>
+      <EnTeteConsole
+        titre="Règles métier"
+        aide="Paramètres par couple dispositif + travaux (seuils, TVA, ancienneté, pièces, version de fiche). Modifiables ici, sans redéploiement."
       >
-        <ArrowLeft className="h-4 w-4" strokeWidth={1.8} aria-hidden="true" />
-        Mes dossiers
-      </Link>
-      <Link href="/admin/devis" className="ml-4 inline-flex items-center gap-1 text-sm text-tampon underline-offset-4 transition hover:underline">Modèles de devis<ArrowRight className="h-4 w-4" strokeWidth={1.8} aria-hidden="true" /></Link>
-      <Link
-        href="/admin/pilotage"
-        className="ml-4 inline-flex items-center gap-1 text-sm text-tampon underline-offset-4 transition hover:underline"
-      >
-        Pilotage terrain
-        <ArrowRight className="h-4 w-4" strokeWidth={1.8} aria-hidden="true" />
-      </Link>
-      <Link href="/admin/donnees" className="ml-4 inline-flex items-center gap-1 text-sm text-tampon underline-offset-4 transition hover:underline">Nettoyage des données<ArrowRight className="h-4 w-4" strokeWidth={1.8} aria-hidden="true" /></Link>
-
-      <div className="mt-4 mb-2">
-        <h1 className="font-serif text-3xl font-semibold tracking-tight text-encre">
-          Règles métier
-        </h1>
-        <p className="mt-2 text-sm text-ardoise">
-          Paramètres par couple dispositif + travaux (seuils, TVA, ancienneté,
-          pièces, version de fiche). Modifiables ici, sans redéploiement · le
-          contrôle anti-refus et le pack les lisent en direct.
-        </p>
-        <p className="mt-1 text-xs text-encre-claire">Connecté en admin : {admin}</p>
-      </div>
+        <AvertissementProduction>
+          Le contrôle anti-refus et le pack lisent ces règles en direct : une modification
+          enregistrée ici change la production tout de suite. Compte : {admin}.
+        </AvertissementProduction>
+      </EnTeteConsole>
 
       {rows.length === 0 ? (
         <p className="mt-8 rounded border border-dashed border-filigrane bg-papier/40 px-4 py-6 text-sm text-ardoise">

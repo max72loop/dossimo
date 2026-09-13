@@ -1,22 +1,27 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
-import { AlertTriangle, ArrowLeft, ArrowRight, CheckCircle2, Pause, Play } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Info, Pause, Play, Send } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { CONSOLE_MAIN, EnTeteConsole } from "@/components/admin/en-tete-console";
 import { CARTE } from "@/components/ui/cartes";
 import { getAdminEmail } from "@/lib/auth/is-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { etatFile, statsEngagement } from "@/lib/prospection/file";
+import { TAILLE_SALVE, etatFile, statsEngagement } from "@/lib/prospection/file";
 import {
   basculerPause,
   ecarterMessage,
+  envoyerMaintenant,
   importerProspects,
   preparerFileAction,
   validerFile,
 } from "@/lib/prospection/actions";
 
-export const metadata = { title: "Prospection · Admin"};
+export const metadata = { title: "File e-mail · Admin" };
 export const dynamic = "force-dynamic";
+
+// Une salve enchaîne cinq envois espacés de quelques secondes : la durée par
+// défaut d'une Server Action ne suffit pas.
+export const maxDuration = 60;
 
 /**
  * Console de prospection.
@@ -38,20 +43,36 @@ export default async function AdminProspectionPage({
   const [etat, engagement] = await Promise.all([etatFile(), statsEngagement()]);
   const supabase = createAdminClient();
 
-  const { data: file } = etat.campagne
+  // La journée du jour, PLUS tout ce qui reste actionnable des jours précédents.
+  // L'écran ne montrait que `scheduled_on = aujourd'hui` : un lot préparé la
+  // veille et non validé devenait invisible, le bouton « Valider » se grisait, et
+  // rien n'indiquait que 40 messages attendaient (constaté le 28/08/2026). On ne
+  // remonte pas tout l'historique pour autant : les jours passés ne rendent que
+  // le travail encore en attente.
+  const { data: file, error: erreurFile } = etat.campagne
     ? await supabase
         .from("prospection_messages")
         .select("id, statut, objet, corps, scheduled_on, erreur, prospects(email, entreprise, prenom)")
         .eq("campagne_id", etat.campagne.id)
-        .eq("scheduled_on", etat.jour)
+        .or(
+          `scheduled_on.eq.${etat.jour},and(scheduled_on.lt.${etat.jour},statut.in.(en_attente,valide))`,
+        )
+        .order("scheduled_on", { ascending: true })
         .order("created_at", { ascending: true })
-    : { data: null };
+    : { data: null, error: null };
+
+  // Une file affichée vide sur panne de lecture, c'est l'admin qui conclut « rien
+  // à faire » alors que la base est injoignable.
+  if (erreurFile) {
+    throw new Error(`Lecture de la file de prospection : ${erreurFile.message}`);
+  }
 
   type LigneFile = {
     id: string;
     statut: string;
     objet: string;
     corps: string;
+    scheduled_on: string;
     erreur: string | null;
     prospects: { email: string; entreprise: string | null; prenom: string | null } | null;
   };
@@ -67,26 +88,15 @@ export default async function AdminProspectionPage({
   const peuDeDonnees = engagement.envois > 0 && engagement.envois < 200;
 
   return (
-    <main className="mx-auto max-w-4xl px-8 py-10">
-      <div className="flex flex-wrap gap-4 text-sm">
-        <Link href="/admin/regles" className="inline-flex items-center gap-1 text-tampon underline-offset-4 hover:underline">
-          <ArrowLeft className="h-4 w-4" strokeWidth={1.8} aria-hidden="true" />
-          Règles métier
-        </Link>
-        <Link href="/admin/pilotage" className="inline-flex items-center gap-1 text-tampon underline-offset-4 hover:underline">
-          Pilotage terrain
-          <ArrowRight className="h-4 w-4" strokeWidth={1.8} aria-hidden="true" />
-        </Link>
-      </div>
-
-      <h1 className="mt-4 font-serif text-3xl font-semibold tracking-tight text-encre">
-        Prospection
-      </h1>
-      <p className="mt-2 text-sm text-ardoise">
-        {etat.campagne
-          ? `${etat.campagne.nom} · du ${etat.campagne.demarre_le} au ${etat.campagne.termine_le} · depuis ${etat.campagne.from_email}`
-          : "Aucune campagne active."}
-      </p>
+    <main className={CONSOLE_MAIN}>
+      <EnTeteConsole
+        titre="File e-mail"
+        aide={
+          etat.campagne
+            ? `${etat.campagne.nom} · du ${etat.campagne.demarre_le} au ${etat.campagne.termine_le} · depuis ${etat.campagne.from_email}`
+            : "Aucune campagne active."
+        }
+      />
 
       {ok && (
         <p className="mt-4 flex items-start gap-2 border-l-4 border-succes bg-succes-bg px-4 py-3 text-sm text-encre">
@@ -109,14 +119,14 @@ export default async function AdminProspectionPage({
           ratio={etat.plafond > 0 ? etat.envoyes / etat.plafond : undefined}
           note={
             etat.plafond === 0
-              ? "hors fenêtre"
+              ? "jour non couvert par la campagne"
               : etat.plafond < (etat.campagne?.daily_cap_max ?? 40)
                 ? "montée en charge"
                 : "plafond nominal"
           }
         />
         <Compteur label="À relire" valeur={String(etat.enAttente)} note="en attente de validation" />
-        <Compteur label="Validés" valeur={String(etat.valides)} note="partiront dans la journée" />
+        <Compteur label="Validés" valeur={String(etat.valides)} note="prêts à partir, retard compris" />
         <Compteur
           label="Prospects restants"
           valeur={String(etat.prospectsDisponibles)}
@@ -200,6 +210,15 @@ export default async function AdminProspectionPage({
         </p>
       )}
 
+      {/* --- Pourquoi la file ne s'écoule pas, dit à l'écran plutôt que dans un
+           journal que personne n'ouvre. La pause a déjà son propre bandeau. --- */}
+      {etat.blocage && !etat.campagne?.en_pause && (
+        <p className="mt-4 flex items-start gap-2 border-l-4 border-info bg-info-bg px-4 py-3 text-sm text-encre">
+          <Info className="mt-0.5 h-4 w-4 shrink-0 text-info" strokeWidth={1.5} />
+          {etat.blocage}
+        </p>
+      )}
+
       {/* --- Commandes --- */}
       <section className="mt-6 flex flex-wrap items-center gap-3">
         <form action={preparerFileAction}>
@@ -219,6 +238,20 @@ export default async function AdminProspectionPage({
           >
             Valider les {enAttente.length} messages relus
           </button>
+        </form>
+
+        <form action={envoyerMaintenant} className="flex items-center gap-2">
+          <button
+            type="submit"
+            disabled={etat.valides === 0}
+            className="inline-flex h-10 items-center gap-1.5 rounded bg-encre px-4 text-sm font-semibold text-blanc-casse transition-colors hover:bg-encre/90 disabled:opacity-40"
+          >
+            <Send className="h-4 w-4" strokeWidth={1.5} />
+            Envoyer {TAILLE_SALVE} messages maintenant
+          </button>
+          <span className="text-xs text-ardoise">
+            {etat.valides} validé(s) en attente de départ
+          </span>
         </form>
 
         <form action={basculerPause} className="flex items-center gap-2">
@@ -251,7 +284,8 @@ export default async function AdminProspectionPage({
         </h2>
         <p className="mt-1 text-sm text-ardoise">
           Le corps affiché est celui qui partira, mot pour mot. Un message écarté
-          ne part jamais et sort le prospect de la campagne.
+          ne part jamais et sort le prospect de la campagne. Les messages d’un jour
+          antérieur encore en attente ou validés sont repris ici, datés.
         </p>
 
         {messages.length === 0 ? (
@@ -272,6 +306,9 @@ export default async function AdminProspectionPage({
                       <span className="block truncate text-xs text-ardoise">
                         {m.prospects?.entreprise ?? "sans entreprise"} ·{" "}
                         {m.prospects?.prenom ? `prénom : ${m.prospects.prenom}` : "sans prénom"}
+                        {m.scheduled_on !== etat.jour && (
+                          <> · <span className="text-avertissement">en retard du {m.scheduled_on}</span></>
+                        )}
                       </span>
                     </span>
                     <span className="flex shrink-0 items-center gap-3">
