@@ -12,8 +12,7 @@
  *    Mieux vaut une erreur d'envoi qu'un « Bonjour {{prenom}}, » chez un artisan.
  */
 
-import { editeur } from "@/lib/legal/editeur";
-import { MENTION_INDEPENDANCE_PHRASE } from "@/lib/legal/mentions";
+import { DISCLAIMER_DOSSIMO } from "@/lib/legal/mentions";
 import { ACCROCHES } from "@/lib/prospection/accroches";
 
 /** Mots qui trahissent une raison sociale glissée dans la colonne prénom. */
@@ -50,12 +49,15 @@ export function salutation(prenom: string | null | undefined): string {
 }
 
 /**
- * Bloc d'identification en pied de message. Ce n'est pas de la décoration : c'est
- * lui qui rend l'envoi licite (identité de l'expéditeur, art. 6 LCEN) et qui, en
- * pratique, transforme un « signaler comme spam » en simple désinscription.
+ * Pied de message : la marque et la mention d'indépendance, rien de plus.
+ *
+ * Depuis le 17/09/2026, ni nom ni adresse postale de l'éditeur : l'expéditeur
+ * reste identifiable (art. L34-5 CPCE) par la marque, l'adresse de réponse en
+ * en-tête `From` et le lien de désinscription ; l'identité complète vit sur
+ * `/mentions-legales`, à un clic du site.
  */
 export function mentionsLegales(): string {
-  return `Dossimo, ${editeur.raisonSociale}, ${editeur.adresse}. ${MENTION_INDEPENDANCE_PHRASE}`;
+  return DISCLAIMER_DOSSIMO;
 }
 
 function siteUrl(): string {
@@ -203,13 +205,10 @@ const GABARIT_HTML = `<!-- dossimo -->
       </td></tr></table>
     </td></tr></table>
     <p style="margin:0 0 28px;font-size:13px;line-height:1.5;color:#5B636D;text-align:center;">Sans engagement. Un paiement fixe par dossier, jamais un pourcentage sur la prime.</p>
-    <p style="margin:0 0 28px;font-size:16px;line-height:1.62;">Vous avez un devis en cours sur lequel vous avez un doute ? R&eacute;pondez-moi, c'est moi qui lis.</p>
-    <p style="margin:0 0 4px;font-size:16px;line-height:1.6;"><strong>Max Landry</strong>, Dossimo</p>
-    <p style="margin:0 0 22px;font-size:15px;line-height:1.6;"><a href="mailto:max@dossimo.pro" style="color:#35507F;text-decoration:none;">max@dossimo.pro</a></p>
+    <p style="margin:0 0 22px;font-size:16px;line-height:1.62;">Une question sur un devis en cours ? R&eacute;pondez &agrave; ce mail.</p>
     <div style="height:1px;background:#E2DDD1;margin:8px 0 18px;"></div>
-    <p style="margin:0 0 6px;font-size:12px;line-height:1.55;color:#9AA1A9;">{{mentions_legales}}</p>
-    <p style="margin:0 0 6px;font-size:12px;line-height:1.55;color:#9AA1A9;">Votre adresse professionnelle : {{source}}.</p>
-    <p style="margin:0;font-size:12px;line-height:1.55;color:#9AA1A9;"><a href="{{lien_desinscription}}" style="color:#5B636D;text-decoration:underline;">Se d&eacute;sinscrire</a> de tout message de ma part.</p>
+    <p style="margin:0 0 6px;font-size:12px;line-height:1.55;color:#9AA1A9;">{{mentions_legales}} Pourquoi ce message : {{source}}.</p>
+    <p style="margin:0;font-size:12px;line-height:1.55;color:#9AA1A9;"><a href="{{lien_desinscription}}" style="color:#5B636D;text-decoration:underline;">Se d&eacute;sinscrire</a></p>
   </td></tr>
 </table>
 </td></tr></table>

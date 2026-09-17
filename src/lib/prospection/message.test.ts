@@ -83,9 +83,12 @@ describe("corpsPourProspect", () => {
     expect(corps).toContain("/desinscription/tok-123");
     // RGPD art. 14 : le destinataire doit savoir d'où vient son adresse.
     expect(corps).toContain("annuaire public des professionnels RGE");
-    // LCEN art. 6 : l'expéditeur doit être identifiable.
-    expect(corps).toContain("Max Landry (EI)");
+    // L'expéditeur s'identifie par la marque, jamais par le nom ou l'adresse
+    // postale de l'éditeur (retirés du pied le 17/09/2026).
+    expect(corps).toContain("Dossimo");
     expect(corps).toContain("non affilié à l'Anah");
+    expect(corps).not.toContain("Max Landry");
+    expect(corps).not.toContain("Bagnolet");
     // Sans métier fourni, l'accroche générique tient le corps.
     expect(corps).toContain("Une mention obligatoire absente du devis");
   });
@@ -119,8 +122,11 @@ describe("corpsHtmlPourProspect — version HTML à la marque", () => {
     expect(html).toContain("/desinscription/tok-123");
     expect(html).toContain("Tester en 2 minutes");
     expect(html).toContain(prospect.source);
-    expect(html).toContain("R&eacute;pondez-moi");
+    expect(html).toContain("R&eacute;pondez &agrave; ce mail");
     expect(html).not.toContain("DOSSIMO50");
+    expect(html).not.toContain("Max Landry");
+    expect(html).not.toContain("Bagnolet");
+    expect(html).not.toContain("mailto:");
     // Aucune variable de gabarit ne doit subsister.
     expect(html).not.toMatch(/\{\{\s*\w+\s*\}\}/);
   });
